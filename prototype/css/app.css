@@ -657,3 +657,8 @@ html[lang="vi"] .wb-full .vw-acts.n3 .btn:nth-child(3) { grid-column: 1 / -1; }
 .card.is-soon .tpl-soon-cover { position: relative; background: var(--bg-surface); box-shadow: inset 0 0 0 var(--stroke-hairline) var(--border); }
 .card.is-soon .tpl-soon-tag { position: absolute; top: 8px; right: 8px; }
 .card.is-soon .card-title { color: var(--text-2); }
+/* 未开放版式：底板中间兜底图标 */
+.tpl-soon-cover { display: flex; align-items: center; justify-content: center; }
+.tpl-soon-ic { display: inline-flex; color: var(--text-3); opacity: .6; }
+.tpl-soon-ic .ic-40, .tpl-soon-ic svg.ic-40 { width: 40px; height: 40px; }
+.tpl-th.is-soon { display: flex; align-items: center; justify-content: center; }

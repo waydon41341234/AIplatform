@@ -319,7 +319,7 @@
   const segBtns = (opts, cur, act) => window.seg(opts, cur, act);
   const TPLS = () => { const seen = {}; return (window.TEMPLATES || Object.keys(TPL).map((k) => ({ k, meta: k === 'midnight-gold' || k === 'festive-red' ? 'pro' : 'standard', f: 'classic' }))).filter((x) => (seen[x.k] ? false : (seen[x.k] = 1))); };
   const tplMeta = (k) => (TPLS().find((x) => x.k === k) || { meta: 'standard' }).meta;
-  const tplThumb = (k, cls = '', bare = false) => { const p = PRESETS[tplOf(k).preset]; return `<span class="tpl-th ${cls} ${bare ? 'is-soon' : ''}" style="background:${bare ? 'var(--bg-surface)' : `linear-gradient(160deg,${p[0]},${p[7]} 70%,${p[10]})`}">${bare ? '' : `<img src="assets/thumbs/tpl-${k}.png" alt="" onerror="this.remove()">`}</span>`; };
+  const tplThumb = (k, cls = '', bare = false) => { const p = PRESETS[tplOf(k).preset]; return `<span class="tpl-th ${cls} ${bare ? 'is-soon' : ''}" style="background:${bare ? 'var(--bg-surface)' : `linear-gradient(160deg,${p[0]},${p[7]} 70%,${p[10]})`}">${bare ? `<span class="tpl-soon-ic">${ic('layout-fill')}</span>` : `<img src="assets/thumbs/tpl-${k}.png" alt="" onerror="this.remove()">`}</span>`; };
   function tplRow() {
     return `<div class="tpl-row">${tplThumb(E.D.template)}<span class="tx"><b class="ellipsis">${t('template/' + E.D.template)}</b><span class="caption faint">${t('template/meta-' + tplMeta(E.D.template))}</span></span><button class="btn btn-secondary btn-sm" data-act="edOpenTpl">${t('ed/tpl-switch')}</button></div>`;
   }
