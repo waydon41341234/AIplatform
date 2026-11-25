@@ -75,7 +75,8 @@
 .au-eye:hover:not(:disabled) { background: var(--bg-hover); color: var(--icon); }
 .au-err { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px 6px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--error); }
 .au-err > .ic { flex: none; margin-top: 1px; width: 14px; height: 14px; }
-.au-err > span { min-width: 0; }
+.au-err > span { flex: 1 1 0; min-width: 0; }
+.au-err > .au-link { flex: none; }
 .au-link { color: var(--link); font-size: inherit; font-weight: 600; white-space: nowrap; }
 .au-link:hover:not(:disabled) { text-decoration: underline; }
 .au-forgot { display: flex; justify-content: flex-end; margin-top: -4px; font-size: var(--fs-body-sm); }
