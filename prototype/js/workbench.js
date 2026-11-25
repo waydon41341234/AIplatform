@@ -4,7 +4,7 @@
   const S = window.S, A = window.ACT, I = window.INP;
   const t = (k, v) => window.t(k, v), esc = (s) => window.esc(s), ic = (n, c) => window.ic(n, c);
   const isMob = () => window.isMobile();
-  const GLYPHS = ['house-fill', 'game-controller-fill', 'heart-fill', 'gift-fill', 'trophy-fill', 'crown-fill', 'ticket-fill', 'headset-fill', 'stack-fill', 'toolbox-fill', 'sparkle-fill', 'user-circle-fill', 'bell-fill', 'credit-card', 'squares-four-fill', 'magic-wand-fill'];
+  const GLYPHS = ['house-fill', 'game-controller-fill', 'heart-fill', 'gift-fill', 'trophy-fill', 'crown-fill', 'ticket-fill', 'headset-fill', 'stack-fill', 'toolbox-fill', 'sparkle-fill', 'user-circle-fill', 'bell-fill', 'wallet-fill', 'squares-four-fill', 'magic-wand-fill'];
   const TONES = { blue: ['#1e46f0', '#06b0ea'], gold: ['#a8741f', '#f2c14e'], green: ['#0b8f57', '#3fd28f'], purple: ['#5b2fd6', '#c86bff'], follow: ['#1e46f0', '#06b0ea'], custom: null };
   const PRICE = 20; // 一张 20 点
 
@@ -556,7 +556,7 @@
     return `<h3>${esc(o.title)}</h3>${o.body ? `<p class="muted" style="margin:8px 0 0">${esc(o.body)}</p>` : ''}
       <div class="wb-costcard"><div><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: window.num(o.cost) })}</b></div>
       <div class="${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: window.num(S.credits || 0) })}</span></div></div>
-      <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="wbCostOk">${esc(o.okLabel || t('confirm/ok'))}</button>` : `<button class="btn btn-primary" data-act="wbTopup">${ic('credit-card', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
+      <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="wbCostOk">${esc(o.okLabel || t('confirm/ok'))}</button>` : `<button class="btn btn-primary" data-act="wbTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
   }
   A.wbCostOk = () => { const o = pendingCost; pendingCost = null; S.dialog = null; S.sheet = null; if (o && o.onOk) o.onOk(); };
   A.wbTopup = () => { S.dialog = null; S.sheet = null; if (typeof window.openTopup === 'function') { window.openTopup(); return false; } window.comingSoon(); };
@@ -616,7 +616,7 @@
       feed = `<div class="feed">${groups.map((g) => `<div class="day">${t('ws/' + g.d)}</div>${g.rs.map(recordView).join('')}`).join('')}</div>`;
     }
     const title = isNew ? t('nav/new-chat') : t('nav/workbench');
-    const mTop = `<header class="m-topbar wb-bar"><button class="ibtn" data-act="openDrawer" aria-label="menu">${ic('sidebar-simple')}</button><h1>${esc(title)}</h1><button class="ibtn" data-act="newChat" aria-label="${esc(t('nav/new-chat'))}">${ic('plus')}</button></header>`;
+    const mTop = `<header class="m-topbar wb-bar"><button class="ibtn" data-act="openDrawer" aria-label="menu">${ic('sidebar-simple')}</button><h1>${esc(title)}</h1>${window.demoTag()}<button class="ibtn" data-act="newChat" aria-label="${esc(t('nav/new-chat'))}">${ic('plus')}</button></header>`;
     // SH-04：平板（600–1199）顶栏最左侧的历史抽屉按钮
     const tablet = !isMob() && window.bp() !== 'desktop';
     const topLead = tablet ? drawerBtn() : '';

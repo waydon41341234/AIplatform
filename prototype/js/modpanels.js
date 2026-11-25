@@ -13,7 +13,7 @@
   // 游戏菜单 = 游戏类型菜单，13 个类型（名称按当前语言取 mp/gm-n-*，改名后存原文）
   const GM = ['sparkle-fill', 'stack-fill', 'fish-fill', 'game-controller-fill', 'cube-fill', 'user-circle-fill', 'trophy-fill', 'ticket-fill', 'headset-fill', 'bird-fill', 'clock-counter-clockwise', 'heart-fill', 'play-circle-fill'];
   const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机', null, true], ['极速赛车'], ['德州扑克'], ['捕鱼达人']];
-  const BN = [['首页', 'house-fill', true], ['优惠', 'sparkle-fill'], ['消息', 'bell-fill'], ['充值', 'credit-card'], ['我的', 'user-circle', true]];
+  const BN = [['首页', 'house-fill', true], ['优惠', 'sparkle-fill'], ['消息', 'bell-fill'], ['充值', 'wallet-fill'], ['我的', 'user-circle', true]];
   const SIDE = [['首页', 'house-fill'], ['优惠活动', 'gift-fill'], ['VIP 特权', 'crown-fill'], ['在线客服', 'headset-fill'], ['个人中心', 'user-circle']];
   const FOOT = ['关于我们', '帮助中心', '隐私政策'];
   const items = (arr) => arr.map((x) => ({ n: x[0], i: x[1] || null, req: !!x[2], on: true }));
@@ -389,7 +389,7 @@
         + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div><div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
-        : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('credit-card', 'ic-16')}${t('confirm/topup')}</button>`;
+        : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;
     } else if (ia.stage === 'sample') {
       body = `<div class="ia-big"><div class="ia-sample skeleton"><b data-ia-pct>${ia.pct}%</b></div><div class="p-note" style="justify-content:center">${t('mp/ai-sample-ing')}</div></div>`;
       foot = `<button class="btn btn-ghost btn-block" data-act="iaCancel">${t('confirm/cancel')}</button>`;

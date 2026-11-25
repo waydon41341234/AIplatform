@@ -343,7 +343,7 @@
       <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
         <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: num(S.credits) })}</span></div></div>
       ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by', { n: num(short) })}</div>`}
-      <div class="dialog-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('credit-card', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
+      <div class="dialog-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
   }
   window.costConfirmLayer = function () {
     if (S.dialog === 'cost') return window.dialog(costBody(), 'cost-dialog');

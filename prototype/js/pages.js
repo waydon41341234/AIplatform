@@ -94,7 +94,7 @@
   const dayOf = (r) => (r.day === 'today' || r.day === 'yesterday' ? r.day : 'earlier');
 
   // ---------- 小组件 ----------
-  const GLYPHS = ['house-fill', 'game-controller-fill', 'heart-fill', 'gift-fill', 'trophy-fill', 'crown-fill', 'ticket-fill', 'headset-fill', 'stack-fill', 'toolbox-fill', 'sparkle-fill', 'user-circle-fill', 'bell-fill', 'credit-card', 'squares-four-fill', 'magic-wand-fill'];
+  const GLYPHS = ['house-fill', 'game-controller-fill', 'heart-fill', 'gift-fill', 'trophy-fill', 'crown-fill', 'ticket-fill', 'headset-fill', 'stack-fill', 'toolbox-fill', 'sparkle-fill', 'user-circle-fill', 'bell-fill', 'wallet-fill', 'squares-four-fill', 'magic-wand-fill'];
   const TONES = { blue: ['#1e46f0', '#06b0ea'], gold: ['#a8741f', '#f2c14e'], green: ['#0b8f57', '#3fd28f'], purple: ['#5b2fd6', '#c86bff'] };
   function tile(r, i) {
     if (window.glyphTile) return window.glyphTile(r, i, { sm: true, view: false });
@@ -294,7 +294,7 @@
   function ledgerRow(e, i) {
     if (window.ledgerRow) return window.ledgerRow(e, i);
     const amt = ledgerAmount(e), up = amt > 0, link = !!e.sid;
-    const inner = `<span class="pg-lic ${up ? 'is-up' : ''}">${ic(up ? 'credit-card' : 'magic-wand-fill', 'ic-16')}</span><span class="pg-lmid"><span class="ellipsis">${esc(ledgerTitle(e))}</span><span class="caption faint">${esc(ledgerTime(e))}</span></span><span class="pg-lamt ${up ? 'is-up' : ''}">${up ? '+' : '−'}${num(Math.abs(amt))}</span>${link ? ic('caret-right', 'ic-16 pg-chev') : ''}`;
+    const inner = `<span class="pg-lic ${up ? 'is-up' : ''}">${ic(up ? 'wallet-fill' : 'magic-wand-fill', 'ic-16')}</span><span class="pg-lmid"><span class="ellipsis">${esc(ledgerTitle(e))}</span><span class="caption faint">${esc(ledgerTime(e))}</span></span><span class="pg-lamt ${up ? 'is-up' : ''}">${up ? '+' : '−'}${num(Math.abs(amt))}</span>${link ? ic('caret-right', 'ic-16 pg-chev') : ''}`;
     return link ? `<button class="pg-lrow is-link" data-act="pgLedger" data-arg="${i}">${inner}</button>` : `<div class="pg-lrow">${inner}</div>`;
   }
   const isUp = (e) => ledgerAmount(e) > 0;
@@ -379,7 +379,7 @@
     }
     const balLine = `<p class="muted pg-rc-bal">${ic('wallet-fill', 'ic-16')}${t('topup/balance', { n: num(S.credits || 0) })}</p>`;
     if (mob()) {
-      const mTop = `<header class="m-topbar pg-bar"><button class="ibtn" data-act="pgBack" aria-label="${esc(t('pg/back'))}">${ic('caret-left')}</button><h1>${t('topup/title')}</h1><span class="pg-bar-sp"></span></header>`;
+      const mTop = `<header class="m-topbar pg-bar"><button class="ibtn" data-act="pgBack" aria-label="${esc(t('pg/back'))}">${ic('caret-left')}</button><h1>${t('topup/title')}</h1>${window.demoTag()}<span class="pg-bar-sp"></span></header>`;
       return page(`<main class="page pg pg-rc">${done ? '' : balLine}${card}<div class="pg-rc-foot ${done ? 'is-two' : ''}">${foot}</div></main>`, { mTop, noTab: true, cls: 'is-pg-rc' });
     }
     return page(`<main class="page pg pg-rc"><div class="pg-rc-card"><div class="pg-rc-head"><button class="ibtn ibtn-sm ibtn-secondary" data-act="pgBack" aria-label="${esc(t('pg/back'))}">${ic('caret-left', 'ic-16')}</button><h1>${t('topup/title')}</h1></div>${done ? '' : balLine}${card}<div class="pg-rc-foot ${done ? 'is-two' : ''}">${foot}</div></div></main>`);

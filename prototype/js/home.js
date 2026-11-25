@@ -80,7 +80,7 @@
   const closeLayers = () => { S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; };
 
   // ---------- SH-01 余额弹层 ----------
-  const KIND_IC = { topup: 'credit-card' };
+  const KIND_IC = { topup: 'wallet-fill' };
   window.ledgerRow = function (l) {
     const link = !!l.sid;
     const inner = `<span class="lr-ic ${l.kind === 'topup' ? 'is-topup' : ''}">${ic(KIND_IC[l.kind] || 'magic-wand-fill', 'ic-16')}</span>
@@ -97,7 +97,7 @@
       ${window.creditStats()}
       <div class="menu-label">${t('credit/recent')}</div>
       <div class="cp-list">${rows.length ? rows.map(window.ledgerRow).join('') : window.empty('receipt-fill', t('credit/empty')).replace('class="empty"', 'class="empty is-sm"')}</div>
-      <div class="cp-foot"><button class="btn btn-secondary btn-sm" data-act="viewUsage">${ic('receipt-fill', 'ic-16')}<span class="ellipsis">${t('credit/view-usage')}</span></button><button class="btn btn-primary btn-sm" data-act="creditTopup">${ic('credit-card', 'ic-16')}<span class="ellipsis">${t('credit/topup')}</span></button></div>`;
+      <div class="cp-foot"><button class="btn btn-secondary btn-sm" data-act="viewUsage">${ic('receipt-fill', 'ic-16')}<span class="ellipsis">${t('credit/view-usage')}</span></button><button class="btn btn-primary btn-sm" data-act="creditTopup">${ic('wallet-fill', 'ic-16')}<span class="ellipsis">${t('credit/topup')}</span></button></div>`;
   }
   // 打开余额弹层（电脑下拉 / 手机面板）；账户菜单、通知也调它
   window.openCredit = () => { if (window.isMobile()) { S.menu = null; S.sheet = 'credit'; } else { S.sheet = null; S.menu = 'credit'; } };
