@@ -51,6 +51,8 @@ Object.assign(window.I18N, {
   'mp/ai-st-line': ['线性', '線性', 'Line', 'Nét mảnh'],
   'mp/ai-extra': ['补充要求（可选）', '補充要求（可選）', 'Extra notes (optional)', 'Yêu cầu thêm (tùy chọn)'],
   'mp/ai-extra-ph': ['例如：深蓝科技感，圆润线条', '例如：深藍科技感，圓潤線條', 'e.g. deep blue tech, rounded lines', 'VD: xanh đậm công nghệ, nét bo tròn'],
+  'mp/ai-all': ['全选', '全選', 'Select all', 'Chọn tất cả'],
+  'mp/ai-none': ['全不选', '全不選', 'Clear all', 'Bỏ chọn tất cả'],
   'mp/ai-entries': ['入口清单', '入口清單', 'Entries', 'Danh sách lối vào'],
   'mp/ai-count': ['必交 {r} · 选配 {o}', '必交 {r} · 選配 {o}', '{r} required · {o} optional', '{r} bắt buộc · {o} tùy chọn'],
   'mp/ai-cost': ['先生成 1 个样板 · 20 点，满意后再生成其余 {m} 个 · 约 {c} 点', '先生成 1 個樣板 · 20 點，滿意後再生成其餘 {m} 個 · 約 {c} 點', '1 sample first (20), then the other {m} (≈ {c})', 'Tạo 1 mẫu trước (20), sau đó {m} cái còn lại (≈ {c})'],

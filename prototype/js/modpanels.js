@@ -311,6 +311,8 @@
   A.iaClose = () => { iaStop(); X().E.iconAi = null; };
   A.iaStyle = (s) => { X().E.iconAi.style = s; };
   I.iaExtra = (v) => { X().E.iconAi.extra = v; };
+  // 全选 / 全不选（必交项始终保留）
+  A.iaAll = (v) => { const ia = X().E.iconAi; if (!ia) return false; M(ia.b).items.forEach((it, i) => { ia.picks[i] = v === '1' || isReq(ia.b, it); }); };
   A.iaPick = (i) => { const ia = X().E.iconAi; const it = M(ia.b).items[+i]; if (isReq(ia.b, it)) return false; ia.picks[+i] = !ia.picks[+i]; };
   A.iaSample = () => {
     const x = X(); const ia = x.E.iconAi; if (!ia) return false;
@@ -386,7 +388,7 @@
       const r = its.filter((it) => isReq(b, it)).length, o = its.filter((it, i) => !isReq(b, it) && ia.picks[i]).length;
       body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${aiSvg(its[0].i || 'sparkle-fill', s, x.E.D.theme.primary)}" alt=""><span>${window.I18N['mp/ai-st-' + s] ? t('mp/ai-st-' + s) : t('ad/ics-' + s)}</span></button>`).join('')}</div>`)
         + sec(t('mp/ai-extra'), `<input class="input" data-input="iaExtra" value="${esc(ia.extra)}" placeholder="${esc(t('mp/ai-extra-ph'))}" maxlength="60">`)
-        + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div><div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
+        + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
         : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;

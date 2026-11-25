@@ -63,7 +63,9 @@
     figmaLinked: !!meta0.figmaLinked, projAssets: meta0.projAssets || [],
   });
   // 打开时恢复上次项目的设计
-  (function restore() { const d = LS.get('ed.d.' + E.name, null); if (d && d.v === DV) E.D = d; E.status = LS.get('ed.st.' + E.name, 'designing'); })();
+  // 旧数据迁移：充值图标统一面性（2026-11-26）
+  const migrate = (D) => { try { Object.values(D.m || {}).forEach((m) => (m.items || []).forEach((it) => { if (it.i === 'credit-card') it.i = 'wallet-fill'; })); } catch (e) { /* noop */ } return D; };
+  (function restore() { const d = LS.get('ed.d.' + E.name, null); if (d && d.v === DV) E.D = migrate(d); E.status = LS.get('ed.st.' + E.name, 'designing'); })();
 
   // ---------- 共用接口包装（A 的 core.js；缺失时退化） ----------
   const afford = (n) => (window.canAfford ? window.canAfford(n) : (S.credits || 0) >= n);
@@ -105,7 +107,7 @@
     if ((opts.name && opts.name !== E.name) || opts.template || opts.design) {
       if (opts.name) E.name = opts.name;
       const d = !opts.template && LS.get('ed.d.' + E.name, null);
-      E.D = d && d.v === DV ? d : defaultDesign(opts.template, opts.palette);
+      E.D = d && d.v === DV ? migrate(d) : defaultDesign(opts.template, opts.palette);
       if (opts.design) { E.D = JSON.parse(JSON.stringify(opts.design)); E.D.v = DV; persist(); } // AD：AI 首页设计作为初始设计
       E.past = []; E.future = []; E.checksPassed = false; clearTimeout(expTimer); E.exp.stage = 'ready'; E.exp.dl = {}; E.exp.failed = {};
       const pj = Array.isArray(window.PROJECTS) && window.PROJECTS.find((p) => p.name === E.name);

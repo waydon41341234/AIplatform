@@ -688,3 +688,9 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 /* 右栏 300（840–1199）：素材缩略图收窄，给名称留位置 */
 @media (max-width: 1199px) and (min-width: 840px) { .ed-right .asset .thumb:not(.sq):not(.logo) { width: 72px; height: 24px; } .ed-right .asset .nm { overflow-wrap: anywhere; } }
 @media (max-width: 1199px) and (min-width: 840px) { .ed-right .asset .thumb.logo { width: 64px; font-size: 9px; gap: 2px; padding: 0 4px; } .ed-right .asset .thumb.logo img { width: 14px; height: 14px; } }
+/* 测试修复（AD 回归）：手机画布「内容超出」提示排到画布下方，不在右侧撑出横向滚动 */
+.med-stage { flex-wrap: wrap; align-content: flex-start; }
+.med-stage > .h5-over { flex: 0 0 343px; width: 343px; margin-top: 12px; }
+/* 生成一套图标 · 入口清单 全选 / 全不选 */
+.ia-bulk { display: flex; gap: 8px; margin: -2px 0 8px; }
+.ia-bulk .btn { flex: 1; justify-content: center; }
