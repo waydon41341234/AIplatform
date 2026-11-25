@@ -48,7 +48,7 @@
   const bellBtn = () => `<button class="ibtn ibtn-secondary bell ${window.hasUnread() ? 'has-dot' : ''}" data-act="noticeOpen" aria-label="${esc(t('notice/title'))}">${ic('bell-fill')}</button>`;
   function topbar(solid, lead) {
     const pop = (id, body, cls) => (S.menu === id ? `<div class="menu ${cls}">${body}</div>` : '');
-    return `<header class="topbar desk ${solid ? 'is-solid' : ''}">${lead || ''}
+    return `<header class="topbar desk ${solid ? 'is-solid' : ''}">${lead || ''}${window.demoTag()}
       <div class="rel tb-search-wrap"><label class="tb-search ${S.menu === 'search' ? 'is-open' : ''}">${ic('magnifying-glass', 'ic-16')}<input data-input="q" data-key="searchKey" data-act="searchFocus" value="${esc(S.q)}" placeholder="${esc(t('search/placeholder'))}" autocomplete="off"></label>${pop('search', searchBody(), 'search-pop')}</div>
       <div class="rel">${creditBtn()}${pop('credit', creditBody(), 'credit-pop')}</div>
       <div class="rel"><button class="ibtn ibtn-secondary" data-act="menu:toggle" data-arg="lang" title="${esc(t('nav/language'))}">${ic('globe')}</button>${langMenu()}</div>
@@ -57,7 +57,7 @@
       <div class="rel"><button class="avatar" data-act="menu:toggle" data-arg="account" aria-label="${esc(t('nav/me'))}"></button>${pop('account', accountBody(), 'account-pop')}</div></header>`;
   }
   function mTopbar() {
-    return `<header class="m-topbar"><img class="logo" src="assets/logo-orb.webp" alt="logo"><div class="grow"></div>
+    return `<header class="m-topbar"><img class="logo" src="assets/logo-orb.webp" alt="logo">${window.demoTag()}<div class="grow"></div>
       <button class="ibtn ibtn-secondary" data-act="searchOpen" aria-label="${esc(t('search/placeholder'))}">${ic('magnifying-glass')}</button>
       ${creditBtn()}
       <div class="rel"><button class="ibtn ibtn-secondary" data-act="menu:toggle" data-arg="lang">${ic('globe')}</button>${langMenu()}</div>
@@ -288,7 +288,7 @@
   window.composer = function (where) {
     const mob = window.isMobile();
     const tabs = ['design', 'midnav', 'bottomnav', 'gametype']; // design：AI 首页设计（AD-01，放最前）
-    const tabBtn = (ty) => `<button class="c-tab ${S.c.type === ty ? 'is-on' : ''}" data-act="cType" data-arg="${ty}">${ty === 'design' ? window.ic('layout-fill') : window.typeIcon(ty)}${t('composer/type-' + ty)}</button>`;
+    const tabBtn = (ty) => `<button class="c-tab ${S.c.type === ty ? 'is-on' : ''}" data-act="cType" data-arg="${ty}">${window.typeIcon(ty)}${t('composer/type-' + ty)}</button>`;
     const tabsHtml = `<div class="c-tabs" data-sk="ctabs-${where}">${tabs.map(tabBtn).join('')}<button class="tpl-link" data-act="tplLink">${t('composer/template-link')}</button></div>`;
     if (S.c.type === 'design' && window.AD) return window.AD.composer(where, tabsHtml);
     const menu = (id, body, cls) => (!mob && S.menu === id ? `<div class="menu c-menu ${cls}">${body}</div>` : '');
@@ -359,7 +359,7 @@
   const sm = (h) => h.replace('class="empty"', 'class="empty is-sm"');
   window.overlays = function () {
     let h = '';
-    if (S.sheet === 'spec') h += window.sheet(`<div class="sheet-head"><h3>${t('spec/sheet-title')}</h3></div><div class="spec-menu" style="width:auto;padding:0">${specBody()}</div><button class="btn btn-primary btn-block" style="margin-top:16px" data-act="closeAll">${t('spec/done')}</button>`);
+    if (S.sheet === 'spec' && TYPES[S.c.type]) h += window.sheet(`<div class="sheet-head"><h3>${t('spec/sheet-title')}</h3></div><div class="spec-menu" style="width:auto;padding:0">${specBody()}</div><button class="btn btn-primary btn-block" style="margin-top:16px" data-act="closeAll">${t('spec/done')}</button>`);
     if (S.sheet === 'model') h += window.sheet(`<div class="sheet-head"><h3>${t('sheet/model-title')}</h3></div>${modelBody()}`);
     if (S.sheet === 'color') h += window.sheet(`<div class="sheet-head"><h3>${t('sheet/color-title')}</h3></div>${colorBody()}${S.c.color === 'custom' ? `<button class="btn btn-primary btn-block" style="margin-top:12px" data-act="closeAll">${t('spec/done')}</button>` : ''}`);
     if (S.sheet === 'credit') h += window.sheet(`<div class="credit-sheet">${creditBody()}</div>`, 'is-credit');

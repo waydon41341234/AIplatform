@@ -45,6 +45,8 @@
   function typeIcon(type, cls = '') {
     const on = 'var(--brand)', off = 'var(--icon-3)';
     if (type === 'gametype') return `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="3.75" fill="${on}"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="3.75" fill="${off}"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="3.75" fill="${off}"/><rect x="13" y="13" width="7.5" height="7.5" rx="3.75" fill="${off}"/></svg>`;
+    // 首页设计：整页版式（顶栏、主色 Banner、下方两块），和三类图标页签同一套双色画法（2026-11-26 Waydon：面性部分用蓝色）
+    if (type === 'design') return `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.25" width="17" height="4" rx="2" fill="${off}"/><rect x="3.5" y="9" width="17" height="5.5" rx="2" fill="${on}"/><rect x="3.5" y="16.25" width="7.75" height="4.5" rx="2" fill="${off}"/><rect x="12.75" y="16.25" width="7.75" height="4.5" rx="2" fill="${off}"/></svg>`;
     const a = type === 'midnav' ? [off, on, off] : [off, off, on];
     return `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.25" width="16" height="4.5" rx="2.25" fill="${a[0]}"/><rect x="4" y="9.75" width="16" height="4.5" rx="2.25" fill="${a[1]}"/><rect x="4" y="16.25" width="16" height="4.5" rx="2.25" fill="${a[2]}"/></svg>`;
   }
@@ -260,6 +262,8 @@
 
   // ---------- 演示开关 ----------
   const fq = (qs.get('fail') || '').split(',');
+  // 顶部栏 DEMO 标签（Waydon 2026-11-26：给老板看的演示版本标识）
+  window.demoTag = () => '<span class="demo-tag" title="Demo">DEMO</span>';
   S.demo = { failNext: fq.includes('gen'), loadFail: fq.includes('load'), saveFail: fq.includes('save'), exportFail: fq.includes('export') };
   // 读并清掉「下次生成失败」；提示词含「失败」/ fail 也算失败
   window.takeFail = function (prompt) {
