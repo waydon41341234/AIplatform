@@ -10,8 +10,8 @@
   const LEVELS = [25, 50, 75, 100];
   // 与 editor.js 的 AI 候选滤镜一致（候选预览时画布实时显示）
   const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
-  // PC 显示尺寸（资源规格不变：1080×490 / 1020×300 / 386×244）
-  const BAN = { large: { w: 1200, h: 545 }, general: { w: 1200, h: 353 }, small: { w: 386, h: 244 } };
+  // PC Banner：通栏 1920×564（Waydon 2026-11-25 定），不随 H5 的大 / 一般 / 小规格变化
+  const BAN_PC = { w: PAGE_W, h: 564 };
   const SMALL_GAP = (CONTENT_W - 3 * 386) / 2;
   const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机', null, true], ['极速赛车'], ['德州扑克'], ['捕鱼达人'], ['龙虎斗'], ['21 点'], ['轮盘'], ['麻将胡了'], ['斗地主'], ['电竞竞猜']];
 
@@ -67,14 +67,12 @@
     return `translateX(${-k * (386 + SMALL_GAP)}px)`;
   }
   function banner() {
-    const E = X().E, B = E.D.banner, sz = BAN[B.size] || BAN.general;
+    const E = X().E, B = E.D.banner;
     // 隐藏的轮播图不播放（ED-06），位置按可见序号算
     const v = visIdx(), n = v.length, pos = Math.max(0, v.indexOf(E.slide));
-    const small = B.size === 'small';
-    const slides = v.map((i) => `<div class="slide" style="filter:${slideF(i)};border-radius:${small ? B.corner : 0}px"></div>`).join('');
+    const slides = v.map((i) => `<div class="slide" style="filter:${slideF(i)}"></div>`).join('');
     const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
-    const vpStyle = small ? `width:${CONTENT_W}px;height:${sz.h}px` : `width:${sz.w}px;height:${sz.h}px;border-radius:${B.corner}px`;
-    return `<div class="pc-banner ${small ? 'is-small' : ''}" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="${vpStyle}"><div class="track" data-pc-track data-n="${n}" data-size="${B.size}" style="transform:${bannerShift(n, B.size, pos)}">${slides}</div></div>${ind}</div>`;
+    return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span></div>${ind}</div>`;
   }
   function jackpot() {
     const m = M('jackpot');

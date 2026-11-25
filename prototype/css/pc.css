@@ -140,3 +140,5 @@
 .pc-mfloat .iseg button[data-arg="25"], .pc-mfloat .iseg button[data-arg="75"] { display: none; }
 /* 手机面板 / 全屏预览打开时收起缩放条 */
 body:has(.med-sheet) .pc-mfloat, body:has(.preview-full) .pc-mfloat { display: none; }
+/* PC Banner 通栏 1920×564 的尺寸角标 */
+.pc-banner .pc-spec { position: absolute; right: 24px; bottom: 16px; padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: calc(12px * var(--pc-iz, 1)); line-height: 1.5; pointer-events: none; }
