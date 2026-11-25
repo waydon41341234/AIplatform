@@ -565,7 +565,8 @@
   }
   function desktop() {
     const scale = E.zoom / 50;
-    const canvas = E.device === 'pc'
+    // PC 画布由 E 组 js/pc.js 提供；未加载时保持待设计空状态
+    const canvas = window.PC && E.device === 'pc' ? window.PC.canvas() : E.device === 'pc'
       ? `<div class="pc-empty">${window.empty('wrench-fill', t('ed/pc-todo-title'), t('ed/pc-todo-desc'), `<button class="btn btn-secondary btn-sm" data-act="setDevice" data-arg="h5">${t('ed/back-h5')}</button>`)}</div>`
       : `<div class="ed-stage" style="padding-bottom:${120 + 815 * (scale - 1)}px"><div class="ed-zoom" style="transform:scale(${scale})">${h5()}</div></div>`;
     return `<div class="ed">
@@ -627,7 +628,7 @@
     return `<div class="ed-loading"><div class="ld-card"><img src="assets/logo-orb.webp" alt=""><h3>${t('ed/loading-title')}</h3>${steps.map((k, i) => `<div class="ld-step ${i < E.step ? 'is-done' : i === E.step ? 'is-on' : ''}">${ic(i < E.step ? 'check-circle-fill' : i === E.step ? 'clock-counter-clockwise' : 'clock')}${t(k)}</div>`).join('')}<div class="caption faint" style="margin-top:12px">${t('ed/loading-tip')}</div></div></div>`;
   }
 
-  window.EDX = { E, commit, liveTheme, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName };
+  window.EDX = { E, commit, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
   window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai), escape() { E.dlg = null; E.picker = null; E.mpanel = null; E.preview = false; E.ai = null; } };
 })();

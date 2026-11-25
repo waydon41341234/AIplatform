@@ -1,4 +1,9 @@
-/* 核心：状态、文案、路由、渲染循环、通用组件（菜单/面板/弹窗/提示）。 */
+/* 核心：状态、文案、路由、渲染循环、通用组件（菜单/面板/弹窗/提示）。
+ * 第五轮 A：§0.3 共用接口已就绪（见文件末尾「第五轮 A」段）：
+ *   S.credits / S.ledger / S.notices / S.demo、canAfford(n)、spend(n, kind, vars, sid, rid)、topup(n)、openTopup()、
+ *   pushNotice(o)、takeFail(prompt?)、pickImage(opts, cb)、refSlot(state, act) + refPick / refUpload / refCancel、
+ *   costConfirm(opts) / costConfirmLayer() / lowBalance(n)、tx({k, v}) 文案拼装、fmtTime(x)、ledgerTitle(l)、progressRing(pct)。
+ *   路由 #/templates #/projects #/history #/me #/recharge 已接好（VIEWS.* 由 D 在 pages.js 注册，未注册时落到 VIEWS.todo）。 */
 (function () {
   const LS = {
     get(k, d) { try { const v = localStorage.getItem('proto.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -90,8 +95,11 @@
     const fn = actions[name];
     if (!fn) { console.warn('missing action', name); return; }
     const keepMenu = el.closest('.menu') && el.dataset.keep !== undefined;
+    window.__prevMenu = S.menu; // 分发前打开的菜单（按钮再点一次关掉用）
     if (S.menu && !keepMenu && !name.startsWith('menu:')) S.menu = null;
-    const r = fn(arg, el, e);
+    window.__inAct = true; // 动作内调用的接口不自己重渲染（第五轮 A）
+    let r;
+    try { r = fn(arg, el, e); } finally { window.__inAct = false; }
     if (r !== false) render();
   });
   document.addEventListener('input', (e) => {
@@ -102,7 +110,7 @@
   });
   document.addEventListener('keydown', (e) => {
     const el = e.target.closest('[data-key]');
-    if (el) { const fn = actions[el.dataset.key]; if (fn && fn(e, el) === true) render(); }
+    if (el) { const fn = actions[el.dataset.key]; window.__inAct = true; let r; try { r = fn && fn(e, el); } finally { window.__inAct = false; } if (r === true) render(); }
     if (e.key === 'Escape') {
       if (S.menu || S.sheet || S.dialog || S.drawer || (window.ED && window.ED.isOpen())) { S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; if (window.ED) window.ED.escape(); render(); }
     }
@@ -149,4 +157,194 @@
   Object.assign(window, { t, esc, num, ic, typeIcon, MODEL_LOGO, bp, isMobile, toast, comingSoon, go, render, seg, sheet, dialog, empty, LS });
   window.AFTER_RENDER = [];
   window.addEventListener('DOMContentLoaded', () => { parseRoute(); render(); });
+})();
+
+/* ===== 第五轮 A：§0.3 共用接口（余额 / 流水 / 通知 / 演示开关 / 选图 / 参考图格 / 费用确认）===== */
+(function () {
+  const S = window.S, A = window.ACT, t = window.t, esc = window.esc, ic = window.ic, num = window.num;
+  const qs = new URLSearchParams(location.search);
+
+  // ---------- 余额与流水 ----------
+  const LS = window.LS;
+  S.credits = LS.get('credits', 1280);
+  S.monthUsed = LS.get('monthUsed', 740); // 本月已用（由前 4 条流水算出），spend 时累加
+  S.monthRuns = LS.get('monthRuns', 4); // 本月生成次数
+  let lid = 0;
+  const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  // 流水：{id, kind: sample|rest|one|regen|fill|banner|iconset|topup, amount(扣点为负), vars, sid, rid, time:{k,t} 或 at:时间戳}
+  S.ledger = [
+    { id: 'l' + ++lid, kind: 'sample', amount: -20, vars: { type: 'midnav' }, sid: 's1', rid: 'r11', time: { k: 'common/today-at', t: '10:12' } },
+    { id: 'l' + ++lid, kind: 'rest', amount: -680, vars: { type: 'bottomnav', n: 34 }, sid: 's2', rid: 'r13', time: { k: 'common/yesterday-at', t: '21:08' } },
+    { id: 'l' + ++lid, kind: 'sample', amount: -20, vars: { type: 'bottomnav' }, sid: 's2', rid: 'r13', time: { k: 'common/yesterday-at', t: '20:55' } },
+    { id: 'l' + ++lid, kind: 'one', amount: -20, vars: { type: 'gametype' }, sid: 's3', rid: 'r14', time: { k: 'common/yesterday-at', t: '18:40' } },
+    { id: 'l' + ++lid, kind: 'topup', amount: 1000, vars: {}, time: { k: 'common/date-nov20', t: '09:30' } },
+  ];
+  S.ledger = LS.get('ledger', S.ledger);
+  window.canAfford = (n) => S.credits >= (n || 0);
+  // 扣点：成功那一刻调用。vars.type 写类型代码（midnav / bottomnav / gametype），渲染时自动翻译
+  window.spend = function (n, kind, vars, sid, rid) {
+    n = Math.round(n || 0);
+    if (n <= 0) return;
+    S.credits -= n; S.monthUsed += n; S.monthRuns += 1;
+    S.ledger.unshift({ id: uid('l'), kind: kind || 'one', amount: -n, vars: vars || {}, sid: sid || null, rid: rid || null, at: Date.now() });
+  };
+  // 充值入账（D 的充值页用）：加点、写流水、发通知
+  window.topup = function (n) {
+    S.credits += n;
+    S.ledger.unshift({ id: uid('l'), kind: 'topup', amount: n, vars: {}, at: Date.now() });
+    window.pushNotice({ kind: 'credit', cat: 'sys', title: { k: 'notice/topup', v: { n: num(n) } }, body: { k: 'notice/balance-d', v: { n: num(S.credits) } } });
+  };
+  window.openTopup = function () {
+    S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false;
+    if (window.ED && window.ED.isOpen()) window.ED.escape();
+    S.returnTo = location.hash || '#/home';
+    window.go('recharge');
+  };
+
+  // ---------- 文案拼装 ----------
+  // tx(x)：字符串原样返回；{k, v} 按 key 翻译，v 里的值可以再是 {k, v}；v.type 为类型代码时自动翻译
+  window.tx = function tx(x) {
+    if (x == null) return '';
+    if (typeof x !== 'object') return String(x);
+    const v = {};
+    for (const k in x.v || {}) {
+      const val = x.v[k];
+      v[k] = k === 'type' && typeof val === 'string' && window.I18N['composer/type-' + val] ? t('composer/type-' + val) : tx(val);
+    }
+    return t(x.k, v);
+  };
+  const hm = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  // 时间：{time:{k,t}} 或 {at: 时间戳}
+  window.fmtTime = function (x) {
+    if (x.time) return t(x.time.k, { t: x.time.t });
+    const d = new Date(x.at || Date.now()), day = (q) => new Date(q.getFullYear(), q.getMonth(), q.getDate()).getTime();
+    const diff = Math.round((day(new Date()) - day(d)) / 86400000);
+    if (diff <= 0) return t('common/today-at', { t: hm(d) });
+    if (diff === 1) return t('common/yesterday-at', { t: hm(d) });
+    return t('common/date-at', { m: d.getMonth() + 1, d: d.getDate(), t: hm(d) });
+  };
+  window.ledgerTitle = (l) => window.tx({ k: 'credit/l-' + l.kind, v: l.vars || {} });
+
+  // ---------- 通知 ----------
+  let nid = 0;
+  // 通知：{id, kind: done|failed|export|credit, cat: gen|sys, title, body（字符串或 {k,v}）, sid, rid, name, read, time|at}
+  S.notices = [
+    { id: 'n' + ++nid, kind: 'done', cat: 'gen', title: { k: 'notice/sample-done', v: { type: 'midnav' } }, body: '深蓝科技感，玻璃磨砂质感，圆润线条', sid: 's1', rid: 'r11', read: false, time: { k: 'common/today-at', t: '10:13' } },
+    { id: 'n' + ++nid, kind: 'failed', cat: 'gen', title: { k: 'notice/failed', v: { type: 'gametype' } }, body: { k: 'notice/failed-d' }, sid: 's3', rid: 'rf3', read: false, time: { k: 'common/today-at', t: '09:40' } },
+    { id: 'n' + ++nid, kind: 'export', cat: 'sys', title: { k: 'notice/export-done', v: { name: '星河体育 · 首页' } }, body: { k: 'notice/export-d', v: { list: 'Figma、PNG、JSON', n: 3 } }, name: '星河体育 · 首页', read: true, time: { k: 'common/yesterday-at', t: '22:15' } },
+    { id: 'n' + ++nid, kind: 'done', cat: 'gen', title: { k: 'notice/set-done', v: { type: 'bottomnav', n: 35 } }, body: '金色奢华风，立体浮雕，深色底', sid: 's2', rid: 'r13', read: true, time: { k: 'common/yesterday-at', t: '21:09' } },
+    { id: 'n' + ++nid, kind: 'credit', cat: 'sys', title: { k: 'notice/topup', v: { n: '1,000' } }, body: { k: 'notice/balance-d', v: { n: '1,280' } }, read: true, time: { k: 'common/date-nov20', t: '09:31' } },
+  ];
+  S.notices = LS.get('notices', S.notices);
+  window.pushNotice = function (o) {
+    S.notices.unshift(Object.assign({ id: uid('n'), cat: 'gen', read: false, at: Date.now() }, o, { read: !!o.read }));
+    if (!window.__inAct) window.render(); // 异步回调里调用时立即出红点
+  };
+  window.hasUnread = () => S.notices.some((n) => !n.read);
+
+  // ---------- 本地保存：余额 / 流水 / 通知，刷新后一致（每次渲染后有变化才写）----------
+  let saved = '';
+  const persist = () => {
+    const snap = JSON.stringify([S.credits, S.monthUsed, S.monthRuns, S.ledger, S.notices]);
+    if (snap === saved) return; saved = snap;
+    LS.set('credits', S.credits); LS.set('monthUsed', S.monthUsed); LS.set('monthRuns', S.monthRuns); LS.set('ledger', S.ledger.slice(0, 200)); LS.set('notices', S.notices.slice(0, 100));
+  };
+  window.persistCore = persist;
+  window.addEventListener('DOMContentLoaded', () => { window.AFTER_RENDER.push(persist); });
+  window.addEventListener('pagehide', persist);
+  // 原型重置：?reset=1 清掉本地数据
+  if (qs.get('reset')) { try { Object.keys(localStorage).filter((k) => k.startsWith('proto.')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* noop */ } location.replace(location.pathname + location.hash); }
+
+  // ---------- 演示开关 ----------
+  const fq = (qs.get('fail') || '').split(',');
+  S.demo = { failNext: fq.includes('gen'), loadFail: fq.includes('load'), saveFail: fq.includes('save'), exportFail: fq.includes('export') };
+  // 读并清掉「下次生成失败」；提示词含「失败」/ fail 也算失败
+  window.takeFail = function (prompt) {
+    const p = String(prompt == null ? (S.c && S.c.prompt) || '' : prompt).toLowerCase();
+    const f = S.demo.failNext || p.includes('失败') || p.includes('失敗') || p.includes('fail');
+    S.demo.failNext = false;
+    return f;
+  };
+  A.demoToggle = (k) => { S.demo[k] = !S.demo[k]; };
+
+  // ---------- 选图 ----------
+  // pickImage({accept, maxMB, multiple}, cb)：单选 cb(dataURL, file)；多选 cb([{src, name, file}])。类型 / 大小不合规自己 toast，不回调
+  window.pickImage = function (opts, cb) {
+    opts = Object.assign({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10, multiple: false }, opts || {});
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = opts.accept; inp.multiple = !!opts.multiple; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    const ok = (f) => opts.accept.split(',').some((a) => { a = a.trim(); return a.endsWith('/*') ? f.type.startsWith(a.slice(0, -1)) : f.type === a; });
+    inp.addEventListener('change', () => {
+      const files = Array.from(inp.files || []); inp.remove();
+      if (!files.length) return;
+      const bad = files.filter((f) => !ok(f)), big = files.filter((f) => ok(f) && f.size > opts.maxMB * 1048576);
+      if (bad.length) window.toast(t('composer/ref-bad-type'), { info: true });
+      if (big.length) window.toast(opts.maxMB === 10 ? t('composer/ref-too-big') : t('common/file-too-big', { n: opts.maxMB }), { info: true });
+      const good = files.filter((f) => ok(f) && f.size <= opts.maxMB * 1048576);
+      if (!good.length) return;
+      const read = (f) => new Promise((res) => { const r = new FileReader(); r.onload = () => res({ src: r.result, name: f.name, file: f }); r.readAsDataURL(f); });
+      Promise.all((opts.multiple ? good : good.slice(0, 1)).map(read)).then((arr) => { if (opts.multiple) cb(arr); else cb(arr[0].src, arr[0].file); window.render(); });
+    });
+    inp.click();
+  };
+
+  // ---------- 参考图格（CP-01）----------
+  // refSlot(state, act)：state = {src, name, uploading, pct}。动作名 = act + Pick / Rm / Cancel / View
+  // 选图 + 模拟上传用 refPick(state)（state 会被写入 uploading / pct / src / name），上传期间每 100ms 重渲染
+  const ring = (pct) => { const c = 2 * Math.PI * 10; return `<svg class="ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--fill-1)" stroke-width="2.5"/><circle cx="12" cy="12" r="10" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct / 100)}" transform="rotate(-90 12 12)"/></svg>`; };
+  window.progressRing = ring;
+  window.refSlot = function (st, act) {
+    st = st || {};
+    if (st.uploading) return `<div class="refslot is-uploading skeleton" role="progressbar" aria-valuenow="${st.pct || 0}" title="${esc(t('composer/ref-uploading', { n: st.pct || 0 }))}">${ring(st.pct || 0)}<span class="pct">${st.pct || 0}%</span><span class="rm" data-act="${act}Cancel" data-stop>${ic('x', 'ic-16')}</span></div>`;
+    if (st.src) return `<button class="refslot is-filled" data-act="${act}View" aria-label="${esc(st.name || t('composer/ref-slot'))}"><img class="ref-img" src="${esc(st.src)}" alt=""><span class="rm" data-act="${act}Rm" data-stop aria-label="${esc(t('composer/ref-remove'))}">${ic('x', 'ic-16')}</span><span class="ref-pop"><img src="${esc(st.src)}" alt=""><span class="caption ellipsis">${esc(st.name || '')}</span></span></button>`;
+    return `<button class="refslot" data-act="${act}Pick" aria-label="${esc(t('composer/ref-slot'))}">${ic('plus')}<span>${t('composer/ref-slot')}</span><span class="tip">${t('composer/ref-hint')}</span></button>`;
+  };
+  window.refPick = function (st, done) {
+    window.pickImage({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10 }, (src, file) => window.refUpload(st, src, file ? file.name : '', done));
+  };
+  // 模拟上传约 1 秒
+  window.refUpload = function (st, src, name, done) {
+    const tok = (st._tok = (st._tok || 0) + 1);
+    st.uploading = true; st.pct = 0;
+    const tick = () => {
+      if (st._tok !== tok || !st.uploading) return;
+      st.pct = Math.min(100, st.pct + 10 + Math.round(Math.random() * 5));
+      if (st.pct >= 100) { st.uploading = false; st.pct = 0; st.src = src; st.name = name; if (done) done(); }
+      else setTimeout(tick, 100);
+      window.render();
+    };
+    window.render(); setTimeout(tick, 100);
+  };
+  window.refCancel = (st) => { st.uploading = false; st.pct = 0; st._tok = (st._tok || 0) + 1; };
+
+  // ---------- 费用确认（CP-02）----------
+  // costConfirm({title, body, cost, okLabel, onOk})：余额够 → 确认后 onOk()；余额不足 → 主按钮变「去充值」
+  const narrow = () => window.isMobile() || (S.route === 'editor' && window.innerWidth < 840);
+  window.costConfirm = function (opts) {
+    S.cost = Object.assign({ okLabel: t('confirm/ok') }, opts || {});
+    S.menu = null;
+    if (narrow()) { S.dialog = null; S.sheet = 'cost'; } else { S.sheet = null; S.dialog = 'cost'; }
+    if (!window.__inAct) window.render();
+  };
+  // 单个生成余额不足时直接弹的版本
+  window.lowBalance = (n) => window.costConfirm({ title: t('confirm/low-title'), body: t('confirm/low-one', { n }), cost: n });
+  function costBody() {
+    const o = S.cost || {};
+    const ok = window.canAfford(o.cost), short = (o.cost || 0) - S.credits;
+    return `<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
+      <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
+        <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: num(S.credits) })}</span></div></div>
+      ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by', { n: num(short) })}</div>`}
+      <div class="dialog-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('credit-card', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
+  }
+  window.costConfirmLayer = function () {
+    if (S.dialog === 'cost') return window.dialog(costBody(), 'cost-dialog');
+    if (S.sheet === 'cost') return window.sheet(costBody(), 'cost-sheet');
+    return '';
+  };
+  const closeCost = () => { if (S.dialog === 'cost') S.dialog = null; if (S.sheet === 'cost') S.sheet = null; };
+  A.costCancel = () => { closeCost(); const o = S.cost; S.cost = null; if (o && o.onCancel) o.onCancel(); };
+  A.costOk = () => { closeCost(); const o = S.cost; S.cost = null; if (o && o.onOk) o.onOk(); };
+  A.costTopup = () => { closeCost(); S.cost = null; window.openTopup(); return false; };
 })();
