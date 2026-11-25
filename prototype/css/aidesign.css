@@ -172,6 +172,9 @@
 .ad-bar .tx { min-width: 0; color: var(--text-2); }
 .ad-bar-go { flex: none; height: 30px; padding: 0 12px; border-radius: var(--radius-full); background: var(--brand); color: #fff; font-weight: 500; white-space: nowrap; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; }
 .med-canvas .ad-bar { margin-bottom: -48px; }
+/* 手机：登录态浮条在画布顶部居中，提示条排在它下面，画布内容再下移，互不遮挡（测试修复） */
+.med-canvas:has(> .med-login) > .ad-bar { margin-top: 60px; }
+.med-canvas:has(> .med-login):has(> .ad-bar) .med-stage { padding-top: 108px; }
 @media (max-width: 599px) { .ad-bar .tx { display: none; } }
 
 /* ---------- 单模块重新生成（AD-04）---------- */
@@ -293,4 +296,7 @@
   .ad-composer .c-opt[data-arg="adColor"] > .ellipsis, .ad-composer .c-opt[data-arg="model"] > .ellipsis { display: none; }
   .ad-composer .c-opt[data-arg="adStyle"], .ad-composer .c-opt[data-arg="adIcs"] { flex-shrink: 0; }
   .ad-composer .c-opts > .rel:has(> [data-arg="adStyle"]), .ad-composer .c-opts > .rel:has(> [data-arg="adIcs"]) { flex-shrink: 0; }
+  /* 测试修复：越南语等长文案时，主色 / 模型两个小胶囊不再被压窄（下拉箭头跑到边框外），改由「图标风格」省略 */
+  .ad-composer .c-opts > .rel:has(> [data-arg="adColor"]), .ad-composer .c-opts > .rel:has(> [data-arg="model"]) { flex-shrink: 0; }
+  .ad-composer .c-opts { flex-wrap: wrap; row-gap: 8px; } /* 放不下时换行（下拉菜单仍向下弹，不被裁） */
 }

@@ -167,6 +167,7 @@
     const card = window.projectCard ? window.projectCard(p)
       : `<button class="card" data-act="pgOpenProj" data-arg="${p.pgId}"><div class="cover r-5x6 pg-thumb is-proj" style="--a:${(window.PALETTES || {})[p.tone] ? window.PALETTES[p.tone][0] : '#1678ff'};--b:${(window.PALETTES || {})[p.tone] ? window.PALETTES[p.tone][3] : '#333'}"><i></i><i></i><i></i><i></i><span class="level-tag"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span></div><div class="card-title"><span class="ellipsis" title="${esc(p.name)}">${esc(p.name)}</span><span class="pill-tag ${p.st === 'exported' ? 'is-ok' : ''}">${t('status/' + p.st)}</span></div><div class="caption faint">${t(p.time)}</div></button>`;
     const mid = 'pg-proj:' + p.pgId;
+    if (S.pg.msel) { const on = S.pg.msel.includes(p.pgId); return `<div class="pg-pcard is-msel ${on ? 'is-picked' : ''}">${card}<button class="pg-pick" data-act="pgMselT" data-arg="${p.pgId}" aria-pressed="${on}" aria-label="${esc(p.name)}"><span class="check ${on ? 'is-on' : ''}">${on ? ic('check', 'ic-16') : ''}</span></button></div>`; }
     const open = S.menu === mid || (S.sheet === 'pg-proj' && S.pg.projSel === p.pgId);
     return `<div class="pg-pcard ${open ? 'is-open' : ''}">${card}<button class="pg-more" data-act="${mob() ? 'pgProjSheet' : 'menu:toggle'}" data-arg="${mob() ? p.pgId : mid}" aria-label="more">${ic('dots-three', 'ic-16')}</button>${deskMenu(mid, projMenuItems(p), 'pg-pmenu')}</div>`;
   }
@@ -178,7 +179,8 @@
     const cnt = (f) => all.filter((p) => f === 'all' || p.st === f).length;
     let list = all.filter((p) => P.projF === 'all' || p.st === P.projF);
     if (P.projSort === 'name') list = list.slice().sort((a, b) => a.name.localeCompare(b.name, S.lang));
-    const newBtn = `<button class="btn btn-primary ${mob() ? 'btn-sm' : ''}" data-act="pgNewProj">${ic('plus', 'ic-16')}${t('proj/new')}</button>`;
+    const selBtn = all.length ? `<button class="btn btn-secondary ${mob() ? 'btn-sm' : ''}" data-act="pgMselOn">${ic('check-square-fill', 'ic-16')}${t('proj/select')}</button>` : '';
+    const newBtn = `<div class="pg-head-btns">${selBtn}<button class="btn btn-primary ${mob() ? 'btn-sm' : ''}" data-act="pgNewProj">${ic('plus', 'ic-16')}${t('proj/new')}</button></div>`;
     const sortLabel = t(P.projSort === 'name' ? 'proj/sort-name' : 'proj/sort-recent');
     const sortBody = ['recent', 'name'].map((v) => `<button class="menu-item ${P.projSort === v ? 'is-on' : ''}" data-act="pgSort" data-arg="${v}">${t('proj/sort-' + v)}</button>`).join('');
     const filters = `<div class="pg-filters"><div class="scroll-x pg-seg-wrap" data-sk="pg-projf">${window.seg(['all', 'designing', 'exported'].map((v) => ({ v, html: segCount(t(v === 'all' ? 'filter/all' : 'status/' + v), cnt(v)) })), P.projF, 'pgProjF', 'pg-seg')}</div>
@@ -187,8 +189,31 @@
     if (!all.length) body = emptyBox('folder-fill', t('proj/empty'), `<button class="btn btn-primary btn-sm" data-act="pgNewProj">${ic('plus', 'ic-16')}${t('proj/new')}</button>`);
     else if (!list.length) body = emptyBox('folder-fill', t('proj/empty-filter', { st: t('status/' + P.projF) }), viewAllBtn('pgProjAll'));
     else body = `<div class="pg-grid">${list.map(projCardHtml).join('')}</div>`;
+    // 多选模式：顶部换成工具条（已选 N · 全选 / 全不选 · 删除 · 取消），手机删除栏固定在底部
+    if (P.msel) {
+      P.msel = P.msel.filter((id) => all.some((p) => p.pgId === id));
+      const n = P.msel.length, allOn = list.length && list.every((p) => P.msel.includes(p.pgId));
+      const bar = `<div class="pg-mbar"><b>${t('proj/selected-n', { n })}</b><span class="pg-mbar-sp"></span>
+        <button class="btn btn-ghost btn-sm" data-act="pgMselAll" data-arg="${allOn ? 0 : 1}">${ic(allOn ? 'minus-square-fill' : 'check-square-fill', 'ic-16')}${t(allOn ? 'mp/ai-none' : 'mp/ai-all')}</button>
+        <button class="btn btn-danger btn-sm ${n ? '' : 'is-disabled'}" data-act="pgMselDel">${ic('trash-fill', 'ic-16')}${t('proj/delete-n', { n })}</button>
+        <button class="btn btn-secondary btn-sm" data-act="pgMselOff">${t('confirm/cancel')}</button></div>`;
+      return page(`<main class="page pg is-msel">${head(t('nav/projects'), '', '')}${bar}${filters}${body}</main>`);
+    }
     return page(`<main class="page pg">${head(t('nav/projects'), '', newBtn)}${filters}${body}</main>`);
   }
+  // 多选删除（Waydon 2026-11-26）：选择 → 勾选 / 全选 → 删除 N 个（确认）→ 可撤销；取消 / Esc 退出
+  A.pgMselOn = () => { S.pg.msel = []; S.menu = null; S.sheet = null; };
+  A.pgMselOff = () => { S.pg.msel = null; };
+  A.pgMselT = (id) => { const a = S.pg.msel; if (!a) return false; const i = a.indexOf(id); if (i >= 0) a.splice(i, 1); else a.push(id); };
+  A.pgMselAll = (v) => { const P = S.pg, vis = projects().filter((p) => P.projF === 'all' || p.st === P.projF).map((p) => p.pgId); P.msel = v === '1' ? Array.from(new Set(P.msel.concat(vis))) : P.msel.filter((id) => !vis.includes(id)); };
+  A.pgMselDel = () => { if (!S.pg.msel || !S.pg.msel.length) return false; if (mob()) S.sheet = 'pg-mdel'; else S.dialog = 'pg-mdel'; };
+  A.pgMselDelOk = () => {
+    const arr = projects(), ids = S.pg.msel || [];
+    const removed = arr.map((p, i) => ({ p, i })).filter((x) => ids.includes(x.p.pgId));
+    for (let k = removed.length - 1; k >= 0; k--) arr.splice(removed[k].i, 1);
+    saveProjects(); S.dialog = null; S.sheet = null; S.pg.msel = null;
+    window.toast(t('proj/deleted-n', { n: removed.length }), { ms: 6000, actionLabel: t('ed/am-undo'), action: () => { removed.forEach((x) => { if (!arr.includes(x.p)) arr.splice(Math.min(x.i, arr.length), 0, x.p); }); saveProjects(); window.render(); } });
+  };
   A.pgProjF = (v) => { S.pg.projF = v; };
   A.pgProjAll = () => { S.pg.projF = 'all'; };
   A.pgSort = (v) => { S.pg.projSort = v; S.menu = null; S.sheet = null; };
@@ -418,6 +443,10 @@
       const emptyName = !P.renVal.trim();
       h += wrap('pg-rename', `<div class="dialog-head sheet-head"><h3>${t('proj/rename')}</h3></div><input class="input pg-ren" data-input="pgRenVal" data-key="pgRenKey" value="${esc(P.renVal)}" data-autofocus aria-label="${esc(t('proj/rename'))}">
         <div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-primary ${emptyName ? 'is-disabled' : ''}" data-act="pgRenOk">${t('proj/save')}</button></div>`);
+    }
+    if (S.dialog === 'pg-mdel' || S.sheet === 'pg-mdel') {
+      const n = (P.msel || []).length;
+      h += wrap('pg-mdel', `<h3>${t('proj/delete-n-q', { n })}</h3><p class="muted pg-dp">${t('proj/delete-d')}</p><div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="pgMselDelOk">${t('proj/delete-n', { n })}</button></div>`);
     }
     if (S.dialog === 'pg-del' || S.sheet === 'pg-del') {
       h += wrap('pg-del', `<h3>${t('proj/delete-q')}</h3><p class="muted pg-dp">${t('proj/delete-d')}</p><div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="pgDelOk">${t('proj/delete')}</button></div>`);

@@ -171,3 +171,20 @@ button.pg-row:hover, .pg-row.is-open { background: var(--bg-hover); }
   .pg-drop.is-icon-m { width: 32px; padding: 0; justify-content: center; }
   .pg-drop.is-icon-m span, .pg-drop.is-icon-m .chev { display: none; }
 }
+
+/* 我的项目 · 多选删除 */
+.pg-head-btns { display: flex; gap: var(--space-8); flex: none; }
+.pg-mbar { display: flex; align-items: center; gap: var(--space-8); margin: 0 0 var(--space-16); padding: var(--space-8) var(--space-12); border-radius: var(--radius-lg); background: var(--brand-subtle); }
+.pg-mbar b { font-weight: 600; font-size: var(--fs-body); }
+.pg-mbar-sp { flex: 1; }
+.pg-mbar .is-disabled { opacity: .4; pointer-events: none; }
+.pg-pcard.is-msel > .card { pointer-events: none; transition: transform .15s; }
+.pg-pick { position: absolute; inset: 0; z-index: 2; background: transparent; border: 0; border-radius: var(--radius-lg); cursor: pointer; display: flex; align-items: flex-start; justify-content: flex-end; padding: var(--space-8); }
+.pg-pick .check { background: var(--bg-surface); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.pg-pick .check.is-on { background: var(--brand); }
+.pg-pcard.is-picked .pg-pick { box-shadow: inset 0 0 0 2px var(--brand); }
+.pg-pcard.is-picked > .card { transform: scale(.97); }
+@media (max-width: 599px) {
+  .pg.is-msel { padding-bottom: 120px; }
+  .pg-mbar { position: fixed; left: 12px; right: 12px; bottom: calc(var(--nav-tabbar-height) + env(safe-area-inset-bottom) + 8px); z-index: 41; margin: 0; background: var(--bg-surface); box-shadow: 0 6px 24px rgba(0,0,0,.18); flex-wrap: wrap; }
+}

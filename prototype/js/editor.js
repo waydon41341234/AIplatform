@@ -9,6 +9,7 @@
     blue: ['#1678ff', '#333333', '#666666', '#999999', '#cccccc', '#e3e3e3', '#f8f8f8', '#ffffff', '#04be02', '#ea4e3d', '#ffaa09'],
     gold: ['#c9963b', '#2b2620', '#6b6256', '#9c9286', '#cfc7bc', '#e8e0d4', '#f7f3ec', '#ffffff', '#2fa84f', '#d9472b', '#f2a20c'],
     green: ['#10b26c', '#1f2a24', '#58665e', '#8e9a93', '#c5cdc8', '#dfe6e2', '#f4f8f6', '#ffffff', '#3a86ff', '#ef4444', '#ffaa09'],
+    platinum: ['#c8a96a', '#2b2a28', '#6b6863', '#9a968f', '#cfcac2', '#e8e4dd', '#f7f6f3', '#ffffff', '#2fa84f', '#d9472b', '#e0a83a'],
     purple: ['#7b4dff', '#25213a', '#5f5a75', '#948faa', '#c9c5da', '#e4e1ef', '#f6f5fb', '#ffffff', '#12b886', '#f03e5e', '#ff9f1c'],
   };
   const preset = (k) => Object.fromEntries(KEYS.map((key, i) => [key, PRESETS[k][i]]));
@@ -38,7 +39,7 @@
     'classic-blue': { preset: 'blue', order: ORDER9, size: 'general', slides: SLIDE_F },
     'midnight-gold': { preset: 'gold', order: ORDER9, size: 'large', slides: ['sepia(.6) saturate(1.3)', 'sepia(.4) hue-rotate(-15deg)', 'sepia(.8) brightness(.9)'] },
     'fresh-green': { preset: 'green', order: ['banner', 'midnav', 'gamemenu', 'gamecards', 'jackpot', 'footer'], size: 'general', slides: ['hue-rotate(60deg)', 'hue-rotate(80deg) saturate(.9)', 'hue-rotate(40deg) brightness(1.05)'] },
-    'western-white': { preset: 'purple', order: ['banner', 'gamemenu', 'gamecards', 'midnav', 'footer', 'jackpot'], size: 'small', slides: ['hue-rotate(220deg)', 'hue-rotate(250deg) saturate(.8)', 'grayscale(.3) hue-rotate(200deg)'] },
+    'western-white': { preset: 'platinum', order: ['banner', 'gamemenu', 'gamecards', 'midnav', 'footer', 'jackpot'], size: 'small', slides: ['hue-rotate(220deg)', 'hue-rotate(250deg) saturate(.8)', 'grayscale(.3) hue-rotate(200deg)'] },
     'festive-red': { preset: 'gold', order: ORDER9, size: 'large', slides: ['hue-rotate(-50deg) saturate(1.6)', 'hue-rotate(-70deg) saturate(1.4)', 'hue-rotate(-40deg) saturate(1.8)'] },
   };
   const tplOf = (k) => TPL[k] || TPL['classic-blue'];
@@ -318,7 +319,7 @@
   const segBtns = (opts, cur, act) => window.seg(opts, cur, act);
   const TPLS = () => { const seen = {}; return (window.TEMPLATES || Object.keys(TPL).map((k) => ({ k, meta: k === 'midnight-gold' || k === 'festive-red' ? 'pro' : 'standard', f: 'classic' }))).filter((x) => (seen[x.k] ? false : (seen[x.k] = 1))); };
   const tplMeta = (k) => (TPLS().find((x) => x.k === k) || { meta: 'standard' }).meta;
-  const tplThumb = (k, cls = '') => { const p = PRESETS[tplOf(k).preset]; return `<span class="tpl-th ${cls}" style="background:linear-gradient(160deg,${p[0]},${p[7]} 70%,${p[10]})"><img src="assets/thumbs/tpl-${k}.png" alt="" onerror="this.remove()"></span>`; };
+  const tplThumb = (k, cls = '', bare = false) => { const p = PRESETS[tplOf(k).preset]; return `<span class="tpl-th ${cls}" style="background:linear-gradient(160deg,${p[0]},${p[7]} 70%,${p[10]})">${bare ? '' : `<img src="assets/thumbs/tpl-${k}.png" alt="" onerror="this.remove()">`}</span>`; };
   function tplRow() {
     return `<div class="tpl-row">${tplThumb(E.D.template)}<span class="tx"><b class="ellipsis">${t('template/' + E.D.template)}</b><span class="caption faint">${t('template/meta-' + tplMeta(E.D.template))}</span></span><button class="btn btn-secondary btn-sm" data-act="edOpenTpl">${t('ed/tpl-switch')}</button></div>`;
   }
@@ -471,7 +472,7 @@
     if (b === 'banner' && E.ai) return aiPanel();
     if (E.iconAi && E.iconAi.b === b) return window.MP.aiPanel();
     // AD-04：侧边栏在电脑画布上没有浮动工具条，「AI 重新生成」放在面板标题右侧（测试修复）
-    const adBtn = b === 'sidebar' && window.AD ? `<span style="flex:1"></span>${window.AD.toolBtn(id, true)}` : '';
+    const adBtn = b === 'sidebar' && window.AD && !mobileEd() ?`<span style="flex:1"></span>${window.AD.toolBtn(id, true)}` : '';
     const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() : bannerColor());
@@ -721,7 +722,7 @@
   }
   A.edOpenTpl = () => { E.tpl = { step: 'list', chip: 'all', k: null, keep: true, busy: false }; E.dlg = 'tplpick'; E.picker = null; S.menu = null; if (E.mpanel === 'pages') E.mpanel = null; };
   A.edTplChip = (c) => { E.tpl.chip = c; };
-  A.edTplPick = (k) => { if (k === E.D.template || tplMeta(k) === 'pro') return false; E.tpl.k = k; E.tpl.step = 'preview'; E.tpl.keep = true; };
+  A.edTplPick = (k) => { if (k === E.D.template || !window.tplOpen(k)) return false; E.tpl.k = k; E.tpl.step = 'preview'; E.tpl.keep = true; };
   A.edTplBack = () => { if (E.tpl.busy) return false; E.tpl.step = 'list'; E.tpl.k = null; };
   A.edTplKeep = (v) => { E.tpl.keep = v === '1'; };
   A.edTplUse = () => {
@@ -750,8 +751,8 @@
       const chips = ['all', 'classic', 'western', 'minimal', 'dark', 'festive'];
       const list = TPLS().filter((p) => T.chip === 'all' || p.f === T.chip);
       const card = (p) => {
-        const cur = p.k === E.D.template, pro = p.meta === 'pro';
-        return `<button class="tpl-card ${cur ? 'is-cur' : ''} ${pro ? 'is-off' : ''}" data-act="edTplPick" data-arg="${p.k}" ${cur || pro ? 'aria-disabled="true"' : ''}>${tplThumb(p.k, 'big')}${cur ? `<span class="pill-tag tpl-tag">${t('ed/tpl-current')}</span>` : ''}${pro ? `<span class="pill-tag is-gray tpl-tag">${t('level/coming-soon')}</span>` : ''}<span class="nm ellipsis">${t('template/' + p.k)}</span><span class="caption faint">${t('template/meta-' + p.meta)}</span></button>`;
+        const cur = p.k === E.D.template, pro = !window.tplOpen(p.k); // 未开放：只显示底板色
+        return `<button class="tpl-card ${cur ? 'is-cur' : ''} ${pro ? 'is-off' : ''}" data-act="edTplPick" data-arg="${p.k}" ${cur || pro ? 'aria-disabled="true"' : ''}>${tplThumb(p.k, 'big', pro)}${cur ? `<span class="pill-tag tpl-tag">${t('ed/tpl-current')}</span>` : ''}${pro ? `<span class="pill-tag is-gray tpl-tag">${t('level/coming-soon')}</span>` : ''}<span class="nm ellipsis">${t('template/' + p.k)}</span><span class="caption faint">${t('template/meta-' + p.meta)}</span></button>`;
       };
       return `<div class="dialog-head"><h3>${t('ed/tpl-switch')}</h3>${x}</div><div class="filters scroll-x tpl-chips">${chips.map((c) => `<button class="chip ${T.chip === c ? 'is-on' : ''}" data-act="edTplChip" data-arg="${c}">${t('filter/' + c)}</button>`).join('')}</div>
         <div class="tpl-grid" data-sk="tplgrid">${list.length ? list.map(card).join('') : `<div class="empty is-sm"><div class="ico">${ic('squares-four-fill', 'ic-24')}</div><h3>—</h3></div>`}</div>`;

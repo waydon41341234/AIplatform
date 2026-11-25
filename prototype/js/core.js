@@ -114,6 +114,7 @@
     const el = e.target.closest('[data-key]');
     if (el) { const fn = actions[el.dataset.key]; window.__inAct = true; let r; try { r = fn && fn(e, el); } finally { window.__inAct = false; } if (r === true) render(); }
     if (e.key === 'Escape') {
+      if (!S.menu && !S.sheet && !S.dialog && S.pg && S.pg.msel) { S.pg.msel = null; render(); return; }
       if (S.menu || S.sheet || S.dialog || S.drawer || (window.ED && window.ED.isOpen())) { S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; if (window.ED) window.ED.escape(); render(); }
     }
   });
@@ -147,7 +148,7 @@
     if (window.AFTER_RENDER) window.AFTER_RENDER.forEach((f) => f());
     renderToasts();
   }
-  window.addEventListener('hashchange', () => { parseRoute(); S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; window.scrollTo(0, 0); render(); });
+  window.addEventListener('hashchange', () => { parseRoute(); if (S.pg) S.pg.msel = null; S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; window.scrollTo(0, 0); render(); });
   window.addEventListener('resize', () => { const b = bp(); if (b !== lastBp) { lastBp = b; S.menu = null; S.sheet = null; S.drawer = false; render(); } });
 
   // ---------- 通用片段 ----------

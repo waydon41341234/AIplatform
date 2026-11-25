@@ -39,7 +39,7 @@ import json
 a_map = ('<script>window.A_ = ' + json.dumps(assets) + ''';
 (function () {
   // 先在 innerHTML / insertAdjacentHTML 写入前把 assets/ 路径换成内嵌数据，避免发出失败请求
-  const sub = (h) => typeof h === 'string' && h.includes('assets/') ? h.replace(/(["'(])assets\/([\w./-]+)/g, (m, q, k) => window.A_[k] ? q + window.A_[k] : m) : h;
+  const sub = (h) => typeof h === 'string' && h.includes('assets/') ? h.replace(/(["'(])assets\\/([\\w./-]+)/g, (m, q, k) => window.A_[k] ? q + window.A_[k] : m) : h;
   const d = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
   Object.defineProperty(Element.prototype, 'innerHTML', { get: d.get, set(v) { d.set.call(this, sub(v)); }, configurable: true });
   const ia = Element.prototype.insertAdjacentHTML; Element.prototype.insertAdjacentHTML = function (pos, h) { return ia.call(this, pos, sub(h)); };

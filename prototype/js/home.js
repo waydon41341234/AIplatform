@@ -6,6 +6,7 @@
   const PALETTES = {
     blue: ['#1678ff', '#04be02', '#ffaa09', '#333333'], gold: ['#c9963b', '#2fa84f', '#f2a20c', '#2b2620'],
     green: ['#10b26c', '#3a86ff', '#ffaa09', '#1f2a24'], purple: ['#7b4dff', '#12b886', '#ff9f1c', '#25213a'],
+    platinum: ['#c8a96a', '#9a968f', '#e0a83a', '#2b2a28'], // 白金（2026-11-26，版式「白金 · 简约」用，不进创作框色板下拉）
   };
   window.TYPES = TYPES; window.PALETTES = PALETTES;
   S.c = { type: 'midnav', qty: 'one', quality: 'std', model: 'gpt', color: 'follow', custom: ['#0a84ff', '#ffffff', '#0a84ff', '#8e8e93'], prompt: '', refSt: { src: null, name: '', uploading: false, pct: 0 } };
@@ -23,11 +24,12 @@
     { id: 'history', key: 'nav/history', icon: 'image-fill', route: 'history' },
   ];
   function current() { return S.route === 'todo' ? S.routeArg : S.route; }
+  const auOff = () => !!(window.AU && window.AU.off()); // AU：未登录时外壳换成登录入口（js/auth.js）
   function sidebar() {
     const exp = (S.route === 'workbench' ? S.wbSidebar : S.sidebarExpanded) && window.bp() === 'desktop';
     const cur = current();
     const wbOn = S.route === 'workbench' && (!S.activeSession || S.routeArg === 'new');
-    const wb = exp
+    const wb = auOff() ? window.AU.sbBlock(exp) : exp
       ? `<div class="sb-wb"><button class="nav ${wbOn ? 'is-on' : ''}" data-act="go" data-arg="workbench">${ic('magic-wand-fill', 'is-brand')}<span>${t('nav/workbench')}</span></button><button class="ibtn ibtn-sm chev" data-act="toggleHistory" aria-label="toggle">${ic(S.historyOpen ? 'caret-down' : 'caret-right', 'ic-16')}</button></div>
         ${S.historyOpen ? `<div class="sb-tools"><label class="sb-search">${ic('magnifying-glass', 'ic-16')}<input data-input="sessSearch" value="${esc(S.sessSearch || '')}" placeholder="${esc(t('workbench/search-sessions'))}"></label><button class="ibtn ibtn-sm" style="color:var(--brand)" data-act="newChat" aria-label="${esc(t('nav/new-chat'))}">${ic('plus', 'ic-16')}</button></div>${window.sessionList('sb')}` : ''}`
       : `<button class="nav ${S.route === 'workbench' ? 'is-on' : ''}" data-act="go" data-arg="workbench">${ic('magic-wand-fill', 'is-brand')}<span>${t('nav/workbench')}</span></button>
@@ -50,19 +52,19 @@
     const pop = (id, body, cls) => (S.menu === id ? `<div class="menu ${cls}">${body}</div>` : '');
     return `<header class="topbar desk ${solid ? 'is-solid' : ''}">${lead || ''}${window.demoTag()}
       <div class="rel tb-search-wrap"><label class="tb-search ${S.menu === 'search' ? 'is-open' : ''}">${ic('magnifying-glass', 'ic-16')}<input data-input="q" data-key="searchKey" data-act="searchFocus" value="${esc(S.q)}" placeholder="${esc(t('search/placeholder'))}" autocomplete="off"></label>${pop('search', searchBody(), 'search-pop')}</div>
-      <div class="rel">${creditBtn()}${pop('credit', creditBody(), 'credit-pop')}</div>
+      ${auOff() ? '' : `<div class="rel">${creditBtn()}${pop('credit', creditBody(), 'credit-pop')}</div>`}
       <div class="rel"><button class="ibtn ibtn-secondary" data-act="menu:toggle" data-arg="lang" title="${esc(t('nav/language'))}">${ic('globe')}</button>${langMenu()}</div>
       <button class="ibtn ibtn-secondary" data-act="setTheme" title="${esc(t(S.theme === 'dark' ? 'nav/theme-dark' : 'nav/theme-light'))}">${ic(S.theme === 'dark' ? 'moon-fill' : 'sun-fill')}</button>
-      <div class="rel">${bellBtn()}${pop('notice', noticeBody(false), 'notice-pop')}</div>
-      <div class="rel"><button class="avatar" data-act="menu:toggle" data-arg="account" aria-label="${esc(t('nav/me'))}"></button>${pop('account', accountBody(), 'account-pop')}</div></header>`;
+      ${auOff() ? window.AU.deskBtns() : `<div class="rel">${bellBtn()}${pop('notice', noticeBody(false), 'notice-pop')}</div>
+      <div class="rel"><button class="avatar" data-act="menu:toggle" data-arg="account" aria-label="${esc(t('nav/me'))}"></button>${pop('account', accountBody(), 'account-pop')}</div>`}</header>`;
   }
   function mTopbar() {
     return `<header class="m-topbar"><img class="logo" src="assets/logo-orb.webp" alt="logo">${window.demoTag()}<div class="grow"></div>
       <button class="ibtn ibtn-secondary" data-act="searchOpen" aria-label="${esc(t('search/placeholder'))}">${ic('magnifying-glass')}</button>
-      ${creditBtn()}
+      ${auOff() ? '' : creditBtn()}
       <div class="rel"><button class="ibtn ibtn-secondary" data-act="menu:toggle" data-arg="lang">${ic('globe')}</button>${langMenu()}</div>
       <button class="ibtn ibtn-secondary" data-act="setTheme">${ic(S.theme === 'dark' ? 'moon-fill' : 'sun-fill')}</button>
-      ${bellBtn()}</header>`;
+      ${auOff() ? window.AU.mBtn() : bellBtn()}</header>`;
   }
   function tabbar() {
     const cur = current();
@@ -160,9 +162,9 @@
     const seen = {};
     const tpls = window.TEMPLATES.filter((x) => { if (seen[x.k]) return false; seen[x.k] = 1; return has(t('template/' + x.k)) || has(t('filter/' + x.f)); })
       .map((x) => ({ act: 'tpl:' + x.k, html: `<span class="sr-thumb r-3x4" style="background:${toneGrad(thumbTone(x))}"></span><span class="sr-main"><span class="ellipsis">${hl(t('template/' + x.k), q)}</span><span class="caption faint ellipsis">${esc(t('filter/' + x.f))} · ${esc(t('template/meta-' + x.meta))}</span></span>` }));
-    const projs = window.PROJECTS.filter((p) => has(p.name))
+    const projs = (auOff() ? [] : window.PROJECTS).filter((p) => has(p.name))
       .map((p) => ({ act: 'proj:' + p.name, html: `<span class="sr-thumb r-5x6" style="background:${toneGrad(p.tone)}"></span><span class="sr-main"><span class="ellipsis">${hl(p.name, q)}</span></span><span class="pill-tag ${p.st === 'exported' ? 'is-ok' : 'is-gray'}">${t('status/' + p.st)}</span>` }));
-    const sess = (S.sessions || []).filter((s) => has(s.title))
+    const sess = (auOff() ? [] : S.sessions || []).filter((s) => has(s.title))
       .map((s) => ({ act: 'sess:' + s.id, html: `<span class="sr-ic">${ic('magic-wand-fill', 'ic-16')}</span><span class="sr-main"><span class="ellipsis">${hl(s.title, q)}</span></span><span class="caption faint">${t('ws/' + ((s.records && s.records[0] && s.records[0].day) || 'today'))}</span>` }));
     return [['templates', tpls], ['projects', projs], ['sessions', sess]];
   }
@@ -388,12 +390,17 @@
   // 项目列表存 LS：新建 / 重命名 / 删除（D 的页面直接改 window.PROJECTS 数组）刷新后保持一致
   let projSaved = '';
   window.AFTER_RENDER.push(() => { const s = JSON.stringify(window.PROJECTS); if (s !== projSaved) { projSaved = s; window.LS.set('projects', window.PROJECTS); } });
+  // 目前只开放 经典蓝 和 白金（western-white，名字已改为「白金 · 简约」）；其余版式只显示底板色 +「暂未开放」（Waydon 2026-11-26）
+  const TPL_OPEN = ['classic-blue', 'western-white'];
+  window.tplOpen = (k) => TPL_OPEN.includes(k);
+  const soonToast = () => window.toast(t('tpl/soon-toast'), { info: true });
+  A.tplSoon = () => { soonToast(); return false; };
   const TEMPLATES = (window.TEMPLATES = [
     { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' }, { k: 'midnight-gold', meta: 'pro', f: 'dark', tone: 'gold' }, { k: 'fresh-green', meta: 'standard', f: 'minimal', tone: 'green' },
-    { k: 'western-white', meta: 'standard', f: 'western', tone: 'purple' }, { k: 'festive-red', meta: 'pro', f: 'festive', tone: 'gold' }, { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' },
+    { k: 'western-white', meta: 'standard', f: 'western', tone: 'platinum' }, { k: 'festive-red', meta: 'pro', f: 'festive', tone: 'gold' }, { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' },
   ]);
   // 模板 → 配色（沿用编辑器 setTemplate 的 map；新模板没写 tone 时按名字猜）
-  const TPL_TONE = { 'classic-blue': 'blue', 'midnight-gold': 'gold', 'fresh-green': 'green', 'western-white': 'purple', 'festive-red': 'gold', 'ocean-blue': 'blue', 'black-gold': 'gold', 'spring-red': 'gold', 'mini-gray': 'purple', 'western-blue': 'blue' };
+  const TPL_TONE = { 'classic-blue': 'blue', 'midnight-gold': 'gold', 'fresh-green': 'green', 'western-white': 'platinum', 'festive-red': 'gold', 'ocean-blue': 'blue', 'black-gold': 'gold', 'spring-red': 'gold', 'mini-gray': 'purple', 'western-blue': 'blue' };
   const tplTone = (x) => x.tone || TPL_TONE[x.k] || 'blue';
   window.tplTone = (k) => TPL_TONE[k] || 'blue';
   const toneGrad = (tone) => { const p = PALETTES[tone] || MINI_PAL[tone] || PALETTES.blue; return `linear-gradient(160deg, ${p[0]}, ${p[3]})`; };
@@ -411,7 +418,7 @@
   window.kickThumbs = kickThumbs;
   // 卡片 HTML（D 的新页面复用）：extra 放进封面右上（例如「⋯」按钮）
   window.projectCard = (p, extra = '') => { kickThumbs(); return `<div class="card" role="button" tabindex="0" data-act="openProject" data-arg="${esc(p.name)}">${cover('assets/thumbs/project-' + (p.tone || 'blue') + '.png', 'r-5x6', levelTag() + extra)}<div class="card-title"><span class="ellipsis" title="${esc(p.name)}">${esc(p.name)}</span><span class="pill-tag ${p.st === 'exported' ? 'is-ok' : ''}">${t('status/' + p.st)}</span></div><div class="caption faint">${p.timeText ? esc(p.timeText) : t(p.time)}</div></div>`; };
-  window.templateCard = (x, extra = '') => { kickThumbs(); return `<div class="card" role="button" tabindex="0" data-act="openTplPreview" data-arg="${x.k}">${cover('assets/thumbs/tpl-' + x.k + '.png', 'r-3x4', extra)}<div class="card-title"><span class="ellipsis">${t('template/' + x.k)}</span></div><div class="caption faint">${t('template/meta-' + x.meta)}</div></div>`; };
+  window.templateCard = (x, extra = '') => { if (!window.tplOpen(x.k)) return `<div class="card is-soon" role="button" tabindex="0" data-act="tplSoon" data-arg="${x.k}"><div class="cover r-3x4 tpl-soon-cover" style="background:${toneGrad(thumbTone(x))}"><span class="pill-tag is-gray tpl-soon-tag">${t('level/coming-soon')}</span>${extra}</div><div class="card-title"><span class="ellipsis">${t('template/' + x.k)}</span></div><div class="caption faint">${t('level/coming-soon')}</div></div>`; kickThumbs(); return `<div class="card" role="button" tabindex="0" data-act="openTplPreview" data-arg="${x.k}">${cover('assets/thumbs/tpl-' + x.k + '.png', 'r-3x4', extra)}<div class="card-title"><span class="ellipsis">${t('template/' + x.k)}</span></div><div class="caption faint">${t('template/meta-' + x.meta)}</div></div>`; };
   // role=button 的卡片支持回车 / 空格
   document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); } });
   A.openProject = (name) => {
@@ -440,6 +447,7 @@
       <div class="m-bottom">${icons(5, 'm-bi')}</div></div>`;
   };
   window.openTplPreview = function (k) {
+    if (!window.tplOpen(k)) { soonToast(); return; }
     S.tplK = k; S.tplReady = false; S.menu = null;
     if (window.isMobile()) { S.dialog = null; S.sheet = 'tpl'; } else { S.sheet = null; S.dialog = 'tpl'; }
     const tok = (S.tplTok = (S.tplTok || 0) + 1);
@@ -466,6 +474,7 @@
   }
   // 新建项目弹窗（D 的「我的项目」也调它）
   window.openNewProject = function (opts = {}) {
+    if (opts.template && !window.tplOpen(opts.template)) { soonToast(); return; }
     S.np = { name: opts.name || defaultName(), level: 'standard', template: opts.template || null, design: opts.design || null, from: opts.from || '', fresh: true };
     S.menu = null;
     if (window.isMobile()) { S.dialog = null; S.sheet = 'newproj'; } else { S.sheet = null; S.dialog = 'newproj'; }
@@ -516,8 +525,8 @@
     const inner = `<main class="page">
       <section class="hero"><img class="hero-orb" src="assets/logo-orb.webp" alt=""><h1>${t('home/greeting')}</h1><p>${t('home/subtitle')}</p>${window.composer('home')}</section>
       <section class="section"><div class="section-head"><h2>${t('section/level')}</h2></div><div class="levels">${lv(1, 'standard', true)}${lv(2, 'pro', false)}${lv(3, 'full', false)}</div></section>
-      <section class="section"><div class="section-head"><h2>${t('section/recent')}</h2><button class="view-all" data-act="go" data-arg="projects">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
-        <div class="cards" data-sk="recent">${window.PROJECTS.slice(0, 6).map((p) => window.projectCard(p)).join('')}</div></section>
+      ${auOff() ? window.AU.homeCard() : `<section class="section"><div class="section-head"><h2>${t('section/recent')}</h2><button class="view-all" data-act="go" data-arg="projects">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
+        <div class="cards" data-sk="recent">${window.PROJECTS.slice(0, 6).map((p) => window.projectCard(p)).join('')}</div></section>`}
       <section class="section" id="sec-templates"><div class="section-head"><h2>${t('section/templates')}</h2><button class="view-all" data-act="go" data-arg="templates">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
         <div class="filters scroll-x" data-sk="filters">${['all', 'classic', 'western', 'minimal', 'dark', 'festive'].map((f) => `<button class="chip ${S.filter === f ? 'is-on' : ''}" data-act="filter" data-arg="${f}">${t('filter/' + f)}</button>`).join('')}</div>
         <div class="cards ${tpls.length ? '' : 'is-empty'}" data-sk="tpls">${tpls.length ? tpls.slice(0, 6).map((x) => window.templateCard(x)).join('') : tplEmpty}</div></section>
