@@ -204,9 +204,9 @@ a { color: var(--link); text-decoration: none; }
 .c-tab:first-child { border-top-left-radius: var(--radius-xl); }
 .c-tab .ic { width: 16px; height: 16px; }
 .c-tab.is-on { background: var(--bg-raised); color: var(--text); font-weight: 500; }
-.c-tab.is-on::before, .c-tab.is-on::after { content: ""; position: absolute; bottom: 0; width: 12px; height: 12px; background: radial-gradient(circle at 0 0, transparent 12px, var(--bg-raised) 12.5px); }
+.c-tab.is-on::before, .c-tab.is-on::after { content: ""; position: absolute; bottom: 0; width: 12px; height: 12px; background: radial-gradient(circle at 100% 0, transparent 12px, var(--bg-raised) 12.5px); }
 .c-tab.is-on::after { right: -12px; }
-.c-tab.is-on::before { left: -12px; background: radial-gradient(circle at 100% 0, transparent 12px, var(--bg-raised) 12.5px); }
+.c-tab.is-on::before { left: -12px; background: radial-gradient(circle at 0 0, transparent 12px, var(--bg-raised) 12.5px); }
 .c-tab:first-child.is-on::before { display: none; }
 .c-tabs .tpl-link { margin-left: auto; align-self: center; color: var(--link); font-size: var(--fs-caption); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding-left: var(--space-8); }
 .c-box { position: relative; background: var(--bg-raised); border-radius: 0 0 var(--radius-xl) var(--radius-xl); padding: var(--space-16) var(--space-20) var(--space-16); }
