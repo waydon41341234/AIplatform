@@ -21,6 +21,10 @@
 
 截图见 `docs/figma-shots/`。尚未完成的画面按 `docs/figma-design-plan.md` 的清单继续。
 
+## HTML 交互原型（2026-11-25）
+
+`prototype/`：把 Figma 首页、工作台、编辑器内页（电脑 + 手机、日 / 夜、四种语言）搭成可点击的静态 HTML，用来验证交互，已用 Playwright 自测（4 档宽度、日夜、四语、随机点击无报错、无横向滚动）。打开方式与交互清单见 `prototype/README.md`。原型缺的状态已先补进 Figma（切图 → 组件 → 页面）。
+
 ## 代码（首版，待按 Figma 更新）
 
 首版可运行：`npm install && npm run dev`，`npm run check` 通过（33 项测试）。功能清单见 README。

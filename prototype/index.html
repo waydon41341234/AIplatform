@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hans" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>定制设计平台 · 交互原型</title>
+<link rel="icon" href="assets/logo-orb.webp">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="js/icons.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/core.js"></script>
+<script src="js/home.js"></script>
+<script src="js/workbench.js"></script>
+<script src="js/editor.js"></script>
+<script>
+  /* 原型专用的快捷切换条（右下角，手机宽度隐藏），不属于平台界面。 */
+  window.PROTO_BAR = function () {
+    var L = window.LANGS.map(function (l) { return '<button data-act="setLang" data-arg="' + l.code + '"' + (S.lang === l.code ? ' style="background:#ffffff33"' : '') + '>' + l.code + '</button>'; }).join('');
+    return '<div class="proto-bar" aria-hidden="true"><button data-act="setTheme">' + (S.theme === 'dark' ? '☾' : '☀') + '</button>' + L + '</div>';
+  };
+</script>
+</body>
+</html>
