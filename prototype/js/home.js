@@ -450,10 +450,10 @@
       <div class="tpl-meta"><span class="level-tag is-inline"><img src="assets/badge-tier${x.meta === 'pro' ? 2 : 1}.png" alt="">${t('level/' + (x.meta === 'pro' ? 'pro' : 'standard') + '-title')}</span><span class="caption muted">${t('template/meta-' + x.meta)}</span></div>
       <div class="dots tpl-dots">${pal.slice(0, 3).map((c) => `<i style="background:${c}"></i>`).join('')}</div>
       <p class="muted body-sm">${t('tpl/desc')}</p>
-      <div class="tpl-btns"><button class="btn btn-secondary" data-act="closeAll">${t('tpl/close')}</button><button class="btn btn-primary" data-act="tplUse">${t('tpl/use')}</button></div></div>`;
+      <div class="tpl-btns"><button class="btn btn-secondary" data-act="closeAll">${t('tpl/close')}</button><button class="btn btn-primary" data-act="tplNew">${t('tpl/use')}</button></div></div>`;
     return mobile ? `<div class="sheet-head"><h3 class="ellipsis">${t('template/' + x.k)}</h3><button class="ibtn ibtn-sm ibtn-secondary" data-act="closeAll" aria-label="${esc(t('common/close'))}">${ic('x', 'ic-16')}</button></div>${prev}${info}` : `<div class="tpl-wrap">${prev}${info}</div>`;
   }
-  A.tplUse = () => { window.openNewProject({ template: S.tplK }); };
+  A.tplNew = () => { window.openNewProject({ template: S.tplK }); };
   function defaultName() {
     const names = new Set(window.PROJECTS.map((p) => p.name)); let n = 1;
     while (names.has(t('newproj/default-name', { n }))) n++;

@@ -187,12 +187,14 @@
     if (n <= 0) return;
     S.credits -= n; S.monthUsed += n; S.monthRuns += 1;
     S.ledger.unshift({ id: uid('l'), kind: kind || 'one', amount: -n, vars: vars || {}, sid: sid || null, rid: rid || null, at: Date.now() });
+    window.persistCore();
   };
   // 充值入账（D 的充值页用）：加点、写流水、发通知
   window.topup = function (n) {
     S.credits += n;
     S.ledger.unshift({ id: uid('l'), kind: 'topup', amount: n, vars: {}, at: Date.now() });
     window.pushNotice({ kind: 'credit', cat: 'sys', title: { k: 'notice/topup', v: { n: num(n) } }, body: { k: 'notice/balance-d', v: { n: num(S.credits) } } });
+    window.persistCore();
   };
   window.openTopup = function () {
     S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false;
@@ -238,6 +240,7 @@
   S.notices = LS.get('notices', S.notices);
   window.pushNotice = function (o) {
     S.notices.unshift(Object.assign({ id: uid('n'), cat: 'gen', read: false, at: Date.now() }, o, { read: !!o.read }));
+    window.persistCore();
     if (!window.__inAct) window.render(); // 异步回调里调用时立即出红点
   };
   window.hasUnread = () => S.notices.some((n) => !n.read);

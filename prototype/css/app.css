@@ -533,6 +533,9 @@ a { color: var(--link); text-decoration: none; }
 .cards.is-empty { display: block; margin: 0; padding: 0; }
 .cards-empty { width: 100%; border-radius: var(--radius-lg); background: var(--bg-surface); }
 
+@media (max-width: 599px) { .card-title { flex-wrap: wrap; row-gap: 2px; } .card-title > .ellipsis { flex: 1 0 100%; } }
+.card-title .pill-tag { flex: none; }
+
 /* 原型切换条：演示开关 */
 .proto-bar .pb-sep { width: 1px; margin: 2px 2px; background: #ffffff40; }
 .proto-bar button.is-on { background: #ff453a; }
