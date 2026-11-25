@@ -654,6 +654,6 @@ html[lang="vi"] .wb-full .vw-acts.n3 .btn:nth-child(3) { grid-column: 1 / -1; }
 .topbar, .topbar.is-solid { background: var(--bg-canvas); backdrop-filter: none; -webkit-backdrop-filter: none; }
 @media (max-width: 599px) { .m-topbar { background: var(--bg-canvas); backdrop-filter: none; -webkit-backdrop-filter: none; } }
 /* 未开放的通用版式：只显示底板色 + 暂未开放 */
-.card.is-soon .tpl-soon-cover { position: relative; opacity: .55; }
+.card.is-soon .tpl-soon-cover { position: relative; background: var(--bg-surface); box-shadow: inset 0 0 0 var(--stroke-hairline) var(--border); }
 .card.is-soon .tpl-soon-tag { position: absolute; top: 8px; right: 8px; }
 .card.is-soon .card-title { color: var(--text-2); }
