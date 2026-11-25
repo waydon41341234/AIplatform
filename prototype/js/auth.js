@@ -30,22 +30,53 @@
   };
 
   // ---------- 数据按账号保留 ----------
+  // MEM：本页内切走的账号保留「活」数据（同一批对象），没跑完的生成继续更新它们；LS 里另存一份快照，刷新后用
+  const MEM = {};
   const owner = () => LS.get('auth.owner', DEF.key);
-  const snapshot = () => JSON.parse(JSON.stringify({ credits: S.credits, monthUsed: S.monthUsed, monthRuns: S.monthRuns, ledger: S.ledger, notices: S.notices, projects: window.PROJECTS || [], sessions: S.sessions || [], active: S.activeSession || null }));
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  const live = () => ({ credits: S.credits, monthUsed: S.monthUsed, monthRuns: S.monthRuns, ledger: S.ledger, notices: S.notices, projects: (window.PROJECTS || []).slice(), sessions: S.sessions || [], active: S.activeSession || null });
+  const fresh = () => ({ credits: 0, monthUsed: 0, monthRuns: 0, ledger: [], notices: [], projects: [], sessions: [], active: null });
   function switchData(key) {
     const cur = owner();
     if (cur === key) return;
-    LS.set('auth.data.' + cur, snapshot());
-    const d = LS.get('auth.data.' + key, null) || { credits: 0, monthUsed: 0, monthRuns: 0, ledger: [], notices: [], projects: [], sessions: [], active: null };
+    MEM[cur] = live();
+    LS.set('auth.data.' + cur, clone(MEM[cur]));
+    let d = MEM[key];
+    if (!d) {
+      d = LS.get('auth.data.' + key, null) || fresh();
+      // 刷新前没跑完的生成：快照里停在进行中，恢复时标成失败，避免一直转圈
+      d.sessions.forEach((s) => (s.records || []).forEach((r) => { if (r.status === 'generating') { r.status = 'failed'; r.progress = 0; } }));
+    }
+    delete MEM[key];
     S.credits = d.credits; S.monthUsed = d.monthUsed; S.monthRuns = d.monthRuns; S.ledger = d.ledger; S.notices = d.notices;
     if (Array.isArray(window.PROJECTS)) window.PROJECTS.splice(0, window.PROJECTS.length, ...d.projects);
     S.sessions = d.sessions; S.activeSession = d.active;
-    // 上一个账号没跑完的生成：快照里停在进行中，恢复时标成失败，避免一直转圈
-    S.sessions.forEach((s) => (s.records || []).forEach((r) => { if (r.status === 'generating') { r.status = 'failed'; r.progress = 0; } }));
     S.viewer = null; S.setGrid = null; S.flash = null;
     LS.set('auth.owner', key);
     window.persistCore();
   }
+  // 切走的账号里没跑完的生成完成时扣点 / 发通知：记到那个账号（按会话 / 记录 id 找），不记到当前账号
+  function acctOf(sid, rid) {
+    if (!sid && !rid) return null;
+    const has = (list) => (list || []).some((s) => (sid && s.id === sid) || (rid && (s.records || []).some((r) => r.id === rid)));
+    if (has(S.sessions)) return null;
+    return Object.keys(MEM).find((k) => has(MEM[k].sessions)) || null;
+  }
+  const spend0 = window.spend;
+  window.spend = function (n, kind, vars, sid, rid) {
+    const k = acctOf(sid, rid); if (!k) return spend0.apply(this, arguments);
+    const m = MEM[k]; n = Math.round(n || 0); if (n <= 0) return;
+    m.credits -= n; m.monthUsed += n; m.monthRuns += 1;
+    m.ledger.unshift({ id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: kind || 'one', amount: -n, vars: vars || {}, sid: sid || null, rid: rid || null, at: Date.now() });
+    LS.set('auth.data.' + k, clone(m));
+  };
+  const notice0 = window.pushNotice;
+  window.pushNotice = function (o) {
+    const k = o && acctOf(o.sid, o.rid); if (!k) return notice0.apply(this, arguments);
+    const m = MEM[k];
+    m.notices.unshift(Object.assign({ id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cat: 'gen', at: Date.now() }, o, { read: false }));
+    LS.set('auth.data.' + k, clone(m));
+  };
 
   // ---------- 弹窗状态 ----------
   const blank = () => ({ open: false, tab: 'login', method: 'code', acct: '', code: '', pwd: '', rCode: '', rPwd: '', team: '', showPwd: false, agree: false, err: {}, busy: false, tok: 0, cdUntil: 0, forgotTip: false, shakeUntil: 0, next: null, fresh: false, page: false });
@@ -121,6 +152,8 @@
     S.auth.in = false; saveAuth();
     closeAuth();
     S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; S.viewer = null; S.setGrid = null;
+    if (window.ED && window.ED.isOpen && window.ED.isOpen()) window.ED.escape();
+    S.route = 'home'; S.routeArg = null; // 先切到首页再渲染，避免在受保护页上触发路由守卫
     goW('home');
   }
   ['logoutOk', 'pgLogoutOk'].forEach((n) => { const f = A[n]; if (typeof f === 'function') A[n] = function () { f.apply(this, arguments); logout(); }; });

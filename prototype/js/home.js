@@ -525,7 +525,7 @@
     const inner = `<main class="page">
       <section class="hero"><img class="hero-orb" src="assets/logo-orb.webp" alt=""><h1>${t('home/greeting')}</h1><p>${t('home/subtitle')}</p>${window.composer('home')}</section>
       <section class="section"><div class="section-head"><h2>${t('section/level')}</h2></div><div class="levels">${lv(1, 'standard', true)}${lv(2, 'pro', false)}${lv(3, 'full', false)}</div></section>
-      ${auOff() ? window.AU.homeCard() : `<section class="section"><div class="section-head"><h2>${t('section/recent')}</h2><button class="view-all" data-act="go" data-arg="projects">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
+      ${auOff() ? window.AU.homeCard() : !window.PROJECTS.length ? '' : `<section class="section"><div class="section-head"><h2>${t('section/recent')}</h2><button class="view-all" data-act="go" data-arg="projects">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
         <div class="cards" data-sk="recent">${window.PROJECTS.slice(0, 6).map((p) => window.projectCard(p)).join('')}</div></section>`}
       <section class="section" id="sec-templates"><div class="section-head"><h2>${t('section/templates')}</h2><button class="view-all" data-act="go" data-arg="templates">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
         <div class="filters scroll-x" data-sk="filters">${['all', 'classic', 'western', 'minimal', 'dark', 'festive'].map((f) => `<button class="chip ${S.filter === f ? 'is-on' : ''}" data-act="filter" data-arg="${f}">${t('filter/' + f)}</button>`).join('')}</div>
