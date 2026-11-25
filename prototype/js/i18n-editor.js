@@ -129,6 +129,7 @@ Object.assign(window.I18N, {
   'ed/save-retry': ['重试', '重試', 'Retry', 'Thử lại'],
   'ed/project-name': ['项目名', '專案名稱', 'Project name', 'Tên dự án'],
   'ed/save': ['保存', '儲存', 'Save', 'Lưu'],
+  'ed/name-taken': ['已有同名项目，换个名字', '已有同名專案，換個名稱', 'A project with this name exists', 'Đã có dự án trùng tên'],
   // ED-16 导出
   'ed/exp-figma-auth': ['首次导出需要连接 Figma 账号（原型里模拟）', '首次匯出需要連接 Figma 帳號（原型中模擬）', 'First export needs a Figma connection (simulated)', 'Lần xuất đầu cần kết nối Figma (mô phỏng)'],
   'ed/exp-connect-title': ['连接 Figma 账号', '連接 Figma 帳號', 'Connect Figma', 'Kết nối Figma'],
@@ -165,6 +166,7 @@ Object.assign(window.I18N, {
   'mp/gm-n-12': ['收藏', '收藏', 'Favorites', 'Yêu thích'],
   'mp/gm-n-13': ['试玩', '試玩', 'Demo', 'Chơi thử'],
   // ED-23 切换模板
+  'ed/tpl-sec': ['模板', '模板', 'Template', 'Mẫu'],
   'ed/tpl-switch': ['切换模板', '切換模板', 'Change template', 'Đổi mẫu'],
   'ed/tpl-current': ['当前', '目前', 'Current', 'Hiện tại'],
   'ed/tpl-replaces': ['会替换的内容', '會替換的內容', 'What will change', 'Nội dung sẽ thay'],

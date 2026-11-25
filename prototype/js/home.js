@@ -139,6 +139,8 @@
     n.read = true; closeLayers();
     // 有 sid（生成完成 / 失败 / 部分失败）→ 工作台对应记录；有项目名（导出完成 / 失败）→ 编辑器导出结果；余额类 → 余额弹层
     if (n.sid && n.kind !== 'credit') { if (window.openRecord) window.openRecord(n.sid, n.rid); else { S.activeSession = n.sid; window.go('workbench'); } return false; }
+    // 编辑器里 Banner AI / AI 生成一套图标 失败等通知带 proj：只回到该项目编辑器，不打开导出结果
+    if (n.proj && !n.name) { window.openEditor({ name: n.proj }); return false; }
     if (n.name || n.kind === 'export' || n.kind === 'exportFail') { window.openEditor({ name: n.name, status: 'exported', then: 'exportDone' }); return false; }
     if (n.kind === 'credit') window.openCredit();
   };

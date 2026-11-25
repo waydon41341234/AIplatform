@@ -44,7 +44,7 @@
     const key = TPL[tk] ? tk : 'classic-blue'; const tp = tplOf(key); const p = PRESETS[pal] ? pal : tp.preset;
     return {
       v: DV, order: tp.order.slice(), hidden: {}, side: 'left', login: false,
-      theme: preset(p), palette: p, basePreset: p, template: key, height: 1480,
+      theme: preset(p), palette: p, basePreset: p, template: key, height: 1600,
       banner: { size: tp.size, ind: 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
       tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: true, search: true, auth: true }, searchFirst: false, colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
@@ -64,10 +64,11 @@
 
   // ---------- 共用接口包装（A 的 core.js；缺失时退化） ----------
   const afford = (n) => (window.canAfford ? window.canAfford(n) : (S.credits || 0) >= n);
-  const pay = (n, kind) => { if (window.spend) window.spend(n, kind, { type: 'editor' }); else S.credits -= n; };
+  const pay = (n, kind, vars) => { if (window.spend) window.spend(n, kind, vars || {}); }; // 扣点统一走 core 的 spend
   const fail = (p) => (window.takeFail ? window.takeFail(p == null ? '' : p) : false);
   const topup = () => { if (window.openTopup) window.openTopup(); else window.comingSoon(); };
-  const notice = (o) => { if (window.pushNotice) window.pushNotice(Object.assign({ name: E.name }, o)); };
+  // 导出类通知带 name（点了回导出结果）；其它编辑器通知带 proj（点了回编辑器）
+  const notice = (o) => { if (window.pushNotice) window.pushNotice(Object.assign(/^export/.test(o.kind) ? { name: E.name } : { proj: E.name }, o)); };
   const undoOpt = (ms = 5000) => ({ action: () => { A.undo(); window.render(); }, actionLabel: t('ed/am-undo'), ms });
   A.edTopup = () => { topup(); return false; };
 
@@ -100,7 +101,9 @@
       if (opts.name) E.name = opts.name;
       const d = !opts.template && LS.get('ed.d.' + E.name, null);
       E.D = d && d.v === DV ? d : defaultDesign(opts.template, opts.palette);
-      E.past = []; E.future = []; E.checksPassed = false; E.status = LS.get('ed.st.' + E.name, 'designing');
+      E.past = []; E.future = []; E.checksPassed = false; clearTimeout(expTimer); E.exp.stage = 'ready'; E.exp.dl = {}; E.exp.failed = {};
+      const pj = Array.isArray(window.PROJECTS) && window.PROJECTS.find((p) => p.name === E.name);
+      E.status = LS.get('ed.st.' + E.name, pj && pj.st === 'exported' ? 'exported' : 'designing');
     }
     if (opts.status) E.status = opts.status;
     E.then = opts.then || null;
@@ -122,8 +125,10 @@
     };
     setTimeout(tick, 380);
   }
-  function afterLoad() { if (E.then === 'exportDone') { E.dlg = 'export'; E.exp.stage = 'done'; E.exp.dl = {}; E.exp.failed = {}; } E.then = null; }
+  function afterLoad() { if (E.then === 'exportDone') { const r = LS.get('ed.x.' + E.name, null); E.dlg = 'export'; E.exp.stage = 'done'; E.exp.dl = {}; E.exp.retrying = {}; E.exp.failed = (r && r.failed) || {}; } E.then = null; }
   A.edLoadRetry = () => { startLoad(); };
+  // 直接打开 / 刷新 #/editor 也走加载页（加载失败演示开关同样生效）
+  window.addEventListener('DOMContentLoaded', () => { if (S.route === 'editor' || /#\/editor/.test(location.hash)) startLoad(); });
   A.edLoadHome = () => { loadTok++; E.loading = false; E.loadFail = false; window.go('home'); return false; };
   const mobileEd = () => window.innerWidth < 840;
 
@@ -305,7 +310,7 @@
   const tplMeta = (k) => (TPLS().find((x) => x.k === k) || { meta: 'standard' }).meta;
   const tplThumb = (k, cls = '') => { const p = PRESETS[tplOf(k).preset]; return `<span class="tpl-th ${cls}" style="background:linear-gradient(160deg,${p[0]},${p[7]} 70%,${p[10]})"><img src="assets/thumbs/tpl-${k}.png" alt="" onerror="this.remove()"></span>`; };
   function tplRow() {
-    return `<div class="tpl-row">${tplThumb(E.D.template)}<span class="tx"><b class="ellipsis">${t('template/' + E.D.template)}</b><span class="caption faint">${t('template/meta-' + tplMeta(E.D.template))}</span></span><button class="btn btn-secondary btn-sm" data-act="openTpl">${t('ed/tpl-switch')}</button></div>`;
+    return `<div class="tpl-row">${tplThumb(E.D.template)}<span class="tx"><b class="ellipsis">${t('template/' + E.D.template)}</b><span class="caption faint">${t('template/meta-' + tplMeta(E.D.template))}</span></span><button class="btn btn-secondary btn-sm" data-act="edOpenTpl">${t('ed/tpl-switch')}</button></div>`;
   }
   function pageSettings(mode) {
     if (E.keys && mode !== 'colors-only') return keysHead() + window.MP.keysPanel(mobileEd());
@@ -318,7 +323,7 @@
     if (mode === 'colors-only') return colorsSec;
     const hNote = E.contentH ? t('ed/height-note-n', { n: E.contentH }) : t('ed/height-note');
     return `<h2 class="p-title">${t('ed/page-settings')}</h2><p class="p-sub">${t('ed/page-hint')}</p>
-      <div class="p-sec"><div class="lab">${t('ed/template')}</div>${tplRow()}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tpl-sec')}</div>${tplRow()}</div>
       ${colorsSec}
       <div class="p-sec"><div class="lab">${t('ed/page-height')}</div><div class="h-row"><input class="input" style="width:110px" type="number" min="1334" max="6000" value="${E.D.height}" data-input="pageHeight" data-key="heightKey"><span class="caption faint">${hNote}</span></div></div>`;
   }
@@ -698,12 +703,12 @@
     }
     return nd;
   }
-  A.openTpl = () => { E.tpl = { step: 'list', chip: 'all', k: null, keep: true, busy: false }; E.dlg = 'tplpick'; E.picker = null; S.menu = null; if (E.mpanel === 'pages') E.mpanel = null; };
-  A.tplChip = (c) => { E.tpl.chip = c; };
-  A.tplPick = (k) => { if (k === E.D.template || tplMeta(k) === 'pro') return false; E.tpl.k = k; E.tpl.step = 'preview'; E.tpl.keep = true; };
-  A.tplBack = () => { if (E.tpl.busy) return false; E.tpl.step = 'list'; E.tpl.k = null; };
-  A.tplKeep = (v) => { E.tpl.keep = v === '1'; };
-  A.tplUse = () => {
+  A.edOpenTpl = () => { E.tpl = { step: 'list', chip: 'all', k: null, keep: true, busy: false }; E.dlg = 'tplpick'; E.picker = null; S.menu = null; if (E.mpanel === 'pages') E.mpanel = null; };
+  A.edTplChip = (c) => { E.tpl.chip = c; };
+  A.edTplPick = (k) => { if (k === E.D.template || tplMeta(k) === 'pro') return false; E.tpl.k = k; E.tpl.step = 'preview'; E.tpl.keep = true; };
+  A.edTplBack = () => { if (E.tpl.busy) return false; E.tpl.step = 'list'; E.tpl.k = null; };
+  A.edTplKeep = (v) => { E.tpl.keep = v === '1'; };
+  A.edTplUse = () => {
     const T = E.tpl; if (!T || !T.k || T.busy) return false;
     T.busy = true;
     setTimeout(() => {
@@ -730,20 +735,20 @@
       const list = TPLS().filter((p) => T.chip === 'all' || p.f === T.chip);
       const card = (p) => {
         const cur = p.k === E.D.template, pro = p.meta === 'pro';
-        return `<button class="tpl-card ${cur ? 'is-cur' : ''} ${pro ? 'is-off' : ''}" data-act="tplPick" data-arg="${p.k}" ${cur || pro ? 'aria-disabled="true"' : ''}>${tplThumb(p.k, 'big')}${cur ? `<span class="pill-tag tpl-tag">${t('ed/tpl-current')}</span>` : ''}${pro ? `<span class="pill-tag is-gray tpl-tag">${t('level/coming-soon')}</span>` : ''}<span class="nm ellipsis">${t('template/' + p.k)}</span><span class="caption faint">${t('template/meta-' + p.meta)}</span></button>`;
+        return `<button class="tpl-card ${cur ? 'is-cur' : ''} ${pro ? 'is-off' : ''}" data-act="edTplPick" data-arg="${p.k}" ${cur || pro ? 'aria-disabled="true"' : ''}>${tplThumb(p.k, 'big')}${cur ? `<span class="pill-tag tpl-tag">${t('ed/tpl-current')}</span>` : ''}${pro ? `<span class="pill-tag is-gray tpl-tag">${t('level/coming-soon')}</span>` : ''}<span class="nm ellipsis">${t('template/' + p.k)}</span><span class="caption faint">${t('template/meta-' + p.meta)}</span></button>`;
       };
-      return `<div class="dialog-head"><h3>${t('ed/tpl-switch')}</h3>${x}</div><div class="filters scroll-x tpl-chips">${chips.map((c) => `<button class="chip ${T.chip === c ? 'is-on' : ''}" data-act="tplChip" data-arg="${c}">${t('filter/' + c)}</button>`).join('')}</div>
+      return `<div class="dialog-head"><h3>${t('ed/tpl-switch')}</h3>${x}</div><div class="filters scroll-x tpl-chips">${chips.map((c) => `<button class="chip ${T.chip === c ? 'is-on' : ''}" data-act="edTplChip" data-arg="${c}">${t('filter/' + c)}</button>`).join('')}</div>
         <div class="tpl-grid" data-sk="tplgrid">${list.length ? list.map(card).join('') : `<div class="empty is-sm"><div class="ico">${ic('squares-four-fill', 'ic-24')}</div><h3>—</h3></div>`}</div>`;
     }
     const c = tplCounts(E.D); const nd = tplDesign(T.k, T.keep && c.n > 0);
     const det = [c.colors && t('ed/tpl-d-colors', { n: c.colors }), c.assets && t('ed/tpl-d-assets', { n: c.assets }), c.icons && t('ed/tpl-d-icons', { n: c.icons })].filter(Boolean).join('、');
-    const ro = (v, k) => `<button class="rcard sm ${T.keep === (v === '1') ? 'is-on' : ''}" data-act="tplKeep" data-arg="${v}"><span class="radio ${T.keep === (v === '1') ? 'is-on' : ''}"></span><span><b>${t(k)}</b></span></button>`;
+    const ro = (v, k) => `<button class="rcard sm ${T.keep === (v === '1') ? 'is-on' : ''}" data-act="edTplKeep" data-arg="${v}"><span class="radio ${T.keep === (v === '1') ? 'is-on' : ''}"></span><span><b>${t(k)}</b></span></button>`;
     const over = c.n ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${t('ed/tpl-overwrite', { n: c.n, detail: det })}</div></div>${ro('1', 'ed/tpl-keep')}${ro('0', 'ed/tpl-all')}<div class="caption faint" style="margin-top:6px">${t('ed/tpl-undo-note')}</div>` : '';
     const rep = [t('ed/tpl-r-layout'), t('ed/tpl-r-colors'), t('ed/tpl-r-assets', { n: tplOf(T.k).slides.length })];
-    return `<div class="dialog-head"><h3 class="tpl-h"><button class="ibtn ibtn-sm" data-act="tplBack" aria-label="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${t('template/' + T.k)}</span></h3>${x}</div>
-      <div class="tpl-prev ${mobile ? 'is-m' : ''}" data-sk="tplprev"><div class="tpl-long"><div class="tpl-scale">${h5For(nd)}</div></div>
+    return `<div class="dialog-head"><h3 class="tpl-h"><button class="ibtn ibtn-sm" data-act="edTplBack" aria-label="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${t('template/' + T.k)}</span></h3>${x}</div>
+      <div class="ed-tprev ${mobile ? 'is-m' : ''}" data-sk="tplprev"><div class="tpl-long"><div class="tpl-scale">${h5For(nd)}</div></div>
         <div class="tpl-side"><div class="lab">${t('ed/tpl-replaces')}</div>${rep.map((r) => `<div class="tpl-li">${ic('check-circle-fill', 'ic-16')}${r}</div>`).join('')}<div style="margin-top:12px">${over}</div></div></div>
-      <div class="dialog-foot"><button class="btn btn-secondary" data-act="tplBack">${t('ed/tpl-back')}</button><button class="btn btn-primary ${T.busy ? 'is-busy' : ''}" data-act="tplUse">${T.busy ? ic('circle-notch', 'ic-16 spin') : ''}${t('ed/tpl-use')}</button></div>`;
+      <div class="dialog-foot"><button class="btn btn-secondary" data-act="edTplBack">${t('ed/tpl-back')}</button><button class="btn btn-primary ${T.busy ? 'is-busy' : ''}" data-act="edTplUse">${T.busy ? ic('circle-notch', 'ic-16 spin') : ''}${t('ed/tpl-use')}</button></div>`;
   }
 
   A.toggleAdv = () => { E.adv = !E.adv; };
@@ -766,6 +771,8 @@
   function rename(v) {
     v = (v || '').trim(); if (!v || v === E.name) return false;
     const old = E.name; const P = window.PROJECTS;
+    if (Array.isArray(P) && P.some((x) => x.name === v)) { window.toast(t('ed/name-taken'), { info: true }); return false; } // 不能和其它项目同名
+    const xr = LS.get('ed.x.' + old, null); if (xr) LS.set('ed.x.' + v, xr);
     if (Array.isArray(P)) { const p = P.find((x) => x.name === old); if (p) p.name = v; }
     E.name = v; persist();
     window.toast(t('toast/renamed'));
@@ -974,10 +981,10 @@
       if (E.exp.stage !== 'exporting') return;
       x.stage = 'done';
       if (S.demo && S.demo.exportFail) x.failed = { png: true };
-      E.status = 'exported'; persist();
+      E.status = 'exported'; persist(); LS.set('ed.x.' + E.name, { failed: x.failed }); // 记住导出结果，点通知回来能看到
       const P = window.PROJECTS; if (Array.isArray(P)) { const p = P.find((q) => q.name === E.name); if (p) p.st = 'exported'; }
       const files = expFiles();
-      notice(x.failed.png ? { kind: 'failed', cat: 'sys', title: t('ed/exp-partial'), body: t('ed/exp-partial-d') } : { kind: 'export', cat: 'sys', title: { k: 'notice/export-done', v: { name: E.name } }, body: { k: 'notice/export-d', v: { list: files.map((f) => f[1]).join('、'), n: files.length } } });
+      notice(x.failed.png ? { kind: 'exportFail', cat: 'sys', title: t('ed/exp-partial') + ' · ' + E.name, body: t('ed/exp-partial-d') } : { kind: 'export', cat: 'sys', title: { k: 'notice/export-done', v: { name: E.name } }, body: { k: 'notice/export-d', v: { list: files.map((f) => f[1]).join('、'), n: files.length } } });
       if (S.route === 'editor') window.render();
     }, 1800);
   }
@@ -993,7 +1000,7 @@
   };
   A.expCancel = () => { clearTimeout(expTimer); E.exp.stage = 'ready'; window.toast(t('ed/exp-cancelled'), { info: true }); };
   A.dlFile = (k) => { if (k) E.exp.dl[k] = true; else expFiles().forEach((f) => { if (!E.exp.failed[f[2]]) E.exp.dl[f[2]] = true; }); window.toast(t('ed/exp-dl-started')); };
-  A.expRetry = (k) => { const x = E.exp; x.retrying[k] = true; setTimeout(() => { delete x.retrying[k]; delete x.failed[k]; if (E.dlg === 'export') window.render(); }, 1000); };
+  A.expRetry = (k) => { const x = E.exp; if (x.retrying[k]) return false; x.retrying[k] = true; setTimeout(() => { delete x.retrying[k]; delete x.failed[k]; LS.set('ed.x.' + E.name, { failed: x.failed }); if (E.dlg === 'export') window.render(); }, 1000); };
   A.expBack = () => { E.exp.stage = 'ready'; E.exp.linking = 0; };
   A.closeDlg = () => {
     if (E.dlg === 'export' && E.exp.stage === 'exporting') A.expCancel();

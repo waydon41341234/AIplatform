@@ -279,6 +279,7 @@
 
   // ---------- AI 生成一套图标（ED-04） ----------
   const STYLES = ['glass', 'flat', '3d', 'line'];
+  const tType = (b) => (b === 'gamemenu' ? 'gametype' : b); // 流水里的类型名
   function lighten(hex, k) { const n = parseInt(hex.slice(1, 7), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * k)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); }
   // 模拟 AI 结果：按款式把 Phosphor 图标画成 SVG dataURL
   function aiSvg(icon, style, color) {
@@ -319,7 +320,7 @@
       if (ia.pct >= 100) {
         clearInterval(ia.timer); ia.timer = null;
         if (x.fail()) { ia.stage = 'failed'; x.notice({ kind: 'failed', cat: 'editor', title: t('mp/ai-title', { mod: modTitle(ia.b) }), body: t('mp/ai-failed') }); }
-        else { x.pay(20, 'icons'); const k0 = jobs(ia)[0]; ia.cands = { [k0]: { style: ia.style, color: candColor(ia, k0.split('|')[1]) } }; ia.failed = {}; ia.stage = 'sampleOk'; }
+        else { x.pay(20, 'iconset', { type: tType(ia.b) }); const k0 = jobs(ia)[0]; ia.cands = { [k0]: { style: ia.style, color: candColor(ia, k0.split('|')[1]) } }; ia.failed = {}; ia.stage = 'sampleOk'; }
         window.render();
       }
     }, 120);
@@ -339,7 +340,7 @@
   }
   function iaFinish(ia) {
     const x = X(); clearInterval(ia.timer); ia.timer = null;
-    if (ia.okN) x.pay(ia.okN * 20, 'icons');
+    if (ia.okN) x.pay(ia.okN * 20, 'iconset', { type: tType(ia.b) });
     ia.stage = 'adopt';
     const nf = Object.keys(ia.failed).length;
     x.notice({ kind: nf ? 'partial' : 'done', cat: 'editor', title: t('mp/ai-title', { mod: modTitle(ia.b) }), body: nf ? t('rec/partial', { d: jobs(ia).length - nf, n: jobs(ia).length, f: nf }) : t('mp/ai-adopted', { n: Object.keys(ia.cands).length }) });
@@ -354,14 +355,14 @@
   A.iaCancel = () => {
     const x = X(); const ia = x.E.iconAi; if (!ia) return;
     if (ia.stage === 'sample') { iaStop(); ia.stage = 'setup'; return; }
-    if (ia.stage === 'rest') { iaStop(); ia.run.slice(ia.done).forEach((k) => { ia.failed[k] = true; }); if (ia.okN) x.pay(ia.okN * 20, 'icons'); ia.stage = 'adopt'; window.toast(t('ed/ia-cancelled'), { info: true }); }
+    if (ia.stage === 'rest') { iaStop(); ia.run.slice(ia.done).forEach((k) => { ia.failed[k] = true; }); if (ia.okN) x.pay(ia.okN * 20, 'iconset', { type: tType(ia.b) }); ia.stage = 'adopt'; window.toast(t('ed/ia-cancelled'), { info: true }); }
   };
   A.iaFill = () => { const x = X(); const ia = x.E.iconAi; const list = Object.keys(ia.failed); if (!list.length) return false; if (!x.afford(list.length * 20)) { x.topup(); return false; } runJobs(ia, list); };
   A.iaRedo = (key) => {
     const x = X(); const ia = x.E.iconAi; if (ia.busy[key]) return false;
     if (!x.afford(20)) { x.topup(); return false; }
     ia.busy[key] = true;
-    setTimeout(() => { if (X().E.iconAi !== ia) return; delete ia.busy[key]; if (x.fail()) { window.toast(t('mp/ai-failed'), { info: true }); } else { ia.attempt++; ia.cands[key] = { style: ia.style, color: candColor(ia, key.split('|')[1]) }; delete ia.failed[key]; x.pay(20, 'icons'); } window.render(); }, 900);
+    setTimeout(() => { if (X().E.iconAi !== ia) return; delete ia.busy[key]; if (x.fail()) { window.toast(t('mp/ai-failed'), { info: true }); } else { ia.attempt++; ia.cands[key] = { style: ia.style, color: candColor(ia, key.split('|')[1]) }; delete ia.failed[key]; x.pay(20, 'iconset', { type: tType(ia.b) }); } window.render(); }, 900);
   };
   A.iaAdopt = () => {
     const x = X(); const ia = x.E.iconAi; const keys = Object.keys(ia.cands); if (!keys.length) return false;
@@ -627,7 +628,7 @@
   };
   A.keyRestore = (k) => { const x = X(); if (!x.E.D.ec['key:' + k]) return false; x.commit(() => { delete x.E.D.ec['key:' + k]; }); S().menu = null; window.toast(t('ed/changed-undo'), x.undoOpt()); };
   // 菜单往下弹；面板可滚动，保证菜单可见
-  window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
+  window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu, .bx-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
 
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {
