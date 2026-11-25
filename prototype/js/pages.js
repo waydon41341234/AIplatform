@@ -198,15 +198,31 @@
   A.pgRename = (id) => { const p = projById(id); if (!p) return; S.pg.projSel = id; S.pg.renVal = p.name; S.menu = null; S.sheet = null; if (mob()) S.sheet = 'pg-rename'; else S.dialog = 'pg-rename'; };
   I.pgRenVal = (v) => { const was = !S.pg.renVal.trim(); S.pg.renVal = v; return was !== !v.trim(); };
   A.pgRenKey = (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.pgRenOk(); return true; } };
+  // 编辑器的设计 / 状态 / 导出记录按项目名存 LS（ed.d. / ed.st. / ed.x.）：改名时搬过去，复制时拷一份（测试修复）
+  const ED_KEYS = ['ed.d.', 'ed.st.', 'ed.x.'];
+  function edData(from, to, move) {
+    ED_KEYS.forEach((k) => { const v = window.LS.get(k + from, null); if (v != null) { window.LS.set(k + to, v); if (move) { try { localStorage.removeItem('proto.' + k + from); } catch (e) { /* noop */ } } } });
+    if (move && window.LS.get('ed.last', null) === from) window.LS.set('ed.last', to);
+  }
+  const nameTaken = (v, self) => projects().some((p) => p !== self && p.name === v);
   A.pgRenOk = () => {
     const p = projById(S.pg.projSel), v = S.pg.renVal.trim();
     if (!v) return false;
-    if (p && v !== p.name) { p.name = v; saveProjects(); window.toast(t('proj/renamed')); }
+    if (p && v !== p.name) {
+      if (nameTaken(v, p)) { window.toast(t('ed/name-taken'), { info: true }); return false; }
+      const old = p.name; p.name = v; edData(old, v, true); saveProjects(); window.toast(t('proj/renamed'));
+      // 编辑器内存里还是旧名（正开着这个项目时），下次打开按新名读
+      if (window.E && window.E.name === old) window.E.name = v;
+    }
     S.dialog = null; S.sheet = null;
   };
   A.pgDup = (id) => {
     const arr = projects(), i = arr.findIndex((p) => p.pgId === id); if (i < 0) return;
-    const c = Object.assign({}, arr[i], { name: t('proj/copy-suffix', { name: arr[i].name }), st: 'designing', time: 'proj/just-now' });
+    // 副本名不重复：X 副本、X 副本 2、X 副本 3…
+    let name = t('proj/copy-suffix', { name: arr[i].name }), k = 2;
+    const base = name; while (nameTaken(name)) name = base + ' ' + k++;
+    const c = Object.assign({}, arr[i], { name, st: 'designing', time: 'proj/just-now' });
+    edData(arr[i].name, name, false); window.LS.set('ed.st.' + name, 'designing');
     delete c.pgId; arr.splice(i + 1, 0, c); projects(); saveProjects();
     S.menu = null; S.sheet = null; window.toast(t('proj/copied'));
   };

@@ -629,3 +629,13 @@ html[lang="vi"] .wb-full .vw-acts.n3 .btn:nth-child(3) { grid-column: 1 / -1; }
 .wb-costcard { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding: 12px; border-radius: 12px; background: var(--fill-3); }
 .wb-costcard > div { display: flex; justify-content: space-between; gap: 8px; }
 .wb-costcard .is-err { color: var(--error); }
+
+/* ===== 测试修复（外壳 / 工作台）===== */
+/* 手机抽屉里打开的会话面板、删除确认等叠在抽屉上面 */
+.drawer ~ .scrim { z-index: 91; }
+.drawer ~ .sheet, .drawer ~ .dialog { z-index: 92; }
+/* 平板竖（600–839）工作台顶栏多了历史抽屉按钮，搜索框可收窄，避免顶栏内容溢出到侧栏下面 */
+.topbar .tb-search-wrap { flex: 0 1 320px; min-width: 140px; }
+.topbar .tb-search { width: 100%; }
+/* 工作台底部创作框贴着屏幕底，往下弹的模型 / 配色 / 规格菜单会出屏且无法滚动看到，这里改为往上弹 */
+.dock .c-menu { top: auto; bottom: calc(100% + 8px); max-height: calc(100dvh - var(--nav-topbar-height) - 200px); overflow: auto; }

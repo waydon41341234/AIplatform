@@ -471,27 +471,31 @@
   A.openNewProject = (k) => { window.openNewProject({ template: k || null }); };
   function npBody() {
     const np = S.np || {}, emptyName = !np.name.trim();
+    const taken = !emptyName && window.PROJECTS.some((p) => p.name === np.name.trim()); // 同名会覆盖已有项目的设计，拦下
     const lv = (key, tier, on) => `<button class="np-level ${on ? (np.level === key ? 'is-on' : '') : 'is-off'}" ${on ? `data-act="npLevel" data-arg="${key}"` : 'disabled'}><img src="assets/badge-tier${tier}.png" alt=""><span class="grow">${t('level/' + key + '-title')}</span>${on ? '' : `<span class="pill-tag is-gray">${t('level/coming-soon')}</span>`}</button>`;
     const fresh = np.fresh; np.fresh = false;
     return `<h3>${t('newproj/title')}</h3>
       <label class="np-lab">${t('newproj/name')}</label>
-      <input class="input np-name ${emptyName ? 'is-err' : ''}" data-input="npName" data-key="npKey" value="${esc(np.name)}" ${fresh ? 'data-autofocus' : ''} maxlength="40">
-      ${emptyName ? `<div class="caption err-text">${t('newproj/name-empty')}</div>` : ''}
+      <input class="input np-name ${emptyName || taken ? 'is-err' : ''}" data-input="npName" data-key="npKey" value="${esc(np.name)}" ${fresh ? 'data-autofocus' : ''} maxlength="40">
+      ${emptyName ? `<div class="caption err-text">${t('newproj/name-empty')}</div>` : taken ? `<div class="caption err-text">${t('ed/name-taken')}</div>` : ''}
       <label class="np-lab">${t('newproj/level')}</label>
       <div class="np-levels">${lv('standard', 1, true)}${lv('pro', 2, false)}${lv('full', 3, false)}</div>
       ${np.template ? `<div class="caption muted" style="margin-top:12px">${t('newproj/from-tpl', { name: t('template/' + np.template) })}</div>` : ''}
-      <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-primary ${emptyName ? 'is-disabled' : ''}" data-act="npStart">${t('newproj/start')}</button></div>`;
+      <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-primary ${emptyName || taken ? 'is-disabled' : ''}" data-act="npStart">${t('newproj/start')}</button></div>`;
   }
-  I.npName = (v) => { const was = !S.np.name.trim(); S.np.name = v; return was !== !v.trim(); };
+  const npState = (v) => { v = v.trim(); return !v ? 'empty' : window.PROJECTS.some((p) => p.name === v) ? 'taken' : 'ok'; };
+  I.npName = (v) => { const was = npState(S.np.name); S.np.name = v; return was !== npState(v); };
   A.npKey = (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.npStart(); window.render(); } };
   A.npLevel = (k) => { S.np.level = k; };
   A.npStart = () => {
-    const np = S.np; if (!np || !np.name.trim()) return false;
+    const np = S.np; if (!np || npState(np.name) !== 'ok') return false;
     closeLayers();
     const palette = np.template ? tplTone({ k: np.template }) : 'blue';
     const name = np.name.trim();
-    if (!window.PROJECTS.some((p) => p.name === name)) window.PROJECTS.unshift({ name, st: 'designing', time: 'time/just', tone: palette, template: np.template || null });
-    window.openEditor({ name, template: np.template, palette, status: 'designing' });
+    // 新项目：清掉同名旧项目（已删除）残留的编辑器数据；不带模板时按默认模板新建，保证是一份全新的设计
+    ['ed.d.', 'ed.st.', 'ed.x.'].forEach((k) => { try { localStorage.removeItem('proto.' + k + name); } catch (e) { /* noop */ } });
+    window.PROJECTS.unshift({ name, st: 'designing', time: 'time/just', tone: palette, template: np.template || null });
+    window.openEditor({ name, template: np.template || 'classic-blue', palette, status: 'designing' });
     return false;
   };
 
@@ -512,6 +516,13 @@
     return window.shell(inner);
   };
   A.filter = (f) => { S.filter = f; };
+  // 首页创作框的下拉（自定义配色展开后较高）超出屏幕底部时，把页面滚到能看到整个菜单（测试修复）
+  window.AFTER_RENDER.push(() => {
+    if (!S.menu || S.route !== 'home') return;
+    const m = document.querySelector('.hero .c-menu'); if (!m) return;
+    const r = m.getBoundingClientRect();
+    if (r.bottom > window.innerHeight - 8) window.scrollBy({ top: Math.min(r.bottom - window.innerHeight + 16, r.top - 72) });
+  });
   A.openEditor = () => { window.openNewProject(); };
 
   // ---------- 待设计页面（兜底）----------

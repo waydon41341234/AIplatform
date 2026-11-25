@@ -84,6 +84,8 @@
     }, 600);
   }
   A.saveRetry = () => { save(); };
+  // 刚改完就刷新 / 关页：还在「保存中」的改动立即写入（保存失败演示时不写）
+  window.addEventListener('pagehide', () => { if (E.save === 'saving' && !(S.demo && S.demo.saveFail)) persist(); });
   function commit(fn) {
     const before = checks().req;
     E.past.push(snap()); if (E.past.length > 60) E.past.shift(); E.future = []; fn();
@@ -605,6 +607,8 @@
     E.sel = nid; S.menu = null; E.keys = null;
     E.h5side = nid === 'sidebar';
     if (mobileEd()) E.mpanel = nid ? 'module' : null;
+    // 从左栏选模块：画布滚到该模块，选中框和工具条可见
+    if (nid && el && el.closest && el.closest('.ed-left')) setTimeout(() => { const n = document.querySelector(`.ed-canvas [data-mod="${nid}"]`); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 30);
   };
   A.setTab = (v) => { E.tab = v; E.picker = null; E.rn = null; };
   A.tbTab = (v) => { E.tab = v; E.ai = null; E.iconAi = null; if (mobileEd()) E.mpanel = 'module'; };
@@ -686,7 +690,9 @@
     let assets = D.banner.slides.filter((s, i) => s.f !== (tp.slides[i] || 'none') || s.fit).length;
     ['jackpot.bg', 'gamecards.fallback', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D.m[b][f]) assets++; });
     if (D.tb.logoF !== 'none') assets++;
-    let icons = 0; ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => D.m[b].items.forEach((it) => { if (it.img || it.imgOn || (it.n && it.k)) icons++; }));
+    // 换过的入口图标 + 改过的入口名 / 页脚链接名（名字不在默认名单里即算改过）
+    const d0 = window.MP ? window.MP.defaults() : null;
+    let icons = 0; ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => { const dn = d0 && d0[b] ? d0[b].items.map((x) => x.n) : []; D.m[b].items.forEach((it) => { if (it.img || it.imgOn || (it.n && (it.k || (d0 && !dn.includes(it.n))))) icons++; }); });
     return { colors, assets, icons, n: colors + assets + icons };
   }
   function tplDesign(k, keep) {
@@ -1121,7 +1127,7 @@
         <button class="ibtn ibtn-sm warn ${n ? '' : 'is-ok'}" data-act="mPanel" data-arg="checks" aria-label="${esc(t('ed/checks-title'))}">${ic(n ? 'warning-circle-fill' : 'check-circle-fill')}${n ? `<i class="badge">${n}</i>` : ''}</button>
         <button class="btn btn-primary btn-sm" data-act="mPanel" data-arg="export">${ic('download-simple', 'ic-16')}<span class="ex-l">${t('ed/export')}</span></button></header>
       <main class="med-canvas ${pc ? 'is-pc' : ''}" data-sk="med-canvas" data-act="canvasBg">${canvas}
-        ${E.mpanel ? '' : `<div class="med-login"><div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>`}
+        ${E.mpanel || pc ? '' : `<div class="med-login"><div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>`}
         ${E.mpanel || pc ? '' : `<button class="fab" data-act="mPanel" data-arg="colors" aria-label="${esc(t('ed/m-colors'))}">${ic('paint-brush-fill')}<i style="background:${E.D.theme.primary}"></i></button>`}${busyMask()}</main>
       <nav class="med-tools">${[['pages', 'squares-four-fill', 'ed/pages'], ['modules', 'layout-fill', 'ed/m-modules'], ['colors', 'palette-fill', 'ed/m-colors'], ['preview', 'eye-fill', 'ed/m-preview']].map(([id, i, k]) => `<button class="${E.mpanel === id ? 'is-on' : ''}" data-act="mPanel" data-arg="${id}">${ic(i)}${t(k)}</button>`).join('')}</nav>
     </div>${panel}${amSheet()}${E.preview ? `<div class="preview-full"><button class="ibtn ibtn-secondary x" data-act="closePreview" aria-label="${esc(t('ed/close'))}">${ic('x')}</button>${h5({ noFold: true })}</div>` : ''}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;

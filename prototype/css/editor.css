@@ -653,7 +653,7 @@ button.ed-name:hover { background: var(--bg-hover); }
   .bx-list { max-height: none; overflow: visible; }
   .bx-row { flex-wrap: wrap; }
   .bx-row > .ic { display: none; }
-  .bx-dd { width: 100%; margin-left: 50px; }
+  .bx-dd { width: calc(100% - 50px); margin-left: 50px; }
   .bx-row .rel { flex-basis: 100%; }
   .chk-body { max-height: none; }
   .over-wrap { width: 100%; padding: 0 12px; }
@@ -672,3 +672,19 @@ body:has(.ed) .proto-bar { right: auto; left: 12px; }
 /* 登录态浮条在画布顶部居中，画布内容下移，不挡顶部栏 */
 .med-canvas:has(> .med-login) .med-stage { padding-top: 60px; }
 body:has(.med) .proto-bar { left: 12px; right: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
+/* 测试 2 号修复：保存失败时 840–1199 也显示「保存失败 · 重试」；手机副标题放不下时省略 */
+@media (max-width: 1199px) { .ed-top .ed-saved.is-failed span { display: inline; } }
+.med-nav .tt small > .ed-saved.sm { min-width: 0; overflow: hidden; }
+.med-nav .tt small > .ed-saved.sm > span { overflow: hidden; text-overflow: ellipsis; }
+/* 原型切换条（600–839 可见）不挡手机编辑器的面板和 PC 缩放条 */
+body:has(.med-sheet) .proto-bar, body:has(.preview-full) .proto-bar, body:has(.med .scrim) .proto-bar { display: none; }
+body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset-bottom)); }
+/* 顶部栏 Logo 卡：缩略图收窄，规格文字至少能按词换行（右栏 300 / 越南语） */
+.asset .thumb.logo { width: 88px; overflow: hidden; white-space: nowrap; }
+.asset .top > span:has(> .sp) { flex: 1 1 0; }
+/* 模板行：右栏 300 时模板名最多两行，不被「切换模板」挤成两三个字 */
+.tpl-row .tx b.ellipsis { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tpl-row .tx .caption { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 右栏 300（840–1199）：素材缩略图收窄，给名称留位置 */
+@media (max-width: 1199px) and (min-width: 840px) { .ed-right .asset .thumb:not(.sq):not(.logo) { width: 72px; height: 24px; } .ed-right .asset .nm { overflow-wrap: anywhere; } }
+@media (max-width: 1199px) and (min-width: 840px) { .ed-right .asset .thumb.logo { width: 64px; font-size: 9px; gap: 2px; padding: 0 4px; } .ed-right .asset .thumb.logo img { width: 14px; height: 14px; } }

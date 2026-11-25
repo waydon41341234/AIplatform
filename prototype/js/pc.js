@@ -41,12 +41,15 @@
   }
   const M = (b) => (X().E.D.m || {})[b] || {};
   const vis = (b) => (M(b).items || []).filter((x) => x.on);
+  // 入口名：默认按当前语言取 key（游戏菜单 13 类），改过名用原文
+  const nm = (it) => (window.MP && window.MP.nm ? window.MP.nm(it) : it.n || '');
+  const im = (src) => `<img class="cu" src="${src}" alt="">`;
   const base = (id) => (X().baseName ? X().baseName(id) : id.split('~')[0]);
 
   // ---------- 各模块 PC 形态 ----------
   function topbar() {
     const D = X().E.D, tb = D.tb || {}, it = tb.items || {};
-    const nav = vis('gamemenu').slice(0, 6).map((x, i) => `<span class="${i ? '' : 'on'}">${esc(x.n)}</span>`).join('');
+    const nav = vis('gamemenu').slice(0, 6).map((x, i) => `<span class="${i ? '' : 'on'}">${esc(nm(x))}</span>`).join('');
     const logo = it.logo !== false ? `<span class="lg" style="filter:${tb.logoF || 'none'}"><img src="assets/logo-orb.webp" alt="">星河体育</span>` : '';
     const search = it.search !== false ? `<span class="srch">${ic('magnifying-glass')}<span>搜索游戏</span></span>` : '';
     const auth = it.auth !== false ? (D.login ? `<span class="bal">¥ 1,280.00</span><span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
@@ -55,20 +58,23 @@
   function slideF(i) {
     const E = X().E;
     if (E.ai && E.ai.cand != null && i === E.slide) return CAND_F[E.ai.cand] || 'none';
-    return E.D.banner.slides[i] || 'none';
+    return (E.D.banner.slides[i] || {}).f || 'none';
   }
+  const visIdx = () => X().E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
   function bannerShift(n, size, i) {
     if (size !== 'small') return `translateX(${-i * 100}%)`;
     const k = Math.max(0, Math.min(i, n - 3));
     return `translateX(${-k * (386 + SMALL_GAP)}px)`;
   }
   function banner() {
-    const E = X().E, B = E.D.banner, sz = BAN[B.size] || BAN.general, n = B.slides.length;
+    const E = X().E, B = E.D.banner, sz = BAN[B.size] || BAN.general;
+    // 隐藏的轮播图不播放（ED-06），位置按可见序号算
+    const v = visIdx(), n = v.length, pos = Math.max(0, v.indexOf(E.slide));
     const small = B.size === 'small';
-    const slides = B.slides.map((_, i) => `<div class="slide" style="filter:${slideF(i)};border-radius:${small ? B.corner : 0}px"></div>`).join('');
-    const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${B.ind}">${B.slides.map((_, i) => `<i class="${i === E.slide ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
+    const slides = v.map((i) => `<div class="slide" style="filter:${slideF(i)};border-radius:${small ? B.corner : 0}px"></div>`).join('');
+    const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     const vpStyle = small ? `width:${CONTENT_W}px;height:${sz.h}px` : `width:${sz.w}px;height:${sz.h}px;border-radius:${B.corner}px`;
-    return `<div class="pc-banner ${small ? 'is-small' : ''}" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="${vpStyle}"><div class="track" data-pc-track data-n="${n}" data-size="${B.size}" style="transform:${bannerShift(n, B.size, E.slide)}">${slides}</div></div>${ind}</div>`;
+    return `<div class="pc-banner ${small ? 'is-small' : ''}" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="${vpStyle}"><div class="track" data-pc-track data-n="${n}" data-size="${B.size}" style="transform:${bannerShift(n, B.size, pos)}">${slides}</div></div>${ind}</div>`;
   }
   function jackpot() {
     const m = M('jackpot');
@@ -78,13 +84,13 @@
   function midnav() {
     const m = M('midnav');
     const acct = m.layout === 'account' ? `<div class="acct"><span>¥ 1,280.00</span><span class="sp"></span><span class="a">充值</span><span class="a">提现</span></div>` : '';
-    const items = vis('midnav').slice(0, 10).map((it) => `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'}">${it.img ? `<img src="${it.img}" alt="">` : ic(it.i || 'plus')}</span><span class="nm">${esc(it.n)}</span></div>`).join('');
+    const items = vis('midnav').slice(0, 10).map((it) => `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'}">${it.img ? `<img src="${it.img}" alt="">` : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div>`).join('');
     return `<div class="pc-mid-wrap"><div class="pc-sec">${acct}<div class="pc-mid">${items}</div></div></div>`;
   }
   function gamemenu() {
     const m = M('gamemenu');
     const icons = m.style === 'icons';
-    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${vis('gamemenu').map((it, i) => `<span class="${i ? '' : 'on'}">${icons && it.i ? ic(it.i) : ''}<em>${esc(it.n)}</em></span>`).join('')}</div></div></div>`;
+    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${vis('gamemenu').map((it, i) => { const src = i ? it.img : it.imgOn || it.img; return `<span class="${i ? '' : 'on'}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
   }
   function gamecards() {
     const m = M('gamecards');
@@ -92,12 +98,10 @@
   }
   function footer() {
     const m = M('footer');
-    return `<div class="pc-foot" style="text-align:${m.align || 'center'}"><div class="pc-sec"><div class="ln">${vis('footer').map((x) => `<span>${esc(x.n)}</span>`).join('')}</div><div class="cp">${esc(m.copy || '')}</div></div></div>`;
+    return `<div class="pc-foot" style="text-align:${m.align || 'center'}"><div class="pc-sec"><div class="ln">${vis('footer').map((x) => `<span>${esc(nm(x))}</span>`).join('')}</div><div class="cp">${esc(m.copy || '')}</div></div></div>`;
   }
   function rail() {
-    const D = X().E.D;
-    return `<div class="pc-rail">${vis('sidebar').map((it, i) => `<div class="ri ${i ? '' : 'on'}">${ic(it.i || 'square')}<span>${esc(it.n)}</span></div>`).join('')}</div>`;
-    void D;
+    return `<div class="pc-rail">${vis('sidebar').map((it, i) => `<div class="ri ${i ? '' : 'on'}">${it.img ? im(it.img) : ic(it.i || 'square')}<span>${esc(nm(it))}</span></div>`).join('')}</div>`;
   }
   // 未知模块（别的组新增）：用 H5 渲染放大后居中，至少能看到、能选中
   function fallback(id) {
@@ -187,8 +191,9 @@
     const E = x.E;
     if (E.slide !== lastSlide) {
       lastSlide = E.slide;
-      document.querySelectorAll('[data-pc-track]').forEach((n) => { n.style.transform = bannerShift(+n.dataset.n, n.dataset.size, E.slide); });
-      document.querySelectorAll('.pc-ind').forEach((w) => [...w.children].forEach((d, k) => d.classList.toggle('on', k === E.slide)));
+      const pos = Math.max(0, visIdx().indexOf(E.slide));
+      document.querySelectorAll('[data-pc-track]').forEach((n) => { n.style.transform = bannerShift(+n.dataset.n, n.dataset.size, pos); });
+      document.querySelectorAll('.pc-ind').forEach((w) => [...w.children].forEach((d, k) => d.classList.toggle('on', k === pos)));
     }
     if (E.picker) {
       const s = themeStyle();

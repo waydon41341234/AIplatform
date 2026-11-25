@@ -565,16 +565,17 @@
 
   window.wbOverlays = function () {
     let h = '';
-    const delBody = `<h3>${t('confirm/delete-title')}</h3><p class="muted" style="margin:8px 0 0">${t('confirm/delete-body')}</p><div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="sessDeleteOk">${t('menu/delete')}</button></div>`;
-    if (S.dialog === 'del') h += window.dialog(delBody);
-    if (S.sheet === 'del') h += window.sheet(delBody);
-    if (S.sheet === 'sess') { const s = sess(S.sessSheet); if (s) h += window.sheet(`<div class="sheet-head"><h3 class="ellipsis">${esc(s.title)}</h3></div>${sessMenu(s, 'sheet')}`); }
+    // 抽屉先画：抽屉里打开的会话面板 / 删除确认叠在抽屉上面（测试修复）
     if (S.drawer) h += `<div class="scrim" data-act="closeAll"></div><aside class="drawer ${S.drawerIn ? 'is-in' : ''}">
       <button class="nav" data-act="go" data-arg="home">${ic('house-fill')}${t('nav/home')}</button>
       <div class="sb-wb"><button class="nav" data-act="go" data-arg="workbench">${ic('magic-wand-fill', 'is-brand')}${t('nav/workbench')}</button></div>
       <button class="nav" data-act="go" data-arg="history">${ic('image-fill')}${t('nav/history')}</button>
       <div class="sb-tools"><label class="sb-search">${ic('magnifying-glass', 'ic-16')}<input data-input="sessSearch" value="${esc(S.sessSearch)}" placeholder="${esc(t('workbench/search-sessions'))}"></label><button class="ibtn ibtn-sm" style="color:var(--brand)" data-act="newChat" aria-label="${esc(t('nav/new-chat'))}">${ic('plus', 'ic-16')}</button></div>
       ${window.sessionList('drawer')}</aside>`;
+    const delBody = `<h3>${t('confirm/delete-title')}</h3><p class="muted" style="margin:8px 0 0">${t('confirm/delete-body')}</p><div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="sessDeleteOk">${t('menu/delete')}</button></div>`;
+    if (S.dialog === 'del') h += window.dialog(delBody);
+    if (S.sheet === 'del') h += window.sheet(delBody);
+    if (S.sheet === 'sess') { const s = sess(S.sessSheet); if (s) h += window.sheet(`<div class="sheet-head"><h3 class="ellipsis">${esc(s.title)}</h3></div>${sessMenu(s, 'sheet')}`); }
     if ((S.dialog === 'wbcost' || S.sheet === 'wbcost') && pendingCost) h += isMob() ? window.sheet(costBody(pendingCost)) : window.dialog(costBody(pendingCost));
     if (S.dialog === 'wbcancel' || S.sheet === 'wbcancel') { const b = cancelBody(); if (b) h += isMob() ? window.sheet(b) : window.dialog(b); }
     if (gridOpen()) h += setGridHTML(false);

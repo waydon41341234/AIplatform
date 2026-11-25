@@ -94,6 +94,7 @@
 .pc-gm span.on { background: var(--e-gamemenu-active); color: var(--e-gamemenu-activeText); font-weight: 600; }
 .pc-gm.icons span { flex-direction: column; height: 76px; gap: 4px; font-size: 13px; }
 .pc-gm.icons span .ic { width: 28px; height: 28px; flex: none; }
+.pc-gm.icons span img { width: 40px; height: 30px; object-fit: contain; flex: none; }
 
 /* 游戏卡片：6 列 */
 .pc-gc { display: grid; grid-template-columns: repeat(6, 1fr); padding: 24px 0 32px; }
@@ -117,6 +118,7 @@
 .pc-rail { width: 72px; padding: 8px 6px; box-sizing: border-box; border-radius: 16px; background: var(--e-sidebar-bg); color: var(--e-sidebar-text); box-shadow: 0 6px 20px #0000002e; display: flex; flex-direction: column; gap: 6px; }
 .pc-rail .ri { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 10px; background: var(--e-sidebar-item); font-size: 11px; line-height: 14px; text-align: center; word-break: break-all; }
 .pc-rail .ri .ic { width: 24px; height: 24px; }
+.pc-rail .ri img { width: 28px; height: 28px; object-fit: contain; }
 .pc-rail .ri.on { background: var(--e-sidebar-itemActive); color: var(--e-sidebar-textActive); }
 .pc-rail-pos .mod { border-radius: 16px; }
 .pc-rail-pos.left .seltool { left: 0; transform: none; }

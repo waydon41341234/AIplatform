@@ -628,7 +628,7 @@
   };
   A.keyRestore = (k) => { const x = X(); if (!x.E.D.ec['key:' + k]) return false; x.commit(() => { delete x.E.D.ec['key:' + k]; }); S().menu = null; window.toast(t('ed/changed-undo'), x.undoOpt()); };
   // 菜单往下弹；面板可滚动，保证菜单可见
-  window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu, .bx-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
+  window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu, .bx-menu, .ed-right .am-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
 
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {

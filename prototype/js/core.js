@@ -256,7 +256,7 @@
   window.addEventListener('DOMContentLoaded', () => { window.AFTER_RENDER.push(persist); });
   window.addEventListener('pagehide', persist);
   // 原型重置：?reset=1 清掉本地数据
-  if (qs.get('reset')) { try { Object.keys(localStorage).filter((k) => k.startsWith('proto.')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* noop */ } location.replace(location.pathname + location.hash); }
+  if (qs.get('reset')) { try { Object.keys(localStorage).filter((k) => k.startsWith('proto.')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* noop */ } const q2 = new URLSearchParams(location.search); q2.delete('reset'); const rest = q2.toString(); location.replace(location.pathname + (rest ? '?' + rest : '') + location.hash); } // 其它参数（theme / lang / fail）保留
 
   // ---------- 演示开关 ----------
   const fq = (qs.get('fail') || '').split(',');
