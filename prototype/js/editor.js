@@ -29,6 +29,7 @@
       order: ['banner', 'jackpot', 'midnav', 'gamemenu', 'gamecards', 'footer', 'menubar'], hidden: {}, side: 'left', login: false,
       theme: preset('blue'), palette: 'blue', template: 'classic-blue', height: 1480,
       banner: { size: 'general', ind: 'bars', margin: 16, corner: 8, slides: SLIDE_F.slice() },
+      m: window.MP ? window.MP.defaults() : {}, ec: {},
       tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: true, search: true, auth: true }, searchFirst: false, colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
     };
   }
@@ -70,12 +71,13 @@
   function liveTheme() {
     const th = Object.assign({}, E.D.theme);
     const tb = Object.assign({}, E.D.tb.colors);
-    if (E.picker) { if (E.picker.tbRow) tb[E.picker.tbRow] = E.picker.value; else th[E.picker.key] = E.picker.value; }
-    return { th, tb };
+    const ec = Object.assign({}, E.D.ec);
+    if (E.picker) { if (E.picker.tbRow) tb[E.picker.tbRow] = E.picker.value; else if (E.picker.elRow) ec[E.picker.elRow] = E.picker.value; else th[E.picker.key] = E.picker.value; }
+    return { th, tb, ec };
   }
   function themeStyle() {
-    const { th, tb } = liveTheme();
-    let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';');
+    const { th, tb, ec } = liveTheme();
+    let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP ? window.MP.vars(th, ec) : '');
     if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`;
     return s;
   }
@@ -93,6 +95,7 @@
     const btn = (act, icon, label, arg = '') => `<button data-act="${act}" data-arg="${arg}" data-stop>${ic(icon)}${label}</button>`;
     let main = '';
     if (b === 'topbar') main = btn('tbTab', 'sliders-horizontal', t('ed/tool-layout'), 'layout') + btn('tbTab', 'paint-brush-fill', t('ed/recolor'), 'color');
+    else if (b !== 'banner' && b !== 'menubar') main = btn('tbTab', 'sliders-horizontal', t('ed/tool-layout'), 'layout') + btn('tbTab', 'paint-brush-fill', t('ed/recolor'), 'color');
     else if (b === 'banner') main = btn('toolReplace', 'image', t('ed/replace-image')) + btn('openAi', 'magic-wand', t('ed/ai')) + btn('tbTab', 'paint-brush-fill', t('ed/recolor'), 'color');
     const move = fixed || b === 'sidebar' ? '' : `<button class="ib" data-act="move" data-arg="-1" data-stop ${idx <= 0 ? 'disabled' : ''}>${ic('arrow-up')}</button><button class="ib" data-act="move" data-arg="1" data-stop ${idx >= E.D.order.length - 1 ? 'disabled' : ''}>${ic('arrow-down')}</button>`;
     const menu = S.menu === 'modmenu' ? moduleMenu(id) : '';
@@ -126,16 +129,10 @@
     return `<div class="h5-banner" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-E.slide * 100}%)">${slides}</div></div>${ind}</div>`;
     void n;
   }
-  const MID = [['体育', null], ['真人', null], ['电子', 'game-controller'], ['彩票', 'squares-four-fill'], ['棋牌', 'stack-fill'], ['捕鱼', 'sparkle-fill'], ['电竞', 'toolbox-fill'], ['优惠', 'heart-fill'], ['VIP', 'user-circle'], ['客服', 'bell-fill']];
-  const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机'], ['极速赛车'], ['德州扑克'], ['捕鱼达人']];
   function modHtml(id) {
     switch (baseName(id)) {
       case 'banner': return h5Banner();
-      case 'jackpot': return `<div class="h5-jack">彩金池<b>¥ 88,888,888.88</b></div>`;
-      case 'midnav': return `<div class="h5-mid">${MID.map(([n, i]) => `<div class="it"><span class="ib ${i ? '' : 'ph'}">${ic(i || 'plus')}</span>${n}</div>`).join('')}</div>`;
-      case 'gamemenu': return `<div class="h5-gm">${['热门', '体育', '真人', '电子', '彩票', '棋牌'].map((x, i) => `<span class="${i ? '' : 'on'}">${x}</span>`).join('')}</div>`;
-      case 'gamecards': return `<div class="h5-gc">${GAMES.map(([n, tg]) => `<div class="c"><div class="im">${tg ? `<span class="tg">${tg}</span>` : ''}</div>${n}</div>`).join('')}</div>`;
-      case 'footer': return `<div class="h5-foot"><div>关于我们 · 帮助中心 · 隐私政策</div><div>© 2026 星河体育 版权所有</div></div>`;
+      case 'jackpot': case 'midnav': case 'gamemenu': case 'gamecards': case 'footer': return window.MP.h5(baseName(id), id);
       default: return '';
     }
   }
@@ -143,8 +140,8 @@
     const D = E.D;
     const body = D.order.filter((id) => !D.hidden[id] && baseName(id) !== 'menubar').map((id) => modWrap(id, modHtml(id))).join('');
     const top = D.hidden.topbar ? '' : modWrap('topbar', h5Topbar(), { top: true });
-    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${E.sel === 'bottomnav' ? 'is-sel' : ''}" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${[['首页', 'house-fill'], ['优惠', 'sparkle-fill'], ['消息', 'bell-fill'], ['充值', 'credit-card'], ['我的', 'user-circle']].map(([n, i], k) => `<span class="it ${k ? '' : 'on'}">${ic(i)}${n}</span>`).join('')}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}</div>`;
-    const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop><div class="pn" data-act="selMod" data-arg="sidebar" data-stop>${[['house-fill', '首页'], ['gift-fill', '优惠活动'], ['crown-fill', 'VIP 特权'], ['headset-fill', '在线客服'], ['user-circle', '个人中心']].map(([i, n]) => `<div>${ic(i)}${n}</div>`).join('')}</div></div>` : '';
+    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}</div>`;
+    const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop>${window.MP.side()}</div>` : '';
     return `<div class="h5" style="${themeStyle()}${opts.style || ''}">${top}${body}${bnav}${side}</div>`;
   }
 
@@ -161,6 +158,7 @@
       <div class="row ${E.sel === null ? 'is-on' : ''}"><span class="dot ${pageSt}"></span>${ic('house-fill', 'ic-16')}<button class="nm" data-act="selMod" data-arg="">${t('cat/home')}</button><span class="st">${t(pageSt === 'check' ? 'st/check' : 'st/done')}</span></div>
       <div class="divider"></div><div class="grp-label">${t('ed/modules')}</div>
       <div data-drag-list>${E.D.order.map((id) => row(id, { grip: true })).join('')}</div>
+      <div class="rel"><button class="add-mod ${S.menu === 'addmod' ? 'is-open' : ''}" data-act="addMenu">${ic('plus', 'ic-16')}${t('ed/add-module')}</button>${S.menu === 'addmod' ? `<div class="menu add-menu">${addList()}</div>` : ''}</div>
       ${row('sidebar')}
       <div class="side-pos"><span>${t('ed/side-pos')}</span><div class="iseg">${['left', 'right'].map((v) => `<button class="${E.D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>
       <div class="grp-label">${t('ed/fixed')}</div>${row('topbar')}${row('bottomnav')}`;
@@ -272,6 +270,7 @@
     const head = `<h2 class="p-title">${esc(modName(id))}</h2>`;
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() : E.tab === 'layout' ? tbLayout() : tbColor());
+    if (window.MP.has(b)) return head + tabs3(E.tab) + window.MP.panel(b, E.tab);
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -280,9 +279,10 @@
   function pickerHtml(cls = '', title) {
     const p = E.picker; const hsv = hex2hsv(p.value);
     const name = title || t('ed/key-' + p.key);
-    const keyMenu = !p.tbRow && S.menu === 'keymenu' ? `<div class="menu keymenu">${KEYS.map((k) => `<button class="menu-item ${p.key === k ? 'is-on' : ''}" data-act="pickKey" data-arg="${k}"><span class="sw" style="background:${E.D.theme[k]}"></span>${t('ed/key-' + k)}<span class="kk">${k}</span></button>`).join('')}</div>` : '';
+    const fixedRow = p.tbRow || p.elRow;
+    const keyMenu = !fixedRow && S.menu === 'keymenu' ? `<div class="menu keymenu">${KEYS.map((k) => `<button class="menu-item ${p.key === k ? 'is-on' : ''}" data-act="pickKey" data-arg="${k}"><span class="sw" style="background:${E.D.theme[k]}"></span>${t('ed/key-' + k)}<span class="kk">${k}</span></button>`).join('')}</div>` : '';
     return `<div class="picker ${cls}" data-picker>
-      <div class="pk-head">${p.tbRow ? `<span class="pk-title">${esc(name)}</span>` : `<button class="pk-title" data-act="menu:toggle" data-arg="keymenu">${esc(name)}${ic('caret-down')}</button>`}${keyMenu}<span class="caption faint">${p.tbRow ? '' : p.key}</span></div>
+      <div class="pk-head">${fixedRow ? `<span class="pk-title">${esc(name)}</span>` : `<button class="pk-title" data-act="menu:toggle" data-arg="keymenu">${esc(name)}${ic('caret-down')}</button>`}${keyMenu}<span class="caption faint">${fixedRow ? '' : p.key}</span></div>
       <div class="pk-cmp"><div style="background:${p.orig}">${t('ed/pick-current')}</div><div data-pk-new style="background:${p.value}">${t('ed/pick-new')}</div></div>
       <div class="pk-sv" data-drag="sv" style="background:hsl(${hsv.h},100%,50%)"><span class="pk-dot" data-pk-svdot style="left:${hsv.s * 100}%;top:${(1 - hsv.v) * 100}%;background:${p.value}"></span></div>
       <div class="pk-h" data-drag="hue"><span class="pk-dot" data-pk-hdot style="left:${(hsv.h / 360) * 100}%;background:hsl(${hsv.h},100%,50%)"></span></div>
@@ -300,9 +300,9 @@
   A.pkApply = () => {
     const p = E.picker; if (!p) return;
     if (p.value.toLowerCase() === p.orig.toLowerCase()) { E.picker = null; if (E.mpanel === 'picker') E.mpanel = null; return; }
-    commit(() => { if (p.tbRow) E.D.tb.colors[p.tbRow] = p.value; else { E.D.theme[p.key] = p.value; E.D.palette = null; } });
+    commit(() => { if (p.tbRow) E.D.tb.colors[p.tbRow] = p.value; else if (p.elRow) E.D.ec[p.elRow] = p.value; else { E.D.theme[p.key] = p.value; E.D.palette = null; } });
     E.picker = null; if (E.mpanel === 'picker') E.mpanel = null;
-    const label = p.tbRow ? t({ bg: 'ed/tb-c-bg', text: 'ed/tb-c-text', search: 'ed/tb-c-search', reg: 'ed/tb-c-reg' }[p.tbRow]) : t('ed/key-' + p.key);
+    const label = p.elRow ? t('mp/c-' + p.elRow.replace('.', '-')) : p.tbRow ? t({ bg: 'ed/tb-c-bg', text: 'ed/tb-c-text', search: 'ed/tb-c-search', reg: 'ed/tb-c-reg' }[p.tbRow]) : t('ed/key-' + p.key);
     window.toast(t('ed/toast-color', { k: label }), { action: () => { A.undo(); window.render(); }, actionLabel: t('ed/undo'), ms: 4000 });
   };
   I.pkHex = (v) => { if (validHex(v)) { E.picker.value = (v[0] === '#' ? v : '#' + v).toLowerCase(); livePicker(); } };
@@ -357,7 +357,9 @@
     };
     const up = () => {
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
-      if (target) commit(() => { const o = E.D.order.filter((x) => x !== id); let i = o.indexOf(target.id); if (!target.before) i++; o.splice(i, 0, id); E.D.order = o; });
+      const key = list.dataset.dragList;
+      if (target && key) commit(() => { const arr = E.D.m[key].items; const from = +id; const it = arr.splice(from, 1)[0]; let i = +target.id; if (i > from) i--; if (!target.before) i++; arr.splice(i, 0, it); });
+      else if (target) commit(() => { const o = E.D.order.filter((x) => x !== id); let i = o.indexOf(target.id); if (!target.before) i++; o.splice(i, 0, id); E.D.order = o; });
       window.render();
     };
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
@@ -384,7 +386,7 @@
     const nid = id || null;
     if (nid !== E.sel) { E.tab = 'content'; E.ai = null; E.picker = null; }
     E.sel = nid; S.menu = null;
-    if (nid === 'sidebar') E.h5side = true;
+    E.h5side = nid === 'sidebar';
     if (mobileEd()) E.mpanel = nid ? 'module' : null;
   };
   A.setTab = (v) => { E.tab = v; E.picker = null; };
@@ -393,10 +395,40 @@
   A.move = (d) => { const id = E.sel; const o = E.D.order; const i = o.indexOf(id), j = i + +d; if (i < 0 || j < 0 || j >= o.length) return false; commit(() => { o.splice(i, 1); o.splice(j, 0, id); }); };
   A.modDup = (id) => { commit(() => { const b = baseName(id); const n = E.D.order.filter((x) => baseName(x) === b).length; const nid = b + '~' + n; E.D.order.splice(E.D.order.indexOf(id) + 1, 0, nid); E.sel = nid; }); S.menu = null; window.toast(t('ed/dup-toast')); };
   A.modReset = (id) => {
-    commit(() => { const d = defaultDesign(); const b = baseName(id); if (b === 'topbar') E.D.tb = d.tb; if (b === 'banner') E.D.banner = d.banner; E.D.hidden[id] = false; });
+    commit(() => { const d = defaultDesign(); const b = baseName(id); if (b === 'topbar') E.D.tb = d.tb; if (b === 'banner') E.D.banner = d.banner; if (d.m[b]) E.D.m[b] = d.m[b]; window.MP.resetColors(b); E.D.hidden[id] = false; });
     S.menu = null; window.toast(t('ed/reset-toast'));
   };
-  A.modDel = (id) => { commit(() => { if (id.includes('~')) E.D.order = E.D.order.filter((x) => x !== id); else E.D.hidden[id] = true; }); E.sel = null; S.menu = null; E.mpanel = null; };
+  // 删除：页面里的流式模块真正移除（可撤销、可从「添加模块」加回来）；顶部栏 / 底部导航 / 侧边栏是固定模块，只能隐藏
+  A.modDel = (id) => {
+    const inFlow = E.D.order.includes(id);
+    commit(() => { if (inFlow) E.D.order = E.D.order.filter((x) => x !== id); else E.D.hidden[id] = true; });
+    if (E.sel === id) E.sel = null; S.menu = null; if (E.mpanel === 'module') E.mpanel = null;
+    if (inFlow) window.toast(t('ed/deleted-toast', { m: modName(id) }), { action: () => { A.undo(); window.render(); }, actionLabel: t('ed/undo'), ms: 5000 });
+  };
+  const ADDABLE = ['banner', 'jackpot', 'midnav', 'gamemenu', 'gamecards', 'footer', 'menubar'];
+  A.addMod = (b) => {
+    let id = b; let n = 1; while (E.D.order.includes(id)) id = b + '~' + n++;
+    commit(() => { const i = E.D.order.indexOf(E.sel); if (i >= 0) E.D.order.splice(i + 1, 0, id); else E.D.order.push(id); E.D.hidden[id] = false; });
+    S.menu = null; E.tab = 'content'; E.ai = null; E.picker = null;
+    if (mobileEd()) { E.mpanel = 'modules'; E.sel = null; } else E.sel = b === 'menubar' ? null : id;
+    window.toast(t('ed/added-toast', { m: modName(id) }));
+    setTimeout(() => { const n2 = document.querySelector(`.h5 [data-mod="${id}"]`); if (n2) n2.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 30);
+  };
+  // 左栏可滚动会裁掉菜单，所以「添加模块」菜单用 fixed 定位到按钮正下方（往下弹）
+  window.AFTER_RENDER.push(() => {
+    const m = document.querySelector('.add-menu'); if (!m) return;
+    const r = m.parentElement.querySelector('.add-mod').getBoundingClientRect();
+    m.style.position = 'fixed'; m.style.left = r.left + 'px'; m.style.top = (r.bottom + 6) + 'px';
+    m.style.maxHeight = (window.innerHeight - r.bottom - 18) + 'px'; m.style.overflow = 'auto';
+  });
+  A.addMenu = () => { if (mobileEd()) { E.mpanel = 'addmod'; S.menu = null; } else S.menu = S.menu === 'addmod' ? null : 'addmod'; };
+  function addList() {
+    return `<div class="add-hd"><div class="t">${t('ed/add-title')}</div><div class="caption faint">${t('ed/add-hint')}</div></div><div class="add-grid">${ADDABLE.map((b) => {
+      const ico = { banner: 'image-fill', jackpot: 'sparkle-fill', midnav: 'list', gamemenu: 'squares-four', gamecards: 'squares-four-fill', footer: 'file-image', menubar: 'layout-fill' }[b];
+      const inPage = E.D.order.some((x) => baseName(x) === b);
+      return `<button class="add-it" data-act="addMod" data-arg="${b}"><span class="tile">${ic(ico)}</span><span class="tx"><span class="nm">${t(MODS[b].key)}</span><span class="ds">${t('ed/desc-' + b)}</span></span>${inPage ? `<span class="tag">${t('ed/add-in-page')}</span>` : ''}</button>`;
+    }).join('')}</div>`;
+  }
   A.setSide = (v) => { commit(() => { E.D.side = v; }); };
   A.h5Side = () => { E.h5side = true; E.sel = 'sidebar'; if (mobileEd()) E.mpanel = 'module'; };
   A.h5SideClose = (a, el, e) => { if (e.target.closest('.pn')) return false; E.h5side = false; if (E.sel === 'sidebar') E.sel = null; if (mobileEd()) E.mpanel = null; };
@@ -422,8 +454,8 @@
   // 素材：上传 / 菜单
   A.toolReplace = () => { E.tab = 'content'; E.ai = null; S.menu = null; E.fpSlot = 'slide' + E.slide; E.dlg = 'fp'; };
   A.amUpload = (slot) => { S.menu = null; E.fpSlot = slot; E.dlg = 'fp'; };
-  A.amReset = (slot) => { S.menu = null; commit(() => { if (slot.startsWith('slide')) E.D.banner.slides[+slot.slice(5)] = SLIDE_F[+slot.slice(5)] || 'none'; if (slot === 'tb-logo') E.D.tb.logoF = 'none'; }); window.toast(t('ed/reset-toast')); };
-  A.amToggle = (slot) => { S.menu = null; if (slot.startsWith('tb-')) A.tbItem(slot.slice(3)); else window.comingSoon(); };
+  A.amReset = (slot) => { S.menu = null; commit(() => { if (slot.startsWith('slide')) E.D.banner.slides[+slot.slice(5)] = SLIDE_F[+slot.slice(5)] || 'none'; if (slot === 'tb-logo') E.D.tb.logoF = 'none'; if (slot.startsWith('mp-')) window.MP.setAsset(slot, null); }); window.toast(t('ed/reset-toast')); };
+  A.amToggle = (slot) => { S.menu = null; if (slot.startsWith('mp-')) { window.MP.toggleAsset(slot); return; } if (slot.startsWith('tb-')) A.tbItem(slot.slice(3)); else window.comingSoon(); };
   A.fpPick = (f) => {
     const slot = E.fpSlot; E.dlg = null; E.upload = { slot, pct: 0 }; E.replaced = null;
     const timer = setInterval(() => {
@@ -432,15 +464,15 @@
       const bar = document.querySelector('[data-uplbar]'); if (bar) bar.style.width = E.upload.pct + '%';
       if (E.upload.pct >= 100) {
         clearInterval(timer);
-        const prev = slot.startsWith('slide') ? E.D.banner.slides[+slot.slice(5)] : E.D.tb.logoF;
-        commit(() => { if (slot.startsWith('slide')) E.D.banner.slides[+slot.slice(5)] = f; else if (slot === 'tb-logo') E.D.tb.logoF = f; });
+        const prev = slot.startsWith('mp-') ? window.MP.getAsset(slot) : slot.startsWith('slide') ? E.D.banner.slides[+slot.slice(5)] : E.D.tb.logoF;
+        commit(() => { if (slot.startsWith('mp-')) window.MP.setAsset(slot, f); else if (slot.startsWith('slide')) E.D.banner.slides[+slot.slice(5)] = f; else if (slot === 'tb-logo') E.D.tb.logoF = f; });
         E.upload = null; E.replaced = { slot, prev }; window.toast(t('ed/upload-done')); window.render();
       }
     }, 140);
     E.upload.timer = timer;
   };
   A.cancelUpload = () => { if (E.upload) clearInterval(E.upload.timer); E.upload = null; };
-  A.undoReplace = () => { const r = E.replaced; if (!r) return; commit(() => { if (r.slot.startsWith('slide')) E.D.banner.slides[+r.slot.slice(5)] = r.prev; else E.D.tb.logoF = r.prev; }); E.replaced = null; };
+  A.undoReplace = () => { const r = E.replaced; if (!r) return; commit(() => { if (r.slot.startsWith('mp-')) window.MP.setAsset(r.slot, r.prev); else if (r.slot.startsWith('slide')) E.D.banner.slides[+r.slot.slice(5)] = r.prev; else E.D.tb.logoF = r.prev; }); E.replaced = null; };
 
   // AI 生成
   A.openAi = () => { E.sel = 'banner'; E.picker = null; S.menu = null; const sz = BANNER[E.D.banner.size]; E.ai = { prompt: t('ed/ai-auto-prompt', { w: sz.w, h: sz.h }), kw: [], ref: false, model: 'gpt', stage: 'idle', cand: null }; if (mobileEd()) E.mpanel = 'module'; };
@@ -568,6 +600,7 @@
     if (E.mpanel === 'pages') { head = t('ed/pages'); body = `<div class="row ${E.sel === null ? 'is-on' : ''}"><span class="dot ${E.checksPassed ? 'done' : 'check'}"></span>${ic('house-fill', 'ic-16')}<span class="nm">${t('cat/home')}</span></div>` + pageSettings().replace(/<h2[\s\S]*?<\/h2>/, ''); }
     else if (E.mpanel === 'modules') { head = t('ed/m-modules'); body = tree().replace(/^[\s\S]*?<div class="grp-label">/, '<div class="grp-label">').replace(/<div class="grp-label">[^<]*<\/div>\s*<div class="row[\s\S]*?<div class="divider"><\/div>/, ''); }
     else if (E.mpanel === 'colors') { head = t('ed/m-colors'); body = pageSettings().replace(/<h2[\s\S]*?<\/h2>\s*<p class="p-sub">[\s\S]*?<\/p>/, '').replace(/<div class="p-sec"><div class="lab">[^<]*<\/div><div class="tplchips">[\s\S]*$/, ''); }
+    else if (E.mpanel === 'addmod') { return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet add-sheet" data-sk="msheet"><div class="sheet-grab"></div>${addList()}</div>`; }
     else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim" data-act="pkCancel"></div><div class="sheet med-sheet"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
     else if (E.mpanel === 'module' && E.sel) {
       const inner = modulePanel(E.sel);
@@ -583,6 +616,7 @@
     return `<div class="ed-loading"><div class="ld-card"><img src="assets/logo-orb.webp" alt=""><h3>${t('ed/loading-title')}</h3>${steps.map((k, i) => `<div class="ld-step ${i < E.step ? 'is-done' : i === E.step ? 'is-on' : ''}">${ic(i < E.step ? 'check-circle-fill' : i === E.step ? 'clock-counter-clockwise' : 'clock')}${t(k)}</div>`).join('')}<div class="caption faint" style="margin-top:12px">${t('ed/loading-tip')}</div></div></div>`;
   }
 
+  window.EDX = { E, commit, liveTheme, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
   window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai), escape() { E.dlg = null; E.picker = null; E.mpanel = null; E.preview = false; E.ai = null; } };
 })();
