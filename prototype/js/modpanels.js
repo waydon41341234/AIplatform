@@ -61,6 +61,10 @@
   const modeSeg = (b) => sec(t('mp/nav-mode'), seg([{ v: 'conf', label: t('mp/mode-conf') }, { v: 'fixed', label: t('mp/mode-fixed') }], M(b).mode, `mpSet_${b}_mode`) + `<div class="p-note">${t(M(b).mode === 'conf' ? 'mp/mode-conf-help' : 'mp/mode-fixed-help')}</div>`);
   const iconBtns = `<div class="r2" style="margin-top:10px"><button class="btn btn-primary btn-sm" data-act="soon">${ic('magic-wand', 'ic-16')}${t('mp/ai-icons')}</button><button class="btn btn-secondary btn-sm" data-act="soon">${ic('upload-simple', 'ic-16')}${t('mp/upload-icons')}</button></div>`;
   const ico = (i) => `<span class="thumb sq">${i ? ic(i) : ic('plus')}</span>`;
+  // 中部导航 / 底部导航：入口图标可上传替换（缩略图右下角上传角标；画布上点图标也能替换）
+  const img = (src) => `<img class="cu" src="${src}" alt="">`;
+  const upThumb = (b, i, f, icon, cls = '', title = '') => { const src = M(b).items[i][f]; return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
+  const resetBtn = (b, i) => { const it = M(b).items[i]; return it.img || it.imgOn ? `<button class="ib-s" data-act="mpIconReset" data-arg="${b}|${i}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''; };
 
   function colors(b) {
     const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker;
@@ -81,7 +85,7 @@
         + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }) + note('ed/unit-750'),
     },
     midnav: {
-      content: () => modeSeg('midnav') + sec(t('mp/entries'), list('midnav', (it) => `${ico(it.i)}<span class="nm">${esc(it.n)}</span>`) + iconBtns),
+      content: () => modeSeg('midnav') + sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}<span class="nm">${esc(it.n)}</span>${resetBtn('midnav', i)}`) + note('mp/icon-hint') + iconBtns),
       layout: () => sec(t('mp/style'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], M('midnav').layout, 'mpSet_midnav_layout'))
         + px('midnav', 'per', [4, 5], { title: t('mp/per-row'), unit: '' }) + px('midnav', 'size', [80, 96, 112], { title: t('mp/icon-size') }) + note('ed/unit-750'),
     },
@@ -111,7 +115,7 @@
         + px('sidebar', 'width', [62, 75], { title: t('mp/width'), unit: '%' }),
     },
     bottomnav: {
-      content: () => modeSeg('bottomnav') + sec(t('mp/entries'), list('bottomnav', (it) => `<span class="thumb sq st2" title="${esc(t('mp/state-def'))}">${ic(it.i)}</span><span class="thumb sq st2 on" title="${esc(t('mp/state-act'))}">${ic(it.i)}</span><span class="nm">${esc(it.n)}</span>`) + `<div class="p-note">${t('mp/bn-icons-note')}</div>` + iconBtns),
+      content: () => modeSeg('bottomnav') + sec(t('mp/entries'), list('bottomnav', (it, i) => `${upThumb('bottomnav', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('bottomnav', i, 'imgOn', it.i, 'st2 on', t('mp/state-act'))}<span class="nm">${esc(it.n)}</span>${resetBtn('bottomnav', i)}`) + `<div class="p-note">${t('mp/bn-icons-note')}</div>` + note('mp/icon-hint') + iconBtns),
       layout: () => sec(t('mp/style'), seg([{ v: 'regular', label: t('mp/bn-regular') }, { v: 'raised', label: t('mp/bn-raised') }], M('bottomnav').style, 'mpSet_bottomnav_style'))
         + px('bottomnav', 'h', [98, 110, 120], { title: t('mp/height') }) + note('ed/unit-750'),
     },
@@ -120,7 +124,7 @@
 
   // ---------- 画布 ----------
   const vis = (b) => M(b).items.filter((x) => x.on);
-  function h5(b) {
+  function h5(b, id) {
     const m = M(b);
     if (b === 'jackpot') {
       const amt = `<b class="${m.anim === 'roll' ? 'roll' : ''}">¥ 88,888,888.88</b>`;
@@ -130,7 +134,7 @@
     if (b === 'midnav') {
       const sz = m.size / 2.4;
       const acct = m.layout === 'account' ? `<div class="acct"><span>¥ 1,280.00</span><span class="sp"></span><span class="a">充值</span><span class="a">提现</span></div>` : '';
-      return `<div class="h5-mid-wrap">${acct}<div class="h5-mid" style="grid-template-columns:repeat(${m.per},1fr)">${vis('midnav').map((it) => `<div class="it"><span class="ib ${it.i ? '' : 'ph'}" style="width:${sz + 8}px;height:${sz}px">${ic(it.i || 'plus')}</span>${esc(it.n)}</div>`).join('')}</div></div>`;
+      return `<div class="h5-mid-wrap">${acct}<div class="h5-mid" style="grid-template-columns:repeat(${m.per},1fr)">${vis('midnav').map((it) => { const i = m.items.indexOf(it); return `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'} ${S().menu === 'icon:midnav|' + i ? 'is-focus' : ''}" style="width:${sz + 8}px;height:${sz}px" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${it.img ? img(it.img) : ic(it.i || 'plus')}</span>${esc(it.n)}${S().menu === 'icon:midnav|' + i ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
     }
     if (b === 'gamemenu') return `<div class="h5-gm ${m.style} ${m.shape}">${vis('gamemenu').map((it, i) => `<span class="${i ? '' : 'on'}">${m.style === 'icons' ? ic(it.i) : ''}${esc(it.n)}</span>`).join('')}</div>`;
     if (b === 'gamecards') {
@@ -141,7 +145,7 @@
   }
   function bnav() {
     const m = M('bottomnav'); const v = vis('bottomnav'); const mid = Math.floor(v.length / 2);
-    return v.map((it, k) => `<span class="it ${k ? '' : 'on'} ${m.style === 'raised' && k === mid ? 'raised' : ''}">${ic(it.i)}${esc(it.n)}</span>`).join('');
+    return v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:bottomnav|' + i; return `<span class="it ${k ? '' : 'on'} ${m.style === 'raised' && k === mid ? 'raised' : ''}"><span class="bi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="bottomnav|bottomnav|${i}|${f}" data-stop>${it[f] ? img(it[f]) : ic(it.i)}</span>${esc(it.n)}${on ? iconMenu('bottomnav', i, f) : ''}</span>`; }).join('');
   }
   const bnavCls = () => `h-${M('bottomnav').h}`;
   function side() {
@@ -168,9 +172,68 @@
   I.mpFtCopy = typeText('footer', 'copy');
   document.addEventListener('click', () => { typing = null; }, true);
 
+  // ---------- 图标上传替换 ----------
+  const S = () => window.S;
+  function iconMenu(b, i, f) {
+    const has = !!M(b).items[i][f];
+    return `<div class="menu icon-menu" data-stop><button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')}</span></span></button><button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
+  }
+  let fileIn = null, target = null;
+  function pickIcon(b, i, f) {
+    target = { b, i: +i, f };
+    if (!fileIn) {
+      fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = 'image/png,image/svg+xml,image/webp,image/jpeg'; fileIn.style.display = 'none'; fileIn.setAttribute('data-icon-file', '');
+      document.body.appendChild(fileIn);
+      fileIn.addEventListener('change', () => {
+        const file = fileIn.files[0]; fileIn.value = ''; if (!file || !target) return;
+        if (!/^image\//.test(file.type)) { window.toast(t('mp/icon-bad')); return; }
+        const rd = new FileReader();
+        rd.onload = () => {
+          const { b: mb, i: mi, f: mf } = target; const x = X();
+          x.commit(() => { x.E.D.m[mb].items[mi][mf] = rd.result; });
+          if (x.E.mpanel === 'iconmenu') x.E.mpanel = 'module';
+          window.toast(t('mp/icon-replaced', { n: x.E.D.m[mb].items[mi].n }), { action: () => { A.undo(); window.render(); }, actionLabel: t('ed/undo'), ms: 4000 });
+          window.render();
+        };
+        rd.readAsDataURL(file);
+      });
+    }
+    fileIn.click();
+  }
+  A.mpIcon = (arg) => { const [b, i, f] = arg.split('|'); S().menu = null; pickIcon(b, i, f || 'img'); window.render(); return false; };
+  A.mpIconReset = (arg) => {
+    const [b, i, f] = arg.split('|'); const x = X(); const it = x.E.D.m[b].items[+i];
+    if (f ? !it[f] : !(it.img || it.imgOn)) return false;
+    x.commit(() => { if (f) delete it[f]; else { delete it.img; delete it.imgOn; } });
+    S().menu = null; if (x.E.mpanel === 'iconmenu') x.E.mpanel = 'module';
+    window.toast(t('mp/icon-reset-toast'));
+  };
+  A.mpIconMenu = (arg) => {
+    const [id, b, i, f] = arg.split('|'); const x = X(); const E = x.E;
+    if (E.sel !== id) { E.tab = 'content'; E.ai = null; E.picker = null; }
+    E.sel = id; E.h5side = false; if (E.tab !== 'content') E.tab = 'content';
+    if (x.mobileEd()) { E.iconMenu = { b, i: +i, f: f || 'img' }; E.mpanel = 'iconmenu'; S().menu = null; }
+    else S().menu = 'icon:' + b + '|' + i;
+  };
+  function iconSheet() {
+    const m = X().E.iconMenu; if (!m) return '';
+    const it = M(m.b).items[m.i];
+    return `<div class="icon-sheet-hd">${it[m.f] ? img(it[m.f]) : ic(it.i || 'plus')}<b>${esc(it.n)}</b></div>${iconMenu(m.b, m.i, m.f).replace('menu icon-menu', 'icon-sheet-list')}`;
+  }
+  // 画布里的图标菜单：fixed 定位到图标正下方（底部导航放不下就往上）
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('body > .icon-menu').forEach((n) => n.remove());
+    const m = document.querySelector('.icon-menu'); if (!m) return;
+    // 画布有缩放（transform），fixed 会相对画布定位，所以把菜单移到 body 下
+    const r = m.parentElement.querySelector('.is-focus').getBoundingClientRect();
+    document.body.appendChild(m);
+    m.style.position = 'fixed'; m.style.left = Math.max(8, Math.min(r.left - 4, window.innerWidth - 248)) + 'px';
+    const h = m.offsetHeight; m.style.top = (r.bottom + 6 + h > window.innerHeight - 8 ? r.top - 6 - h : r.bottom + 6) + 'px';
+  });
+
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {
-    defaults, vars, panel, h5, bnav, bnavCls, side, has: (b) => !!P[b],
+    defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, has: (b) => !!P[b],
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); X().E.D.m[b][f] = v; },

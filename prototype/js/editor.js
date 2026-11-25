@@ -67,6 +67,14 @@
   }
   const validHex = (s) => /^#?[0-9a-f]{6}$/i.test(s);
 
+  // 色块上的文字颜色：按 WCAG 相对亮度，取与底色对比度更高的黑或白
+  function inkOn(hex) {
+    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})/i.exec(hex || ''); if (!m) return '#fff';
+    let h = m[1]; if (h.length === 3) h = h.replace(/./g, (c) => c + c);
+    const L = [0, 2, 4].map((i) => { const c = parseInt(h.substr(i, 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+    const lum = 0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2];
+    return (lum + 0.05) / 0.05 > 1.05 / (lum + 0.05) ? '#000' : '#fff';
+  }
   // 当前用于渲染的主题（取色中实时预览）
   function liveTheme() {
     const th = Object.assign({}, E.D.theme);
@@ -283,7 +291,7 @@
     const keyMenu = !fixedRow && S.menu === 'keymenu' ? `<div class="menu keymenu">${KEYS.map((k) => `<button class="menu-item ${p.key === k ? 'is-on' : ''}" data-act="pickKey" data-arg="${k}"><span class="sw" style="background:${E.D.theme[k]}"></span>${t('ed/key-' + k)}<span class="kk">${k}</span></button>`).join('')}</div>` : '';
     return `<div class="picker ${cls}" data-picker>
       <div class="pk-head">${fixedRow ? `<span class="pk-title">${esc(name)}</span>` : `<button class="pk-title" data-act="menu:toggle" data-arg="keymenu">${esc(name)}${ic('caret-down')}</button>`}${keyMenu}<span class="caption faint">${fixedRow ? '' : p.key}</span></div>
-      <div class="pk-cmp"><div style="background:${p.orig}">${t('ed/pick-current')}</div><div data-pk-new style="background:${p.value}">${t('ed/pick-new')}</div></div>
+      <div class="pk-cmp"><div style="background:${p.orig};color:${inkOn(p.orig)}">${t('ed/pick-current')}</div><div data-pk-new style="background:${p.value};color:${inkOn(p.value)}">${t('ed/pick-new')}</div></div>
       <div class="pk-sv" data-drag="sv" style="background:hsl(${hsv.h},100%,50%)"><span class="pk-dot" data-pk-svdot style="left:${hsv.s * 100}%;top:${(1 - hsv.v) * 100}%;background:${p.value}"></span></div>
       <div class="pk-h" data-drag="hue"><span class="pk-dot" data-pk-hdot style="left:${(hsv.h / 360) * 100}%;background:hsl(${hsv.h},100%,50%)"></span></div>
       <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"></label>
@@ -311,6 +319,7 @@
     const hsv = hex2hsv(p.value);
     document.querySelectorAll('.h5').forEach((n) => { n.style.cssText = themeStyle() + (n.dataset.extra || ''); });
     document.querySelectorAll('[data-pk-new],[data-pk-sw]').forEach((n) => { n.style.background = p.value; });
+    document.querySelectorAll('[data-pk-new]').forEach((n) => { n.style.color = inkOn(p.value); });
     document.querySelectorAll('[data-pk-svdot]').forEach((n) => { n.style.left = hsv.s * 100 + '%'; n.style.top = (1 - hsv.v) * 100 + '%'; n.style.background = p.value; });
     document.querySelectorAll('[data-drag="sv"]').forEach((n) => { n.style.background = `hsl(${p.h != null ? p.h : hsv.h},100%,50%)`; });
     document.querySelectorAll('[data-pk-hdot]').forEach((n) => { const h = p.h != null ? p.h : hsv.h; n.style.left = (h / 360) * 100 + '%'; n.style.background = `hsl(${h},100%,50%)`; });
@@ -593,6 +602,7 @@
     E.mpanel = E.mpanel === id ? null : id; E.picker = null;
   };
   A.closePreview = () => { E.preview = false; };
+  A.mIconClose = () => { E.mpanel = 'module'; E.iconMenu = null; };
   A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; if (E.sel) E.sel = null; S.menu = null; };
   function mobilePanel() {
     if (!E.mpanel) return '';
@@ -600,6 +610,7 @@
     if (E.mpanel === 'pages') { head = t('ed/pages'); body = `<div class="row ${E.sel === null ? 'is-on' : ''}"><span class="dot ${E.checksPassed ? 'done' : 'check'}"></span>${ic('house-fill', 'ic-16')}<span class="nm">${t('cat/home')}</span></div>` + pageSettings().replace(/<h2[\s\S]*?<\/h2>/, ''); }
     else if (E.mpanel === 'modules') { head = t('ed/m-modules'); body = tree().replace(/^[\s\S]*?<div class="grp-label">/, '<div class="grp-label">').replace(/<div class="grp-label">[^<]*<\/div>\s*<div class="row[\s\S]*?<div class="divider"><\/div>/, ''); }
     else if (E.mpanel === 'colors') { head = t('ed/m-colors'); body = pageSettings().replace(/<h2[\s\S]*?<\/h2>\s*<p class="p-sub">[\s\S]*?<\/p>/, '').replace(/<div class="p-sec"><div class="lab">[^<]*<\/div><div class="tplchips">[\s\S]*$/, ''); }
+    else if (E.mpanel === 'iconmenu') { return `<div class="scrim" data-act="mIconClose"></div><div class="sheet med-sheet icon-sheet" data-sk="msheet"><div class="sheet-grab"></div>${window.MP.iconSheet()}</div>`; }
     else if (E.mpanel === 'addmod') { return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet add-sheet" data-sk="msheet"><div class="sheet-grab"></div>${addList()}</div>`; }
     else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim" data-act="pkCancel"></div><div class="sheet med-sheet"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
     else if (E.mpanel === 'module' && E.sel) {
