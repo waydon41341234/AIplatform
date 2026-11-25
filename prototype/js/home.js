@@ -396,8 +396,8 @@
   const soonToast = () => window.toast(t('tpl/soon-toast'), { info: true });
   A.tplSoon = () => { soonToast(); return false; };
   const TEMPLATES = (window.TEMPLATES = [
-    { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' }, { k: 'midnight-gold', meta: 'pro', f: 'dark', tone: 'gold' }, { k: 'fresh-green', meta: 'standard', f: 'minimal', tone: 'green' },
-    { k: 'western-white', meta: 'standard', f: 'western', tone: 'platinum' }, { k: 'festive-red', meta: 'pro', f: 'festive', tone: 'gold' }, { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' },
+    { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' }, { k: 'western-white', meta: 'standard', f: 'western', tone: 'platinum' }, { k: 'midnight-gold', meta: 'pro', f: 'dark', tone: 'gold' },
+    { k: 'fresh-green', meta: 'standard', f: 'minimal', tone: 'green' }, { k: 'festive-red', meta: 'pro', f: 'festive', tone: 'gold' }, { k: 'classic-blue', meta: 'standard', f: 'classic', tone: 'blue' },
   ]);
   // 模板 → 配色（沿用编辑器 setTemplate 的 map；新模板没写 tone 时按名字猜）
   const TPL_TONE = { 'classic-blue': 'blue', 'midnight-gold': 'gold', 'fresh-green': 'green', 'western-white': 'platinum', 'festive-red': 'gold', 'ocean-blue': 'blue', 'black-gold': 'gold', 'spring-red': 'gold', 'mini-gray': 'purple', 'western-blue': 'blue' };
