@@ -695,3 +695,8 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .ia-bulk { display: flex; gap: 8px; margin: -2px 0 8px; }
 .ia-bulk .btn { flex: 1; justify-content: center; }
 .tpl-th.is-soon { box-shadow: inset 0 0 0 var(--stroke-hairline) var(--border); }
+/* 浮动工具条「⋯」菜单：不继承工具条按钮样式，竖排 */
+.seltool .menu { display: flex; flex-direction: column; white-space: nowrap; padding: 4px; gap: 0; }
+.seltool .menu .menu-item { display: flex; width: 100%; height: 36px; padding: 0 12px; gap: 8px; font-size: 13px; background: none; border-radius: 8px; justify-content: flex-start; }
+.seltool .menu .menu-item:hover { background: var(--bg-hover); }
+.seltool .menu .menu-item.is-danger { color: var(--error); }
