@@ -12,7 +12,7 @@ cd prototype && python3 -m http.server 8765
 # 浏览器打开 http://localhost:8765/
 ```
 
-或直接双击 `index.html`（部分浏览器对本地文件限制较多，推荐用上面的方式）。
+不想开命令行：运行 `python3 prototype/build-single.py` 生成 `prototype/dist/prototype-single.html`（CSS、JS、图片全部内嵌的单文件），双击就能打开，也可以直接发给别人。注意别在压缩包里直接双击 `index.html`，要先解压，否则会是空白页。
 
 地址参数：`?theme=dark|light&lang=zh-Hans|zh-Hant|en|vi`，例如 `index.html?theme=light&lang=vi#/editor`。
 电脑宽度下右下角有一条半透明的「原型切换条」（日夜 + 四种语言），不属于平台界面。
