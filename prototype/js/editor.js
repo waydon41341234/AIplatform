@@ -12,6 +12,9 @@
     purple: ['#7b4dff', '#25213a', '#5f5a75', '#948faa', '#c9c5da', '#e4e1ef', '#f6f5fb', '#ffffff', '#12b886', '#f03e5e', '#ff9f1c'],
   };
   const preset = (k) => Object.fromEntries(KEYS.map((key, i) => [key, PRESETS[k][i]]));
+  // AD：AI 首页设计的基准色在 D.baseTheme / D.baseEc（AI 给的值不算业主自改，ED-14 规则不变）
+  const baseOf = (D) => (D.baseTheme ? Object.assign({}, D.baseTheme) : preset(PRESETS[D.basePreset] ? D.basePreset : 'blue'));
+  const ecCustom = (D) => Object.keys(D.ec).filter((k) => !(D.baseEc && D.baseEc[k] === D.ec[k])).length;
   const SUGGEST = ['#1678ff', '#c9963b', '#10b26c', '#7b4dff', '#ea4e3d', '#ff7a1a', '#06b0ea', '#1c2033'];
   // ED-21：去掉「菜单栏」，游戏菜单即游戏类型菜单
   const MODS = {
@@ -99,16 +102,18 @@
   // ---------- 进入编辑器（加载页，ED-15 / ED-17） ----------
   window.openEditor = function (opts) {
     opts = opts || {};
-    if ((opts.name && opts.name !== E.name) || opts.template) {
+    if ((opts.name && opts.name !== E.name) || opts.template || opts.design) {
       if (opts.name) E.name = opts.name;
       const d = !opts.template && LS.get('ed.d.' + E.name, null);
       E.D = d && d.v === DV ? d : defaultDesign(opts.template, opts.palette);
+      if (opts.design) { E.D = JSON.parse(JSON.stringify(opts.design)); E.D.v = DV; persist(); } // AD：AI 首页设计作为初始设计
       E.past = []; E.future = []; E.checksPassed = false; clearTimeout(expTimer); E.exp.stage = 'ready'; E.exp.dl = {}; E.exp.failed = {};
       const pj = Array.isArray(window.PROJECTS) && window.PROJECTS.find((p) => p.name === E.name);
       E.status = LS.get('ed.st.' + E.name, pj && pj.st === 'exported' ? 'exported' : 'designing');
     }
     if (opts.status) E.status = opts.status;
     E.then = opts.then || null;
+    E.adBar = opts.design && opts.design.iconStyle ? { ics: opts.design.iconStyle } : null; E.adp = null; E.adMod = null;
     E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.keys = null; E.iconAi = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved';
     LS.set('ed.last', E.name);
     startLoad();
@@ -148,7 +153,7 @@
   const validHex = (s) => /^#?[0-9a-f]{6}$/i.test(s);
   // 色块上的文字颜色：按 WCAG 相对亮度，取与底色对比度更高的黑或白
   function inkOn(hex) {
-    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})/i.exec(hex || ''); if (!m) return '#fff';
+    const m = /^#?([0-9a-f]{6}|[0-9a-f]{3})/i.exec(hex || ''); if (!m) return '#fff';
     let h = m[1]; if (h.length === 3) h = h.replace(/./g, (c) => c + c);
     const L = [0, 2, 4].map((i) => { const c = parseInt(h.substr(i, 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
     const lum = 0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2];
@@ -165,7 +170,7 @@
   function themeStyle() {
     const { th, tb, ec } = liveTheme();
     let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP ? window.MP.vars(th, ec) : '');
-    if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`;
+    if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`;
     return s;
   }
 
@@ -193,6 +198,7 @@
       (miss.length ? req : ok).push({ id: 'gamemenu', mod: 'gamemenu', name: t('mod/gamemenu'), text: miss.length ? t('ed/chk-gamemenu', { n: miss.length, names: miss.map(nm).join('、') }) : t('mod/gamemenu') });
     }
     if (inPage('jackpot')) (D.chkOk.jackpot ? ok : sug).push({ id: 'jackpot', mod: 'jackpot', name: t('cat/jackpot'), text: D.chkOk.jackpot ? t('cat/jackpot') : t('ed/chk-4'), confirm: true });
+    if (window.AD && window.AD.checks) window.AD.checks(D, req, sug, ok);
     if (E.checksPassed) { ok.push(...req, ...sug); return { req: [], sug: [], ok }; }
     return { req, sug, ok };
   }
@@ -202,7 +208,7 @@
     const sel = E.sel === id;
     let extra = '';
     if (sel && !mobileEd()) extra = `<span class="sel-label ${opts.top ? 'inside' : ''}">${esc(E.ai && E.ai.cand != null && baseName(id) === 'banner' ? t('ed/previewing', { n: E.ai.cand + 1 }) : modName(id))}</span>${selToolbar(id, opts.top)}`;
-    return `<div class="mod ${sel ? 'is-sel' : ''}" data-mod="${id}" data-act="selMod" data-arg="${id}">${inner}${extra}</div>`;
+    return `<div class="mod ${sel ? 'is-sel' : ''}" data-mod="${id}" data-act="selMod" data-arg="${id}">${inner}${extra}${window.AD ? window.AD.modMask(id) : ''}</div>`;
   }
   function selToolbar(id, below) {
     const b = baseName(id), fixed = MODS[b].fixed;
@@ -213,7 +219,7 @@
     else main = btn('tbTab', 'sliders-horizontal', t('ed/tool-layout'), 'layout') + btn('tbTab', 'paint-brush-fill', t('ed/recolor'), 'color');
     const move = fixed || b === 'sidebar' ? '' : `<button class="ib" data-act="move" data-arg="-1" data-stop ${idx <= 0 ? 'disabled' : ''}>${ic('arrow-up')}</button><button class="ib" data-act="move" data-arg="1" data-stop ${idx >= E.D.order.length - 1 ? 'disabled' : ''}>${ic('arrow-down')}</button>`;
     const menu = S.menu === 'modmenu' ? moduleMenu(id) : '';
-    return `<div class="seltool ${below ? 'below' : ''}" data-stop>${main}${move}<button class="ib" data-act="toggleHide" data-arg="${id}" data-stop title="${esc(t('ed/am-toggle'))}">${ic('eye-slash-fill')}</button><span class="rel"><button class="ib" data-act="menu:toggle" data-arg="modmenu" data-stop>${ic('dots-three')}</button>${menu}</span></div>`;
+    return `<div class="seltool ${below ? 'below' : ''}" data-stop>${main}${window.AD ? window.AD.toolBtn(id) : ''}${move}<button class="ib" data-act="toggleHide" data-arg="${id}" data-stop title="${esc(t('ed/am-toggle'))}">${ic('eye-slash-fill')}</button><span class="rel"><button class="ib" data-act="menu:toggle" data-arg="modmenu" data-stop>${ic('dots-three')}</button>${menu}</span></div>`;
   }
   function moduleMenu(id) {
     const fixed = MODS[baseName(id)].fixed;
@@ -257,12 +263,12 @@
     const body = D.order.filter((id) => !D.hidden[id] && MODS[baseName(id)]).map((id) => modWrap(id, modHtml(id))).join('');
     const topPx = D.hidden.topbar ? 0 : D.tb.h / 2, bnPx = D.hidden.bottomnav ? 0 : BNAV_PX[D.m.bottomnav.h] || 55;
     const top = D.hidden.topbar ? '' : modWrap('topbar', h5Topbar(), { top: true });
-    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}</div>`;
-    const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop>${window.MP.side()}</div>` : '';
+    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
+    const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop>${window.MP.side()}${window.AD ? window.AD.modMask('sidebar') : ''}</div>` : '';
     // ED-13：画布按页面高度显示，1334 处画首屏线
     const minBody = Math.max(0, D.height / 2 - topPx - bnPx);
     const fold = opts.noFold ? '' : `<div class="h5-fold" style="top:${667}px"><span>${t('ed/fold-line')}</span></div>`;
-    return `<div class="h5" style="${themeStyle()}${opts.style || ''}">${top}<div class="h5-body" ${opts.measure ? 'data-measure' : ''} data-top="${topPx}" data-bn="${bnPx}" style="min-height:${minBody}px">${body}</div>${bnav}${fold}${side}</div>`;
+    return `<div class="h5 ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" style="${themeStyle()}${opts.style || ''}">${top}<div class="h5-body" ${opts.measure ? 'data-measure' : ''} data-top="${topPx}" data-bn="${bnPx}" style="min-height:${minBody}px">${body}</div>${bnav}${fold}${side}</div>`;
   }
   // 内容高度（750 稿单位）：渲染后量一次，变了再渲染
   window.AFTER_RENDER.push(() => {
@@ -324,7 +330,7 @@
         <button class="btn btn-secondary btn-sm btn-block" style="margin-top:12px" data-act="openKeys">${ic('caret-right', 'ic-16')}${t('ed/all-keys')}</button></div>`;
     if (mode === 'colors-only') return colorsSec;
     const hNote = E.contentH ? t('ed/height-note-n', { n: E.contentH }) : t('ed/height-note');
-    return `<h2 class="p-title">${t('ed/page-settings')}</h2><p class="p-sub">${t('ed/page-hint')}</p>
+    return `<h2 class="p-title">${t('ed/page-settings')}</h2><p class="p-sub">${t('ed/page-hint')}</p>${window.AD ? window.AD.entryCard() : ''}
       <div class="p-sec"><div class="lab">${t('ed/tpl-sec')}</div>${tplRow()}</div>
       ${colorsSec}
       <div class="p-sec"><div class="lab">${t('ed/page-height')}</div><div class="h-row"><input class="input" style="width:110px" type="number" min="1334" max="6000" value="${E.D.height}" data-input="pageHeight" data-key="heightKey"><span class="caption faint">${hNote}</span></div></div>`;
@@ -469,7 +475,7 @@
     if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab);
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
-  function rightPanel() { return E.sel ? modulePanel(E.sel) : pageSettings(); }
+  function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
 
   // ---------- 取色器 ----------
   function pickerHtml(cls = '', title) {
@@ -660,13 +666,13 @@
   A.setLogin = (v) => { if (E.D.login === (v === 'in')) return false; commit(() => { E.D.login = v === 'in'; }); };
 
   // ---------- 换整套配色（ED-14） ----------
-  function customCount() { const base = preset(E.D.basePreset || 'blue'); return Object.keys(E.D.ec).length + KEYS.filter((k) => E.D.theme[k].toLowerCase() !== base[k]).length; }
+  function customCount() { const base = baseOf(E.D); return ecCustom(E.D) + KEYS.filter((k) => E.D.theme[k].toLowerCase() !== base[k].toLowerCase()).length; }
   function applyPalette(k, keep) {
-    const base = preset(E.D.basePreset || 'blue'); const nw = preset(k);
+    const base = baseOf(E.D); const nw = preset(k);
     commit(() => {
-      if (keep) KEYS.forEach((key) => { if (E.D.theme[key].toLowerCase() === base[key]) E.D.theme[key] = nw[key]; });
+      if (keep) { KEYS.forEach((key) => { if (E.D.theme[key].toLowerCase() === base[key].toLowerCase()) E.D.theme[key] = nw[key]; }); const be = E.D.baseEc || {}; Object.keys(be).forEach((id) => { if (E.D.ec[id] === be[id]) delete E.D.ec[id]; }); }
       else { E.D.theme = nw; E.D.ec = {}; }
-      E.D.palette = k; E.D.basePreset = k;
+      E.D.palette = k; E.D.basePreset = k; delete E.D.baseTheme; delete E.D.baseEc;
     });
     E.picker = null; E.dlg = null; E.palQ = null;
     window.toast(t('ed/pal-applied', { name: t('color/palette-' + k) }), undoOpt());
@@ -685,8 +691,8 @@
 
   // ---------- 切换模板（ED-23） ----------
   function tplCounts(D) {
-    const base = preset(D.basePreset || 'blue'); const tp = tplOf(D.template);
-    const colors = Object.keys(D.ec).length + KEYS.filter((k) => D.theme[k].toLowerCase() !== base[k]).length;
+    const base = baseOf(D); const tp = tplOf(D.template);
+    const colors = ecCustom(D) + KEYS.filter((k) => D.theme[k].toLowerCase() !== base[k].toLowerCase()).length;
     let assets = D.banner.slides.filter((s, i) => s.f !== (tp.slides[i] || 'none') || s.fit).length;
     ['jackpot.bg', 'gamecards.fallback', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D.m[b][f]) assets++; });
     if (D.tb.logoF !== 'none') assets++;
@@ -699,9 +705,9 @@
     const D0 = E.D; const nd = defaultDesign(k);
     ['side', 'login', 'height', 'chkOk'].forEach((f) => { nd[f] = JSON.parse(JSON.stringify(D0[f])); });
     if (keep) {
-      const base = preset(D0.basePreset || 'blue');
-      KEYS.forEach((key) => { if (D0.theme[key].toLowerCase() !== base[key]) nd.theme[key] = D0.theme[key]; });
-      nd.ec = JSON.parse(JSON.stringify(D0.ec)); nd.tb.colors = Object.assign({}, D0.tb.colors); nd.tb.logoF = D0.tb.logoF;
+      const base = baseOf(D0);
+      KEYS.forEach((key) => { if (D0.theme[key].toLowerCase() !== base[key].toLowerCase()) nd.theme[key] = D0.theme[key]; });
+      nd.ec = JSON.parse(JSON.stringify(D0.ec)); const be = D0.baseEc || {}; Object.keys(be).forEach((id) => { if (nd.ec[id] === be[id]) delete nd.ec[id]; }); nd.tb.colors = Object.assign({}, D0.tb.colors); nd.tb.logoF = D0.tb.logoF;
       const tp0 = tplOf(D0.template);
       D0.banner.slides.forEach((s, i) => { if (nd.banner.slides[i] && (s.f !== (tp0.slides[i] || 'none'))) nd.banner.slides[i] = Object.assign({}, s, { w: BANNER[nd.banner.size].w, h: BANNER[nd.banner.size].h }); });
       ['jackpot.bg', 'gamecards.fallback', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D0.m[b][f]) nd.m[b][f] = D0.m[b][f]; });
@@ -976,7 +982,7 @@
   // ---------- 检查 / 导出（ED-12 / ED-16） ----------
   A.openChecks = () => { E.dlg = 'checks'; S.menu = null; };
   A.openExport = () => { E.dlg = 'export'; if (E.exp.stage !== 'exporting') E.exp.stage = 'ready'; E.exp.linking = 0; };
-  A.locate = (id) => { const all = checks(); const c = [...all.req, ...all.sug].find((x) => x.id === id); E.dlg = null; if (c && c.act === 'openResize') { A.openResize(c.arg); return; } A.selMod(c ? c.mod : id); };
+  A.locate = (id) => { const all = checks(); const c = [...all.req, ...all.sug].find((x) => x.id === id); E.dlg = null; if (c && c.act && A[c.act]) { return A[c.act](c.arg); } A.selMod(c ? c.mod : id); };
   A.chkConfirm = () => { commit(() => { E.D.chkOk.jackpot = true; }); window.toast(t('ed/chk-solved', { name: t('cat/jackpot') })); };
   A.markAll = () => { E.checksPassed = true; };
   A.expOpt = (k) => { E.exp.opts[k] = !E.exp.opts[k]; };
@@ -1012,6 +1018,7 @@
     if (E.dlg === 'export' && E.exp.stage === 'exporting') A.expCancel();
     if (E.dlg === 'export' && E.exp.stage === 'connect') E.exp.stage = 'ready';
     if (E.dlg === 'resize' && E.rs && E.rs.back === 'lib' && E.lib) { E.rs = null; E.dlg = 'lib'; return; }
+    if (E.dlg === 'adfig') { E.dlg = 'export'; return; } // AD-05：结构预览关掉回到导出结果
     E.dlg = null; E.rs = null; E.lib = null; E.palQ = null; if (!(E.tpl && E.tpl.busy)) E.tpl = null; E.nameEdit = null; if (E.bx && E.bx.ing == null) E.bx = null;
   };
 
@@ -1044,14 +1051,14 @@
       const rowBtn = (k) => (x.failed[k] ? (x.retrying[k] ? `<button class="btn btn-secondary btn-sm is-busy">${ic('circle-notch', 'ic-16 spin')}${t('ed/exp-retry')}</button>` : `<button class="btn btn-secondary btn-sm" data-act="expRetry" data-arg="${k}">${t('ed/exp-retry')}</button>`)
         : x.dl[k] ? `<span class="dl-ok">${ic('check-circle-fill', 'ic-16')}${t('ed/exp-downloaded')}</span>` : `<button class="btn btn-secondary btn-sm" data-act="dlFile" data-arg="${k}">${t('ed/exp-dl')}</button>`);
       return `<div class="dialog-head"><h3>${anyFail ? `<span class="t-warn">${ic('warning-circle-fill')}</span> ${t('ed/exp-partial')}` : `${ic('check-circle-fill')} ${t('ed/exp-done')}`}</h3>${close}</div><p class="muted">${anyFail ? t('ed/exp-partial-d') : t('ed/exp-done-d')}</p>
-        <div class="files">${files.map(([n, , k]) => `<div class="f ${x.failed[k] ? 'is-fail' : ''}">${x.failed[k] ? `<span class="t-err">${ic('x-circle-fill')}</span>` : ic(k === 'figma' ? 'file-image' : 'download-simple')}<span class="n ellipsis">${esc(n)}</span>${rowBtn(k)}</div>`).join('')}</div>
+        <div class="files">${files.map(([n, , k]) => `<div class="f ${x.failed[k] ? 'is-fail' : ''}">${x.failed[k] ? `<span class="t-err">${ic('x-circle-fill')}</span>` : ic(k === 'figma' ? 'file-image' : 'download-simple')}<span class="n ellipsis">${esc(n)}</span>${k === 'figma' && !x.failed[k] && window.AD ? window.AD.figViewBtn() : ''}${rowBtn(k)}</div>`).join('')}</div>
         <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeDlg">${t('ed/done')}</button><button class="btn btn-primary" data-act="dlFile">${ic('download-simple', 'ic-16')}${t('ed/exp-dl-all')}</button></div>`;
     }
     const opt = (k, n, d, extra = '') => `<button class="exp-opt ${x.opts[k] ? 'is-on' : ''}" data-act="expOpt" data-arg="${k}"><span class="check ${x.opts[k] ? 'is-on' : ''}">${x.opts[k] ? ic('check', 'ic-16') : ''}</span><span><b class="body-sm">${t(n)}</b><small>${t(d)}</small>${extra}</span></button>`;
     const figExtra = x.opts.figma && !E.figmaLinked ? `<small class="fg-cap">${ic('link-simple', 'ic-16')}${t('ed/exp-figma-auth')}</small>` : '';
     return `<div class="dialog-head"><h3>${t('ed/export-title')}</h3>${close}</div>
       ${!req ? `<div class="notice is-ok" style="margin-bottom:12px">${ic('check-circle-fill')}${t('ed/exp-ready')}</div>` : `<div class="notice is-warn" style="margin-bottom:12px;align-items:center">${ic('warning-circle-fill')}<span style="flex:1">${t('ed/exp-blocked', { n: req })}</span><button class="btn btn-secondary btn-sm" data-act="openChecks">${t('ed/go-check')}</button></div>`}
-      ${opt('figma', 'ed/exp-figma', 'ed/exp-figma-d', figExtra)}${opt('png', 'ed/exp-png', 'ed/exp-png-d')}${opt('svg', 'ed/exp-svg', 'ed/exp-svg-d')}
+      ${opt('figma', 'ed/exp-figma', 'ed/exp-figma-d', figExtra)}${x.opts.figma && window.AD ? window.AD.figIncl() : ''}${opt('png', 'ed/exp-png', 'ed/exp-png-d')}${opt('svg', 'ed/exp-svg', 'ed/exp-svg-d')}
       <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary ${!req && Object.values(x.opts).some(Boolean) ? '' : 'is-disabled'}" data-act="doExport">${ic('download-simple', 'ic-16')}${t('ed/export-btn')}</button></div>`;
   }
   function fpBody() {
@@ -1063,12 +1070,12 @@
   function dialogs() {
     if (!E.dlg) return '';
     const m = mobileEd();
-    const map = { checks: checksBody, export: exportBody, fp: fpBody, lib: libBody, resize: resizeBody, pal: palBody, tplpick: tplBody, rename: renameBody, batch: (mm) => window.MP.batchBody(mm) };
+    const map = Object.assign({ checks: checksBody, export: exportBody, fp: fpBody, lib: libBody, resize: resizeBody, pal: palBody, tplpick: tplBody, rename: renameBody, batch: (mm) => window.MP.batchBody(mm) }, window.AD ? window.AD.dlgs : {});
     const need = { lib: 'lib', resize: 'rs', pal: 'palQ', tplpick: 'tpl', batch: 'bx' }[E.dlg];
     if (need && !E[need]) { E.dlg = null; return ''; }
     const body = (map[E.dlg] || fpBody)(m);
-    const full = ['lib', 'resize', 'batch', 'tplpick'].includes(E.dlg);
-    const cls = { lib: 'dialog-lib', tplpick: 'dialog-tpl', pal: 'dialog-sm', rename: 'dialog-sm', batch: 'dialog-bx', resize: 'dialog-rs' }[E.dlg] || '';
+    const full = ['lib', 'resize', 'batch', 'tplpick', 'adfig'].includes(E.dlg);
+    const cls = { lib: 'dialog-lib', tplpick: 'dialog-tpl', pal: 'dialog-sm', rename: 'dialog-sm', batch: 'dialog-bx', resize: 'dialog-rs', adfig: 'dialog-adfig' }[E.dlg] || '';
     if (m) return `<div class="scrim" data-act="closeDlg"></div><div class="sheet med-sheet ed-dlg-sheet ${full ? 'is-full' : ''} ${cls}" data-sk="dlgsheet">${full ? '' : '<div class="sheet-grab"></div>'}${body}</div>${E.dlg === 'batch' ? window.MP.batchPickSheet() : ''}`;
     return `<div class="scrim" data-act="closeDlg"></div><div class="dialog dialog-wide ${cls}" data-sk="dlg">${body}</div>`;
   }
@@ -1108,7 +1115,7 @@
         <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>
         ${checkBtn()}<button class="btn btn-primary btn-sm" data-act="openExport">${ic('download-simple', 'ic-16')}${t('ed/export')}</button></header>
       <div class="ed-body"><nav class="ed-left" data-sk="ed-left">${tree()}</nav>
-        <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
+        <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
         <aside class="ed-right" data-sk="ed-right">${rightPanel()}</aside></div></div>${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
   }
   A.canvasBg = (a, el, e) => { if (e.target === el || e.target.classList.contains('ed-stage') || e.target.classList.contains('med-stage')) { if (E.sel || E.picker) { E.sel = null; E.ai = null; E.picker = null; E.iconAi = null; E.h5side = false; if (mobileEd()) E.mpanel = null; return; } } return false; };
@@ -1126,7 +1133,7 @@
         <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} aria-label="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} aria-label="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>
         <button class="ibtn ibtn-sm warn ${n ? '' : 'is-ok'}" data-act="mPanel" data-arg="checks" aria-label="${esc(t('ed/checks-title'))}">${ic(n ? 'warning-circle-fill' : 'check-circle-fill')}${n ? `<i class="badge">${n}</i>` : ''}</button>
         <button class="btn btn-primary btn-sm" data-act="mPanel" data-arg="export">${ic('download-simple', 'ic-16')}<span class="ex-l">${t('ed/export')}</span></button></header>
-      <main class="med-canvas ${pc ? 'is-pc' : ''}" data-sk="med-canvas" data-act="canvasBg">${canvas}
+      <main class="med-canvas ${pc ? 'is-pc' : ''}" data-sk="med-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}
         ${E.mpanel || pc ? '' : `<div class="med-login"><div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>`}
         ${E.mpanel || pc ? '' : `<button class="fab" data-act="mPanel" data-arg="colors" aria-label="${esc(t('ed/m-colors'))}">${ic('paint-brush-fill')}<i style="background:${E.D.theme.primary}"></i></button>`}${busyMask()}</main>
       <nav class="med-tools">${[['pages', 'squares-four-fill', 'ed/pages'], ['modules', 'layout-fill', 'ed/m-modules'], ['colors', 'palette-fill', 'ed/m-colors'], ['preview', 'eye-fill', 'ed/m-preview']].map(([id, i, k]) => `<button class="${E.mpanel === id ? 'is-on' : ''}" data-act="mPanel" data-arg="${id}">${ic(i)}${t(k)}</button>`).join('')}</nav>
@@ -1145,7 +1152,7 @@
     if (sub) return '';
     const fixed = MODS[b].fixed; const idx = E.D.order.indexOf(id); const hid = !!E.D.hidden[id];
     const mv = fixed || b === 'sidebar' ? '' : `<button class="ibtn ibtn-sm" data-act="move" data-arg="-1" ${idx <= 0 ? 'disabled' : ''} aria-label="↑">${ic('arrow-up')}</button><button class="ibtn ibtn-sm" data-act="move" data-arg="1" ${idx >= E.D.order.length - 1 ? 'disabled' : ''} aria-label="↓">${ic('arrow-down')}</button>`;
-    return `${mv}<button class="ibtn ibtn-sm" data-act="toggleHide" data-arg="${id}" aria-label="${esc(t('ed/am-toggle'))}">${ic(hid ? 'eye-fill' : 'eye-slash-fill')}</button><span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu">${ic('dots-three')}</button>${S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu"', 'class="menu" style="top:calc(100% + 4px);right:0;left:auto"') : ''}</span>`;
+    return `${window.AD ? window.AD.toolBtn(id, true) : ''}${mv}<button class="ibtn ibtn-sm" data-act="toggleHide" data-arg="${id}" aria-label="${esc(t('ed/am-toggle'))}">${ic(hid ? 'eye-fill' : 'eye-slash-fill')}</button><span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu">${ic('dots-three')}</button>${S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu"', 'class="menu" style="top:calc(100% + 4px);right:0;left:auto"') : ''}</span>`;
   }
   function mobilePanel() {
     if (!E.mpanel) return '';
@@ -1156,7 +1163,8 @@
         <div class="row ${E.sel === null ? 'is-on' : ''}" style="margin-top:12px"><span class="dot ${checks().req.length ? 'check' : 'done'}"></span>${ic('house-fill', 'ic-16')}<span class="nm">${t('cat/home')}</span></div>
         <div class="p-sec"><div class="lab">${t('ed/page-height')}</div><div class="h-row"><input class="input" style="width:110px" type="number" min="1334" max="6000" value="${E.D.height}" data-input="pageHeight" data-key="heightKey"><span class="caption faint">${E.contentH ? t('ed/height-note-n', { n: E.contentH }) : t('ed/height-note')}</span></div></div>`;
     } else if (E.mpanel === 'modules') { head = t('ed/m-modules'); body = tree().replace(/^[\s\S]*?<div class="grp-label">/, '<div class="grp-label">').replace(/<div class="grp-label">[^<]*<\/div>\s*<div class="row[\s\S]*?<div class="divider"><\/div>/, ''); }
-    else if (E.mpanel === 'colors') { head = t('ed/m-colors'); body = pageSettings('colors-only'); }
+    else if (E.mpanel === 'colors') { head = t('ed/m-colors'); body = (window.AD ? window.AD.entryCard() : '') + pageSettings('colors-only'); }
+    else if (E.mpanel === 'ad' && window.AD) { return window.AD.mSheet(); }
     else if (E.mpanel === 'keys' && E.keys) { head = t('ed/keys-title', { n: 68 }); body = window.MP.keysPanel(true); cls = 'is-tall'; }
     else if (E.mpanel === 'iconmenu') { return `<div class="scrim" data-act="mIconClose"></div><div class="sheet med-sheet icon-sheet" data-sk="msheet"><div class="sheet-grab"></div>${window.MP.iconSheet()}</div>`; }
     else if (E.mpanel === 'addmod') { return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet add-sheet" data-sk="msheet"><div class="sheet-grab"></div>${addList()}</div>`; }
@@ -1190,6 +1198,8 @@
     if (E.dlg) { A.closeDlg(); return; }
     if (E.preview) { E.preview = false; return; }
     if (E.mpanel) { if (E.mpanel === 'iconmenu') A.mIconClose(); else if (E.mpanel === 'keys') A.keysBack(); else A.mClose(); return; }
+    if (E.adMod) { A.adModCancel(); return; }
+    if (E.adp) { A.adEClose(); return; }
     if (E.keys) { E.keys = null; return; }
     if (E.iconAi) { A.iaClose(); return; }
     if (E.ai) { E.ai = null; return; }
@@ -1197,7 +1207,9 @@
     if (E.palOpen) { E.palOpen = false; }
   }
 
-  window.EDX = { E, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn };
+  window.EDX = { E, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
+    // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
+    h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
-  window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.iconAi || E.rn || E.nameEdit || E.h5side || E.palOpen), escape };
+  window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.iconAi || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod), escape };
 })();

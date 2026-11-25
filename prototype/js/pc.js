@@ -26,7 +26,7 @@
   function themeStyle() {
     const { th, tb, ec } = X().liveTheme();
     let s = Object.keys(th).map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP && window.MP.vars ? window.MP.vars(th, ec || {}) : '');
-    if (tb) { if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; }
+    if (tb) { if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`; }
     return s;
   }
   const zStyle = (z) => `zoom:${z};--pc-iz:${(1 / z).toFixed(4)}`;
@@ -125,7 +125,7 @@
     const body = D.order.filter((id) => !D.hidden[id] && modHtml(id)).map((id) => wrap(id, modHtml(id))).join('');
     const top = D.hidden.topbar ? '' : wrap('topbar', topbar(), { top: true });
     const side = D.hidden.sidebar ? '' : `<div class="pc-rail-pos ${D.side === 'right' ? 'right' : 'left'}">${wrap('sidebar', rail())}</div>`;
-    return `<div class="pc pc-page" data-pc-page style="${zStyle(z)};${themeStyle()}">${top}<div class="pc-body">${body}${side}</div></div>`;
+    return `<div class="pc pc-page ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" data-pc-page style="${zStyle(z)};${themeStyle()}">${top}<div class="pc-body">${body}${side}</div></div>`;
   }
   function zoomBar() {
     const z = curZ();
@@ -216,5 +216,5 @@
   }, { passive: false });
   document.addEventListener('touchend', (e) => { if (e.touches.length < 2) pinch = null; });
 
-  window.PC = { canvas, rowNote, panelNote, zoom: curZ };
+  window.PC = { canvas, rowNote, panelNote, zoom: curZ, page }; // page：AD 的放大预览 / 结构预览按给定设计渲染 PC 页
 })();

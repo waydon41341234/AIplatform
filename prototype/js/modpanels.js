@@ -278,17 +278,21 @@
   });
 
   // ---------- AI 生成一套图标（ED-04） ----------
-  const STYLES = ['glass', 'flat', '3d', 'line'];
+  const STYLES = ['glass', 'flat', '3d', 'line', 'fill', 'duotone', 'metal', 'gradient']; // 后 4 种：AI 首页设计的图标风格（AD）
   const tType = (b) => (b === 'gamemenu' ? 'gametype' : b); // 流水里的类型名
   function lighten(hex, k) { const n = parseInt(hex.slice(1, 7), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * k)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); }
   // 模拟 AI 结果：按款式把 Phosphor 图标画成 SVG dataURL
   function aiSvg(icon, style, color) {
     const PH = window.PH; const reg = icon.replace(/-fill$/, '');
     const path = style === 'line' && PH[reg] ? PH[reg] : PH[icon] || PH['sparkle-fill'];
+    if (style === 'fill') return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><g transform="translate(12 12) scale(.28)" fill="${color}">${path}</g></svg>`);
     let bg = '', fg = '#fff';
     if (style === 'glass') bg = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".95"/><stop offset="1" stop-color="${color}" stop-opacity=".45"/></linearGradient></defs><rect x="4" y="4" width="88" height="88" rx="24" fill="url(#g)"/><rect x="4.5" y="4.5" width="87" height="87" rx="23.5" fill="none" stroke="#fff" stroke-opacity=".6"/><path d="M12 32Q48 8 84 32V14Q84 6 76 6H20Q12 6 12 14Z" fill="#fff" fill-opacity=".22"/>`;
     else if (style === 'flat') bg = `<rect x="4" y="4" width="88" height="88" rx="20" fill="${color}"/>`;
     else if (style === '3d') bg = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${lighten(color, 0.35)}"/><stop offset="1" stop-color="${color}"/></linearGradient></defs><rect x="6" y="10" width="84" height="82" rx="22" fill="#000" fill-opacity=".22"/><rect x="4" y="4" width="88" height="84" rx="22" fill="url(#g)"/>`;
+    else if (style === 'duotone') { bg = `<rect x="4" y="4" width="88" height="88" rx="24" fill="${color}" fill-opacity=".18"/>`; fg = color; }
+    else if (style === 'metal') bg = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lighten(color, 0.65)}"/><stop offset=".45" stop-color="${color}"/><stop offset=".7" stop-color="${lighten(color, 0.3)}"/><stop offset="1" stop-color="${color}" stop-opacity=".8"/></linearGradient></defs><rect x="4" y="4" width="88" height="88" rx="22" fill="url(#g)"/><rect x="5" y="5" width="86" height="86" rx="21" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/>`;
+    else if (style === 'gradient') bg = `<defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="${lighten(color, 0.5)}"/></linearGradient></defs><circle cx="48" cy="48" r="44" fill="url(#g)"/>`;
     else fg = color;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">${bg}<g transform="translate(24 22) scale(.1875)" fill="${fg}">${path}</g></svg>`);
   }
@@ -380,7 +384,7 @@
     let body = '', foot = '';
     if (ia.stage === 'setup') {
       const r = its.filter((it) => isReq(b, it)).length, o = its.filter((it, i) => !isReq(b, it) && ia.picks[i]).length;
-      body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${aiSvg(its[0].i || 'sparkle-fill', s, x.E.D.theme.primary)}" alt=""><span>${t('mp/ai-st-' + s)}</span></button>`).join('')}</div>`)
+      body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${aiSvg(its[0].i || 'sparkle-fill', s, x.E.D.theme.primary)}" alt=""><span>${window.I18N['mp/ai-st-' + s] ? t('mp/ai-st-' + s) : t('ad/ics-' + s)}</span></button>`).join('')}</div>`)
         + sec(t('mp/ai-extra'), `<input class="input" data-input="iaExtra" value="${esc(ia.extra)}" placeholder="${esc(t('mp/ai-extra-ph'))}" maxlength="60">`)
         + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div><div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
@@ -633,6 +637,7 @@
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aiPanel, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
+    resolveKey, EL, aiSvg, // AD：导出结构预览 / AI 首页设计用
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); X().E.D.m[b][f] = v; },

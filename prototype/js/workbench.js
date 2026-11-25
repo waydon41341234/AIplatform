@@ -158,6 +158,7 @@
   const restDoneNow = (r) => Math.round((r.progress / 100) * (N(r) - 1));
   // 已成功的格子下标（0 = 样板）；历史生成页只显示这些
   function doneIdx(r) {
+    if (r.kind === 'design') return window.AD ? window.AD.doneIdx(r) : []; // AD-02
     const n = N(r), all = (k) => Array.from({ length: k }, (_, i) => i);
     switch (r.status) {
       case 'done': case 'sample': return [0];
@@ -182,6 +183,7 @@
   function glyphTile(r, i = 0, opts = {}) {
     if (typeof r === 'string') r = findRec(r);
     if (!r) return '';
+    if (r.kind === 'design') return window.AD ? window.AD.tile(r, i, opts) : '';
     r.fails = r.fails || []; r.seeds = r.seeds || {};
     const [a, b] = tone(r);
     if (r.status === 'failed') return `<div class="tile tile-fail ${opts.sm ? 'is-sm' : ''}" data-act="viewTile" data-arg="${r.id}:0" title="${esc(t('rec/failed'))}">${ic('x-circle-fill', 'ic-24')}</div>`;
@@ -207,6 +209,7 @@
   }
 
   function recordView(r) {
+    if (r.kind === 'design') return window.AD ? window.AD.recordView(r) : ''; // AD-02：首页设计记录
     const ty = window.TYPES[r.type];
     const mob = isMob();
     const [a, b] = tone(r);
@@ -424,6 +427,7 @@
   const gridOpen = () => !!S.setGrid && (S.dialog === 'setgrid' || S.sheet === 'setgrid');
   window.openViewer = function (id, idx = 0, opts = {}) {
     const r = findRec(id); if (!r) return false;
+    if (r.kind === 'design' && window.AD) return window.AD.openViewer(id, idx, opts);
     S.viewer = { rid: id, idx: +idx || 0, from: opts.from || null, back: opts.back || null };
     S.menu = null; S.drawer = false;
     if (isMob()) { S.dialog = null; S.sheet = 'viewer'; } else { S.sheet = null; S.dialog = 'viewer'; }

@@ -85,7 +85,7 @@
     const link = !!l.sid;
     const inner = `<span class="lr-ic ${l.kind === 'topup' ? 'is-topup' : ''}">${ic(KIND_IC[l.kind] || 'magic-wand-fill', 'ic-16')}</span>
       <span class="lr-main"><span class="lr-title ellipsis">${esc(window.ledgerTitle(l))}</span><span class="caption faint">${esc(window.fmtTime(l))}</span></span>
-      <span class="lr-amt ${l.amount > 0 ? 'is-plus' : ''}">${l.amount > 0 ? '+' : '−'}${num(Math.abs(l.amount))}</span>${link ? ic('caret-right', 'ic-16 lr-caret') : '<span class="lr-caret"></span>'}`;
+      <span class="lr-amt ${l.amount > 0 ? 'is-plus' : ''}">${l.amount > 0 ? '+' : l.amount < 0 ? '−' : ''}${num(Math.abs(l.amount))}</span>${link ? ic('caret-right', 'ic-16 lr-caret') : '<span class="lr-caret"></span>'}`;
     return link ? `<button class="ledger-row is-link" data-act="ledgerGo" data-arg="${l.id}">${inner}</button>` : `<div class="ledger-row">${inner}</div>`;
   };
   window.creditStats = () => `<div class="cp-stats"><div>${t('credit/month-used', { n: num(S.monthUsed) })}</div><div>${t('credit/month-runs', { n: num(S.monthRuns) })}</div></div>`;
@@ -287,7 +287,10 @@
   }
   window.composer = function (where) {
     const mob = window.isMobile();
-    const tabs = ['midnav', 'bottomnav', 'gametype'];
+    const tabs = ['design', 'midnav', 'bottomnav', 'gametype']; // design：AI 首页设计（AD-01，放最前）
+    const tabBtn = (ty) => `<button class="c-tab ${S.c.type === ty ? 'is-on' : ''}" data-act="cType" data-arg="${ty}">${ty === 'design' ? window.ic('layout-fill') : window.typeIcon(ty)}${t('composer/type-' + ty)}</button>`;
+    const tabsHtml = `<div class="c-tabs" data-sk="ctabs-${where}">${tabs.map(tabBtn).join('')}<button class="tpl-link" data-act="tplLink">${t('composer/template-link')}</button></div>`;
+    if (S.c.type === 'design' && window.AD) return window.AD.composer(where, tabsHtml);
     const menu = (id, body, cls) => (!mob && S.menu === id ? `<div class="menu c-menu ${cls}">${body}</div>` : '');
     const opt = (id, inner) => `<div class="rel"><button class="c-opt ${S.menu === id ? 'is-open' : ''}" data-act="${mob ? 'sheet' : 'menu:toggle'}" data-arg="${id}">${inner}${ic('caret-down', 'chev')}</button>${menu(id, id === 'spec' ? specBody() : id === 'model' ? modelBody() : colorBody(), id === 'spec' ? 'spec-menu' : id === 'color' ? 'color-menu' : '')}</div>`;
     const opts = [
@@ -299,9 +302,8 @@
     const empty = !S.c.prompt.trim();
     const now = Date.now(), hint = now < (S.cHintUntil || 0), shake = now < (S.cShakeUntil || 0);
     return `<div class="composer" data-where="${where}">
-      <div class="c-tabs" data-sk="ctabs-${where}">${tabs.map((ty) => `<button class="c-tab ${S.c.type === ty ? 'is-on' : ''}" data-act="cType" data-arg="${ty}">${window.typeIcon(ty)}${t('composer/type-' + ty)}</button>`).join('')}
-        <button class="tpl-link" data-act="tplLink">${t('composer/template-link')}</button></div>
-      <div class="c-box ${S.c.type === 'midnav' ? 'no-tl' : ''} ${hint ? 'is-err' : ''} ${shake ? 'is-shake' : ''}">
+      ${tabsHtml}
+      <div class="c-box ${S.c.type === tabs[0] ? 'no-tl' : ''} ${hint ? 'is-err' : ''} ${shake ? 'is-shake' : ''}">
         <div class="c-input">
           ${window.refSlot(S.c.refSt, 'cRef')}
           <textarea rows="3" data-input="cPrompt" data-key="cKey" placeholder="${esc(t('composer/placeholder'))}">${esc(S.c.prompt)}</textarea>
@@ -310,7 +312,7 @@
           <button class="send ${empty ? 'is-disabled' : ''}" data-act="cSend" title="${esc(t('confirm/approx', { n: cost() }))}">${ic('sparkle-fill')}${num(cost())}${ic('arrow-up')}</button></div>
       </div>${hint ? `<div class="c-hint" role="alert">${t('composer/empty-hint')}</div>` : ''}</div>`;
   };
-  A.cType = (v) => { S.c.type = v; };
+  A.cType = (v) => { S.c.type = v; S.menu = null; };
   A.cQty = (v) => { S.c.qty = v; };
   A.cQuality = (v) => { S.c.quality = v; };
   A.cModel = (v) => { S.c.model = v; S.menu = null; if (S.sheet === 'model') S.sheet = null; };
@@ -372,6 +374,7 @@
     if (S.sheet === 'newproj') h += window.sheet(npBody());
     if (window.wbOverlays) h += window.wbOverlays();
     if (window.pageOverlays) h += window.pageOverlays();
+    if (window.adOverlays) h += window.adOverlays();
     h += window.costConfirmLayer();
     return h;
   };
@@ -463,7 +466,7 @@
   }
   // 新建项目弹窗（D 的「我的项目」也调它）
   window.openNewProject = function (opts = {}) {
-    S.np = { name: defaultName(), level: 'standard', template: opts.template || null, fresh: true };
+    S.np = { name: opts.name || defaultName(), level: 'standard', template: opts.template || null, design: opts.design || null, from: opts.from || '', fresh: true };
     S.menu = null;
     if (window.isMobile()) { S.dialog = null; S.sheet = 'newproj'; } else { S.sheet = null; S.dialog = 'newproj'; }
     if (!window.__inAct) window.render();
@@ -480,7 +483,7 @@
       ${emptyName ? `<div class="caption err-text">${t('newproj/name-empty')}</div>` : taken ? `<div class="caption err-text">${t('ed/name-taken')}</div>` : ''}
       <label class="np-lab">${t('newproj/level')}</label>
       <div class="np-levels">${lv('standard', 1, true)}${lv('pro', 2, false)}${lv('full', 3, false)}</div>
-      ${np.template ? `<div class="caption muted" style="margin-top:12px">${t('newproj/from-tpl', { name: t('template/' + np.template) })}</div>` : ''}
+      ${np.template ? `<div class="caption muted" style="margin-top:12px">${t('newproj/from-tpl', { name: t('template/' + np.template) })}</div>` : ''}${np.design && np.from ? `<div class="caption muted" style="margin-top:12px">${esc(np.from)}</div>` : ''}
       <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-primary ${emptyName || taken ? 'is-disabled' : ''}" data-act="npStart">${t('newproj/start')}</button></div>`;
   }
   const npState = (v) => { v = v.trim(); return !v ? 'empty' : window.PROJECTS.some((p) => p.name === v) ? 'taken' : 'ok'; };
@@ -494,6 +497,12 @@
     const name = np.name.trim();
     // 新项目：清掉同名旧项目（已删除）残留的编辑器数据；不带模板时按默认模板新建，保证是一份全新的设计
     ['ed.d.', 'ed.st.', 'ed.x.'].forEach((k) => { try { localStorage.removeItem('proto.' + k + name); } catch (e) { /* noop */ } });
+    if (np.design) { // AD：用 AI 首页设计新建项目，设计作为初始数据
+      const tone = np.design.tone || 'blue';
+      window.PROJECTS.unshift({ name, st: 'designing', time: 'time/just', tone, template: np.design.template || null });
+      window.openEditor({ name, design: np.design, status: 'designing' });
+      return false;
+    }
     window.PROJECTS.unshift({ name, st: 'designing', time: 'time/just', tone: palette, template: np.template || null });
     window.openEditor({ name, template: np.template || 'classic-blue', palette, status: 'designing' });
     return false;

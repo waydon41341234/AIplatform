@@ -237,7 +237,7 @@
   // ======================================================================
   // NP-03 历史生成
   // ======================================================================
-  const HTYPES = ['midnav', 'bottomnav', 'gametype'];
+  const HTYPES = ['design', 'midnav', 'bottomnav', 'gametype']; // design：AI 首页设计（AD-02）
   const tileBtn = (it) => `<button class="pg-tile" data-act="pgView" data-arg="${it.s.id}|${it.r.id}|${it.i}" aria-label="${esc(t('composer/type-' + it.r.type))}">${tile(it.r, it.i)}</button>`;
   function viewHistory() {
     const P = S.pg, all = historyItems();
