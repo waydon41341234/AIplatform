@@ -700,3 +700,43 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .seltool .menu .menu-item { display: flex; width: 100%; height: 36px; padding: 0 12px; gap: 8px; font-size: 13px; background: none; border-radius: 8px; justify-content: flex-start; }
 .seltool .menu .menu-item:hover { background: var(--bg-hover); }
 .seltool .menu .menu-item.is-danger { color: var(--error); }
+/* 顶部栏内容：分组列表（2026-11-26 排版优化） */
+.tb-group { border-radius: var(--radius-md); background: var(--fill-3); border: var(--stroke-thin) solid var(--border); overflow: visible; }
+.tb-item { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 6px 8px 12px; }
+.tb-item + .tb-item { border-top: var(--stroke-thin) solid var(--border); }
+.tb-item .grip { color: var(--icon-2); display: inline-flex; margin-left: -6px; margin-right: -4px; cursor: grab; flex: none; }
+.tb-item .thumb { flex: none; border-radius: 8px; }
+.tb-item .thumb.sq { width: 36px; height: 36px; background: var(--bg-surface); display: inline-flex; align-items: center; justify-content: center; color: var(--text); }
+.tb-item .thumb.logo { width: 36px; height: 36px; background: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.tb-item .thumb.logo img { width: 24px; height: 24px; border-radius: 50%; }
+.tb-item .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.tb-item .tx b { font-weight: 500; font-size: var(--fs-body-sm); color: var(--text); }
+.tb-item .tx small { font-size: var(--fs-caption); color: var(--text-3); }
+.tb-item .rel { margin-left: 0 !important; flex: none; }
+.tb-item .eye { color: var(--icon-2); width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 8px; }
+.tb-item .eye:hover, .tb-item .more-btn:hover { background: var(--bg-hover); }
+.tb-item.is-hidden > :not(.eye) { opacity: .45; }
+.tb-item.tb-pos { min-height: 52px; padding-right: 8px; }
+.tb-item.tb-pos .iseg button { height: 30px; }
+.tb-group + .replaced, .tb-group + .upl { margin-top: 8px; }
+/* 余额框样式：H5 画布 */
+.h5-top .bal .bi { width: 12px; height: 12px; flex: none; }
+.h5-top .bal.bal-solid { gap: 4px; padding: 0 3px 0 8px; background: var(--o-primary); border-color: transparent; color: #fff; }
+.h5-top .bal.bal-solid .bplus { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.h5-top .bal.bal-solid .bplus .bi { width: 10px; height: 10px; }
+.h5-top .bal.bal-text { gap: 4px; padding: 0 2px; background: none; border: 0; }
+/* 余额框样式：右栏选择 */
+.tb-item.tb-balst { min-height: 40px; padding-bottom: 0; }
+.tb-item + .tb-item.tb-balst { border-top: var(--stroke-thin) solid var(--border); }
+.bal-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px 12px 12px; }
+.bal-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px 8px; border-radius: 10px; background: var(--bg-surface); border: 1.5px solid transparent; min-width: 0; }
+.bal-opt small { font-size: var(--fs-caption); color: var(--text-2); text-align: center; line-height: 1.3; }
+.bal-opt.is-on { border-color: var(--brand); background: var(--brand-subtle); }
+.bal-opt.is-on small { color: var(--brand); }
+.bal-prev { --o-primary: var(--brand); --o-bg_1: var(--fill-3); --o-border: var(--border); display: flex; align-items: center; justify-content: center; height: 26px; max-width: 100%; overflow: hidden; }
+.bal-prev .bal { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--o-bg_1); border: 1px solid var(--o-border); color: var(--o-primary); font-weight: 600; font-size: 10px; white-space: nowrap; }
+.bal-prev .bal .bi { width: 11px; height: 11px; flex: none; }
+.bal-prev .bal.bal-solid { gap: 3px; padding: 0 3px 0 6px; background: var(--o-primary); border-color: transparent; color: #fff; }
+.bal-prev .bal.bal-solid .bplus { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.bal-prev .bal.bal-solid .bplus .bi { width: 9px; height: 9px; }
+.bal-prev .bal.bal-text { gap: 3px; padding: 0; background: none; border: 0; }

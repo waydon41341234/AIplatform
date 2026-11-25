@@ -142,3 +142,9 @@
 body:has(.med-sheet) .pc-mfloat, body:has(.preview-full) .pc-mfloat { display: none; }
 /* PC Banner 通栏 1920×564 的尺寸角标 */
 .pc-banner .pc-spec { position: absolute; right: 24px; bottom: 16px; padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: calc(12px * var(--pc-iz, 1)); line-height: 1.5; pointer-events: none; }
+/* 余额框样式：PC 画布 */
+.pc-top .bal .bi { width: 18px; height: 18px; flex: none; }
+.pc-top .bal.bal-solid { gap: 8px; padding: 0 5px 0 14px; background: var(--o-primary); border-color: transparent; color: #fff; }
+.pc-top .bal.bal-solid .bplus { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.pc-top .bal.bal-solid .bplus .bi { width: 16px; height: 16px; }
+.pc-top .bal.bal-text { gap: 6px; padding: 0 4px; background: none; border: 0; }

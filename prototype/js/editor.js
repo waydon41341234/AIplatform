@@ -51,7 +51,7 @@
       theme: preset(p), palette: p, basePreset: p, template: key, height: 1600,
       banner: { size: tp.size, ind: 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
-      tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: true, search: true, auth: true }, searchFirst: false, colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
+      tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: true, search: true, auth: true }, searchFirst: false, balStyle: 'pill', colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
     };
   }
   const meta0 = LS.get('ed.meta', {});
@@ -228,12 +228,22 @@
     const fixed = MODS[baseName(id)].fixed;
     return `<div class="menu" data-stop>${fixed ? '' : `<button class="menu-item" data-act="modDup" data-arg="${id}" data-stop>${ic('copy')}${t('ed/menu-duplicate')}</button>`}<button class="menu-item" data-act="modReset" data-arg="${id}" data-stop>${ic('arrow-counter-clockwise')}${t('ed/menu-reset')}</button><button class="menu-item is-danger" data-act="modDel" data-arg="${id}" data-stop>${ic('trash')}${t('ed/menu-delete')}</button></div>`;
   }
+  // 余额框样式（Waydon 2026-11-26「余额框样式可选」）：pill 描边胶囊 / solid 实底+充值 / text 图标+金额
+  const BAL_STYLES = ['pill', 'solid', 'text'];
+  const balHtml = (st, amt = '¥ 1,280.00') => {
+    st = BAL_STYLES.includes(st) ? st : 'pill';
+    if (st === 'solid') return `<span class="bal bal-solid">${ic('wallet-fill', 'bi')}${amt}<i class="bplus">${ic('plus', 'bi')}</i></span>`;
+    if (st === 'text') return `<span class="bal bal-text">${ic('wallet-fill', 'bi')}${amt}</span>`;
+    return `<span class="bal">${amt}</span>`;
+  };
+  window.balHtml = (st) => balHtml(st || (E.D && E.D.tb && E.D.tb.balStyle));
+  A.tbBal = (v) => { if (!BAL_STYLES.includes(v) || E.D.tb.balStyle === v) return false; commit(() => { E.D.tb.balStyle = v; }); };
   function h5Topbar() {
     const D = E.D, tb = D.tb, it = tb.items;
     const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
     const search = it.search ? ic('magnifying-glass', 'ico srch') : '';
     const logo = it.logo ? `<span class="lg" style="filter:${tb.logoF}"><img src="assets/logo-orb.webp" alt="">星河体育</span>` : '';
-    const auth = it.auth ? (D.login ? `<span class="bal">¥ 1,280.00</span><span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
+    const auth = it.auth ? (D.login ? `${balHtml(tb.balStyle)}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
     const left = D.side === 'left' ? side : '';
     const right = D.side === 'right' ? side : '';
     const pre = tb.searchFirst ? search : '';
@@ -442,18 +452,20 @@
       ${a.stage !== 'idle' ? `<div class="p-sec"><div class="lab">${t('ed/ai-candidates')}</div>${cands}</div>` : ''}`;
   }
   function tbContent() {
+    // 顶部栏内容（Waydon 2026-11-26 排版优化）：分组列表，每行 拖动 · 缩略图 · 名称/规格 · ⋯ · 眼睛 都在同一张卡内
     const D = E.D, it = D.tb.items;
-    const eye = (k) => `<button class="eye" data-act="tbItem" data-arg="${k}">${ic(it[k] ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`;
-    const card = (k, thumb, name, spec, extra = '') => `<div class="asset-row ${it[k] ? '' : 'is-hidden'}"><span class="grip" ${k === 'side' || k === 'search' ? `data-act="tbSwap"` : ''}>${ic('dots-six-vertical', 'ic-16')}</span><div class="asset"><div class="top">${thumb}<span style="min-width:0"><div class="nm">${name}</div><div class="sp">${spec}</div></span>${moreBtn('tb-' + k)}</div>${extra}</div>${eye(k)}</div>${uploadUI('tb-' + k)}`;
-    const entries = D.tb.searchFirst
-      ? [card('search', `<span class="thumb sq">${ic('magnifying-glass')}</span>`, t('ed/tb-search'), '48×48'), card('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48')]
-      : [card('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48'), card('search', `<span class="thumb sq">${ic('magnifying-glass')}</span>`, t('ed/tb-search'), '48×48')];
+    const eye = (k) => `<button class="eye" data-act="tbItem" data-arg="${k}" aria-label="${esc(t('ed/am-toggle'))}">${ic(it[k] ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`;
+    const row = (k, thumb, name, spec, grip = true) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${grip ? `<span class="grip" ${k === 'side' || k === 'search' ? 'data-act="tbSwap"' : ''}>${ic('dots-six-vertical', 'ic-16')}</span>` : ''}${thumb}<span class="tx"><b class="ellipsis">${name}</b>${spec ? `<small class="ellipsis">${spec}</small>` : ''}</span>${moreBtn('tb-' + k)}${eye(k)}</div>`;
+    const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
+    const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
+    const searchRow = row('search', `<span class="thumb sq">${ic('magnifying-glass')}</span>`, t('ed/tb-search'), '48×48');
+    const entries = D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow;
+    const pos = `<div class="tb-item tb-pos"><span class="tx"><b>${t('ed/side-pos')}</b></span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>`;
+    const auth = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic(D.login ? 'wallet-fill' : 'sign-in-fill')}</span><span class="tx"><b class="ellipsis">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</b></span>${eye('auth')}</div>`;
     return `<div class="p-sec"><div class="lab">${t('ed/tb-state')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div>${card('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/logo-orb.webp" alt="">星河体育</span>`, 'Logo', '600×100 · PNG / SVG')}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div>${entries.join('')}
-        <div class="side-pos" style="padding:0 0 0 30px"><span>${t('ed/side-pos')}</span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div></div>
-      <div class="p-sec"><div class="asset-row ${it.auth ? '' : 'is-hidden'}"><span class="grip">${ic('dots-six-vertical', 'ic-16')}</span><div style="flex:1;font-weight:600;font-size:var(--fs-body-sm)">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</div>${eye('auth')}</div>
-        <div class="p-note">${t(D.login ? 'ed/tb-balance-note' : 'ed/tb-auth-note')}</div></div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${row('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/logo-orb.webp" alt=""></span>`, 'Logo', '600×100 · PNG / SVG', false)}</div>${ups(['logo'])}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${entries}${pos}</div>${ups(['side', 'search'])}</div>
+      <div class="p-sec"><div class="tb-group">${auth}${D.login && it.auth ? `<div class="tb-item tb-balst"><span class="tx"><b>${t('ed/bal-style')}</b></span></div><div class="bal-opts">${BAL_STYLES.map((v) => `<button class="bal-opt ${(D.tb.balStyle || 'pill') === v ? 'is-on' : ''}" data-act="tbBal" data-arg="${v}"><span class="bal-prev">${balHtml(v, '¥ 1,280')}</span><small>${t('ed/bal-' + v)}</small></button>`).join('')}</div>` : ''}</div><div class="p-note">${t(D.login ? 'ed/tb-balance-note' : 'ed/tb-auth-note')}</div></div>
       <div class="p-note">${t('ed/tb-del-note')}</div><div class="p-note">${t('ed/tb-fixed')}</div>`;
   }
   function tbLayout() {
