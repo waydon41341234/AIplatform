@@ -225,7 +225,7 @@ window.I18N = {
   'ed/locate': ['定位', '定位', 'Show', 'Xem'],
   'ed/export-title': ['导出设计', '匯出設計', 'Export design', 'Xuất thiết kế'],
   'ed/exp-figma': ['Figma 源文件', 'Figma 原始檔', 'Figma source file', 'Tệp nguồn Figma'],
-  'ed/exp-figma-d': ['可继续编辑图层、文字和组件', '可繼續編輯圖層、文字和元件', 'Layers, text and components stay editable', 'Giữ lớp, chữ và thành phần để sửa tiếp'],
+  'ed/exp-figma-d': ['下载 .fig 文件，用 Figma 打开即可编辑图层、文字和组件', '下載 .fig 檔，用 Figma 開啟即可編輯圖層、文字和元件', 'Download a .fig file — open it in Figma to edit layers, text and components', 'Tải tệp .fig, mở bằng Figma để chỉnh lớp, chữ và thành phần'],
   'ed/exp-png': ['PNG 图片', 'PNG 圖片', 'PNG images', 'Ảnh PNG'],
   'ed/exp-png-d': ['整页预览 + 规范尺寸素材（图标 @2x）', '整頁預覽 + 規範尺寸素材（圖示 @2x）', 'Full-page preview + spec-size assets (icons @2x)', 'Xem trước cả trang + tài nguyên chuẩn (biểu tượng @2x)'],
   'ed/exp-svg': ['SVG 矢量', 'SVG 向量', 'SVG vector', 'SVG vector'],

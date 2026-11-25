@@ -468,7 +468,9 @@
     const b = baseName(id);
     if (b === 'banner' && E.ai) return aiPanel();
     if (E.iconAi && E.iconAi.b === b) return window.MP.aiPanel();
-    const head = `<h2 class="p-title">${esc(modName(id))}</h2>`;
+    // AD-04：侧边栏在电脑画布上没有浮动工具条，「AI 重新生成」放在面板标题右侧（测试修复）
+    const adBtn = b === 'sidebar' && window.AD ? `<span style="flex:1"></span>${window.AD.toolBtn(id, true)}` : '';
+    const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() : E.tab === 'layout' ? tbLayout() : tbColor());
@@ -1003,7 +1005,7 @@
   A.doExport = () => {
     if (checks().req.length) { E.dlg = 'checks'; return; }
     if (!Object.values(E.exp.opts).some(Boolean)) return false;
-    if (E.exp.opts.figma && !E.figmaLinked) { E.exp.stage = 'connect'; E.exp.linking = 0; return; }
+    // 2026-11-26 Waydon：业主直接下载 .fig，不需要连接自己的 Figma（平台用公司 Figma 空间生成后导出副本），授权步骤去掉
     startExport();
   };
   A.figmaConnect = () => {
@@ -1055,7 +1057,7 @@
         <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeDlg">${t('ed/done')}</button><button class="btn btn-primary" data-act="dlFile">${ic('download-simple', 'ic-16')}${t('ed/exp-dl-all')}</button></div>`;
     }
     const opt = (k, n, d, extra = '') => `<button class="exp-opt ${x.opts[k] ? 'is-on' : ''}" data-act="expOpt" data-arg="${k}"><span class="check ${x.opts[k] ? 'is-on' : ''}">${x.opts[k] ? ic('check', 'ic-16') : ''}</span><span><b class="body-sm">${t(n)}</b><small>${t(d)}</small>${extra}</span></button>`;
-    const figExtra = x.opts.figma && !E.figmaLinked ? `<small class="fg-cap">${ic('link-simple', 'ic-16')}${t('ed/exp-figma-auth')}</small>` : '';
+    const figExtra = false ? `<small class="fg-cap">${ic('link-simple', 'ic-16')}${t('ed/exp-figma-auth')}</small>` : '';
     return `<div class="dialog-head"><h3>${t('ed/export-title')}</h3>${close}</div>
       ${!req ? `<div class="notice is-ok" style="margin-bottom:12px">${ic('check-circle-fill')}${t('ed/exp-ready')}</div>` : `<div class="notice is-warn" style="margin-bottom:12px;align-items:center">${ic('warning-circle-fill')}<span style="flex:1">${t('ed/exp-blocked', { n: req })}</span><button class="btn btn-secondary btn-sm" data-act="openChecks">${t('ed/go-check')}</button></div>`}
       ${opt('figma', 'ed/exp-figma', 'ed/exp-figma-d', figExtra)}${x.opts.figma && window.AD ? window.AD.figIncl() : ''}${opt('png', 'ed/exp-png', 'ed/exp-png-d')}${opt('svg', 'ed/exp-svg', 'ed/exp-svg-d')}
@@ -1108,7 +1110,7 @@
       : `<div class="ed-stage" style="padding-bottom:${120 + 815 * (scale - 1)}px"><div class="ed-zoom" style="transform:scale(${scale})">${h5({ measure: true })}<div class="over-wrap"><div style="transform:scale(${1 / scale});transform-origin:top center">${overNotice()}</div></div></div></div>`;
     return `<div class="ed">
       <header class="ed-top"><button class="ibtn ibtn-sm" data-act="edBack" title="${esc(t('nav/home'))}">${ic('caret-left')}</button>${nameHtml()}
-        ${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span>` : ''}<span class="lv-pill"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span>${saveHtml()}
+        ${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span>` : ''}<span class="lv-pill"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span>${window.demoTag()}${saveHtml()}
         <div class="iseg" style="margin-left:12px">${[['h5', 'device-mobile', 'ed/device-h5'], ['pc', 'desktop', 'ed/device-pc']].map(([v, i, k]) => `<button class="${E.device === v ? 'is-on' : ''}" data-act="setDevice" data-arg="${v}" title="${esc(t(k))}">${ic(i)}</button>`).join('')}</div>
         <div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div>
         <span class="spacer"></span>
@@ -1129,7 +1131,7 @@
       : `<div class="med-stage"><div style="width:343px;height:auto"><div style="transform:scale(${scale});transform-origin:top left;width:375px">${h5({ measure: true })}</div></div>${overNotice()}</div>`;
     const n = checks().req.length;
     return `<div class="med">
-      <header class="med-nav"><button class="ibtn" data-act="edBack" aria-label="${esc(t('nav/home'))}">${ic('caret-left')}</button><button class="tt" data-act="nameEdit"><b>${esc(E.name)}</b><small>${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span> ` : ''}${pc ? `<span class="pc-tag">${t('ed/pc-preview')}</span> · ` : ''}${saveHtml(true)}</small></button>
+      <header class="med-nav"><button class="ibtn" data-act="edBack" aria-label="${esc(t('nav/home'))}">${ic('caret-left')}</button><button class="tt" data-act="nameEdit"><b>${esc(E.name)}</b><small>${window.demoTag()}${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span> ` : ''}${pc ? `<span class="pc-tag">${t('ed/pc-preview')}</span> · ` : ''}${saveHtml(true)}</small></button>
         <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} aria-label="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} aria-label="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>
         <button class="ibtn ibtn-sm warn ${n ? '' : 'is-ok'}" data-act="mPanel" data-arg="checks" aria-label="${esc(t('ed/checks-title'))}">${ic(n ? 'warning-circle-fill' : 'check-circle-fill')}${n ? `<i class="badge">${n}</i>` : ''}</button>
         <button class="btn btn-primary btn-sm" data-act="mPanel" data-arg="export">${ic('download-simple', 'ic-16')}<span class="ex-l">${t('ed/export')}</span></button></header>
