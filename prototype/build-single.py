@@ -55,3 +55,10 @@ out = ROOT / 'dist' / 'prototype-single.html'
 out.parent.mkdir(exist_ok=True)
 out.write_text(html, encoding='utf-8')
 print(out, len(html) // 1024, 'KB')
+
+# 展示版（给老板 / 外部看）：去掉原型快捷条（语言、日夜、演示失败开关），平台内的语言和日夜切换仍可用
+boss = html.replace('</body>', "<script>window.PROTO_BAR = function () { return ''; }; window.render && window.render();</script>\n</body>", 1)
+boss = re.sub(r'<title>.*?</title>', '<title>定制设计平台 · 原型展示</title>', boss, count=1, flags=re.S)
+out2 = ROOT / 'dist' / 'prototype-showcase.html'
+out2.write_text(boss, encoding='utf-8')
+print(out2, len(boss) // 1024, 'KB')
