@@ -364,7 +364,7 @@ window.I18N = {
   'ed/tb-height': ['高度', '高度', 'Height', 'Chiều cao'],
   'ed/tb-padding': ['左右边距', '左右邊距', 'Side padding', 'Lề hai bên'],
   'ed/tb-gap': ['元素间距', '元素間距', 'Item spacing', 'Khoảng cách'],
-  'ed/tb-c-bg': ['底板（bs_topnav_bg）', '底板（bs_topnav_bg）', 'Background (bs_topnav_bg)', 'Nền (bs_topnav_bg)'],
+  'ed/tb-c-bg': ['底板颜色', '底板顏色', 'Background', 'Màu nền'],
   'ed/tb-c-text': ['搜索文案（lead）', '搜尋文案（lead）', 'Search label (lead)', 'Chữ tìm kiếm (lead)'],
   'ed/tb-c-bind': ['币种外框和顶部栏下划线绑定 border，币种文案绑定 neutral_2，在整页配色里改。', '幣種外框和頂部欄底線綁定 border，幣種文案綁定 neutral_2，在整頁配色裡改。', 'Currency outline and top-bar underline use border; currency text uses neutral_2. Change them in the page palette.', 'Viền tiền tệ và gạch dưới thanh trên dùng border; chữ tiền tệ dùng neutral_2. Đổi trong bảng màu trang.'],
   'ed/tb-c-search': ['搜索图标', '搜尋圖示', 'Search icon', 'Biểu tượng tìm kiếm'],

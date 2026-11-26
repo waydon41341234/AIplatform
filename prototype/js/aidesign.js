@@ -727,7 +727,7 @@
       m.bottomnav.style = pick(['regular', 'raised'], m.bottomnav.style); m.bottomnav.h = pick([98, 110, 120], m.bottomnav.h);
       setEc('bottomnav.active', pick([th.primary, th.accent_3, th.lead], D.ec['bottomnav.active'] || th.primary));
     } else if (b === 'topbar') {
-      D.tb.h = pick([88, 96, 112], D.tb.h);
+      D.tb.h = pick([80, 90, 100], D.tb.h); // 顶部栏高度规范 70–100
       const dark = lum(th.bg_1) < 0.2; const cur = D.tb.colors.bg ? (D.tb.colors.bg === th.primary ? 'brand' : 'deep') : 'plain';
       D.tb.colors = tbColors(pick(['plain', 'brand', 'deep'], cur), th, dark);
     }

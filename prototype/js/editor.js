@@ -30,8 +30,11 @@
   // 指示器 4 种样式（真实组件「H5 / Banner 指示器」317:55641），旧数据 dots/bars 映射过来
   const IND = ['s1', 's2', 's3', 's4', 'none'];
   const indOf = (v) => (v === 'dots' ? 's1' : v === 'bars' ? 's4' : IND.includes(v) ? v : 's1');
-  const TB = { h: [88, 96, 112], pad: [24, 32, 48], gap: [16, 24, 32] };
-  const TB_SW = { bg: ['#ffffff', '#f8f8f8', '#1c2033', '#1678ff'], text: ['#333333', '#1c2033', '#ffffff', '#666666'], search: ['#1678ff', '#333333', '#ffaa09', '#ffffff'], reg: ['#ffaa09', '#1678ff', '#ea4e3d', '#10b26c'] };
+  // 顶部栏高度按规范 70–100（Figma 经典蓝白 90）
+  const TB = { h: [80, 90, 100], pad: [24, 32, 48], gap: [16, 24, 32] };
+  // 顶部栏可选色都用 68 Key 引用（存 'key:<名>'），换整页配色时跟着变；默认（null）= 绑定的 Key
+  const TB_SW = { bg: ['bg_2', 'bg_1', 'primary', 'lead'], side: ['lead', 'neutral_1', 'primary', 'bg_2'] };
+  const TB_KEY = { bg: 'bs_topnav_bg', side: 'lead' };
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
   // Banner AI 候选 = Figma generate image 生成的 4 种默认风格（2026-11-26，assets/ai-banner/）
   const CAND_F = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
@@ -60,7 +63,7 @@
       theme: preset(p), palette: p, basePreset: p, template: key, height: 1334,
       banner: { size: tp.size, ind: tp.ind || 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
-      tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: false }, searchFirst: false, balStyle: 'pill', colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
+      tb: { h: 90, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: true }, searchFirst: false, colors: { bg: null, side: null }, logoF: 'none' }, // 已登录默认显示余额框（Waydon 2026-11-26）
     };
   }
   const meta0 = LS.get('ed.meta', {});
@@ -181,14 +184,26 @@
     const tb = Object.assign({}, E.D.tb.colors);
     const ec = Object.assign({}, E.D.ec);
     if (E.picker) { if (E.picker.tbRow) tb[E.picker.tbRow] = E.picker.value; else if (E.picker.elRow) ec[E.picker.elRow] = E.picker.value; else th[E.picker.key] = E.picker.value; }
+    Object.keys(tb).forEach((k) => { tb[k] = tbRef(tb[k], th, ec); }); // 'key:xxx' → 当前配色的值（PC 画布也用这里）
     return { th, tb, ec };
   }
   // 顶部栏底板默认绑定 68 Key 的 bs_topnav_bg（Waydon 2026-11-26）
-  const tbBgDef = (th) => (window.MP && window.MP.resolveKey ? window.MP.resolveKey('bs_topnav_bg', th, E.D.ec || {}) : th.bg_2);
+  const keyVal = (k, th, ec) => (th[k] != null ? th[k] : window.MP && window.MP.resolveKey ? window.MP.resolveKey(k, th, ec || E.D.ec || {}) : null);
+  const tbBgDef = (th) => keyVal('bs_topnav_bg', th) || th.bg_2;
+  function tbRef(v, th, ec) { return typeof v === 'string' && v.startsWith('key:') ? keyVal(v.slice(4), th, ec) || null : v; }
+  // 顶部栏图片值：'img:<url>' 真实上传 / AI 图路径或 dataURL / 其它 = CSS 滤镜（原型模拟，叠在默认图上）
+  function tbImg(v, def) {
+    if (!v || v === 'none') return { src: def, f: 'none', own: false };
+    if (/^img:/.test(v)) return { src: v.slice(4), f: 'none', own: true };
+    if (/^(data:|assets\/|https?:|blob:)/.test(v)) return { src: v, f: 'none', own: true };
+    return { src: def, f: v, own: true };
+  }
+  const tbImgTag = (v, def, alt = '', cls = '') => { const x = tbImg(v, def); return `<img${cls ? ` class="${cls}"` : ''} src="${x.src}" alt="${alt}"${x.f !== 'none' ? ` style="filter:${x.f}"` : ''}>`; };
+  window.tbImg = tbImg;
   function themeStyle() {
     const { th, tb, ec } = liveTheme();
     let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP ? window.MP.vars(th, ec) : '');
-    s += `;--tb-bg:${tb.bg || tbBgDef(th)}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`;
+    s += `;--tb-bg:${tb.bg || tbBgDef(th)}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.side) s += `;--tb-side:${tb.side}`; // H5 只用这三个；搜索/注册等变量只有 PC 顶部栏用（pc.js）
     return s;
   }
 
@@ -300,15 +315,19 @@
       <div class="bx-lab">${t('ed/bal-colors')}</div>${BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('')}
       <div class="p-note">${t('ed/bal-note')}</div></div>`;
   }
+  // 侧边栏入口图标：有图片（上传 / AI）用图片，否则用线性图标（滤镜模拟值叠在线性图标上）
+  function sideIcHtml(v, cls) { const x = tbImg(v, ''); return x.src ? `<img class="${cls} ico-img" src="${x.src}" alt="">` : x.f !== 'none' ? `<span style="display:inline-flex;filter:${x.f}">${ic('list', cls)}</span>` : ic('list', cls); }
   function h5Topbar() {
     const D = E.D, tb = D.tb, it = tb.items;
-    const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
-    // 经典蓝白：Logo 图 + 币种切换 + 带文字的搜索
     const tic = tb.icons || {};
-    const search = it.search ? `<span class="srch-cl"><img src="${tic.search || 'assets/classic/search.png'}" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
-    // 币种框：外框 border、文案 neutral_2（Waydon 2026-11-26）
-    const cur = it.cur && !D.login ? `<span class="cur-cl"><img src="${tic.cur || 'assets/classic/bal-sym.png'}" alt=""><b>CNY</b><i></i></span>` : '';
-    const logo = it.logo ? `<span class="lg lg-cl" style="filter:${tb.logoF}"><img src="assets/classic/logo.png" alt="GAMING"></span>` : '';
+    // 侧边栏入口：默认线性图标跟 --tb-side（lead）；上传 / AI 后用图片
+    const side = it.side ? `<span data-act="h5Side" data-stop>${sideIcHtml(tic.side, 'ico')}</span>` : '';
+    // 经典蓝白：Logo 图 + 币种切换 + 带文字的搜索
+    const search = it.search ? `<span class="srch-cl">${tbImgTag(tic.search, 'assets/classic/search.png')}<small>${t('ed/tb-search')}</small></span>` : '';
+    // 币种框：外框 border、文案 neutral_2、默认币种图标 accent_3（Figma 25517:2140 comm_icon_sqb，用遮罩跟色）（Waydon 2026-11-26）
+    const curIc = tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png') : `<span class="cur-ic" style="-webkit-mask-image:url(${CLA}bal-sym.png);mask-image:url(${CLA}bal-sym.png)"></span>`;
+    const cur = it.cur && !D.login ? `<span class="cur-cl">${curIc}<b>CNY</b><i></i></span>` : '';
+    const logo = it.logo ? `<span class="lg lg-cl">${tbImgTag(tb.logoF, 'assets/classic/logo.png', 'GAMING')}</span>` : '';
     // 未登录：顶部栏只留币种切换，不显示余额框 / 登录注册 / 头像（Waydon 2026-11-26，登录入口在帐户栏）
     const auth = it.auth && D.login ? balHtml() : ''; // 头像不放顶部栏（Waydon 2026-11-26）
     const left = D.side === 'left' ? side : '';
@@ -455,6 +474,12 @@
       return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>
         <button class="menu-item" data-act="amToggle" data-arg="${id}" ${lastVis ? 'disabled' : ''}>${ic(s.hid ? 'eye-fill' : 'eye-slash-fill')}<span class="tx"><span>${t(s.hid ? 'ed/am-show' : 'ed/am-hide')}</span>${lastVis ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>
         <div class="menu-sep"></div><button class="menu-item is-danger" data-act="amDelete" data-arg="${id}" ${one ? 'disabled' : ''}>${ic('trash')}<span class="tx"><span>${t('ed/am-delete')}</span>${one ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>`;
+    }
+    if (id.startsWith('tb-')) {
+      // 顶部栏：上传 / AI 生成 / 恢复默认 / 显示隐藏（Waydon 2026-11-26）
+      const k = id.slice(3), own = k === 'logo' ? tbImg(E.D.tb.logoF, '').own : !!(E.D.tb.icons || {})[k];
+      const aiAct = k === 'logo' ? 'tbLogoAiOpen' : k === 'side' ? '' : 'tbAiJump';
+      return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${aiAct ? `<button class="menu-item" data-act="${aiAct}" data-arg="${k}">${ic('sparkle-fill')}${t(k === 'logo' ? 'ed/tblogo-title' : 'mp/ai-one')}</button>` : ''}<button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
     }
     const lib = /^mp-(jackpot-bg|gamecards-fallback|sidebar-head)$/.test(id) ? `<button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button>` : '';
     return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
@@ -616,13 +641,15 @@
     a.stage = 'busy'; const st = a.fromRef ? a.refStyle || 'glossy' : a.style;
     setTimeout(() => { if (E.tbAi !== a || a.stage !== 'busy') return; if (fail()) { a.stage = 'setup'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(n, 'iconset', { type: t('mod/topbar') }); a.stage = 'done'; a.res = st; } window.render(); }, 1400);
   };
-  A.tbAiUse = () => { const a = tbAi(), r = a.res; if (!r) return false; commit(() => { const ic0 = Object.assign({}, E.D.tb.icons); if (a.target !== 'cur') ic0.search = AIT + 'search-' + r + '.png'; if (a.target !== 'search') ic0.cur = AIT + 'cur-' + r + '.png'; E.D.tb.icons = ic0; }); a.stage = 'setup'; window.toast(t('ed/tbai-used'), undoOpt()); };
-  A.tbAiReset = () => { if (!E.D.tb.icons) return false; commit(() => { delete E.D.tb.icons; }); window.toast(t('ed/tbai-reset'), undoOpt()); };
-  // 入口图标行的 ✦ 按钮：跳到 AI 生成并选好目标（Waydon 2026-11-26）
-  A.tbAiJump = (k) => { const a = tbAi(); if (a.stage === 'busy') return false; a.target = k; if (a.stage === 'done') a.stage = 'setup'; E.tbAiFocus = true; };
-  window.AFTER_RENDER.push(() => { if (!E.tbAiFocus) return; E.tbAiFocus = false; const go = () => { const m = document.querySelector('.tbai'); if (!m) return; let c = m.parentElement; while (c && !(c.scrollHeight > c.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(c).overflowY))) c = c.parentElement; if (c) c.scrollTop += m.getBoundingClientRect().top - c.getBoundingClientRect().top - 8; m.classList.add('is-flash'); const ta = m.querySelector('textarea'); if (ta) ta.focus({ preventScroll: true }); }; setTimeout(go, 30); setTimeout(go, 320); });
+  A.tbAiUse = () => { const a = tbAi(), r = a.res; if (!r) return false; commit(() => { if (a.target !== 'cur') tbIconSet('search', AIT + 'search-' + r + '.png'); if (a.target !== 'search') tbIconSet('cur', AIT + 'cur-' + r + '.png'); }); a.stage = 'setup'; window.toast(t('ed/tbai-used'), undoOpt()); };
+  // 一键恢复搜索 + 币种默认图标（侧边栏入口图标单独在行里恢复）
+  A.tbAiReset = () => { const o = E.D.tb.icons || {}; if (!o.cur && !o.search) return false; commit(() => { tbIconSet('cur', null); tbIconSet('search', null); }); window.toast(t('ed/tbai-reset'), undoOpt()); };
+  // 入口图标行的 ✦ 按钮：在入口图标下方展开 AI 生成并选好目标（Waydon 2026-11-26）
+  A.tbAiJump = (k) => { S.menu = null; const a = tbAi(); E.tab = 'content'; E.tbAiOpen = true; E.tbAiFocus = '.tbai'; if (a.stage === 'busy') return; if (k === 'cur' || k === 'search') a.target = k; if (a.stage === 'done') a.stage = 'setup'; };
+  A.tbAiToggle = () => { E.tbAiOpen = !E.tbAiOpen; if (E.tbAiOpen) E.tbAiFocus = '.tbai'; };
+  window.AFTER_RENDER.push(() => { const sel = E.tbAiFocus; if (!sel) return; E.tbAiFocus = false; const go = () => { const m = document.querySelector(typeof sel === 'string' ? sel : '.tbai'); if (!m) return; let c = m.parentElement; while (c && !(c.scrollHeight > c.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(c).overflowY))) c = c.parentElement; if (c) c.scrollTop += m.getBoundingClientRect().top - c.getBoundingClientRect().top - 8; m.classList.add('is-flash'); const ta = m.querySelector('textarea'); if (ta) ta.focus({ preventScroll: true }); }; setTimeout(go, 30); setTimeout(go, 320); });
   function tbAiSec() {
-    const a = tbAi(), busy = a.stage === 'busy', n = tbAiCost();
+    const a = tbAi(), busy = a.stage === 'busy', n = tbAiCost(), o = E.D.tb.icons || {};
     const pair = (st) => `${a.target !== 'cur' ? `<img src="${AIT}search-${st}.png" alt="">` : ''}${a.target !== 'search' ? `<img src="${AIT}cur-${st}.png" alt="">` : ''}`;
     const target = segBtns([{ v: 'both', label: t('ed/tbai-t-both') }, { v: 'search', label: t('ed/tb-search') }, { v: 'cur', label: t('ed/tbai-t-cur') }], a.target, 'tbAiTarget');
     const tiles = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${!a.fromRef && a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
@@ -634,42 +661,82 @@
       ${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="tbAiGen" title="${esc(t('ed/tbai-gen', { n }))}">${ic('sparkle-fill')}${n}${ic('arrow-up')}</button>`}</div></div>`;
     const note = a.fromRef && !a.analyzing ? `<div class="p-note">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt-tip2')}</div>` : `<div class="p-note">${t('ed/tbai-box-tip')}</div>`;
     const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n })}</button></div></div>` : '';
-    return `<div class="p-sec tbai"><div class="lab">${t('ed/tbai-title')}${E.D.tb.icons ? `<button class="tx-reset" style="margin-left:auto" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
+    return `<div class="p-sec tbai"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('ed/tbai-title2')}<span class="tbai-hd">${o.cur || o.search ? `<button class="tx-reset" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}<button class="ib-s" data-act="tbAiToggle" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>
       <div class="tbai-row"><span>${t('ed/tbai-target')}</span>${target}</div>${tiles}${box}${note}${res}</div>`;
   }
+  // ---------- Logo AI 生成（原型：用调色滤镜模拟 4 个候选；正式版按提示词出图，品牌名 / 网址文字保持不变） ----------
+  const LOGO_AI_F = ['saturate(1.3) contrast(1.05)', 'hue-rotate(-150deg) saturate(1.4)', 'sepia(.7) saturate(1.8) hue-rotate(-12deg) brightness(.95)', 'hue-rotate(95deg) saturate(1.3)', 'hue-rotate(160deg) saturate(1.2)', 'grayscale(1) contrast(1.4) brightness(.7)'];
+  const tbLogoAi = () => (E.tbLogo = E.tbLogo || { prompt: t('ed/tblogo-def'), stage: 'setup', pick: 0, round: 0 });
+  A.tbLogoAiOpen = () => { S.menu = null; E.tab = 'content'; tbLogoAi(); E.tbLogoOpen = true; E.tbAiFocus = '.tblogo'; };
+  A.tbLogoAiClose = () => { E.tbLogoOpen = false; };
+  A.tbLogoGen = () => {
+    const a = tbLogoAi(); if (a.stage === 'busy' || !(a.prompt || '').trim()) return false;
+    if (!afford(20)) { topup(); return false; }
+    a.stage = 'busy';
+    setTimeout(() => { if (E.tbLogo !== a || a.stage !== 'busy') return; if (fail(a.prompt)) { a.stage = a.cands ? 'done' : 'setup'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(20, 'iconset', { type: 'Logo' }); a.cands = [0, 1, 2, 3].map((i) => LOGO_AI_F[(a.round * 2 + i) % LOGO_AI_F.length]); a.round++; a.pick = 0; a.stage = 'done'; } window.render(); }, 1400);
+  };
+  A.tbLogoPick = (i) => { tbLogoAi().pick = +i; };
+  A.tbLogoUse = () => { const a = tbLogoAi(); const f = a.cands && a.cands[a.pick]; if (!f) return false; commit(() => { E.D.tb.logoF = f; }); a.stage = 'setup'; a.cands = null; window.toast(t('ed/tblogo-used'), undoOpt()); };
+  document.addEventListener('input', (e) => { const el = e.target; if (el.matches && el.matches('[data-tblogoprompt]')) { tbLogoAi().prompt = el.value.slice(0, 300); const b = document.querySelector('.tblogo .send'); if (b) b.classList.toggle('is-disabled', !el.value.trim()); } });
+  function tbLogoSec() {
+    const a = tbLogoAi(), busy = a.stage === 'busy', empty = !(a.prompt || '').trim();
+    const box = `<div class="c-box tbai-box"><div class="c-input"><textarea rows="3" maxlength="300" data-tblogoprompt placeholder="${esc(t('ed/tblogo-ph'))}" ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea></div>
+      <div class="c-tools"><div class="c-opts"></div>${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="tbLogoGen" title="${esc(t('ed/tbai-gen', { n: 20 }))}">${ic('sparkle-fill')}20${ic('arrow-up')}</button>`}</div></div>`;
+    const res = a.stage === 'done' && a.cands ? `<div class="tblogo-cands">${a.cands.map((f, i) => `<button class="tblogo-c ${a.pick === i ? 'is-on' : ''}" data-act="tbLogoPick" data-arg="${i}"><img src="assets/classic/logo.png" alt="" style="filter:${f}"></button>`).join('')}</div>
+      <div class="tbai-res"><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbLogoUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbLogoGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n: 20 })}</button></div></div>` : '';
+    return `<div class="tblogo"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('ed/tblogo-title')}<span class="tbai-hd"><button class="ib-s" data-act="tbLogoAiClose" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>${box}${res}<div class="p-note">${t('ed/tblogo-note')}</div></div>`;
+  }
+  A.tbSearchPos = (v) => { const f = v === 'left'; if (E.D.tb.searchFirst === f) return false; commit(() => { E.D.tb.searchFirst = f; }); };
   function tbContent() {
-    // 顶部栏内容（Waydon 2026-11-26 排版优化）：分组列表，每行 拖动 · 缩略图 · 名称/规格 · ⋯ · 眼睛 都在同一张卡内
-    const D = E.D, it = D.tb.items;
-    const eye = (k) => `<button class="eye" data-act="tbItem" data-arg="${k}" aria-label="${esc(t('ed/am-toggle'))}">${ic(it[k] ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`;
-    const row = (k, thumb, name, spec, grip = true) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${grip ? `<span class="grip" ${k === 'side' || k === 'search' ? 'data-act="tbSwap"' : ''}>${ic('dots-six-vertical', 'ic-16')}</span>` : ''}${thumb}<span class="tx"><b class="ellipsis">${name}</b>${spec ? `<small class="ellipsis">${spec}</small>` : ''}</span>${k === 'cur' || k === 'search' ? `<button class="ib-s tb-ai" data-act="tbAiJump" data-arg="${k}" title="${esc(t('ed/tbai-title'))}">${ic('sparkle-fill', 'ic-16')}</button>` : ''}${moreBtn('tb-' + k)}${eye(k)}</div>`;
+    // 顶部栏内容（Waydon 2026-11-26 排版优化）：预览状态 → Logo → 入口图标（AI 生成就在下面展开）→ 余额框 → 文字样式
+    // 每行：缩略图（点一下上传）· 名称 / 规格 · ✦ AI · 恢复 · ⋯ · 眼睛
+    const D = E.D, it = D.tb.items, tic = D.tb.icons || {}, th = liveTheme().th;
+    const eye = (k) => `<button class="eye" data-act="tbItem" data-arg="${k}" title="${esc(t('ed/am-toggle'))}" aria-label="${esc(t('ed/am-toggle'))}">${ic(it[k] ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`;
+    const thumb = (k, inner, cls = 'sq') => `<button class="thumb ${cls}" data-act="amUpload" data-arg="tb-${k}" title="${esc(t('ed/am-upload'))}" aria-label="${esc(t('ed/am-upload'))}">${inner}</button>`;
+    const ib = (act, k, icn, tip, cls = '') => `<button class="ib-s ${cls}" data-act="${act}" data-arg="${k}" title="${esc(tip)}" aria-label="${esc(tip)}">${ic(icn, 'ic-16')}</button>`;
+    const row = (k, th0, name, spec, own, ai) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${th0}<span class="tx"><b class="ellipsis">${name}</b><small class="ellipsis">${spec}${own ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? ib(ai, k, 'sparkle-fill', t(k === 'logo' ? 'ed/tblogo-title' : 'mp/ai-one'), 'tb-ai') : ''}${own ? ib('amReset', 'tb-' + k, 'arrow-counter-clockwise', t('ed/am-reset')) : ''}${moreBtn('tb-' + k)}${eye(k)}</div>`;
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
-    const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
-    const searchRow = row('search', `<span class="thumb sq"><img src="${(D.tb.icons || {}).search || 'assets/classic/search.png'}" alt=""></span>`, t('ed/tb-search'), '56×49');
-    const curRow = row('cur', `<span class="thumb sq"><img src="${(D.tb.icons || {}).cur || 'assets/classic/bal-sym.png'}" alt=""></span>`, t('ed/tb-cur'), '52×52');
-    const entries = (D.login ? '' : curRow) + (D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow);
-    const pos = `<div class="tb-item tb-pos"><span class="tx"><b>${t('ed/side-pos')}</b></span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>`;
-    const auth = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic(D.login ? 'wallet-fill' : 'sign-in-fill')}</span><span class="tx"><b class="ellipsis">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</b></span>${eye('auth')}</div>`;
-    return `<div class="p-sec"><div class="lab">${t('ed/tb-state')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${row('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/classic/logo.png" alt=""></span>`, 'Logo', '230×76 · PNG / SVG', false)}</div>${ups(['logo'])}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${entries}${pos}</div>${ups(['cur', 'side', 'search'])}</div>
-      ${D.login ? `<div class="p-sec"><div class="tb-group">${auth}</div><div class="p-note">${t('ed/tb-balance-note')}</div><div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/tb-in-note')}</div></div>` : `<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/tb-out-note')}</div>`}
-      <div class="p-note">${t('ed/tb-del-note')}</div><div class="p-note">${t('ed/tb-fixed')}</div>`;
+    const logoRow = row('logo', thumb('logo', tbImgTag(D.tb.logoF, 'assets/classic/logo.png'), 'logo'), 'Logo', '230×76', tbImg(D.tb.logoF, '').own, 'tbLogoAiOpen');
+    const curDef = `<span class="cur-ic" style="background:${th.accent_3};-webkit-mask-image:url(${CLA}bal-sym.png);mask-image:url(${CLA}bal-sym.png)"></span>`;
+    const curRow = row('cur', thumb('cur', tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png') : curDef), t('ed/tb-cur'), '36×36', !!tic.cur, 'tbAiJump');
+    const searchRow = row('search', thumb('search', tbImgTag(tic.search, 'assets/classic/search.png')), t('ed/tb-search'), '56×49', !!tic.search, 'tbAiJump');
+    const sideRow = row('side', thumb('side', sideIcHtml(tic.side, '')), t('ed/tb-sideicon'), '48×48', !!tic.side, '');
+    const balRow = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic('wallet-fill')}</span><span class="tx"><b class="ellipsis">${t('ed/tb-balance')}</b><small class="ellipsis">${t('ed/tb-bal-sub')}</small></span>${eye('auth')}</div>`;
+    const seg = (lab, opts, cur, act) => `<div class="tb-item tb-pos"><span class="tx"><b class="ellipsis">${t(lab)}</b></span><div class="iseg">${opts.map(([v, l]) => `<button class="${cur === v ? 'is-on' : ''}" data-act="${act}" data-arg="${v}">${t(l)}</button>`).join('')}</div></div>`;
+    const searchPos = it.search ? seg('ed/tb-search-pos', [['left', 'ed/side-left'], ['right', 'ed/side-right']], D.tb.searchFirst ? 'left' : 'right', 'tbSearchPos') : '';
+    const sidePos = it.side ? seg('ed/tb-side-pos', [['left', 'ed/side-left'], ['right', 'ed/side-right']], D.side, 'setSide') : '';
+    const aiEntry = E.tbAiOpen ? '' : `<button class="btn btn-secondary btn-sm tbai-open" data-act="tbAiToggle">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-open')}</button>`;
+    return `<div class="p-sec"><div class="lab">${t('ed/tb-state2')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}<div class="p-note">${ic('info-fill', 'ic-16')}${t(D.login ? 'ed/tb-note-in' : 'ed/tb-note-out')}</div></div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${logoRow}</div>${ups(['logo'])}${E.tbLogoOpen ? tbLogoSec() : ''}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${D.login ? balRow : curRow}${searchRow}${sideRow}${searchPos}${sidePos}</div>${ups(['cur', 'search', 'side'])}${aiEntry}</div>
+      ${E.tbAiOpen ? tbAiSec() : ''}${D.login && it.auth ? balSec() : ''}`;
   }
   function tbLayout() {
     const tb = E.D.tb;
-    const sec = (k, lab) => `<div class="p-sec"><div class="lab">${t(lab)}<span class="v">${tb[k]} px</span></div>${pxSeg(TB[k], tb[k], 'tbLayout_' + k, null, { h: [60, 160, 'px'], pad: [0, 80, 'px'], gap: [0, 64, 'px'] }[k])}</div>`;
-    return sec('h', 'ed/tb-height') + sec('pad', 'ed/tb-padding') + sec('gap', 'ed/tb-gap') + `<div class="p-note">${t('ed/unit-750')}</div>`;
+    const sec = (k, lab) => `<div class="p-sec"><div class="lab">${t(lab)}<span class="v">${tb[k]} px</span></div>${pxSeg(TB[k], tb[k], 'tbLayout_' + k, null, { h: [70, 100, 'px'], pad: [0, 80, 'px'], gap: [0, 64, 'px'] }[k])}</div>`;
+    return sec('h', 'ed/tb-height') + sec('pad', 'ed/tb-padding') + sec('gap', 'ed/tb-gap') + `<div class="p-note">${t('ed/tb-h-note')}</div><div class="p-note">${t('ed/unit-750')}</div>`;
   }
   function tbColor() {
-    const { th, tb } = liveTheme();
-    const cur = { bg: tb.bg || tbBgDef(th), text: tb.text || th.lead, search: tb.search || th.primary, reg: tb.reg || th.accent_3 };
-    const rows = [['bg', 'ed/tb-c-bg'], ['text', 'ed/tb-c-text']]; // 经典蓝白：底板 bs_topnav_bg、搜索文案 lead；币种外框/下划线 border、币种文案 neutral_2 跟全局配色
-    return rows.map(([k, lab]) => `<div class="crow"><div class="k">${t(lab)}</div><div class="sws">${TB_SW[k].map((c) => `<button class="sw-btn ${cur[k].toLowerCase() === c ? 'is-on' : ''}" style="background:${c}" data-act="tbColor" data-arg="${k}|${c}"></button>`).join('')}<button class="rainbow ${E.picker && E.picker.tbRow === k ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}"></button></div>${E.picker && E.picker.tbRow === k ? pickerHtml('in-panel', t(lab)) : ''}</div>`).join('') + `<div class="p-note">${t('ed/tb-c-bind')}</div><div class="p-note">${t('ed/tb-c-note')}</div>`;
+    // 颜色都绑 68 Key（Figma 317:55664）：底板 bs_topnav_bg、搜索文字 lead（Waydon 决定，Figma 为 neutral_1）、币种文字 neutral_2、
+    // 币种外框 / 底部分割线 border、币种图标 accent_3、侧边栏入口 lead。文字颜色和「内容 › 文字样式」是同一个设置
+    const { th, tb } = liveTheme(), raw = E.D.tb.colors || {}, D = E.D;
+    const kk = (k) => (E.adv ? `<small class="kk">${k}</small>` : '');
+    const row = (k, lab) => {
+      const v = raw[k] || null, pk = E.picker && E.picker.tbRow === k;
+      return `<div class="crow"><div class="k">${t(lab)}${kk(TB_KEY[k])}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="tbColor" data-arg="${k}|">${t('tx/c-auto')}</button>${TB_SW[k].map((key) => `<button class="sw-btn ${v === 'key:' + key ? 'is-on' : ''}" style="background:${th[key]}" title="${esc(t('ed/key-' + key))}" aria-label="${esc(t('ed/key-' + key))}" data-act="tbColor" data-arg="${k}|key:${key}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? pickerHtml('in-panel', t(lab)) : ''}</div>`;
+    };
+    const txRow = (id, lab, key) => `<div class="crow"><div class="k">${t(lab)}${kk(key)}</div>${txColors(id)}</div>`;
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${t(lab)}${kk(key)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${keyVal(key, th)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span><button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    return `<div class="p-sec">${row('bg', 'ed/tb-c-bg')}${D.tb.items.side ? row('side', 'ed/tb-c-side') : ''}${txRow('tb.search', 'tx/tb-search', 'lead')}${D.login ? '' : txRow('tb.cur', 'tx/tb-cur', 'neutral_2')}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link('ed/tb-c-border', 'border')}${!D.login && !(D.tb.icons || {}).cur ? link('ed/tb-c-curic', 'accent_3') : ''}</div>
+      <div class="p-note">${t('ed/tb-c-note2')}</div>${D.login && D.tb.items.auth ? `<div class="p-note">${t('ed/tb-c-bal')}</div>` : ''}
+      <button class="p-note" style="align-items:center" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
   }
   // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
   // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细]
   const TXT = {
-    topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 12, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 10, 400]],
+    // 顶部栏：币种文字 26/750=13（下拉箭头跟文字同色，Figma 都是 neutral_2）；搜索文字 22/750=11；余额金额只在已登录显示
+    topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 13, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 11, 400], ['tb.bal', 'tx/tb-bal', '.h5-top .bx b', '.h5-top .bx b', 13, 400]],
     notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 12, 400]],
     midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.bx b', '.bx b', 12, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],
@@ -689,17 +756,23 @@
     }
     return css ? `<style>${css}</style>` : '';
   }
+  // 只在对应状态下出现的文字（顶部栏：未登录才有币种，已登录且显示余额框才有金额）
+  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth };
+  const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
+  // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）
+  function txColors(id) {
+    const sw = txSw(), c = (txOf(id).c || '').toLowerCase();
+    return `<div class="tx-colors"><button class="tx-auto ${c ? '' : 'is-on'}" data-act="txColor" data-arg="${id}|" title="${esc(t('tx/c-auto'))}">${t('tx/c-auto')}</button>${sw.map((x) => `<button class="sw-btn ${c === x ? 'is-on' : ''}" style="background:${x}" data-act="txColor" data-arg="${id}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${c && !sw.includes(c) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-txcolor="${id}" value="${c || '#333333'}"></label></div>`;
+  }
   function txtSec(b) {
-    const els = TXT[b]; if (!els) return '';
-    const th = liveTheme().th;
-    const sw = [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i);
+    const els = (TXT[b] || []).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
     const rows = els.map(([id, k, , , ds, dw]) => {
-      const v = txOf(id), size = v.s || ds, w = v.w || dw, c = (v.c || '').toLowerCase();
+      const v = txOf(id), size = v.s || ds, w = v.w || dw;
       const changed = v.s || v.w || v.c;
       return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
         <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em>${size * 2}</em><button data-act="txSize" data-arg="${id}|1" ${size >= 24 ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
         <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
-        <div class="tx-colors"><button class="tx-auto ${c ? '' : 'is-on'}" data-act="txColor" data-arg="${id}|" title="${esc(t('tx/c-auto'))}">${t('tx/c-auto')}</button>${sw.map((x) => `<button class="sw-btn ${c === x ? 'is-on' : ''}" style="background:${x}" data-act="txColor" data-arg="${id}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${c && !sw.includes(c) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-txcolor="${id}" value="${c || '#333333'}"></label></div></div>`;
+        ${txColors(id)}</div>`;
     }).join('');
     return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t('tx/note')}</div></div>`;
   }
@@ -738,7 +811,7 @@
     const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
-    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + tbAiSec() + (E.D.login && E.D.tb.items.auth ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
+    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
     if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'midnav' ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
@@ -758,11 +831,11 @@
       <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"></label>
       <div class="caption muted" style="margin-top:8px">${t('ed/pick-suggest')}</div>
       <div class="pk-sug">${SUGGEST.map((c) => `<button style="background:${c}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
-      <div class="caption faint" style="margin-bottom:10px">${t('ed/pick-sync')}</div>
+      <div class="caption faint" style="margin-bottom:10px">${t(p.tbRow ? 'ed/pick-sync-tb' : 'ed/pick-sync')}</div>
       <div class="pk-foot"><button class="btn btn-secondary btn-sm" data-act="pkCancel">${t('confirm/cancel')}</button><button class="btn btn-primary btn-sm" data-act="pkApply">${t('ed/pick-apply')}</button></div></div>`;
   }
   A.pick = (arg) => { const [k, where] = arg.split('|'); const v = E.D.theme[k]; E.picker = { key: k, orig: v, value: v, where: mobileEd() ? 'sheet' : where }; S.menu = null; if (mobileEd()) { E.picker.back = ['colors', 'module'].includes(E.mpanel) ? E.mpanel : null; E.mpanel = 'picker'; } };
-  A.pickTb = (k) => { const th = E.D.theme; const cur = E.D.tb.colors[k] || { bg: tbBgDef(th), text: th.lead, search: th.primary, reg: th.accent_3 }[k]; if (E.picker && E.picker.tbRow === k) { E.picker = null; return; } E.picker = { key: k, tbRow: k, orig: cur, value: cur, where: 'tb' }; };
+  A.pickTb = (k) => { if (E.picker && E.picker.tbRow === k) { E.picker = null; return; } E.picker = null; const { th, tb } = liveTheme(); const cur = tb[k] || keyVal(TB_KEY[k] || 'lead', th) || '#ffffff'; E.picker = { key: k, tbRow: k, orig: cur, value: cur, where: 'tb' }; };
   A.pickKey = (k) => { const v = E.D.theme[k]; Object.assign(E.picker, { key: k, orig: v, value: v }); S.menu = null; };
   A.pkSet = (c) => { E.picker.value = c; };
   A.pkCancel = () => { const p = E.picker; E.picker = null; if (E.mpanel === 'picker') E.mpanel = p && p.back ? p.back : null; };
@@ -773,7 +846,7 @@
     commit(() => { if (p.tbRow) E.D.tb.colors[p.tbRow] = p.value; else if (p.elRow) E.D.ec[p.elRow] = p.value; else { E.D.theme[p.key] = p.value; E.D.palette = null; } });
     back();
     if (p.elRow && p.elRow.startsWith('key:')) { window.toast(t('ed/changed-undo'), undoOpt(4000)); return; }
-    const label = p.elRow ? t('mp/c-' + p.elRow.replace('.', '-')) : p.tbRow ? t({ bg: 'ed/tb-c-bg', text: 'ed/tb-c-text', search: 'ed/tb-c-search', reg: 'ed/tb-c-reg' }[p.tbRow]) : t('ed/key-' + p.key);
+    const label = p.elRow ? t('mp/c-' + p.elRow.replace('.', '-')) : p.tbRow ? t({ bg: 'ed/tb-c-bg', side: 'ed/tb-c-side', text: 'ed/tb-c-text', search: 'ed/tb-c-search', reg: 'ed/tb-c-reg' }[p.tbRow] || 'ed/tb-c-bg') : t('ed/key-' + p.key);
     window.toast(t('ed/toast-color', { k: label }), undoOpt(4000));
   };
   I.pkHex = (v) => { if (validHex(v)) { E.picker.value = (v[0] === '#' ? v : '#' + v).toLowerCase(); livePicker(); } };
@@ -1049,8 +1122,8 @@
   A.bannerCorner = (v) => { commit(() => { E.D.banner.corner = +v; }); };
   A.addSlide = () => { const sz = BANNER[E.D.banner.size]; commit(() => { E.D.banner.slides.push({ f: 'hue-rotate(90deg) saturate(.8)', w: sz.w, h: sz.h }); }); setSlide(E.D.banner.slides.length - 1); };
   A.tbItem = (k) => { commit(() => { E.D.tb.items[k] = !E.D.tb.items[k]; }); };
-  A.tbSwap = () => { commit(() => { E.D.tb.searchFirst = !E.D.tb.searchFirst; }); };
-  A.tbColor = (arg) => { const [k, c] = arg.split('|'); commit(() => { E.D.tb.colors[k] = c; }); E.picker = null; };
+  // 顶部栏颜色：c 为空 = 恢复默认（跟绑定的 Key）；'key:<名>' = 跟整页配色的某个 Key
+  A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); }); };
   ['h', 'pad', 'gap'].forEach((k) => { A['tbLayout_' + k] = (v) => { commit(() => { E.D.tb[k] = +v; }); }; });
   A.setDevice = (v) => { E.device = v; E.ai = null; E.iconAi = null; E.picker = null; };
   A.mDevice = (v) => { E.device = v; E.mpanel = null; E.sel = null; E.picker = null; };
@@ -1091,19 +1164,23 @@
   }
 
   // ---------- 素材：上传 / 素材库 / 调整尺寸 ----------
-  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [52, 52, 'ed/tb-cur'] };
+  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
+  // 顶部栏图标槽：tb-cur / tb-search / tb-side 存在 E.D.tb.icons[k]（AI 图路径 / 'img:' 上传图 / 滤镜模拟值）
+  const TB_ICON = /^tb-(cur|search|side)$/;
+  function tbIconSet(k, v) { const o = Object.assign({}, E.D.tb.icons); if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) E.D.tb.icons = o; else delete E.D.tb.icons; }
   function slotSpec(slot) { if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; } const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' }; }
-  function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); return E.D.tb.logoF; }
+  function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); if (TB_ICON.test(slot)) return (E.D.tb.icons || {})[slot.slice(3)] || null; return E.D.tb.logoF; }
   function setAsset(slot, v) {
     if (slot.startsWith('mp-')) window.MP.setAsset(slot, v && typeof v === 'object' ? v.f : v);
     else if (slot.startsWith('slide')) { const i = +slot.slice(5); const prev = E.D.banner.slides[i] || {}; E.D.banner.slides[i] = v && typeof v === 'object' ? Object.assign({ hid: prev.hid }, v) : { f: v, w: prev.w, h: prev.h, hid: prev.hid }; }
-    else if (slot === 'tb-logo') E.D.tb.logoF = v && typeof v === 'object' ? v.f : v;
+    else if (slot === 'tb-logo') E.D.tb.logoF = (v && typeof v === 'object' ? v.f : v) || 'none';
+    else if (TB_ICON.test(slot)) tbIconSet(slot.slice(3), v && typeof v === 'object' ? v.f : v);
   }
   A.toolReplace = () => { E.tab = 'content'; E.ai = null; S.menu = null; E.fpSlot = 'slide' + E.slide; E.dlg = 'fp'; };
   A.amUpload = (slot) => { S.menu = null; E.fpSlot = slot; E.dlg = 'fp'; };
   A.amReset = (slot) => {
     S.menu = null;
-    commit(() => { if (slot.startsWith('slide')) { const i = +slot.slice(5); const sz = BANNER[E.D.banner.size]; E.D.banner.slides[i] = { f: tplOf(E.D.template).slides[i] || 'none', w: sz.w, h: sz.h, hid: E.D.banner.slides[i].hid }; } if (slot === 'tb-logo') E.D.tb.logoF = 'none'; if (slot.startsWith('mp-')) window.MP.setAsset(slot, null); });
+    commit(() => { if (slot.startsWith('slide')) { const i = +slot.slice(5); const sz = BANNER[E.D.banner.size]; E.D.banner.slides[i] = { f: tplOf(E.D.template).slides[i] || 'none', w: sz.w, h: sz.h, hid: E.D.banner.slides[i].hid }; } if (slot === 'tb-logo') E.D.tb.logoF = 'none'; if (TB_ICON.test(slot)) tbIconSet(slot.slice(3), null); if (slot.startsWith('mp-')) window.MP.setAsset(slot, null); });
     window.toast(t('ed/reset-toast'), undoOpt());
   };
   A.amToggle = (slot) => {
