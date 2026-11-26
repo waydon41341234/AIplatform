@@ -178,10 +178,12 @@
     if (E.picker) { if (E.picker.tbRow) tb[E.picker.tbRow] = E.picker.value; else if (E.picker.elRow) ec[E.picker.elRow] = E.picker.value; else th[E.picker.key] = E.picker.value; }
     return { th, tb, ec };
   }
+  // 顶部栏底板默认绑定 68 Key 的 bs_topnav_bg（Waydon 2026-11-26）
+  const tbBgDef = (th) => (window.MP && window.MP.resolveKey ? window.MP.resolveKey('bs_topnav_bg', th, E.D.ec || {}) : th.bg_2);
   function themeStyle() {
     const { th, tb, ec } = liveTheme();
     let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP ? window.MP.vars(th, ec) : '');
-    if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`;
+    s += `;--tb-bg:${tb.bg || tbBgDef(th)}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`;
     return s;
   }
 
@@ -298,7 +300,8 @@
     const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
     // 经典蓝白：Logo 图 + 币种切换 + 带文字的搜索
     const search = it.search ? `<span class="srch-cl"><img src="assets/classic/search.png" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
-    const cur = it.cur && !D.login ? `<img class="cur-cl" src="assets/classic/cur.png" alt="CNY">` : '';
+    // 币种框：外框 border、文案 neutral_2（Waydon 2026-11-26）
+    const cur = it.cur && !D.login ? `<span class="cur-cl"><img src="assets/classic/bal-sym.png" alt=""><b>CNY</b><i></i></span>` : '';
     const logo = it.logo ? `<span class="lg lg-cl" style="filter:${tb.logoF}"><img src="assets/classic/logo.png" alt="GAMING"></span>` : '';
     // 未登录：顶部栏只留币种切换，不显示余额框 / 登录注册 / 头像（Waydon 2026-11-26，登录入口在帐户栏）
     const auth = it.auth && D.login ? balHtml() : ''; // 头像不放顶部栏（Waydon 2026-11-26）
@@ -542,7 +545,7 @@
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
     const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
     const searchRow = row('search', `<span class="thumb sq"><img src="assets/classic/search.png" alt=""></span>`, t('ed/tb-search'), '56×49');
-    const curRow = row('cur', `<span class="thumb cur"><img src="assets/classic/cur.png" alt=""></span>`, t('ed/tb-cur'), '142×46');
+    const curRow = row('cur', `<span class="thumb sq"><img src="assets/classic/bal-sym.png" alt=""></span>`, t('ed/tb-cur'), '52×52');
     const entries = (D.login ? '' : curRow) + (D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow);
     const pos = `<div class="tb-item tb-pos"><span class="tx"><b>${t('ed/side-pos')}</b></span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>`;
     const auth = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic(D.login ? 'wallet-fill' : 'sign-in-fill')}</span><span class="tx"><b class="ellipsis">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</b></span>${eye('auth')}</div>`;
@@ -559,9 +562,9 @@
   }
   function tbColor() {
     const { th, tb } = liveTheme();
-    const cur = { bg: tb.bg || th.bg_2, text: tb.text || th.lead, search: tb.search || th.primary, reg: tb.reg || th.accent_3 };
-    const rows = [['bg', 'ed/tb-c-bg'], ['text', 'ed/tb-c-text'], ['search', 'ed/tb-c-search'], ['reg', 'ed/tb-c-reg']];
-    return rows.map(([k, lab]) => `<div class="crow"><div class="k">${t(lab)}</div><div class="sws">${TB_SW[k].map((c) => `<button class="sw-btn ${cur[k].toLowerCase() === c ? 'is-on' : ''}" style="background:${c}" data-act="tbColor" data-arg="${k}|${c}"></button>`).join('')}<button class="rainbow ${E.picker && E.picker.tbRow === k ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}"></button></div>${E.picker && E.picker.tbRow === k ? pickerHtml('in-panel', t(lab)) : ''}</div>`).join('') + `<div class="p-note">${t('ed/tb-c-note')}</div>`;
+    const cur = { bg: tb.bg || tbBgDef(th), text: tb.text || th.lead, search: tb.search || th.primary, reg: tb.reg || th.accent_3 };
+    const rows = [['bg', 'ed/tb-c-bg'], ['text', 'ed/tb-c-text']]; // 经典蓝白：底板 bs_topnav_bg、搜索文案 lead；币种外框/下划线 border、币种文案 neutral_2 跟全局配色
+    return rows.map(([k, lab]) => `<div class="crow"><div class="k">${t(lab)}</div><div class="sws">${TB_SW[k].map((c) => `<button class="sw-btn ${cur[k].toLowerCase() === c ? 'is-on' : ''}" style="background:${c}" data-act="tbColor" data-arg="${k}|${c}"></button>`).join('')}<button class="rainbow ${E.picker && E.picker.tbRow === k ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}"></button></div>${E.picker && E.picker.tbRow === k ? pickerHtml('in-panel', t(lab)) : ''}</div>`).join('') + `<div class="p-note">${t('ed/tb-c-bind')}</div><div class="p-note">${t('ed/tb-c-note')}</div>`;
   }
   // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
   // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细]
@@ -659,7 +662,7 @@
       <div class="pk-foot"><button class="btn btn-secondary btn-sm" data-act="pkCancel">${t('confirm/cancel')}</button><button class="btn btn-primary btn-sm" data-act="pkApply">${t('ed/pick-apply')}</button></div></div>`;
   }
   A.pick = (arg) => { const [k, where] = arg.split('|'); const v = E.D.theme[k]; E.picker = { key: k, orig: v, value: v, where: mobileEd() ? 'sheet' : where }; S.menu = null; if (mobileEd()) { E.picker.back = ['colors', 'module'].includes(E.mpanel) ? E.mpanel : null; E.mpanel = 'picker'; } };
-  A.pickTb = (k) => { const th = E.D.theme; const cur = E.D.tb.colors[k] || { bg: th.bg_2, text: th.lead, search: th.primary, reg: th.accent_3 }[k]; if (E.picker && E.picker.tbRow === k) { E.picker = null; return; } E.picker = { key: k, tbRow: k, orig: cur, value: cur, where: 'tb' }; };
+  A.pickTb = (k) => { const th = E.D.theme; const cur = E.D.tb.colors[k] || { bg: tbBgDef(th), text: th.lead, search: th.primary, reg: th.accent_3 }[k]; if (E.picker && E.picker.tbRow === k) { E.picker = null; return; } E.picker = { key: k, tbRow: k, orig: cur, value: cur, where: 'tb' }; };
   A.pickKey = (k) => { const v = E.D.theme[k]; Object.assign(E.picker, { key: k, orig: v, value: v }); S.menu = null; };
   A.pkSet = (c) => { E.picker.value = c; };
   A.pkCancel = () => { const p = E.picker; E.picker = null; if (E.mpanel === 'picker') E.mpanel = p && p.back ? p.back : null; };
@@ -976,7 +979,7 @@
   }
 
   // ---------- 素材：上传 / 素材库 / 调整尺寸 ----------
-  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [142, 46, 'ed/tb-cur'] };
+  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [52, 52, 'ed/tb-cur'] };
   function slotSpec(slot) { if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; } const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' }; }
   function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); return E.D.tb.logoF; }
   function setAsset(slot, v) {
