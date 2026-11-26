@@ -886,3 +886,4 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .px-custom.is-on .input { border-color: var(--brand); }
 html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 3px; padding: 0 4px; }
 .h5-bnav .seltool { top: auto; bottom: 0; }
+.layout-reset { margin-top: 16px; gap: 6px; } .layout-reset:disabled { opacity: .5; cursor: default; }

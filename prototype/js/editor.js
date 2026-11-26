@@ -559,6 +559,25 @@
   A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
+  // 布局「恢复默认」（Waydon 2026-11-26）：只恢复布局页签里的参数，内容和颜色不动
+  const LAYOUT_KEYS = { banner: ['margin', 'corner', 'size', 'ind'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
+  const layoutObj = (D, b) => (b === 'banner' ? D.banner : b === 'topbar' ? D.tb : (D.m || {})[b]);
+  function layoutDirty(b) {
+    const ks = LAYOUT_KEYS[b]; if (!ks) return false;
+    const cur = layoutObj(E.D, b), def = layoutObj(defaultDesign(E.D.template), b);
+    return !!(cur && def) && ks.some((k) => String(cur[k]) !== String(def[k]));
+  }
+  function layoutResetBtn(b) {
+    if (!LAYOUT_KEYS[b]) return '';
+    const dirty = layoutDirty(b);
+    return `<button class="btn btn-secondary btn-sm btn-block layout-reset" data-act="layoutReset" data-arg="${b}" ${dirty ? '' : 'disabled'}>${ic('arrow-counter-clockwise', 'ic-16')}${t(dirty ? 'ed/layout-reset' : 'ed/layout-is-default')}</button>`;
+  }
+  A.layoutReset = (b) => {
+    if (!layoutDirty(b)) return false;
+    const def = layoutObj(defaultDesign(E.D.template), b);
+    commit(() => { const cur = layoutObj(E.D, b); LAYOUT_KEYS[b].forEach((k) => { cur[k] = def[k]; }); });
+    window.toast(t('ed/layout-reset-done'), undoOpt());
+  };
   function modulePanel(id) {
     const b = baseName(id);
     if (b === 'banner' && E.ai) return aiPanel();
@@ -567,9 +586,9 @@
     const adBtn = b === 'sidebar' && window.AD && !mobileEd() ?`<span style="flex:1"></span>${window.AD.toolBtn(id, true)}` : '';
     const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
-    if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() : bannerColor());
-    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? txtSec(b) : '');
+    if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
+    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? txtSec(b) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
