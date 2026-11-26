@@ -9,24 +9,32 @@
   const S = () => window.S;
 
   // ---------- 默认数据 ----------
-  const MID = [['体育', null], ['真人', null], ['电子', 'game-controller'], ['彩票', 'squares-four-fill'], ['棋牌', 'stack-fill'], ['捕鱼', 'sparkle-fill'], ['电竞', 'toolbox-fill'], ['优惠', 'heart-fill'], ['VIP', 'user-circle'], ['客服', 'bell-fill']];
-  // 游戏菜单 = 游戏类型菜单，13 个类型（名称按当前语言取 mp/gm-n-*，改名后存原文）
+  // 经典蓝白（Waydon 2026-11-26 真实 UI，Figma 03 组件 317:55525）：默认素材放 assets/classic/，存在 def / defOn / defOut 里，
+  // 业主上传的图仍写 img / imgOn（重置 = 清掉 img 回到默认素材），所以「改过几个图标」的计数不受默认素材影响。
+  const CL = 'assets/classic/';
+  const MID = [['利息宝', 'wallet-fill', 'mid0'], ['VIP', 'crown-fill', 'mid1', '12'], ['分享赚钱', 'gift-fill', 'mid2', '1,888.8'], ['更多', 'squares-four-fill', 'mid3']];
+  // 游戏菜单 = 游戏类型菜单，13 个类型（名称按当前语言取 mp/gm-n-*，改名后存原文）；经典蓝白显示前 9 个
   const GM = ['sparkle-fill', 'stack-fill', 'fish-fill', 'game-controller-fill', 'cube-fill', 'user-circle-fill', 'trophy-fill', 'ticket-fill', 'headset-fill', 'bird-fill', 'clock-counter-clockwise', 'heart-fill', 'play-circle-fill'];
-  const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机', null, true], ['极速赛车'], ['德州扑克'], ['捕鱼达人']];
-  const BN = [['首页', 'house-fill', true], ['优惠', 'sparkle-fill'], ['消息', 'bell-fill'], ['充值', 'wallet-fill'], ['我的', 'user-circle', true]];
+  const GM_ORDER = [1, 2, 3, 6, 4, 7, 9, 8, 10, 5, 11, 12, 13]; // 热门 棋牌 捕鱼 真人 电子 体育 电竞 彩票 斗鸡 | 区块链 最近 收藏 试玩（后 4 个默认关）
+  const GAMES = [['炸金花', 0], ['通比牛牛', 1], ['龙虎斗', 2], ['百人牛牛', 3], ['奔驰宝马', 4], ['水浒传', 5], ['百家乐', 7], ['飞禽走兽', 8], ['红黑大战', 6]];
+  // 底部导航：第 4 个未登录显示「注册」，登录后显示「存款」；中间「分享赚钱」凸起大图标
+  const BN = [['首页', 'house-fill', true, 'bi0'], ['优惠', 'gift-fill', false, 'bi1', 'bo1'], ['分享赚钱', 'gift-fill', false, 'bi2', 'bo2'], ['存款', 'wallet-fill', false, 'bi3', 'bo3', '注册'], ['我的', 'user-circle', true, 'bi4', 'bo4']];
   const SIDE = [['首页', 'house-fill'], ['优惠活动', 'gift-fill'], ['VIP 特权', 'crown-fill'], ['在线客服', 'headset-fill'], ['个人中心', 'user-circle']];
   const FOOT = ['关于我们', '帮助中心', '隐私政策'];
   const items = (arr) => arr.map((x) => ({ n: x[0], i: x[1] || null, req: !!x[2], on: true }));
+  const NOTICE = '恭喜玩家在“龙虎斗”游戏中级场房间赢得18888元彩金，祝您好运连连！';
   const defaults = () => {
-    const bn = items(BN); bn[0].onBuiltin = true; // 首页选中态图标内置
+    const bn = BN.map(([n, i, req, def, defOut, outN]) => Object.assign({ n, i, req, on: true, def: CL + def + '.png' }, defOut ? { defOut: CL + defOut + '.png' } : {}, outN ? { outN } : {}));
+    bn[0].onBuiltin = true; bn[0].defOn = CL + 'bi0.png'; // 首页选中态图标内置
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
-      midnav: { mode: 'conf', items: items(MID), layout: 'row', per: 5, size: 96 },
-      gamemenu: { items: GM.map((i, k) => ({ n: '', k: 'mp/gm-n-' + (k + 1), i, req: false, on: true })), style: 'tabs', shape: 'pill' },
-      gamecards: { name: true, tag: true, fallback: null, cols: 3, corner: 16, gap: 16 },
+      notice: { text: NOTICE, mail: true, speed: 'normal' },
+      midnav: { mode: 'conf', items: MID.map(([n, i, def, badge]) => ({ n, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 96 },
+      gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill' },
+      gamecards: { name: true, tag: true, fav: true, fallback: null, cols: 3, corner: 16, gap: 16 },
       footer: { items: items(FOOT.map((n) => [n])), copy: '© 2026 星河体育 版权所有', align: 'center' },
       sidebar: { items: items(SIDE), style: 'list', width: 62, head: null, headOn: true },
-      bottomnav: { mode: 'fixed', items: bn, style: 'regular', h: 110 },
+      bottomnav: { mode: 'fixed', items: bn, style: 'raised', h: 120 },
     };
   };
   const nm = (it) => it.n || (it.k ? t(it.k) : '');
@@ -36,7 +44,8 @@
   // 元素颜色：[元素 ID, 默认取的基础色 Key]
   const EL = {
     jackpot: [['jackpot.bg', 'primary'], ['jackpot.title', 'bg_2'], ['jackpot.amount', 'bg_2']],
-    midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary']],
+    notice: [['notice.bg', 'bg_2'], ['notice.text', 'lead'], ['notice.hl', 'accent_2'], ['notice.num', 'accent_3']],
+    midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary'], ['midnav.btn', 'primary']],
     gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'neutral_1'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'bg_2']],
     gamecards: [['gamecards.placeholder', 'border'], ['gamecards.placeholderIcon', 'neutral_3'], ['gamecards.text', 'lead'], ['gamecards.label', 'accent_3'], ['gamecards.labelText', 'bg_2']],
     footer: [['footer.bg', 'bg_1'], ['footer.text', 'neutral_2'], ['footer.link', 'neutral_1']],
@@ -78,7 +87,8 @@
   const iconBtns = (b) => `<div class="r2" style="margin-top:10px"><button class="btn btn-primary btn-sm" data-act="iaOpen" data-arg="${b}">${ic('magic-wand', 'ic-16')}${t('mp/ai-icons')}</button><button class="btn btn-secondary btn-sm" data-act="bxOpen" data-arg="${b}">${ic('upload-simple', 'ic-16')}${t('mp/upload-icons')}</button></div>`;
   // 入口图标可上传替换（缩略图右下角上传角标；画布上点图标也能替换）
   const img = (src) => `<img class="cu" src="${src}" alt="">`;
-  const upThumb = (b, i, f, icon, cls = '', title = '') => { const src = M(b).items[i][f]; return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
+  const defSrc = (it, f, b) => (f === 'imgOn' ? it.defOn || (b === 'gamemenu' ? it.def : null) : it.def) || null;
+  const upThumb = (b, i, f, icon, cls = '', title = '') => { const it0 = M(b).items[i]; const src = it0[f] || defSrc(it0, f, b); return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
   const resetBtn = (b, i) => { const it = M(b).items[i]; return it.img || it.imgOn ? `<button class="ib-s" data-act="mpIconReset" data-arg="${b}|${i}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''; };
 
   function colors(b) {
@@ -99,6 +109,11 @@
       layout: () => sec(t('mp/style'), seg([{ v: 'flow', label: t('mp/lay-flow') }, { v: 'compact', label: t('mp/lay-compact') }], M('jackpot').layout, 'mpSet_jackpot_layout'))
         + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }) + note('ed/unit-750'),
     },
+    notice: {
+      content: () => sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;resize:vertical" data-input="mpNtText" maxlength="80">${esc(M('notice').text)}</textarea>`) + note('mp/nt-hl')
+        + sec(t('mp/nt-show'), toggle(M('notice').mail, 'mpFlag', 'notice|mail', t('mp/nt-mail'))),
+      layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-size'),
+    },
     midnav: {
       content: () => modeSeg('midnav') + sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/icon-hint') + iconBtns('midnav')),
       layout: () => sec(t('mp/style'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], M('midnav').layout, 'mpSet_midnav_layout'))
@@ -107,11 +122,11 @@
     gamemenu: {
       content: () => sec(t('mp/gm-cats'), list('gamemenu', (it, i) => `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on', t('mp/state-act'))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}`)
         + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec')}</div>` + note('mp/gm-scroll') + note('mp/gm-first') + iconBtns('gamemenu')),
-      layout: () => sec(t('mp/style'), seg([{ v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
-        + sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')) + note('mp/gm-scroll'),
+      layout: () => sec(t('mp/style'), seg([{ v: 'side', label: t('mp/gm-side') }, { v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
+        + (M('gamemenu').style === 'side' ? note('mp/gm-side-note') : sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')) + note('mp/gm-scroll')),
     },
     gamecards: {
-      content: () => sec(t('mp/gc-show'), toggle(M('gamecards').name, 'mpFlag', 'gamecards|name', t('mp/gc-name')) + toggle(M('gamecards').tag, 'mpFlag', 'gamecards|tag', t('mp/gc-tag')))
+      content: () => sec(t('mp/gc-show'), toggle(M('gamecards').name, 'mpFlag', 'gamecards|name', t('mp/gc-name')) + toggle(M('gamecards').tag, 'mpFlag', 'gamecards|tag', t('mp/gc-plat')) + toggle(M('gamecards').fav !== false, 'mpFlag', 'gamecards|fav', t('mp/gc-fav')))
         + sec(t('mp/gc-fallback'), asset('gamecards', 'fallback', t('mp/gc-fallback'), t('mp/gc-fallback-spec'), `<span class="thumb fb" style="filter:${M('gamecards').fallback || 'none'}">${ic('image-fill')}</span>`)),
       layout: () => sec(t('mp/cols'), seg([2, 3, 4].map((n) => ({ v: String(n), label: t('mp/cols-n', { n }) })), M('gamecards').cols, 'mpSet_gamecards_cols'))
         + px('gamecards', 'corner', [0, 16, 32], { title: t('ed/corner') }) + px('gamecards', 'gap', [16, 24, 32], { title: t('mp/gap') }) + note('ed/unit-750'),
@@ -147,25 +162,47 @@
       const bg = m.bg && m.bgOn ? `background-image:linear-gradient(135deg,#f6c445,#c9963b);filter:${m.bg}` : '';
       return `<div class="h5-jack ${m.layout}" style="margin:${m.margin / 2}px 12px;border-radius:${m.corner / 2}px;${bg}"><span class="tt">${esc(m.title)}</span>${amt}</div>`;
     }
+    if (b === 'notice') {
+      // 公告栏：喇叭 + 跑马灯文字（“引号内”用强调色 1、数字用强调色 2）+ 信箱
+      const tx = esc(m.text || '').replace(/“([^”]*)”/g, '<em class="hl">“$1”</em>').replace(/(\d[\d,.]*)/g, '<em class="num">$1</em>');
+      return `<div class="cl-notice sp-${m.speed || 'normal'}"><img class="spk" src="${CL}speaker.png" alt=""><div class="mq"><span>${tx}</span></div>${m.mail ? `<span class="mail"><img src="${CL}mail.png" alt=""><i>99</i></span>` : ''}</div>`;
+    }
     if (b === 'midnav') {
-      const sz = m.size / 2.4;
-      const acct = m.layout === 'account' ? `<div class="acct"><span>¥ 1,280.00</span><span class="sp"></span><span class="a">充值</span><span class="a">提现</span></div>` : '';
-      return `<div class="h5-mid-wrap">${acct}<div class="h5-mid" style="grid-template-columns:repeat(${m.per},1fr)">${vis('midnav').map((it) => { const i = m.items.indexOf(it); return `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'} ${S().menu === 'icon:midnav|' + i ? 'is-focus' : ''}" style="width:${sz + 8}px;height:${sz}px" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${it.img ? img(it.img) : ic(it.i || 'plus')}</span>${esc(nm(it))}${S().menu === 'icon:midnav|' + i ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
+      // 帐户栏（经典蓝白）：左边 未登录=登录/注册，已登录=VIP·用户名·余额；右边 4 个入口
+      const login = X().E.D.login; const v = vis('midnav');
+      const acct = m.layout === 'account' ? (login
+        ? `<div class="cl-user"><div class="u"><img class="vip" src="${CL}vip.png" alt="">${ic('caret-down', 'cv')}<b>huiyuan123456</b><img class="sw" src="${CL}swap.png" alt=""></div><div class="bl"><i>¥</i><b>1,234,567,890.99</b>${ic('arrow-counter-clockwise', 'rf')}</div></div>`
+        : `<div class="cl-user out"><span class="lg">${t('mp/acct-login')}</span><span class="rg">${t('mp/acct-reg')}</span></div>`) : '';
+      return `<div class="cl-acct ${acct ? '' : 'no-acct'}">${acct}<div class="cl-ent" style="grid-template-columns:repeat(${acct ? v.length : m.per},1fr)">${v.map((it) => { const i = m.items.indexOf(it); const src = it.img || it.def; const focus = S().menu === 'icon:midnav|' + i; return `<div class="it"><span class="ib ${src ? 'cu' : it.i ? '' : 'ph'} ${focus ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${src ? img(src) : ic(it.i || 'plus')}${login && it.badge ? `<i class="bd">${esc(it.badge)}</i>` : ''}</span><span class="nm">${esc(nm(it))}</span>${focus ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
     }
     if (b === 'gamemenu') {
-      // 13 个入口放不下时横向滚动，右侧渐隐提示可滑
       const v = vis('gamemenu');
-      return `<div class="h5-gm-wrap"><div class="h5-gm ${m.style} ${m.shape}" data-sk="gm-${id || b}">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const icon = m.style === 'icons' ? `<span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${it[f] || (k === 0 && it.img) ? img(it[f] || it.img) : ic(it.i)}</span>` : ''; return `<span class="${k ? '' : 'on'}">${icon}${esc(nm(it))}${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;
+      if (m.style === 'side') {
+        // 竖排分类（经典蓝白）：放在游戏卡片左侧，第一个为选中态
+        return `<div class="cl-gm">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const src = it[f] || it.img || it.def; return `<span class="${k ? '' : 'on'}"><span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><b>${esc(nm(it))}</b>${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}<span class="more">${ic('caret-down')}</span></div>`;
+      }
+      // 13 个入口放不下时横向滚动，右侧渐隐提示可滑
+      return `<div class="h5-gm-wrap"><div class="h5-gm ${m.style} ${m.shape}" data-sk="gm-${id || b}">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const src = it[f] || (k === 0 && it.img) || it.def; const icon = m.style === 'icons' ? `<span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span>` : ''; return `<span class="${k ? '' : 'on'}">${icon}${esc(nm(it))}${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;
     }
     if (b === 'gamecards') {
-      return `<div class="h5-gc" style="grid-template-columns:repeat(${m.cols},1fr);gap:${m.gap / 2}px">${GAMES.map(([n, tg, fb]) => `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px;${fb && m.fallback ? `filter:${m.fallback}` : ''}">${fb ? ic('image-fill') : ''}${tg && m.tag ? `<span class="tg">${tg}</span>` : ''}</div>${m.name ? esc(n) : ''}</div>`).join('')}</div>`;
+      // 游戏卡片（经典蓝白）：上方 热门/最近/收藏 页签，方图 + 收藏星 + 平台角标 + 名称，底部「展开」
+      const tabs = [1, 11, 12].map((k, j) => `<span class="${j ? '' : 'on'}">${t('mp/gm-n-' + k)}</span>`).join('');
+      const cards = GAMES.map(([n, g], j) => `<div class="c"><div class="im" style="border-radius:${m.corner / 2}px"><img src="${CL}game${g}.webp" alt="">${m.fav !== false ? `<img class="star" src="${CL}${j ? 'star' : 'star-on'}.png" alt="">` : ''}${m.tag ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`).join('');
+      return `<div class="cl-gc"><div class="tabs">${tabs}</div><div class="grid" style="grid-template-columns:repeat(${m.cols},1fr);gap:${m.gap / 2}px ${m.gap / 4}px">${cards}</div><div class="more">${t('mp/gc-more')} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div></div>`;
     }
     if (b === 'footer') return `<div class="h5-foot" style="text-align:${m.align}"><div class="ln">${vis('footer').map((x) => esc(nm(x))).join(' · ')}</div><div>${esc(m.copy)}</div></div>`;
     return '';
   }
   function bnav() {
-    const m = M('bottomnav'); const v = vis('bottomnav'); const mid = Math.floor(v.length / 2);
-    return v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:bottomnav|' + i; return `<span class="it ${k ? '' : 'on'} ${m.style === 'raised' && k === mid ? 'raised' : ''}"><span class="bi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="bottomnav|bottomnav|${i}|${f}" data-stop>${it[f] ? img(it[f]) : ic(it.i)}</span>${esc(nm(it))}${on ? iconMenu('bottomnav', i, f) : ''}</span>`; }).join('');
+    // 底部导航（经典蓝白）：第 4 个未登录=注册、已登录=存款；优惠未登录用动效礼盒；中间凸起大图标
+    const m = M('bottomnav'); const v = vis('bottomnav'); const mid = Math.floor(v.length / 2); const login = X().E.D.login;
+    return v.map((it, k) => {
+      const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:bottomnav|' + i;
+      const src = it[f] || (f === 'imgOn' ? it.defOn : null) || (!login && it.defOut) || it.def;
+      const name = !login && it.outN && !it.img ? it.outN : nm(it);
+      const big = !login && it.defOut && !it.img && i === 1 ? 'big' : '';
+      return `<span class="it ${k ? '' : 'on'} ${m.style === 'raised' && k === mid ? 'raised' : ''}"><span class="bi ${big} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="bottomnav|bottomnav|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span>${esc(name)}${on ? iconMenu('bottomnav', i, f) : ''}</span>`;
+    }).join('');
   }
   const bnavCls = () => `h-${M('bottomnav').h}`;
   function side() {
@@ -175,7 +212,7 @@
   }
 
   // ---------- 动作 ----------
-  for (const [b, keys] of Object.entries({ jackpot: ['anim', 'layout', 'margin', 'corner'], midnav: ['mode', 'layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['mode', 'style', 'h'] })) {
+  for (const [b, keys] of Object.entries({ notice: ['speed'], jackpot: ['anim', 'layout', 'margin', 'corner'], midnav: ['mode', 'layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['mode', 'style', 'h'] })) {
     for (const k of keys) A[`mpSet_${b}_${k}`] = (v) => { const cur = M(b)[k]; set(b, k, typeof cur === 'number' ? +v : v); };
   }
   A.mpItem = (arg) => { const [b, i] = arg.split('|'); const x = X(); x.commit(() => { const it = x.E.D.m[b].items[+i]; it.on = !it.on; }); };
@@ -190,6 +227,7 @@
   const typeText = (b, k) => (v) => { const x = X(); if (typing !== b + k) { x.commit(() => {}); typing = b + k; } x.E.D.m[b][k] = v; x.save(); return true; };
   I.mpJpTitle = typeText('jackpot', 'title');
   I.mpFtCopy = typeText('footer', 'copy');
+  I.mpNtText = typeText('notice', 'text');
   document.addEventListener('click', () => { typing = null; }, true);
 
   // ---------- 改名（ED-19）：上限中文 6 字 / 12 个字符 ----------

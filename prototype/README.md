@@ -98,6 +98,11 @@ assets/             Hero 图、等级徽章、Logo（均从 Figma / public/brand
 - 补充（23:15）：PC Banner 按 Waydon 定的 1920×564 通栏显示；工作台底部创作框下拉往上弹（已确认的例外）。单文件打包改为 JS 原样内嵌、运行时替换图片路径（之前在 JS 里替换路径弄坏了字符串，单文件 / 线上版打不开）。
 - 展示版：`python3 prototype/build-single.py` 同时生成 `dist/prototype-showcase.html`，去掉原型快捷条（语言 / 日夜 / 演示失败开关），用于给老板或内部文档平台内嵌展示；平台自身的语言、日夜切换（头像菜单 / 我的）仍可用。内嵌 iframe 需 sandbox 含 allow-scripts allow-same-origin。
 
+### 2026-11-26 午：经典蓝白真实 UI
+
+- 模板只开放「经典蓝白」；编辑器模块改成真实结构：顶部栏 · Banner · 公告栏 · 帐户栏 · 游戏分类（竖排）+ 游戏卡片 · 底部导航，去掉彩金池 / 页脚 / 侧边栏。
+- 真实切图在 `assets/classic/`（从 Figma 03 组件 317:55525 导出）。待办见 `docs/remaining-work.md` 0.4。
+
 ### 第六轮（2026-11-26 凌晨）：AI 首页设计、未登录 / 登录、细节修正
 
 - **AI 首页设计**：`js/aidesign.js`、`js/i18n-ad.js`、`css/aidesign.css`。首页创作框「首页设计」页签 → 扣 50 点 → 工作台出 3 套 → 查看 / 用这套新建项目 → 编辑器；编辑器内「AI 一键设计」与单模块 AI 重新生成（10 点）；导出面板显示 Figma 源文件结构（68 Key、切图、组件）。

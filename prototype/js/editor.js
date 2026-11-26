@@ -19,8 +19,8 @@
   const SUGGEST = ['#1678ff', '#c9963b', '#10b26c', '#7b4dff', '#ea4e3d', '#ff7a1a', '#06b0ea', '#1c2033'];
   // ED-21：去掉「菜单栏」，游戏菜单即游戏类型菜单
   const MODS = {
-    topbar: { key: 'mod/topbar', fixed: true }, banner: { key: 'mod/banner' }, jackpot: { key: 'cat/jackpot' },
-    midnav: { key: 'mod/midnav' }, gamemenu: { key: 'mod/gamemenu' }, gamecards: { key: 'mod/gamecards' },
+    topbar: { key: 'mod/topbar', fixed: true }, banner: { key: 'mod/banner' }, notice: { key: 'mod/notice' }, jackpot: { key: 'cat/jackpot' },
+    midnav: { key: 'mod/account' }, gamemenu: { key: 'mod/gamemenu' }, gamecards: { key: 'mod/gamecards' },
     footer: { key: 'cat/footer' }, sidebar: { key: 'mod/sidebar' }, bottomnav: { key: 'mod/bottomnav', fixed: true },
   };
   const BANNER = { large: { w: 1080, h: 490, dw: 710, dh: 322, cw: 351, ch: 159 }, general: { w: 1020, h: 300, dw: 710, dh: 209, cw: 351, ch: 103 }, small: { w: 386, h: 244, dw: 386, dh: 244, cw: 193, ch: 122 } };
@@ -29,14 +29,16 @@
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
   const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
   const BNAV_PX = { 98: 49, 110: 55, 120: 60 };
-  const DV = 5; // 设计数据版本（LS 里旧数据不兼容时丢弃）
+  const DV = 6; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
   const modName = (id) => { const b = baseName(id); const n = id.includes('~') ? ' ' + (+id.split('~')[1] + 1) : ''; return t((MODS[b] || MODS.banner).key) + n; };
 
   // ---------- 模板（ED-23）：版式 + 配色 + 默认素材整套 ----------
   const ORDER9 = ['banner', 'jackpot', 'midnav', 'gamemenu', 'gamecards', 'footer'];
+  // 经典蓝白 = 真实 UI 结构（Waydon 2026-11-26 选「改成真实结构」）：没有彩金池 / 页脚 / 侧边栏
+  const ORDER_CL = ['banner', 'notice', 'midnav', 'gamemenu', 'gamecards'];
   const TPL = {
-    'classic-blue': { preset: 'blue', order: ORDER9, size: 'general', slides: SLIDE_F },
+    'classic-blue': { preset: 'blue', order: ORDER_CL, size: 'general', slides: SLIDE_F },
     'midnight-gold': { preset: 'gold', order: ORDER9, size: 'large', slides: ['sepia(.6) saturate(1.3)', 'sepia(.4) hue-rotate(-15deg)', 'sepia(.8) brightness(.9)'] },
     'fresh-green': { preset: 'green', order: ['banner', 'midnav', 'gamemenu', 'gamecards', 'jackpot', 'footer'], size: 'general', slides: ['hue-rotate(60deg)', 'hue-rotate(80deg) saturate(.9)', 'hue-rotate(40deg) brightness(1.05)'] },
     'western-white': { preset: 'platinum', order: ['banner', 'gamemenu', 'gamecards', 'midnav', 'footer', 'jackpot'], size: 'small', slides: ['hue-rotate(220deg)', 'hue-rotate(250deg) saturate(.8)', 'grayscale(.3) hue-rotate(200deg)'] },
@@ -51,7 +53,7 @@
       theme: preset(p), palette: p, basePreset: p, template: key, height: 1600,
       banner: { size: tp.size, ind: 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
-      tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: true, search: true, auth: true }, searchFirst: false, balStyle: 'pill', colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
+      tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: false }, searchFirst: false, balStyle: 'pill', colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
     };
   }
   const meta0 = LS.get('ed.meta', {});
@@ -241,14 +243,16 @@
   function h5Topbar() {
     const D = E.D, tb = D.tb, it = tb.items;
     const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
-    const search = it.search ? ic('magnifying-glass', 'ico srch') : '';
-    const logo = it.logo ? `<span class="lg" style="filter:${tb.logoF}"><img src="assets/logo-orb.webp" alt="">星河体育</span>` : '';
+    // 经典蓝白：Logo 图 + 币种切换 + 带文字的搜索
+    const search = it.search ? `<span class="srch-cl"><img src="assets/classic/search.png" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
+    const cur = it.cur ? `<img class="cur-cl" src="assets/classic/cur.png" alt="CNY">` : '';
+    const logo = it.logo ? `<span class="lg lg-cl" style="filter:${tb.logoF}"><img src="assets/classic/logo.png" alt="GAMING"></span>` : '';
     const auth = it.auth ? (D.login ? `${balHtml(tb.balStyle)}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
     const left = D.side === 'left' ? side : '';
     const right = D.side === 'right' ? side : '';
     const pre = tb.searchFirst ? search : '';
     const post = tb.searchFirst ? '' : search;
-    return `<div class="h5-top" style="height:${tb.h / 2}px;padding:0 ${tb.pad / 2}px;gap:${tb.gap / 2}px">${left}${pre}${logo}<span class="sp"></span>${post}${auth}${right}</div>`;
+    return `<div class="h5-top" style="height:${tb.h / 2}px;padding:0 ${tb.pad / 2}px;gap:${tb.gap / 2}px">${left}${pre}${logo}<span class="sp"></span>${cur}${post}${auth}${right}</div>`;
   }
   // 轮播只播放未隐藏的图（ED-06）
   const visIdx = () => E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
@@ -260,20 +264,27 @@
   function h5Banner() {
     const B = E.D.banner, sz = BANNER[B.size];
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
-    const slides = v.map((i) => `<div class="slide" style="filter:${slideF(i)}"></div>`).join('');
+    const slides = v.map((i) => `<div class="slide" style="background-image:url(assets/classic/banner.webp);filter:${slideF(i)}"></div>`).join('');
     const ind = B.ind === 'none' ? '' : `<div class="h5-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     return `<div class="h5-banner" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div></div>${ind}</div>`;
   }
   function modHtml(id) {
     switch (baseName(id)) {
       case 'banner': return h5Banner();
-      case 'jackpot': case 'midnav': case 'gamemenu': case 'gamecards': case 'footer': return window.MP.h5(baseName(id), id);
+      case 'notice': case 'jackpot': case 'midnav': case 'gamemenu': case 'gamecards': case 'footer': return window.MP.h5(baseName(id), id);
       default: return '';
     }
   }
   function h5(opts = {}) {
     const D = E.D;
-    const body = D.order.filter((id) => !D.hidden[id] && MODS[baseName(id)]).map((id) => modWrap(id, modHtml(id))).join('');
+    // 竖排游戏分类紧挨着游戏卡片时，两个模块左右并排（经典蓝白）
+    const vis0 = D.order.filter((id) => !D.hidden[id] && MODS[baseName(id)]);
+    let body = '';
+    for (let k = 0; k < vis0.length; k++) {
+      const id = vis0[k], nx = vis0[k + 1];
+      if (baseName(id) === 'gamemenu' && D.m.gamemenu.style === 'side' && nx && baseName(nx) === 'gamecards') { body += `<div class="cl-games">${modWrap(id, modHtml(id))}${modWrap(nx, modHtml(nx))}</div>`; k++; continue; }
+      body += modWrap(id, modHtml(id));
+    }
     const topPx = D.hidden.topbar ? 0 : D.tb.h / 2, bnPx = D.hidden.bottomnav ? 0 : BNAV_PX[D.m.bottomnav.h] || 55;
     const top = D.hidden.topbar ? '' : modWrap('topbar', h5Topbar(), { top: true });
     const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
@@ -320,8 +331,7 @@
       <div class="divider"></div><div class="grp-label">${t('ed/modules')}</div>
       <div data-drag-list>${E.D.order.map((id) => row(id, { grip: true })).join('')}</div>
       <div class="rel"><button class="add-mod ${S.menu === 'addmod' ? 'is-open' : ''}" data-act="addMenu">${ic('plus', 'ic-16')}${t('ed/add-module')}</button>${S.menu === 'addmod' ? `<div class="menu add-menu">${addList()}</div>` : ''}</div>
-      ${row('sidebar')}
-      <div class="side-pos"><span>${t('ed/side-pos')}</span><div class="iseg">${['left', 'right'].map((v) => `<button class="${E.D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>
+      ${E.D.tb.items.side ? row('sidebar') + `<div class="side-pos"><span>${t('ed/side-pos')}</span><div class="iseg">${['left', 'right'].map((v) => `<button class="${E.D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>` : ''}
       <div class="grp-label">${t('ed/fixed')}</div>${row('topbar')}${row('bottomnav')}`;
   }
 
@@ -458,13 +468,14 @@
     const row = (k, thumb, name, spec, grip = true) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${grip ? `<span class="grip" ${k === 'side' || k === 'search' ? 'data-act="tbSwap"' : ''}>${ic('dots-six-vertical', 'ic-16')}</span>` : ''}${thumb}<span class="tx"><b class="ellipsis">${name}</b>${spec ? `<small class="ellipsis">${spec}</small>` : ''}</span>${moreBtn('tb-' + k)}${eye(k)}</div>`;
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
     const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
-    const searchRow = row('search', `<span class="thumb sq">${ic('magnifying-glass')}</span>`, t('ed/tb-search'), '48×48');
-    const entries = D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow;
+    const searchRow = row('search', `<span class="thumb sq"><img src="assets/classic/search.png" alt=""></span>`, t('ed/tb-search'), '56×49');
+    const curRow = row('cur', `<span class="thumb cur"><img src="assets/classic/cur.png" alt=""></span>`, t('ed/tb-cur'), '142×46');
+    const entries = curRow + (D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow);
     const pos = `<div class="tb-item tb-pos"><span class="tx"><b>${t('ed/side-pos')}</b></span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>`;
     const auth = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic(D.login ? 'wallet-fill' : 'sign-in-fill')}</span><span class="tx"><b class="ellipsis">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</b></span>${eye('auth')}</div>`;
     return `<div class="p-sec"><div class="lab">${t('ed/tb-state')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${row('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/logo-orb.webp" alt=""></span>`, 'Logo', '600×100 · PNG / SVG', false)}</div>${ups(['logo'])}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${entries}${pos}</div>${ups(['side', 'search'])}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${row('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/classic/logo.png" alt=""></span>`, 'Logo', '230×76 · PNG / SVG', false)}</div>${ups(['logo'])}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${entries}${pos}</div>${ups(['cur', 'side', 'search'])}</div>
       <div class="p-sec"><div class="tb-group">${auth}${D.login && it.auth ? `<div class="tb-item tb-balst"><span class="tx"><b>${t('ed/bal-style')}</b></span></div><div class="bal-opts">${BAL_STYLES.map((v) => `<button class="bal-opt ${(D.tb.balStyle || 'pill') === v ? 'is-on' : ''}" data-act="tbBal" data-arg="${v}"><span class="bal-prev">${balHtml(v, '¥ 1,280')}</span><small>${t('ed/bal-' + v)}</small></button>`).join('')}</div>` : ''}</div><div class="p-note">${t(D.login ? 'ed/tb-balance-note' : 'ed/tb-auth-note')}</div></div>
       <div class="p-note">${t('ed/tb-del-note')}</div><div class="p-note">${t('ed/tb-fixed')}</div>`;
   }
@@ -653,7 +664,7 @@
     if (E.sel === id) E.sel = null; S.menu = null; if (E.mpanel === 'module') E.mpanel = null;
     window.toast(t(inFlow ? 'ed/deleted-toast' : 'ed/hidden-toast', { m: modName(id), name: modName(id) }), undoOpt());
   };
-  const ADDABLE = ['banner', 'jackpot', 'midnav', 'gamemenu', 'gamecards', 'footer'];
+  const ADDABLE = ['banner', 'notice', 'midnav', 'gamemenu', 'gamecards']; // 经典蓝白没有彩金池 / 页脚
   A.addMod = (b) => {
     let id = b; let n = 1; while (E.D.order.includes(id)) id = b + '~' + n++;
     commit(() => { const i = E.D.order.indexOf(E.sel); if (i >= 0) E.D.order.splice(i + 1, 0, id); else E.D.order.push(id); E.D.hidden[id] = false; });
@@ -672,7 +683,7 @@
   A.addMenu = () => { if (mobileEd()) { E.mpanel = 'addmod'; S.menu = null; } else S.menu = window.__prevMenu === 'addmod' ? null : 'addmod'; };
   function addList() {
     return `<div class="add-hd"><div class="t">${t('ed/add-title')}</div><div class="caption faint">${t('ed/add-hint')}</div></div><div class="add-grid">${ADDABLE.map((b) => {
-      const ico = { banner: 'image-fill', jackpot: 'sparkle-fill', midnav: 'list', gamemenu: 'squares-four', gamecards: 'squares-four-fill', footer: 'file-image' }[b];
+      const ico = { notice: 'bell-fill', banner: 'image-fill', jackpot: 'sparkle-fill', midnav: 'list', gamemenu: 'squares-four', gamecards: 'squares-four-fill', footer: 'file-image' }[b];
       const inPg = E.D.order.some((x) => baseName(x) === b);
       return `<button class="add-it" data-act="addMod" data-arg="${b}"><span class="tile">${ic(ico)}</span><span class="tx"><span class="nm">${t(MODS[b].key)}</span><span class="ds">${t('ed/desc-' + b)}</span></span>${inPg ? `<span class="tag">${t('ed/add-in-page')}</span>` : ''}</button>`;
     }).join('')}</div>`;
@@ -829,7 +840,7 @@
   }
 
   // ---------- 素材：上传 / 素材库 / 调整尺寸 ----------
-  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [600, 100, null] };
+  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [142, 46, 'ed/tb-cur'] };
   function slotSpec(slot) { if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; } const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' }; }
   function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); return E.D.tb.logoF; }
   function setAsset(slot, v) {

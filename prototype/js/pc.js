@@ -13,7 +13,8 @@
   // PC Banner：通栏 1920×564（Waydon 2026-11-25 定），不随 H5 的大 / 一般 / 小规格变化
   const BAN_PC = { w: PAGE_W, h: 564 };
   const SMALL_GAP = (CONTENT_W - 3 * 386) / 2;
-  const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机', null, true], ['极速赛车'], ['德州扑克'], ['捕鱼达人'], ['龙虎斗'], ['21 点'], ['轮盘'], ['麻将胡了'], ['斗地主'], ['电竞竞猜']];
+  // 经典蓝白游戏（真实 UI 素材，assets/classic/gameN.webp）
+  const GAMES = [['炸金花', 0], ['通比牛牛', 1], ['龙虎斗', 2], ['百人牛牛', 3], ['奔驰宝马', 4], ['水浒传', 5], ['百家乐', 7], ['飞禽走兽', 8], ['红黑大战', 6]];
 
   // 缩放状态：zoom = 'fit' 或百分比数字；fit / mfit 为最近一次量到的适应比例
   const st = { zoom: 'fit', fit: 0.42, mfit: 0.18, mobile: false };
@@ -50,9 +51,9 @@
   function topbar() {
     const D = X().E.D, tb = D.tb || {}, it = tb.items || {};
     const nav = vis('gamemenu').slice(0, 6).map((x, i) => `<span class="${i ? '' : 'on'}">${esc(nm(x))}</span>`).join('');
-    const logo = it.logo !== false ? `<span class="lg" style="filter:${tb.logoF || 'none'}"><img src="assets/logo-orb.webp" alt="">星河体育</span>` : '';
+    const logo = it.logo !== false ? `<span class="lg" style="filter:${tb.logoF || 'none'}"><img class="lg-cl" src="assets/classic/logo.png" alt="GAMING"></span>` : '';
     const search = it.search !== false ? `<span class="srch">${ic('magnifying-glass')}<span>搜索游戏</span></span>` : '';
-    const auth = it.auth !== false ? (D.login ? `${window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>'}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
+    const auth = true ? (D.login ? `${window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>'}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
     return `<div class="pc-top"><div class="in">${logo}<nav class="nv">${nav}</nav><span class="sp"></span>${search}${auth}</div></div>`;
   }
   function slideF(i) {
@@ -70,7 +71,7 @@
     const E = X().E, B = E.D.banner;
     // 隐藏的轮播图不播放（ED-06），位置按可见序号算
     const v = visIdx(), n = v.length, pos = Math.max(0, v.indexOf(E.slide));
-    const slides = v.map((i) => `<div class="slide" style="filter:${slideF(i)}"></div>`).join('');
+    const slides = v.map((i) => `<div class="slide" style="background-image:url(assets/classic/banner.webp);filter:${slideF(i)}"></div>`).join('');
     const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span></div>${ind}</div>`;
   }
@@ -82,17 +83,17 @@
   function midnav() {
     const m = M('midnav');
     const acct = m.layout === 'account' ? `<div class="acct"><span>¥ 1,280.00</span><span class="sp"></span><span class="a">充值</span><span class="a">提现</span></div>` : '';
-    const items = vis('midnav').slice(0, 10).map((it) => `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'}">${it.img ? `<img src="${it.img}" alt="">` : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div>`).join('');
+    const items = vis('midnav').slice(0, 10).map((it) => `<div class="it"><span class="ib ${it.img || it.def ? 'cu' : it.i ? '' : 'ph'}">${it.img || it.def ? `<img src="${it.img || it.def}" alt="">` : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div>`).join('');
     return `<div class="pc-mid-wrap"><div class="pc-sec">${acct}<div class="pc-mid">${items}</div></div></div>`;
   }
   function gamemenu() {
     const m = M('gamemenu');
     const icons = m.style === 'icons';
-    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${vis('gamemenu').map((it, i) => { const src = i ? it.img : it.imgOn || it.img; return `<span class="${i ? '' : 'on'}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
+    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${vis('gamemenu').map((it, i) => { const src = (i ? it.img : it.imgOn || it.img) || it.def; return `<span class="${i ? '' : 'on'}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
   }
   function gamecards() {
     const m = M('gamecards');
-    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, tg, fb]) => `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px;${fb && m.fallback ? `filter:${m.fallback}` : ''}">${fb ? ic('image-fill') : ''}${tg && m.tag ? `<span class="tg">${tg}</span>` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`).join('')}</div></div>`;
+    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, g]) => `<div class="c"><div class="im cl" style="border-radius:${m.corner || 0}px"><img src="assets/classic/game${g}.webp" alt="">${m.tag ? '<img class="wg" src="assets/classic/wg.png" alt="">' : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`).join('')}</div></div>`;
   }
   function footer() {
     const m = M('footer');
@@ -124,7 +125,7 @@
     const D = X().E.D;
     const body = D.order.filter((id) => !D.hidden[id] && modHtml(id)).map((id) => wrap(id, modHtml(id))).join('');
     const top = D.hidden.topbar ? '' : wrap('topbar', topbar(), { top: true });
-    const side = D.hidden.sidebar ? '' : `<div class="pc-rail-pos ${D.side === 'right' ? 'right' : 'left'}">${wrap('sidebar', rail())}</div>`;
+    const side = D.hidden.sidebar || !(D.tb && D.tb.items && D.tb.items.side) ? '' : `<div class="pc-rail-pos ${D.side === 'right' ? 'right' : 'left'}">${wrap('sidebar', rail())}</div>`;
     return `<div class="pc pc-page ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" data-pc-page style="${zStyle(z)};${themeStyle()}">${top}<div class="pc-body">${body}${side}</div></div>`;
   }
   function zoomBar() {
