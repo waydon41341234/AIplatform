@@ -102,7 +102,11 @@
 .pc-gc .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-gc .im { position: relative; aspect-ratio: 4 / 3; background: linear-gradient(135deg, #2a2a2e, #3a3a40); overflow: hidden; }
 .pc-gc .im.fb { background: var(--e-gamecards-placeholder); display: flex; align-items: center; justify-content: center; color: var(--e-gamecards-placeholderIcon); }
-.pc-gc .im.fb > .ic { width: 28%; height: 28%; }
+.pc-gc .im.fb .fbg { display: flex; width: 62%; height: 62%; }
+.pc-gc .im.fb .fbg .ic { width: 100%; height: 100%; }
+.pc-gc .im .fbimg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.pc-gc .im .rec { position: absolute; left: 0; top: 0; width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); border-radius: 0 0 14px 0; }
+.pc-gc .im .rec .ic { width: 18px; height: 18px; }
 .pc-gc .tg { position: absolute; left: 8px; top: 8px; padding: 0 8px; border-radius: 4px; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); font-size: 13px; line-height: 22px; }
 
 /* 页脚：通栏，链接一行 + 版权 */
@@ -151,6 +155,7 @@ body:has(.med-sheet) .pc-mfloat, body:has(.preview-full) .pc-mfloat { display: n
 /* 经典蓝白素材 */
 .pc-top .lg img.lg-cl { width: auto; height: 34px; border-radius: 0; }
 .pc-gc .im.cl { position: relative; overflow: hidden; background: none; aspect-ratio: 1; }
+.pc-gc .im.cl.fb { background: var(--e-gamecards-placeholder); } /* 兜底封面底板 ddt_bg */
 .pc-gc .im.cl > img:first-child { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pc-gc .im.cl .wg { position: absolute; right: 4px; bottom: 4px; width: 36%; }
 .pc-mid .ib.cu img { width: 100%; height: 100%; object-fit: contain; }

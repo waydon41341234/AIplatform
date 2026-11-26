@@ -513,8 +513,11 @@
     }
     // 游戏菜单按钮底图：上传 / AI / 恢复（没有显示隐藏，按钮本身一直在）
     if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gmBaiOpen">${ic('sparkle-fill')}${t('mp/gm-bai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
+    // 游戏卡片收藏星：上传 / AI / 恢复（两张一起恢复）
+    if (/^mp-gamecards-star/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gcAiOpen" data-arg="star">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
+    const gcAi = id === 'mp-gamecards-fallback' ? `<button class="menu-item" data-act="gcAiOpen" data-arg="fallback">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button>` : ''; // 兜底封面也能 AI 生成
     const lib = /^mp-(jackpot-bg|gamecards-fallback|sidebar-head)$/.test(id) ? `<button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button>` : '';
-    return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
+    return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}${gcAi}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
   }
   function assetMenu(id) {
     if (S.menu !== 'am:' + id || mobileEd()) return '';
@@ -795,7 +798,10 @@
     // 游戏菜单（Figma 317:55796）：竖排分类名 26/750=13 Regular，未选中 leftnav_def、选中 leftnav_active；横向标签 / 图标分类 11
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span:not(.on) b', '.cl-gm > span:not(.on) b', 13, 400], ['gamemenu.nameOn', 'tx/gamemenu-on', '.cl-gm > span.on b', '.cl-gm > span.on b', 13, 400],
       ['gamemenu.tab', 'tx/gamemenu-name', '.h5-gm > span:not(.on)', '.h5-gm > span:not(.on)', 11, 400], ['gamemenu.tabOn', 'tx/gamemenu-on', '.h5-gm > span.on', '.h5-gm > span.on', 11, 400]],
-    gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm, .h5-gc .c', '.cl-gc .nm, .h5-gc .c', 11.5, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 12, 400]],
+    // 游戏卡片（Figma 317:55739）：页签 26/750=13（选中跟 primary 不改色）；游戏名称 22=11（cards_text）；「另有 N 款游戏 展开」26=13（展开跟 primary）；
+    // 分类标题 30=15 lead、「全部」24=12 neutral_2
+    gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm', '.cl-gc .nm', 11, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 13, 400],
+      ['gamecards.title', 'tx/gamecards-title', '.cl-gc .hd b', '.cl-gc .hd b', 15, 400], ['gamecards.all', 'tx/gamecards-all', '.cl-gc .hd small', '.cl-gc .hd small', 12, 400]],
     bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it', '.h5-bnav .it:not(.on)', 10, 400]],
   };
   const TX_ALL = Object.values(TXT).flat();
@@ -803,7 +809,8 @@
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
   const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText',
-    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.activeText' };
+    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.activeText',
+    'gamecards.tab': 'gamecards.tab', 'gamecards.name': 'gamecards.text' };
   const txOf = (id) => {
     const o = ((E.D.txt || {})[id]) || {};
     if (!TX_EC[id]) return o;
@@ -827,7 +834,9 @@
     'midnav.btn': () => mnAcct() && !E.D.login, 'midnav.reg': () => mnAcct() && !E.D.login, 'midnav.user': () => mnAcct() && E.D.login, 'midnav.bal': () => mnAcct() && E.D.login,
     'midnav.greet': () => mnAcct() && E.D.login && balCfg().head === 'greet', 'midnav.badge': () => E.D.login && E.D.m.midnav.items.some((x) => x.on && x.badge),
     // 游戏菜单：竖排和横向两套字号，只显示当前样式那一套
-    'gamemenu.name': () => gmSide(), 'gamemenu.nameOn': () => gmSide(), 'gamemenu.tab': () => !gmSide(), 'gamemenu.tabOn': () => !gmSide() };
+    'gamemenu.name': () => gmSide(), 'gamemenu.nameOn': () => gmSide(), 'gamemenu.tab': () => !gmSide(), 'gamemenu.tabOn': () => !gmSide(),
+    // 游戏卡片：关掉名称 / 分类标题后对应文字样式不显示
+    'gamecards.name': () => !!(E.D.m.gamecards && E.D.m.gamecards.name), 'gamecards.title': () => !!(E.D.m.gamecards && E.D.m.gamecards.title !== false), 'gamecards.all': () => !!(E.D.m.gamecards && E.D.m.gamecards.title !== false) };
   const gmSide = () => !!(E.D.m && E.D.m.gamemenu && E.D.m.gamemenu.style === 'side');
   const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
   const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
@@ -892,7 +901,7 @@
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || b === 'gamemenu' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || b === 'gamemenu' || b === 'gamecards' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -1126,7 +1135,7 @@
     const base = baseOf(D); const tp = tplOf(D.template);
     const colors = ecCustom(D) + KEYS.filter((k) => D.theme[k].toLowerCase() !== base[k].toLowerCase()).length;
     let assets = D.banner.slides.filter((s, i) => s.f !== (tp.slides[i] || 'none') || s.fit).length;
-    ['jackpot.bg', 'gamecards.fallback', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D.m[b][f]) assets++; });
+    ['jackpot.bg', 'gamecards.fallback', 'gamecards.starOff', 'gamecards.starSel', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D.m[b][f]) assets++; });
     if (D.tb.logoF !== 'none') assets++;
     // 换过的入口图标 + 改过的入口名 / 页脚链接名（名字不在默认名单里即算改过）
     const d0 = window.MP ? window.MP.defaults() : null;
@@ -1142,7 +1151,7 @@
       nd.ec = JSON.parse(JSON.stringify(D0.ec)); const be = D0.baseEc || {}; Object.keys(be).forEach((id) => { if (nd.ec[id] === be[id]) delete nd.ec[id]; }); nd.tb.colors = Object.assign({}, D0.tb.colors); nd.tb.logoF = D0.tb.logoF;
       const tp0 = tplOf(D0.template);
       D0.banner.slides.forEach((s, i) => { if (nd.banner.slides[i] && (s.f !== (tp0.slides[i] || 'none'))) nd.banner.slides[i] = Object.assign({}, s, { w: BANNER[nd.banner.size].w, h: BANNER[nd.banner.size].h }); });
-      ['jackpot.bg', 'gamecards.fallback', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D0.m[b][f]) nd.m[b][f] = D0.m[b][f]; });
+      ['jackpot.bg', 'gamecards.fallback', 'gamecards.starOff', 'gamecards.starSel', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D0.m[b][f]) nd.m[b][f] = D0.m[b][f]; });
       ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => D0.m[b].items.forEach((it, i) => { const t2 = nd.m[b].items[i]; if (!t2) return; ['img', 'imgOn'].forEach((f) => { if (it[f]) t2[f] = it[f]; }); if (it.n && (it.k || it.n !== t2.n)) t2.n = it.n; }));
     }
     return nd;
@@ -1245,7 +1254,7 @@
   }
 
   // ---------- 素材：上传 / 素材库 / 调整尺寸 ----------
-  const SLOT_SPEC = { 'mp-gamemenu-btnOff': [150, 70, 'mp/gm-btn-off'], 'mp-gamemenu-btnSel': [150, 70, 'mp/gm-btn-on'], 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
+  const SLOT_SPEC = { 'mp-gamemenu-btnOff': [150, 70, 'mp/gm-btn-off'], 'mp-gamemenu-btnSel': [150, 70, 'mp/gm-btn-on'], 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [260, 260, 'mp/gc-fallback'], 'mp-gamecards-starOff': [36, 36, 'mp/gc-star-off'], 'mp-gamecards-starSel': [36, 36, 'mp/gc-star-on'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
   // 顶部栏图标槽：tb-cur / tb-search / tb-side 存在 E.D.tb.icons[k]（AI 图路径 / 'img:' 上传图 / 滤镜模拟值）
   const TB_ICON = /^tb-(cur|search|side)$/;
   function tbIconSet(k, v) { const o = Object.assign({}, E.D.tb.icons); if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) E.D.tb.icons = o; else delete E.D.tb.icons; }

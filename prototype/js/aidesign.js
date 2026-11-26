@@ -77,7 +77,7 @@
     const m = D.m;
     m.gamemenu.shape = lv === 0 ? 'square' : v.gmShape; m.gamemenu.style = v.gmStyle;
     m.jackpot.layout = v.jp; m.jackpot.corner = [0, 16, 32][lv]; m.jackpot.margin = [8, 16, 24][Math.floor(r() * 3)];
-    m.gamecards.corner = [0, 16, 32][lv]; m.gamecards.cols = v.cols; m.gamecards.gap = [16, 24, 32][Math.floor(r() * 3)];
+    m.gamecards.corner = [0, 20, 32][lv]; m.gamecards.cols = v.cols; m.gamecards.gap = [12, 20, 32][Math.floor(r() * 3)];
     m.footer.align = v.foot; m.bottomnav.style = v.bnav; m.bottomnav.h = v.bh; m.sidebar.style = v.side; m.midnav.per = v.per;
     // Banner：当前规格 3 张（滤镜模拟 AI 出图）
     const size = v.size, sz = x.BANNER[size];
@@ -92,7 +92,7 @@
     const jpInk = best(jpBg, [th.bg_2, th.lead, '#ffffff', '#111111']); put('jackpot.title', jpInk, th.bg_2); put('jackpot.amount', jpInk, th.bg_2);
     put('gamemenu.activeText', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
     put('sidebar.textActive', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
-    put('gamecards.labelText', best(th.accent_3, [th.bg_2, th.lead]), th.bg_2);
+    put('gamecards.labelText', best(th.accent_3, ['#ffffff', th.lead]), '#ffffff'); // 默认 labeltext_accent3 = 固定白
     const bnOn = vi === 1 ? (dark ? th.primary : mix(th.primary, th.lead, 0.25)) : th.primary;
     put('bottomnav.active', contrast(th.bg_2, bnOn) >= 3 ? bnOn : best(th.bg_2, [mix(th.primary, th.lead, 0.35), mix(th.primary, th.lead, 0.6), th.lead]), th.primary);
     if (contrast(th.bg_1, th.neutral_2) < 3.2) put('footer.text', best(th.bg_1, [th.neutral_1, mix(th.neutral_2, th.lead, 0.5)]), th.neutral_2);
@@ -715,7 +715,7 @@
       m.gamemenu.style = pick(['tabs', 'icons'], m.gamemenu.style); m.gamemenu.shape = pick(['pill', 'square'], m.gamemenu.shape);
       const a = pick([th.primary, th.accent_3, th.lead], D.ec['gamemenu.active'] || th.primary); setEc('gamemenu.active', a); setEc('gamemenu.activeText', best(a, [th.bg_2, th.lead]));
     } else if (b === 'gamecards') {
-      m.gamecards.cols = pick([2, 3, 4], m.gamecards.cols); m.gamecards.corner = pick([0, 16, 32], m.gamecards.corner); m.gamecards.gap = pick([16, 24, 32], m.gamecards.gap);
+      m.gamecards.cols = pick([2, 3, 4], m.gamecards.cols); m.gamecards.corner = pick([0, 20, 32], m.gamecards.corner); m.gamecards.gap = pick([12, 20, 32], m.gamecards.gap);
       const l = pick([th.accent_3, th.accent_2, th.primary], D.ec['gamecards.label'] || th.accent_3); setEc('gamecards.label', l); setEc('gamecards.labelText', best(l, [th.bg_2, th.lead]));
     } else if (b === 'footer') {
       m.footer.align = pick(['center', 'left'], m.footer.align);
@@ -755,7 +755,7 @@
     if (inPg(D, 'jackpot')) add('jackpot', t('mp/jp-bg'), 702, 160, 2, { k: 'jack' });
     if (inPg(D, 'midnav')) vis('midnav').forEach((it) => add('midnav', window.MP.nm(it), 160, 140, 2, { k: 'icon', it, f: 'img' }));
     if (inPg(D, 'gamemenu')) vis('gamemenu').forEach((it) => { add('gamemenu', window.MP.nm(it) + ' · Default', 200, 152, 2, { k: 'icon', it, f: 'img' }); add('gamemenu', window.MP.nm(it) + ' · Active', 200, 152, 2, { k: 'icon', it, f: 'imgOn', on: true }); });
-    if (inPg(D, 'gamecards')) add('gamecards', t('mp/gc-fallback'), 300, 225, 2, { k: 'glyph', i: 'image-fill' });
+    if (inPg(D, 'gamecards')) add('gamecards', t('mp/gc-fallback'), 260, 260, 2, { k: 'glyph', i: 'game-controller-fill' });
     if (!D.hidden.sidebar) { if (D.m.sidebar.headOn !== false) add('sidebar', t('mp/sd-head'), 540, 200, 2, { k: 'jack' }); vis('sidebar').forEach((it) => add('sidebar', window.MP.nm(it), 120, 120, 2, { k: 'icon', it, f: 'img' })); }
     if (!D.hidden.bottomnav) vis('bottomnav').forEach((it) => { add('bottomnav', window.MP.nm(it) + ' · Default', 140, 140, 2, { k: 'icon', it, f: 'img', off: true }); add('bottomnav', window.MP.nm(it) + ' · Active', 140, 140, 2, { k: 'icon', it, f: 'imgOn', on: true }); });
     return out;
