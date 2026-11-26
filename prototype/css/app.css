@@ -662,3 +662,5 @@ html[lang="vi"] .wb-full .vw-acts.n3 .btn:nth-child(3) { grid-column: 1 / -1; }
 .tpl-soon-ic { display: inline-flex; color: var(--text-3); opacity: .6; }
 .tpl-soon-ic .ic-40, .tpl-soon-ic svg.ic-40 { width: 40px; height: 40px; }
 .tpl-th.is-soon { display: flex; align-items: center; justify-content: center; }
+.tpl-prev .tpl-real { display: block; width: 100%; height: auto; }
+.tpl-prev:has(.tpl-real) { background: #fff; }

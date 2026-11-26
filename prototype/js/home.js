@@ -458,7 +458,9 @@
   function tplBody(mobile) {
     const x = TEMPLATES.find((q) => q.k === S.tplK) || { k: S.tplK, meta: 'standard', f: 'classic' };
     const tone = thumbTone(x), pal = PALETTES[tone] || MINI_PAL[tone] || PALETTES.blue;
-    const prev = `<div class="tpl-prev ${S.tplReady ? '' : 'skeleton'}" data-sk="tplprev">${S.tplReady ? window.miniH5(tone, true) : ''}</div>`;
+    // 经典蓝白：预览用真实首页（Figma 317:55528 未登录整页），其余版式仍用配色示意图
+    const real = x.k === 'classic-blue' ? `<img class="tpl-real" src="assets/classic/home-out.webp" alt="">` : '';
+    const prev = `<div class="tpl-prev ${S.tplReady ? '' : 'skeleton'}" data-sk="tplprev">${S.tplReady ? real || window.miniH5(tone, true) : ''}</div>`;
     const info = `<div class="tpl-info"><h3>${t('template/' + x.k)}</h3>
       <div class="tpl-meta"><span class="level-tag is-inline"><img src="assets/badge-tier${x.meta === 'pro' ? 2 : 1}.png" alt="">${t('level/' + (x.meta === 'pro' ? 'pro' : 'standard') + '-title')}</span><span class="caption muted">${t('template/meta-' + x.meta)}</span></div>
       <div class="dots tpl-dots">${pal.slice(0, 3).map((c) => `<i style="background:${c}"></i>`).join('')}</div>
