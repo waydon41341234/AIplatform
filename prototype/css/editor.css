@@ -1009,3 +1009,9 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .tbai-box .c-tools { gap: 6px; }
 .tbai-box .send .spin { animation: tbspin 1s linear infinite; }
 .tbai-mmenu { left: 0; min-width: 220px; }
+
+/* 色盘统一圆形（Waydon 2026-11-26） */
+.sw-btn, .bc-row .sw-btn, .tx-colors .sw-btn, .elrow .sw, .keymenu .sw, .ksw, .rainbow, .tx-custom, .tbai-ref .lab2 .sw { border-radius: 50%; }
+.sw-btn.is-on { box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 4px var(--brand); }
+.pal-prev { display: flex; gap: 4px; }
+.pal-prev i { flex: none; width: 20px; height: 20px; border-radius: 50%; }
