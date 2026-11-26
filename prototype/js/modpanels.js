@@ -12,7 +12,9 @@
   // 经典蓝白（Waydon 2026-11-26 真实 UI，Figma 03 组件 317:55525）：默认素材放 assets/classic/，存在 def / defOn / defOut 里，
   // 业主上传的图仍写 img / imgOn（重置 = 清掉 img 回到默认素材），所以「改过几个图标」的计数不受默认素材影响。
   const CL = 'assets/classic/';
-  const MID = [['利息宝', 'wallet-fill', 'mid0'], ['VIP', 'crown-fill', 'mid1', '12'], ['分享赚钱', 'gift-fill', 'mid2', '1,888.8'], ['更多', 'squares-four-fill', 'mid3']];
+  // 帐户栏入口：名称按当前语言取 mp/mn-n-*（改名后存原文到 n），跟底部导航 / 游戏菜单一样
+  const MID = [['dep', 'wallet-fill', 'mid0'], ['vip', 'crown-fill', 'mid1', '12'], ['share', 'gift-fill', 'mid2', '1,888.8'], ['more', 'squares-four-fill', 'mid3']];
+  const MID_OLD = { mid0: '利息宝', mid1: 'VIP', mid2: '分享赚钱', mid3: '更多' }; // 旧存档写死的中文默认名
   // 游戏菜单 = 游戏类型菜单，13 个类型（名称按当前语言取 mp/gm-n-*，改名后存原文）；经典蓝白显示前 9 个
   const GM = ['sparkle-fill', 'stack-fill', 'fish-fill', 'game-controller-fill', 'cube-fill', 'user-circle-fill', 'trophy-fill', 'ticket-fill', 'headset-fill', 'bird-fill', 'clock-counter-clockwise', 'heart-fill', 'play-circle-fill'];
   const GM_ORDER = [1, 2, 3, 6, 4, 7, 9, 8, 10, 5, 11, 12, 13]; // 热门 棋牌 捕鱼 真人 电子 体育 电竞 彩票 斗鸡 | 区块链 最近 收藏 试玩（后 4 个默认关）
@@ -32,7 +34,7 @@
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
       notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] },
-      midnav: { mode: 'conf', items: MID.map(([n, i, def, badge]) => ({ n, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 57 },
+      midnav: { mode: 'conf', items: MID.map(([k, i, def, badge]) => ({ n: '', k: 'mp/mn-n-' + k, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 57 },
       // active = 选中的分类（下标，不再固定第一个）；btnOff / btnSel = 业主上传 / AI 的按钮底图（空 = 效果图默认底图）
       gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill', active: 0, btnOff: null, btnSel: null },
       // 游戏卡片（Figma 317:55739）：tag = 平台角标 WG；rec = 推荐角标（第 1 张）；title = 下一分类标题行；fallback = 兜底封面；starOff / starSel = 收藏星（未收藏 / 已收藏）
@@ -888,7 +890,7 @@
         const it = its[+i]; const ks = all.filter((k) => k.split('|')[0] === i);
         const cell = (k) => ia.cands[k] ? `<span class="ia-c ${ia.busy[k] ? 'skeleton' : ''}">${ia.busy[k] ? '' : `<img src="${candSrc(ia, k)}" alt="">`}</span>` : ia.failed[k] ? `<span class="ia-c is-fail">${ic('x-circle-fill')}</span>` : `<span class="ia-c skeleton"></span>`;
         const redo = ia.stage === 'adopt' ? ks.filter((k) => ia.cands[k] || ia.failed[k]).map((k) => `<button class="btn btn-ghost btn-sm" data-act="iaRedo" data-arg="${k}">${t('mp/ai-redo')}</button>`).slice(0, 1).join('') : '';
-        return `<div class="ia-res"><span class="nm">${esc(nm(it))}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span>${ic('arrow-right', 'ic-16 faint')}${ks.map(cell).join('')}${redo}</div>`;
+        return `<div class="ia-res"><span class="nm">${esc(nm(it))}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span>${ic('arrow-right', 'ic-16 faint')}${ks.map(cell).join('')}${redo}</div>`;
       }).join('');
       const nf = Object.keys(ia.failed).length;
       if (ia.stage === 'rest') {
@@ -1127,6 +1129,8 @@
     // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); const D = X().E.D; D.m[b][f] = v; if (b === 'gamemenu' && v && GM_BTN_EC[f] && D.ec) delete D.ec[GM_BTN_EC[f]]; },
     gcFbInner: (m) => gcFbInner(m),
+    // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
+    migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); },
     toggleAsset: (slot) => { const [b, f] = slotOf(slot); set(b, f + 'On', M(b)[f + 'On'] === false); },
   };
 })();

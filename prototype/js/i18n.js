@@ -167,7 +167,7 @@ window.I18N = {
   'cat/menu': ['菜单栏', '選單列', 'Menu bar', 'Thanh menu'],
   'mod/topbar': ['顶部栏', '頂部欄', 'Top bar', 'Thanh trên cùng'],
   'mod/banner': ['Banner', 'Banner', 'Banner', 'Banner'],
-  'mod/midnav': ['中部导航', '中部導航', 'Middle nav', 'Điều hướng giữa'],
+  'mod/midnav': ['帐户栏', '帳戶欄', 'Account bar', 'Thanh tài khoản'], // 跟左栏 / 面板标题 mod/account 同名
   'mod/bottomnav': ['底部导航', '底部導航', 'Bottom nav', 'Điều hướng dưới'],
   'mod/gamemenu': ['游戏菜单', '遊戲選單', 'Game menu', 'Menu trò chơi'],
   'mod/gamecards': ['游戏卡片', '遊戲卡片', 'Game cards', 'Thẻ trò chơi'],

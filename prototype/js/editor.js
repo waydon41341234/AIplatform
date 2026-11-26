@@ -99,7 +99,7 @@
   });
   // 打开时恢复上次项目的设计
   // 旧数据迁移：充值图标统一面性（2026-11-26）
-  const migrate = (D) => { try { Object.values(D.m || {}).forEach((m) => (m.items || []).forEach((it) => { if (it.i === 'credit-card') it.i = 'wallet-fill'; })); } catch (e) { /* noop */ } if (D.height === 1600) D.height = 1334; return D; };
+  const migrate = (D) => { try { Object.values(D.m || {}).forEach((m) => (m.items || []).forEach((it) => { if (it.i === 'credit-card') it.i = 'wallet-fill'; })); } catch (e) { /* noop */ } if (D.height === 1600) D.height = 1334; try { if (window.MP && window.MP.migrate) window.MP.migrate(D); } catch (e) { /* noop */ } return D; };
   (function restore() { const d = LS.get('ed.d.' + E.name, null); if (d && d.v === DV) E.D = migrate(d); E.status = LS.get('ed.st.' + E.name, 'designing'); })();
 
   // ---------- 共用接口包装（A 的 core.js；缺失时退化） ----------
@@ -310,7 +310,9 @@
   const BAL_C = [['amt', 'ed/bal-c-amt', 'accent_3'], ['bd', 'ed/bal-c-bd', 'border'], ['bg', 'ed/bal-c-bg', 'bg_2'], ['ic', 'ed/bal-c-ic', 'primary']];
   function balBox(cfg, amt = '1,232,345,678.90') {
     cfg = cfg || balCfg(); const m = BAL_MODES.includes(cfg.mode) ? cfg.mode : 'default', c = cfg.c || {};
-    const st = `${c.amt ? `--bx-amt:${c.amt};` : ''}${c.bd ? `--bx-bd:${c.bd};` : ''}${c.bg ? `--bx-bg:${c.bg};` : ''}${c.ic ? `--bx-ic:${c.ic};` : ''}`;
+    // 颜色值 'key:<名>' 跟 68 Key 走（改品牌配色 / Key 会跟着变）；旧存档的十六进制原样用
+    const kc = (v) => (v && v.startsWith('key:') ? keyVal(v.slice(4), liveTheme().th) || '' : v);
+    const st = ['amt', 'bd', 'bg', 'ic'].map((k) => (c[k] ? `--bx-${k}:${kc(c[k])};` : '')).join('');
     // 币种切换的默认币种符号用遮罩跟 accent_3（Figma comm_icon_sqb）；国旗是彩色位图，按原图显示
     const cur = m === 'nocur' ? '' : m === 'switch' ? `${cfg.curImg ? `<img class="cur" src="${cfg.curImg}" alt="">` : balMask('cur cur-k', 'bal-sym.png')}<i class="xch">⇆</i>` : `<img class="cur" src="${cfg.curImg || CLA + 'bal-flag.png'}" alt="">`;
     const rf = cfg.refImg ? `<img class="rf" src="${cfg.refImg}" alt="">` : `<i class="rf" style="-webkit-mask-image:url(${CLA}bal-refresh.png);mask-image:url(${CLA}bal-refresh.png)"></i>`;
@@ -373,9 +375,15 @@
   }
   // 余额框颜色（顶部栏内容页签 / 帐户栏颜色页签共用）
   function balColorRows() {
-    const cfg = balCfg(), th = liveTheme().th;
-    const sw = (k, base) => { const cur = (cfg.c[k] || '').toLowerCase(); const list = [th[base], th.primary, th.accent_3, th.accent_2, th.lead, th.bg_2, th.border].map((x) => x.toLowerCase()).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6); return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${list.map((x) => `<button class="sw-btn ${cur === x ? 'is-on' : ''}" style="background:${x}" data-act="balColor" data-arg="${k}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${cur && !list.includes(cur) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${cur || th[base]}"></label></div>`; };
-    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('');
+    // 色块存 'key:<名>'（跟页面配色走）；「默认」按钮带默认 Key 的色点，色块列表不再重复默认色
+    const cfg = balCfg(), th = liveTheme().th, kv = (k) => keyVal(k, th) || '#000';
+    const SW = ['primary', 'accent_3', 'accent_2', 'lead', 'bg_2', 'border'];
+    const sw = (k, base) => {
+      const cur = cfg.c[k] || '', hex = cur && !cur.startsWith('key:');
+      const keys = SW.filter((x) => x !== base).slice(0, 5);
+      return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|"><i class="sw-dot" style="background:${kv(base)}"></i>${t('tx/c-auto')}</button>${keys.map((x) => `<button class="sw-btn ${cur === 'key:' + x ? 'is-on' : ''}" style="background:${kv(x)}" title="${esc(t('ed/key-' + x))}" aria-label="${esc(t('ed/key-' + x))}" data-act="balColor" data-arg="${k}|key:${x}"></button>`).join('')}<label class="rainbow tx-custom ${hex ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}"></label></div>`;
+    };
+    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}${E.adv ? `<small class="kk">${cfg.c[k] && cfg.c[k].startsWith('key:') ? cfg.c[k].slice(4) : base}</small>` : ''}</span>${sw(k, base)}</div>`).join('');
   }
   // 侧边栏入口图标：有图片（上传 / AI）用图片，否则用线性图标（滤镜模拟值叠在线性图标上）
   function sideIcHtml(v, cls) { const x = tbImg(v, ''); return x.src ? `<img class="${cls} ico-img" src="${x.src}" alt="" style="${tbFitCss('side')}">` : x.f !== 'none' ? `<span style="display:inline-flex;filter:${x.f}">${ic('list', cls)}</span>` : ic('list', cls); }
@@ -472,6 +480,22 @@
     const b = document.querySelector('.h5-body[data-measure]'), m = b && b.querySelector(`[data-mod="${E.sel}"]`); if (!m) return;
     const br = b.getBoundingClientRect(), mr = m.getBoundingClientRect();
     if (mr.top < br.top || mr.bottom > br.bottom) b.scrollTop += mr.top - br.top - 8;
+  });
+  // 手机编辑器：底部面板（.m-mod）盖住画布下半部分；选中模块后把画布滚到模块露在面板上方（不够滚就给画布底部垫出面板高度）
+  let mLastSel = null;
+  window.AFTER_RENDER.push(() => {
+    const c = document.querySelector('.med-canvas'); if (!c) { mLastSel = null; return; }
+    const sh = document.querySelector('.med-sheet.m-mod');
+    c.style.paddingBottom = sh ? sh.offsetHeight + 'px' : '';
+    if (S.route !== 'editor' || !E.sel || !sh) { mLastSel = sh ? mLastSel : null; return; }
+    if (E.sel === mLastSel) return; mLastSel = E.sel;
+    const fit = () => {
+      const m = c.querySelector(`[data-mod="${E.sel}"]`); if (!m) return;
+      const cr = c.getBoundingClientRect(), mr = m.getBoundingClientRect(), top = Math.min(cr.bottom, sh.getBoundingClientRect().top);
+      if (mr.top >= cr.top + 8 && mr.bottom <= top - 8) return;
+      c.scrollTop += mr.bottom > top - 8 && mr.height < top - cr.top - 16 ? mr.bottom - (top - 8) : mr.top - cr.top - 8;
+    };
+    fit(); setTimeout(fit, 320); // 面板有进场动画，动画结束后再对一次
   });
   // 内容高度（750 稿单位）：渲染后量一次，变了再渲染
   window.AFTER_RENDER.push(() => {
@@ -870,7 +894,7 @@
       <button class="p-note" style="align-items:center" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
   }
   // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
-  // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细]
+  // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细, 最大字号(可省，默认 24)]
   const TXT = {
     // 顶部栏：币种文字 26/750=13（下拉箭头跟文字同色，Figma 都是 neutral_2）；搜索文字 22/750=11；余额金额只在已登录显示
     topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 13, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 11, 400], ['tb.bal', 'tx/tb-bal', '.h5-top .bx b', '.h5-top .bx b', 13, 400]],
@@ -879,7 +903,7 @@
     // 帐户栏（Figma 317:55705）：入口名 22/750=11 neutral_1；登录 / 注册 24=12（颜色 primary / text_primary）；用户名 22=11 lead；
     // 问候语 11 neutral_2；余额金额 26=13 Bold（只改帐户栏里的余额框，顶部栏余额在顶部栏里改）；入口角标 18=9 白字
     midnav: [['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400], ['midnav.btn', 'tx/midnav-login', '.cl-user.out .lg', '.cl-user.out .lg', 12, 400], ['midnav.reg', 'tx/midnav-reg', '.cl-user.out .rg', '.cl-user.out .rg', 12, 400],
-      ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.greet', 'tx/midnav-greet', '.bxu .greet', '.bxu .greet', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bx b', '.cl-user .bx b', 13, 700], ['midnav.badge', 'tx/midnav-badge', '.cl-ent .ib .bd', '.cl-ent .ib .bd', 9, 400]],
+      ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.greet', 'tx/midnav-greet', '.bxu .greet', '.bxu .greet', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bx b', '.cl-user .bx b', 13, 700], ['midnav.badge', 'tx/midnav-badge', '.cl-ent .ib .bd', '.cl-ent .ib .bd', 9, 400, 14]],
     // 游戏菜单（Figma 317:55796）：竖排分类名 26/750=13 Regular，未选中 leftnav_def、选中 leftnav_active；横向标签 / 图标分类 11
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span:not(.on) b', '.cl-gm > span:not(.on) b', 13, 400], ['gamemenu.nameOn', 'tx/gamemenu-on', '.cl-gm > span.on b', '.cl-gm > span.on b', 13, 400],
       ['gamemenu.tab', 'tx/gamemenu-name', '.h5-gm > span:not(.on)', '.h5-gm > span:not(.on)', 11, 400], ['gamemenu.tabOn', 'tx/gamemenu-on', '.h5-gm > span.on', '.h5-gm > span.on', 11, 400]],
@@ -933,11 +957,11 @@
   }
   function txtSec(b) {
     const els = (TXT[b] || []).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
-    const rows = els.map(([id, k, , , ds, dw]) => {
+    const rows = els.map(([id, k, , , ds, dw, mx = 24]) => {
       const v = txOf(id), size = v.s || ds, w = v.w || dw;
       const changed = v.s || v.w || v.c;
       return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
-        <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em title="${esc(t('tx/size-tip', { n: size * 2 }))}">${size * 2}</em><button data-act="txSize" data-arg="${id}|1" ${size >= 24 ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
+        <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em title="${esc(t('tx/size-tip', { n: size * 2 }))}">${size * 2}</em><button data-act="txSize" data-arg="${id}|1" ${size >= mx ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
         <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
         ${txColors(id)}</div>`;
     }).join('');
@@ -953,7 +977,7 @@
     }
     commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
   const txDef = (id) => TX_ALL.find((x) => x[0] === id);
-  A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const cur = txOf(id).s || df[4]; const n = Math.max(8, Math.min(24, cur + (+d))); txSet(id, 's', n === df[4] ? null : n); };
+  A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const cur = txOf(id).s || df[4]; const n = Math.max(8, Math.min(df[6] || 24, cur + (+d))); txSet(id, 's', n === df[4] ? null : n); };
   A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
   A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[TX_EC[id]]; }); };

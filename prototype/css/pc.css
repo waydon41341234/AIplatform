@@ -78,6 +78,19 @@
 .pc-mid-wrap .acct { display: flex; align-items: center; gap: 16px; height: 56px; padding: 0 24px; margin-bottom: 16px; border-radius: 12px; background: var(--o-bg_1); color: var(--o-primary); font-weight: 600; font-size: 18px; }
 .pc-mid-wrap .acct .sp { flex: 1; }
 .pc-mid-wrap .acct .a { padding: 6px 18px; border-radius: 16px; background: var(--o-primary); color: var(--o-bg_2); font-size: 14px; }
+/* 帐户区（跟 H5 帐户栏同源）：未登录登录 / 注册按钮，颜色 midnav.btn / midnav.btnText；已登录用户名 + 余额框 */
+.pc-mid-wrap .acct.out .lg, .pc-mid-wrap .acct.out .rg { min-width: 96px; height: 36px; padding: 0 18px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 400; border: 1px solid var(--e-midnav-btn); color: var(--e-midnav-btn); }
+.pc-mid-wrap .acct.out .rg { background: var(--e-midnav-btn); color: var(--e-midnav-btnText); }
+.pc-mid-wrap .acct.in { color: var(--e-midnav-user); font-weight: 400; }
+.pc-mid-wrap .acct.in .u { font-size: 14px; display: inline-flex; }
+.pc-mid-wrap .acct.in .bxu { display: inline-flex; align-items: center; gap: 6px; font-size: inherit; }
+.pc-mid-wrap .acct.in .bxu .vip { height: 20px; }
+.pc-mid-wrap .acct.in .bxu :is(.cv, .act) { width: 14px; height: 14px; }
+.pc-mid-wrap .acct.in .b { font-size: 18px; display: inline-flex; }
+.pc-mid-wrap .acct.in .bx { height: 30px; font-size: inherit; border-radius: 15px; padding: 0 8px 0 4px; gap: 6px; }
+.pc-mid-wrap .acct.in .bx b { font-weight: 700; font-size: inherit; }
+.pc-mid .ib { position: relative; }
+.pc-mid .ib .bd { position: absolute; top: -8px; left: 60%; padding: 0 6px; border-radius: 10px; background: var(--o-accent_2); color: #fff; font-style: normal; font-size: 12px; line-height: 1.4; white-space: nowrap; }
 .pc-mid { display: grid; grid-template-columns: repeat(10, 1fr); }
 .pc-mid .it { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--e-midnav-text); font-size: 15px; min-width: 0; }
 .pc-mid .nm { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

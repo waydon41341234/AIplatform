@@ -102,7 +102,7 @@ Object.assign(window.I18N, {
   'ed/hidden-toast': ['已隐藏 {name}', '已隱藏 {name}', '{name} hidden', 'Đã ẩn {name}'],
   'ed/pc-preview': ['PC 预览', 'PC 預覽', 'PC preview', 'Xem trước PC'],
   // ED-12 交付检查
-  'ed/chk-midnav': ['中部导航缺少 {n} 个必交图标（{names}）', '中部導航缺少 {n} 個必交圖示（{names}）', 'Middle nav is missing {n} required icons ({names})', 'Điều hướng giữa thiếu {n} biểu tượng bắt buộc ({names})'],
+  'ed/chk-midnav': ['帐户栏缺少 {n} 个必交图标（{names}）', '帳戶欄缺少 {n} 個必交圖示（{names}）', 'Account bar is missing {n} required icons ({names})', 'Thanh tài khoản thiếu {n} biểu tượng bắt buộc ({names})'],
   'ed/chk-banner': ['Banner 第 {i} 张尺寸不符，需调整为 {w}×{h}', 'Banner 第 {i} 張尺寸不符，需調整為 {w}×{h}', 'Banner slide {i} is the wrong size; resize to {w}×{h}', 'Ảnh banner {i} sai cỡ, cần chỉnh về {w}×{h}'],
   'ed/chk-bnav': ['底部导航「{names}」缺少选中状态图标', '底部導航「{names}」缺少選中狀態圖示', 'Bottom nav “{names}” is missing its selected icon', 'Điều hướng dưới “{names}” thiếu biểu tượng khi chọn'],
   'ed/chk-gamemenu': ['游戏菜单缺少 {n} 个图标（{names}）', '遊戲選單缺少 {n} 個圖示（{names}）', 'Game menu is missing {n} icons ({names})', 'Menu trò chơi thiếu {n} biểu tượng ({names})'],
@@ -260,6 +260,10 @@ Object.assign(window.I18N, {
   'mp/nt-c-note': ['选「默认」跟随整页配色；色块取自整页配色，换配色时一起变。正文颜色和「内容 › 文字样式」是同一个设置。信箱图标的颜色在图片里，换图请到「内容 › 图标」。', '選「預設」跟隨整頁配色；色塊取自整頁配色，換配色時一起變。正文顏色和「內容 › 文字樣式」是同一個設定。信箱圖示的顏色在圖片裡，換圖請到「內容 › 圖示」。', '"Default" follows the page colors, and the swatches change with them. Body text color is the same setting as Content › Text style. Inbox icon colors are part of the image; replace it in Content › Icons.', '"Mặc định" theo màu cả trang, các ô màu đổi theo. Màu chữ thường là cùng một thiết lập với Nội dung › Kiểu chữ. Màu hộp thư nằm trong ảnh; thay ở Nội dung › Biểu tượng.'],
   'tx/notice-badge': ['未读数（已登录）', '未讀數（已登入）', 'Unread count (signed in)', 'Số chưa đọc (đã đăng nhập)'],
   // 帐户栏（2026-11-26 整理）
+  'mp/mn-n-dep': ['利息宝', '利息寶', 'Interest', 'Lãi suất'],
+  'mp/mn-n-vip': ['VIP', 'VIP', 'VIP', 'VIP'],
+  'mp/mn-n-share': ['分享赚钱', '分享賺錢', 'Share & earn', 'Chia sẻ kiếm tiền'],
+  'mp/mn-n-more': ['更多', '更多', 'More', 'Thêm'],
   'mp/c-midnav-user': ['用户名', '用戶名', 'Username', 'Tên người dùng'],
   'mp/c-midnav-btnText': ['注册文字', '註冊文字', 'Sign-up text', 'Chữ đăng ký'],
   'mp/c-midnav-bd-mid0': ['入口角标底色', '入口角標底色', 'Shortcut badge color', 'Màu nhãn lối tắt'],
