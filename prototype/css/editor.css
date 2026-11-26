@@ -1001,3 +1001,11 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .tbai-pbox .lab2 { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-2); }
 .tbai-pbox textarea { width: 100%; resize: vertical; font-size: 12px; line-height: 1.5; }
 .tbai-pbox small { font-size: 11px; }
+
+/* 顶部栏 AI：首页同款创作框 */
+.tbai-box { margin: 0 0 8px; border-radius: 16px; }
+.tbai-box .c-input { gap: 8px; }
+.tbai-box textarea { font-size: 12px; line-height: 1.5; min-height: 80px; }
+.tbai-box .c-tools { gap: 6px; }
+.tbai-box .send .spin { animation: tbspin 1s linear infinite; }
+.tbai-mmenu { left: 0; min-width: 220px; }

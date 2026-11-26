@@ -448,6 +448,8 @@ window.I18N = {
   'ed/tbai-sprompt': ['提示词', '提示詞', 'Prompt', 'Câu lệnh'],
   'ed/tbai-sprompt-ph': ['描述想要的图标：颜色、材质、风格…', '描述想要的圖示：顏色、材質、風格…', 'Describe the icon: colors, material, style…', 'Mô tả biểu tượng: màu, chất liệu, phong cách…'],
   'ed/tbai-sprompt-tip': ['已按所选风格预填，可直接改或补充要求', '已按所選風格預填，可直接改或補充要求', 'Prefilled from the style; edit or add details', 'Đã điền sẵn theo kiểu; có thể sửa hoặc thêm yêu cầu'],
+  'ed/tbai-box-tip': ['点风格会把提示词填进框里；也可以加参考图，AI 会看图写提示词', '點風格會把提示詞填進框裡；也可以加參考圖，AI 會看圖寫提示詞', 'Pick a style to fill the prompt, or add a reference and AI writes it', 'Chọn kiểu để điền câu lệnh, hoặc thêm ảnh mẫu để AI tự viết'],
+  'ed/tbai-prompt-tip2': ['提示词由 AI 看参考图写出，可直接修改', '提示詞由 AI 看參考圖寫出，可直接修改', 'AI wrote this prompt from your reference; edit freely', 'AI viết câu lệnh từ ảnh mẫu; có thể sửa'],
   'ed/tbai-title': ['AI 生成图标', 'AI 生成圖示', 'AI icons', 'Biểu tượng AI'],
     'ed/tbai-glossy': ['经典光泽', '經典光澤', 'Glossy', 'Bóng'],
   'ed/tbai-flat': ['扁平', '扁平', 'Flat', 'Phẳng'],

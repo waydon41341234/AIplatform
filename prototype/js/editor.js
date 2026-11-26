@@ -551,7 +551,8 @@
       ${a.stage !== 'idle' ? `<div class="p-sec"><div class="lab">${t('ed/ai-candidates')}</div>${cands}</div>` : ''}`;
   }
   // ---------- 顶部栏图标 AI 生成（模拟；样图由 Figma generate_image 生成，Waydon 2026-11-26） ----------
-  // 两种方式：选风格 / 上传参考图 → AI 反推提示词（可改）→ 生成。目标：搜索+币种 / 只搜索 / 只币种
+  // 跟首页创作框一样：参考图格 + 提示词输入框 + 模型下拉 + 发送键。上方风格卡点一下就把该风格的提示词填进框里；
+  // 上传参考图后 AI 反推提示词填进框里（可改）。目标：搜索+币种 / 只搜索 / 只币种
   const TB_AI = ['glossy', 'flat', 'blackgold', 'festive', 'neon']; const AIT = 'assets/ai-tb/';
   const TB_AI_P = {
     glossy: ['亮蓝色 #1678FF 渐变，圆润卡通 3D 光泽质感，带白色高光，干净明亮', 'bright blue #1678FF gradient, glossy cartoon 3D, white highlights, clean and bright'],
@@ -560,16 +561,18 @@
     festive: ['中国红 #E83A30 主体，金色描边，祥云点缀，喜庆节日风格，3D 卡通', 'Chinese red #E83A30 with gold outline and auspicious clouds, festive 3D cartoon'],
     neon: ['青蓝 / 紫色霓虹发光描边，深色半透明主体，科技赛博风，不要白色外发光', 'cyan / purple neon glowing outline, dark translucent body, cyber style, no white outer glow'],
   };
-  const tbStylePrompt = (st) => { const a = tbAi(); return (a.sp && a.sp[st] != null) ? a.sp[st] : TB_AI_P[st][/^zh/.test(S.lang) ? 0 : 1]; };
-  const tbAi = () => (E.tbAi = E.tbAi || { mode: 'style', target: 'both', style: 'glossy', stage: 'setup' });
+  const presetOf = (st) => TB_AI_P[st][/^zh/.test(S.lang) ? 0 : 1];
+  const tbAi = () => (E.tbAi = E.tbAi || { target: 'both', style: 'glossy', model: 'gpt', prompt: presetOf('glossy'), stage: 'setup' });
   const tbAiCost = () => (tbAi().target === 'both' ? 40 : 20);
-  A.tbAiStyle = (v) => { const a = tbAi(); if (a.stage === 'busy') return false; a.style = v; a.stage = 'setup'; };
-  A.tbAiMode = (v) => { const a = tbAi(); if (a.stage === 'busy' || a.mode === v) return false; a.mode = v; a.stage = 'setup'; };
+  A.tbAiStyle = (v) => { const a = tbAi(); if (a.stage === 'busy') return false; a.style = v; a.prompt = presetOf(v); a.fromRef = false; a.stage = 'setup'; };
   A.tbAiTarget = (v) => { const a = tbAi(); if (a.stage === 'busy' || a.target === v) return false; a.target = v; if (a.stage === 'done') a.stage = 'setup'; };
-  A.tbAiRefDel = () => { const a = tbAi(); a.ref = null; a.prompt = ''; a.analyzing = false; a.stage = 'setup'; };
-  // 模拟「图生提示词」：读参考图的主色 / 明暗 / 饱和度，拼一段可编辑的提示词，并记下最接近的风格
+  A.tbAiModel = (v) => { tbAi().model = v; S.menu = null; };
+  A.tbAiRefPick = () => { const a = tbAi(); if (a.stage === 'busy') return false; const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('data-tbairef', ''); inp.style.display = 'none'; document.body.appendChild(inp); inp.click(); setTimeout(() => inp.remove(), 60000); return false; };
+  A.tbAiRefRm = () => { const a = tbAi(); a.ref = null; a.refSt = null; a.analyzing = false; a.fromRef = false; a.prompt = presetOf(a.style); a.stage = 'setup'; };
+  A.tbAiRefView = () => false;
+  A.tbAiRefCancel = () => A.tbAiRefRm();
   function refAnalyze(src) {
-    const a = tbAi(); a.ref = src; a.prompt = ''; a.analyzing = true; a.stage = 'setup'; window.render();
+    const a = tbAi(); a.ref = src; a.analyzing = true; a.refSt = { uploading: true, pct: 60 }; a.stage = 'setup'; window.render();
     const im = new Image(); im.onload = () => {
       const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 32, 32);
       const d = g.getImageData(0, 0, 32, 32).data; let r = 0, gg = 0, b = 0, n = 0, dark = 0, white = 0;
@@ -586,44 +589,43 @@
       const finEn = { glossy: 'glossy cartoon 3D with white highlights', flat: 'flat solid color, no gradient, rounded strokes', blackgold: 'brushed champagne-gold metal, luxurious', festive: 'festive style with gold outline and auspicious clouds', neon: 'neon glowing outline, dark translucent, futuristic' }[style];
       a.prompt = zh ? `主色${colorZh}（约 ${hex}），${sat > 0.5 ? '高饱和' : '低饱和'}${l > 0.6 ? '、明亮' : l < 0.35 ? '、偏暗' : ''}，${finZh}${white / (n + white) > 0.2 ? '，带白色高光/描边' : ''}；透明背景，单个图标居中，适合手机顶部栏小尺寸显示`
         : `Main color ${colorEn} (about ${hex}), ${sat > 0.5 ? 'high' : 'low'} saturation${l > 0.6 ? ', bright' : l < 0.35 ? ', dark' : ''}, ${finEn}; transparent background, single centered icon, readable at small size in a mobile top bar`;
-      a.refHex = hex; a.refStyle = style; a.analyzing = false; window.render();
+      a.refHex = hex; a.refStyle = style; a.analyzing = false; a.refSt = { src, name: a.refName || '' }; a.fromRef = true; window.render();
     };
-    im.onerror = () => { a.analyzing = false; a.ref = null; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); };
+    im.onerror = () => { a.analyzing = false; a.ref = null; a.refSt = null; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); };
     setTimeout(() => { im.src = src; }, 900); // 模拟识别耗时
   }
   document.addEventListener('change', (e) => {
     const el = e.target; if (!el.matches) return;
-    if (el.matches('[data-tbairef]') && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; if (!/^image\//.test(f.type)) { window.toast(t('ed/bal-img-bad'), { info: true }); return; } const r = new FileReader(); r.onload = () => refAnalyze(r.result); r.readAsDataURL(f); }
-    else if (el.matches('[data-tbaiprompt]')) { tbAi().prompt = el.value.slice(0, 300); }
-    else if (el.matches('[data-tbaisp]')) { const a = tbAi(); a.sp = Object.assign({}, a.sp, { [a.style]: el.value.slice(0, 300) }); }
+    if (el.matches('[data-tbairef]') && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; if (!/^image\//.test(f.type)) { window.toast(t('ed/bal-img-bad'), { info: true }); return; } tbAi().refName = f.name; const r = new FileReader(); r.onload = () => refAnalyze(r.result); r.readAsDataURL(f); }
   });
+  document.addEventListener('input', (e) => { const el = e.target; if (el.matches && el.matches('[data-tbaiprompt]')) { tbAi().prompt = el.value.slice(0, 300); const b = document.querySelector('.tbai .send'); if (b) b.classList.toggle('is-disabled', !el.value.trim()); } });
   A.tbAiGen = () => {
     const a = tbAi(), n = tbAiCost();
-    if (a.mode === 'ref' && (!a.ref || a.analyzing || !(a.prompt || '').trim())) return false;
+    if (a.analyzing || !(a.prompt || '').trim()) return false;
     if (!afford(n)) { topup(); return false; }
-    a.stage = 'busy'; const st = a.mode === 'ref' ? a.refStyle || 'glossy' : a.style;
+    a.stage = 'busy'; const st = a.fromRef ? a.refStyle || 'glossy' : a.style;
     setTimeout(() => { if (E.tbAi !== a || a.stage !== 'busy') return; if (fail()) { a.stage = 'setup'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(n, 'iconset', { type: t('mod/topbar') }); a.stage = 'done'; a.res = st; } window.render(); }, 1400);
   };
   A.tbAiUse = () => { const a = tbAi(), r = a.res; if (!r) return false; commit(() => { const ic0 = Object.assign({}, E.D.tb.icons); if (a.target !== 'cur') ic0.search = AIT + 'search-' + r + '.png'; if (a.target !== 'search') ic0.cur = AIT + 'cur-' + r + '.png'; E.D.tb.icons = ic0; }); a.stage = 'setup'; window.toast(t('ed/tbai-used'), undoOpt()); };
   A.tbAiReset = () => { if (!E.D.tb.icons) return false; commit(() => { delete E.D.tb.icons; }); window.toast(t('ed/tbai-reset'), undoOpt()); };
   // 入口图标行的 ✦ 按钮：跳到 AI 生成并选好目标（Waydon 2026-11-26）
   A.tbAiJump = (k) => { const a = tbAi(); if (a.stage === 'busy') return false; a.target = k; if (a.stage === 'done') a.stage = 'setup'; E.tbAiFocus = true; };
-  window.AFTER_RENDER.push(() => { if (!E.tbAiFocus) return; E.tbAiFocus = false; const go = () => { const m = document.querySelector('.tbai'); if (!m) return; let c = m.parentElement; while (c && !(c.scrollHeight > c.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(c).overflowY))) c = c.parentElement; if (c) c.scrollTop += m.getBoundingClientRect().top - c.getBoundingClientRect().top - 8; m.classList.add('is-flash'); }; setTimeout(go, 30); setTimeout(go, 320); }); // 等滚动位置还原后再滚
+  window.AFTER_RENDER.push(() => { if (!E.tbAiFocus) return; E.tbAiFocus = false; const go = () => { const m = document.querySelector('.tbai'); if (!m) return; let c = m.parentElement; while (c && !(c.scrollHeight > c.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(c).overflowY))) c = c.parentElement; if (c) c.scrollTop += m.getBoundingClientRect().top - c.getBoundingClientRect().top - 8; m.classList.add('is-flash'); const ta = m.querySelector('textarea'); if (ta) ta.focus({ preventScroll: true }); }; setTimeout(go, 30); setTimeout(go, 320); });
   function tbAiSec() {
     const a = tbAi(), busy = a.stage === 'busy', n = tbAiCost();
     const pair = (st) => `${a.target !== 'cur' ? `<img src="${AIT}search-${st}.png" alt="">` : ''}${a.target !== 'search' ? `<img src="${AIT}cur-${st}.png" alt="">` : ''}`;
     const target = segBtns([{ v: 'both', label: t('ed/tbai-t-both') }, { v: 'search', label: t('ed/tb-search') }, { v: 'cur', label: t('ed/tbai-t-cur') }], a.target, 'tbAiTarget');
-    const mode = segBtns([{ v: 'style', label: t('ed/tbai-m-style') }, { v: 'ref', label: t('ed/tbai-m-ref') }], a.mode, 'tbAiMode');
-    let body;
-    if (a.mode === 'style') body = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div><div class="tbai-pbox"><div class="lab2">${ic('pencil-simple', 'ic-16')}${t('ed/tbai-sprompt')}</div><textarea class="input" rows="3" maxlength="300" data-tbaisp placeholder="${esc(t('ed/tbai-sprompt-ph'))}" ${busy ? 'disabled' : ''}>${esc(tbStylePrompt(a.style))}</textarea><small class="faint">${t('ed/tbai-sprompt-tip')}</small></div>`;
-    else body = !a.ref ? `<label class="tbai-drop">${ic('image-fill', 'ic-24')}<b>${t('ed/tbai-ref-up')}</b><small>${t('ed/tbai-ref-tip')}</small><input type="file" accept="image/*" data-tbairef hidden></label>`
-      : `<div class="tbai-ref"><span class="th"><img src="${a.ref}" alt=""><button class="ib-s" data-act="tbAiRefDel" title="${esc(t('menu/delete'))}" ${busy ? 'disabled' : ''}>${ic('x', 'ic-16')}</button></span><div class="pp">${a.analyzing ? `<div class="tbai-an">${ic('spinner-gap', 'ic-16 spin')}${t('ed/tbai-analyzing')}</div>` : `<div class="lab2">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt')}${a.refHex ? `<i class="sw" style="background:${a.refHex}"></i>` : ''}</div><textarea class="input" rows="4" maxlength="300" data-tbaiprompt ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea><small class="faint">${t('ed/tbai-prompt-tip')}</small>`}</div></div>`;
+    const tiles = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${!a.fromRef && a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
+    const logo = (window.MODEL_LOGO || {})[a.model] || '', mname = a.model === 'gemini' ? 'Gemini' : 'GPT Image';
+    const mMenu = S.menu === 'tbai-model' ? `<div class="menu c-menu tbai-mmenu">${['gpt', 'gemini'].map((m) => `<button class="menu-item model-item ${a.model === m ? 'is-on' : ''}" data-act="tbAiModel" data-arg="${m}">${(window.MODEL_LOGO || {})[m] || ''}<span><div class="nm">${m === 'gemini' ? 'Gemini' : 'GPT Image'}</div><div class="ds">${m === 'gpt' ? 'Sunburst Flare' : 'Nano Banana Pro'}</div></span></button>`).join('')}</div>` : '';
+    const empty = !(a.prompt || '').trim() || a.analyzing;
+    const box = `<div class="c-box tbai-box"><div class="c-input">${window.refSlot(a.refSt, 'tbAiRef')}<textarea rows="4" maxlength="300" data-tbaiprompt placeholder="${esc(a.analyzing ? t('ed/tbai-analyzing') : t('ed/tbai-sprompt-ph'))}" ${busy || a.analyzing ? 'disabled' : ''}>${esc(a.analyzing ? '' : a.prompt || '')}</textarea></div>
+      <div class="c-tools"><div class="c-opts"><div class="rel"><button class="c-opt ${S.menu === 'tbai-model' ? 'is-open' : ''}" data-act="menu:toggle" data-arg="tbai-model">${logo}<span class="ellipsis">${mname}</span>${ic('caret-down', 'chev')}</button>${mMenu}</div></div>
+      ${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="tbAiGen" title="${esc(t('ed/tbai-gen', { n }))}">${ic('sparkle-fill')}${n}${ic('arrow-up')}</button>`}</div></div>`;
+    const note = a.fromRef && !a.analyzing ? `<div class="p-note">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt-tip2')}</div>` : `<div class="p-note">${t('ed/tbai-box-tip')}</div>`;
     const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n })}</button></div></div>` : '';
-    const ready = a.mode === 'style' || (a.ref && !a.analyzing && (a.prompt || '').trim());
-    const btn = busy ? `<button class="btn btn-primary btn-block is-loading" disabled>${ic('spinner-gap', 'ic-16 spin')}${t('ed/tbai-busy')}</button>`
-      : a.stage === 'done' ? '' : `<button class="btn btn-primary btn-block" data-act="tbAiGen" ${ready ? '' : 'disabled'}>${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-gen', { n })}</button>`;
     return `<div class="p-sec tbai"><div class="lab">${t('ed/tbai-title')}${E.D.tb.icons ? `<button class="tx-reset" style="margin-left:auto" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
-      <div class="tbai-row"><span>${t('ed/tbai-target')}</span>${target}</div><div class="tbai-row"><span>${t('ed/tbai-mode')}</span>${mode}</div>${body}${res}${btn}</div>`;
+      <div class="tbai-row"><span>${t('ed/tbai-target')}</span>${target}</div>${tiles}${box}${note}${res}</div>`;
   }
   function tbContent() {
     // 顶部栏内容（Waydon 2026-11-26 排版优化）：分组列表，每行 拖动 · 缩略图 · 名称/规格 · ⋯ · 眼睛 都在同一张卡内
