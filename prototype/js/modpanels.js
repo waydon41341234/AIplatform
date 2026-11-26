@@ -46,7 +46,7 @@
     jackpot: [['jackpot.bg', 'primary'], ['jackpot.title', 'bg_2'], ['jackpot.amount', 'bg_2']],
     notice: [['notice.bg', 'bg_2'], ['notice.text', 'lead'], ['notice.hl', 'accent_2'], ['notice.num', 'accent_3']],
     midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary'], ['midnav.btn', 'primary']],
-    gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'neutral_1'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'bg_2']],
+    gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'neutral_2'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'bg_2']],
     gamecards: [['gamecards.placeholder', 'border'], ['gamecards.placeholderIcon', 'neutral_3'], ['gamecards.text', 'lead'], ['gamecards.label', 'accent_3'], ['gamecards.labelText', 'bg_2']],
     footer: [['footer.bg', 'bg_1'], ['footer.text', 'neutral_2'], ['footer.link', 'neutral_1']],
     sidebar: [['sidebar.bg', 'bg_2'], ['sidebar.item', 'bg_1'], ['sidebar.itemActive', 'primary'], ['sidebar.text', 'lead'], ['sidebar.textActive', 'bg_2']],
@@ -181,7 +181,8 @@
       const v = vis('gamemenu');
       if (m.style === 'side') {
         // 竖排分类（经典蓝白）：放在游戏卡片左侧，第一个为选中态
-        return `<div class="cl-gm">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const src = it[f] || it.img || it.def; return `<span class="${k ? '' : 'on'}"><span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><b>${esc(nm(it))}</b>${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}<span class="more">${ic('caret-down')}</span></div>`;
+        const ec = X().E.D.ec || {}; // 默认用效果图按钮底图（btn_zc1_1/2）；业主改了底色/选中色就换成纯色
+        return `<div class="cl-gm ${ec['gamemenu.bg'] ? '' : 'img-bg'} ${ec['gamemenu.active'] ? '' : 'img-on'}">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const src = it[f] || it.img || it.def; return `<span class="${k ? '' : 'on'}"><span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><b>${esc(nm(it))}</b>${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}<span class="more">${ic('caret-down')}</span></div>`;
       }
       // 13 个入口放不下时横向滚动，右侧渐隐提示可滑
       return `<div class="h5-gm-wrap"><div class="h5-gm ${m.style} ${m.shape}" data-sk="gm-${id || b}">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const src = it[f] || (k === 0 && it.img) || it.def; const icon = m.style === 'icons' ? `<span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span>` : ''; return `<span class="${k ? '' : 'on'}">${icon}${esc(nm(it))}${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;

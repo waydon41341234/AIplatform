@@ -923,3 +923,16 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 
 /* 经典蓝白顶部栏：底板 bs_topnav_bg、下划线 border（Waydon 2026-11-26） */
 .h5-top { border-bottom: 1px solid var(--o-border); box-sizing: border-box; }
+
+/* 游戏分类竖排按钮：照效果图 150×70（750 稿）= 75×35，底图 + 投影 0 3 7 #729fff26，图标区 58→29，文字 26→13 #999（Waydon 2026-11-26） */
+.cl-gm { gap: 8px; }
+.cl-gm > span { height: 35px; padding: 0 4px 0 7px; gap: 3px; border-radius: 6px; box-shadow: 0 1.5px 3.5px #729fff26; font-size: 13px; letter-spacing: 2px; }
+.cl-gm > span.on { box-shadow: 0 1.5px 3.5px #729fff26; }
+.cl-gm.img-bg > span:not(.on):not(.more) { background: url(../assets/cl-catbtn.png) center / 100% 100% no-repeat; }
+.cl-gm.img-on > span.on { background: url(../assets/cl-catbtn-on.png) center / 100% 100% no-repeat; }
+.cl-gm .gi { width: 29px; height: 22px; opacity: 1; }
+.cl-gm .more { box-shadow: none !important; }
+
+/* 一屏高度：内容在页面内滚动 */
+.h5-body { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; margin-right: -72px; padding-right: 72px; }
+.h5-body::-webkit-scrollbar { display: none; }

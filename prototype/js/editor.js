@@ -56,7 +56,7 @@
     const key = TPL[tk] ? tk : 'classic-blue'; const tp = tplOf(key); const p = PRESETS[pal] ? pal : tp.preset;
     return {
       v: DV, order: tp.order.slice(), hidden: {}, side: 'left', login: false,
-      theme: preset(p), palette: p, basePreset: p, template: key, height: 1600,
+      theme: preset(p), palette: p, basePreset: p, template: key, height: 1334,
       banner: { size: tp.size, ind: tp.ind || 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
       tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: false }, searchFirst: false, balStyle: 'pill', colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
@@ -73,7 +73,7 @@
   });
   // 打开时恢复上次项目的设计
   // 旧数据迁移：充值图标统一面性（2026-11-26）
-  const migrate = (D) => { try { Object.values(D.m || {}).forEach((m) => (m.items || []).forEach((it) => { if (it.i === 'credit-card') it.i = 'wallet-fill'; })); } catch (e) { /* noop */ } return D; };
+  const migrate = (D) => { try { Object.values(D.m || {}).forEach((m) => (m.items || []).forEach((it) => { if (it.i === 'credit-card') it.i = 'wallet-fill'; })); } catch (e) { /* noop */ } if (D.height === 1600) D.height = 1334; return D; };
   (function restore() { const d = LS.get('ed.d.' + E.name, null); if (d && d.v === DV) E.D = migrate(d); E.status = LS.get('ed.st.' + E.name, 'designing'); })();
 
   // ---------- 共用接口包装（A 的 core.js；缺失时退化） ----------
@@ -107,6 +107,10 @@
     before.filter((x) => !after.includes(x.id)).forEach((x) => window.toast(t('ed/chk-solved', { name: x.name })));
     save();
   }
+  // 整页恢复默认样式（Waydon 2026-11-26）：回到当前模板的默认设计，保留登录态预览；可撤销
+  const pageDef = () => { const d = defaultDesign(E.D.template); d.login = E.D.login; return d; };
+  const pageDirty = () => JSON.stringify(Object.assign({}, E.D, { login: false })) !== JSON.stringify(Object.assign({}, pageDef(), { login: false }));
+  A.pageReset = () => { if (!pageDirty()) return false; commit(() => { E.D = pageDef(); }); E.sel = null; E.picker = null; E.ai = null; fixSlide(); window.toast(t('ed/page-reset-done'), undoOpt()); };
   A.undo = () => { if (!E.past.length) return false; E.future.push(snap()); E.D = JSON.parse(E.past.pop()); fixSlide(); save(); window.toast(t('ed/undo-toast')); };
   A.redo = () => { if (!E.future.length) return false; E.past.push(snap()); E.D = JSON.parse(E.future.pop()); fixSlide(); save(); window.toast(t('ed/redo-toast')); };
 
@@ -348,11 +352,19 @@
     const top = D.hidden.topbar ? '' : modWrap('topbar', h5Topbar(), { top: true });
     const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" style="height:${bnPx}px" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
     const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop>${window.MP.side()}${window.AD ? window.AD.modMask('sidebar') : ''}</div>` : '';
-    // ED-13：画布按页面高度显示，1334 处画首屏线
+    // ED-13：画布按页面高度显示（默认一屏 1334，Waydon 2026-11-26），内容超出在页面内滚动；加高后 1334 处画首屏线
     const minBody = Math.max(0, D.height / 2 - topPx - bnPx);
     const fold = opts.noFold ? '' : `<div class="h5-fold" style="top:${667}px"><span>${t('ed/fold-line')}</span></div>`;
-    return `<div class="h5 ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" style="${themeStyle()}${opts.style || ''}">${txtCss()}${top}<div class="h5-body" ${opts.measure ? 'data-measure' : ''} data-top="${topPx}" data-bn="${bnPx}" style="min-height:${minBody}px">${body}</div>${bnav}${fold}${side}</div>`;
+    return `<div class="h5 ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" style="${themeStyle()}${opts.style || ''}">${txtCss()}${top}<div class="h5-body" data-sk="h5-body${opts.style ? '-x' : ''}" ${opts.measure ? 'data-measure' : ''} data-top="${topPx}" data-bn="${bnPx}" style="height:${minBody}px">${body}</div>${bnav}${D.height > 1334 ? fold : ''}${side}</div>`;
   }
+  // 一屏滚动时：选中的模块不在可视区就滚过去
+  let lastSel = null;
+  window.AFTER_RENDER.push(() => {
+    if (S.route !== 'editor' || E.sel === lastSel) return; lastSel = E.sel; if (!E.sel) return;
+    const b = document.querySelector('.h5-body[data-measure]'), m = b && b.querySelector(`[data-mod="${E.sel}"]`); if (!m) return;
+    const br = b.getBoundingClientRect(), mr = m.getBoundingClientRect();
+    if (mr.top < br.top || mr.bottom > br.bottom) b.scrollTop += mr.top - br.top - 8;
+  });
   // 内容高度（750 稿单位）：渲染后量一次，变了再渲染
   window.AFTER_RENDER.push(() => {
     if (S.route !== 'editor' || E.loading) return;
@@ -364,7 +376,7 @@
     if (Math.abs(h - E.contentH) > 2) { E.contentH = h; setTimeout(() => window.render(), 0); }
   });
   function overNotice() {
-    const d = E.contentH - E.D.height; if (d <= 0) return '';
+    const d = E.contentH - E.D.height; if (d <= 0 || E.D.height <= 1334) return ''; // 一屏高度时内容本来就滚动，不提示
     const to = Math.min(6000, E.contentH);
     return `<div class="notice is-warn h5-over">${ic('warning-circle-fill')}<div class="tx">${t('ed/overflow', { d })}</div><button class="btn btn-secondary btn-sm" data-act="growTo" data-arg="${to}" data-stop>${t('ed/grow-to', { n: to })}</button><button class="btn btn-ghost btn-sm" data-act="fixLayout" data-stop>${t('ed/fix-layout')}</button></div>`;
   }
@@ -790,6 +802,18 @@
     commit(() => { E.D.hidden[id] = !was; }); S.menu = null; if (id === 'sidebar') E.h5side = false;
     if (!was) window.toast(t('ed/hidden-toast', { name: modName(id) }), undoOpt());
   };
+  // 电脑快捷键（Waydon 2026-11-26）：Ctrl/⌘+Z 回退、Ctrl/⌘+Shift+Z 或 Ctrl+Y 重做、↑/↓ 移动选中模块、Ctrl/⌘+C 复制选中模块
+  document.addEventListener('keydown', (e) => {
+    if (S.route !== 'editor' || mobileEd() || E.loading || S.dialog || S.sheet) return;
+    const tg = e.target; if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase(); let r;
+    if (mod && k === 'z') r = e.shiftKey ? A.redo() : A.undo();
+    else if (mod && k === 'y') r = A.redo();
+    else if (mod && k === 'c') { if (!E.sel || !MODS[baseName(E.sel)] || MODS[baseName(E.sel)].fixed || (window.getSelection && String(window.getSelection()))) return; r = A.modDup(E.sel); }
+    else if (!mod && !e.altKey && (k === 'arrowup' || k === 'arrowdown')) { if (!E.sel || !E.D.order.includes(E.sel)) return; r = A.move(k === 'arrowup' ? -1 : 1); }
+    else return;
+    e.preventDefault(); if (r !== false) window.render();
+  });
   A.move = (d) => { const id = E.sel; const o = E.D.order; const i = o.indexOf(id), j = i + +d; if (i < 0 || j < 0 || j >= o.length) return false; commit(() => { E.D.order.splice(i, 1); E.D.order.splice(j, 0, id); }); window.toast(t(+d < 0 ? 'ed/moved-up' : 'ed/moved-down')); };
   A.modDup = (id) => { commit(() => { const b = baseName(id); let n = 1, nid = b + '~' + n; while (E.D.order.includes(nid)) nid = b + '~' + ++n; E.D.order.splice(E.D.order.indexOf(id) + 1, 0, nid); E.sel = nid; }); S.menu = null; window.toast(t('ed/dup-toast'), undoOpt()); };
   A.modReset = (id) => {
@@ -1279,7 +1303,7 @@
         <div class="iseg" style="margin-left:12px">${[['h5', 'device-mobile', 'ed/device-h5'], ['pc', 'desktop', 'ed/device-pc']].map(([v, i, k]) => `<button class="${E.device === v ? 'is-on' : ''}" data-act="setDevice" data-arg="${v}" title="${esc(t(k))}">${ic(i)}</button>`).join('')}</div>
         <div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div>
         <span class="spacer"></span>
-        <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>
+        <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button><button class="btn btn-secondary btn-sm ed-reset" data-act="pageReset" ${pageDirty() ? '' : 'disabled'} title="${esc(t(pageDirty() ? 'ed/page-reset-tip' : 'ed/page-is-default'))}">${ic('arrow-counter-clockwise', 'ic-16')}${t('ed/page-reset')}</button>
         ${checkBtn()}<button class="btn btn-primary btn-sm" data-act="openExport">${ic('download-simple', 'ic-16')}${t('ed/export')}</button></header>
       <div class="ed-body"><nav class="ed-left" data-sk="ed-left">${tree()}</nav>
         <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
@@ -1297,7 +1321,7 @@
     const n = checks().req.length;
     return `<div class="med">
       <header class="med-nav"><button class="ibtn" data-act="edBack" aria-label="${esc(t('nav/home'))}">${ic('caret-left')}</button><button class="tt" data-act="nameEdit"><b>${esc(E.name)}</b><small>${window.demoTag()}${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span> ` : ''}${pc ? `<span class="pc-tag">${t('ed/pc-preview')}</span> · ` : ''}${saveHtml(true)}</small></button>
-        <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} aria-label="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} aria-label="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>
+        <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} aria-label="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} aria-label="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button><button class="ibtn ibtn-sm" data-act="pageReset" ${pageDirty() ? '' : 'disabled'} aria-label="${esc(t('ed/page-reset'))}">${ic('arrow-counter-clockwise')}</button>
         <button class="ibtn ibtn-sm warn ${n ? '' : 'is-ok'}" data-act="mPanel" data-arg="checks" aria-label="${esc(t('ed/checks-title'))}">${ic(n ? 'warning-circle-fill' : 'check-circle-fill')}${n ? `<i class="badge">${n}</i>` : ''}</button>
         <button class="btn btn-primary btn-sm" data-act="mPanel" data-arg="export">${ic('download-simple', 'ic-16')}<span class="ex-l">${t('ed/export')}</span></button></header>
       <main class="med-canvas ${pc ? 'is-pc' : ''}" data-sk="med-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}
