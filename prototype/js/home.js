@@ -390,8 +390,8 @@
   // 项目列表存 LS：新建 / 重命名 / 删除（D 的页面直接改 window.PROJECTS 数组）刷新后保持一致
   let projSaved = '';
   window.AFTER_RENDER.push(() => { const s = JSON.stringify(window.PROJECTS); if (s !== projSaved) { projSaved = s; window.LS.set('projects', window.PROJECTS); } });
-  // 目前只开放 经典蓝 和 白金（western-white，名字已改为「白金 · 简约」）；其余版式只显示底板色 +「暂未开放」（Waydon 2026-11-26）
-  const TPL_OPEN = ['classic-blue', 'western-white'];
+  // 目前只开放「经典蓝白」（真实 UI，Waydon 2026-11-26 11:16）；其余版式（含白金）只显示平台底板色 + 兜底图标 +「暂未开放」
+  const TPL_OPEN = ['classic-blue']; // Waydon 2026-11-26 11:16：只开放真实的经典蓝白，其他（含白金）先显示暂不开放
   window.tplOpen = (k) => TPL_OPEN.includes(k);
   const soonToast = () => window.toast(t('tpl/soon-toast'), { info: true });
   A.tplSoon = () => { soonToast(); return false; };
