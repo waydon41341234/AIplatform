@@ -498,7 +498,7 @@
     const x = X(), E = x.E;
     const st = E.D.style && ST[E.D.style] ? E.D.style : 'platinum';
     E.adp = { stage: 'idle', p: newParams({ style: st, ics: E.D.iconStyle || ST[st].ics, follow: !E.D.iconStyle }), sets: [], pick: null, progress: 0, seed: 0, kept: x.customCount() };
-    E.sel = null; E.keys = null; E.picker = null; E.ai = null; E.iconAi = null; S.menu = null;
+    E.sel = null; E.keys = null; E.picker = null; E.ai = null; S.menu = null;
     if (edMob()) E.mpanel = 'ad';
   };
   const P = () => X().E.adp;
@@ -656,7 +656,10 @@
   A.adBarX = () => { X().E.adBar = null; };
   A.adBarGo = () => {
     const E = X().E; const ics = E.adBar && E.adBar.ics; E.adBar = null; E.device = 'h5';
-    selMod0('midnav'); A.iaOpen('midnav'); if (E.iconAi && ics) E.iconAi.style = ics;
+    // 打开统一 AI 面板（帐户栏 · 整套入口图标），预选跟 AI 设计同一种图标风格（旧矢量款式映射到统一款式）
+    selMod0('midnav'); A.aigOpen('midnav|icons||set');
+    const st = { glass: 'glossy', metal: 'blackgold', '3d': 'festive' }[ics] || ics;
+    if (st && window.AIG && window.AIG.cur()) A.aigStyle(st);
     if (edMob()) E.mpanel = 'module';
   };
 

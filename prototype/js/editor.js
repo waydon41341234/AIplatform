@@ -91,7 +91,7 @@
     loading: false, step: 0, device: 'h5', sel: null, tab: 'content', ai: null, zoom: 50, palOpen: false, picker: null,
     checksPassed: false, dlg: null, exp: { stage: 'ready', opts: { figma: true, png: true, svg: false }, dl: {}, failed: {}, retrying: {} }, slide: 0, mpanel: null, preview: false,
     upload: null, replaced: null, h5side: false, adv: false, D: defaultDesign(), past: [], future: [],
-    name: LS.get('ed.last', '星河体育 · 首页'), status: 'designing', save: 'saved', nameEdit: null, rn: null, keys: null, iconAi: null, bx: null,
+    name: LS.get('ed.last', '星河体育 · 首页'), status: 'designing', save: 'saved', nameEdit: null, rn: null, keys: null, bx: null,
     lib: null, rs: null, palQ: null, tpl: null, contentH: 0, loadFail: false,
     figmaLinked: !!meta0.figmaLinked, projAssets: meta0.projAssets || [],
   });
@@ -153,7 +153,7 @@
     if (opts.status) E.status = opts.status;
     E.then = opts.then || null;
     E.adBar = opts.design && opts.design.iconStyle ? { ics: opts.design.iconStyle } : null; E.adp = null; E.adMod = null;
-    E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.keys = null; E.iconAi = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved';
+    E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.keys = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved';
     LS.set('ed.last', E.name);
     startLoad();
     window.go('editor');
@@ -281,7 +281,7 @@
     const b = baseName(id), fixed = MODS[b].fixed;
     const idx = E.D.order.indexOf(id);
     const btn = (act, icon, label, arg = '', on = false) => `<button class="${on ? 'is-on' : ''}" data-act="${act}" data-arg="${arg}" data-stop>${ic(icon)}${label}</button>`;
-    const tabBtn = (v, icon) => btn('tbTab', icon, t('ed/tab-' + v), v, E.sel === id && E.tab === v && !E.ai && !E.iconAi);
+    const tabBtn = (v, icon) => btn('tbTab', icon, t('ed/tab-' + v), v, E.sel === id && E.tab === v && !E.ai);
     // ✦ AI = 统一的 AI 生成图片面板（docs/ai-unified.md）；「换样式」是整模块重新配样式（aidesign），两个分开
     const aiBtn = window.AIG && window.AIG.has(b) ? btn('aigOpen', 'sparkle-fill', t('aig/tool'), id, E.sel === id && window.AIG.isOpen(b)) : '';
     let main = '';
@@ -518,7 +518,7 @@
     return `<div class="notice is-warn h5-over">${ic('warning-circle-fill')}<div class="tx">${t('ed/overflow', { d })}</div><button class="btn btn-secondary btn-sm" data-act="growTo" data-arg="${to}" data-stop>${t('ed/grow-to', { n: to })}</button><button class="btn btn-ghost btn-sm" data-act="fixLayout" data-stop>${t('ed/fix-layout')}</button></div>`;
   }
   A.growTo = (n) => { commit(() => { E.D.height = Math.max(1334, Math.min(6000, +n)); }); };
-  A.fixLayout = () => { const last = E.D.order.filter((x) => !E.D.hidden[x]).slice(-1)[0]; if (!last) return false; E.sel = last; E.tab = 'layout'; E.ai = null; E.keys = null; E.iconAi = null; if (mobileEd()) E.mpanel = 'module'; };
+  A.fixLayout = () => { const last = E.D.order.filter((x) => !E.D.hidden[x]).slice(-1)[0]; if (!last) return false; E.sel = last; E.tab = 'layout'; E.ai = null; E.keys = null; if (mobileEd()) E.mpanel = 'module'; };
 
   // ---------- 左栏：页面与模块树 ----------
   function stOf(id) {
@@ -606,14 +606,13 @@
       return `${aiItem('topbar|' + k)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
     }
     // 游戏菜单按钮底图：上传 / AI / 恢复（没有显示隐藏，按钮本身一直在）
-    if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gmBaiOpen">${ic('sparkle-fill')}${t('mp/gm-bai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
+    if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `${aiItem('gamemenu|btn')}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
     // 游戏卡片收藏星：上传 / AI / 恢复（两张一起恢复）
-    if (/^mp-gamecards-star/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gcAiOpen" data-arg="star">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
+    if (/^mp-gamecards-star/.test(id)) { const own = !!window.MP.getAsset(id); return `${aiItem('gamecards|star')}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
     // 游戏卡片兜底封面：上传 / 素材库 / AI / 恢复（没改过时置灰）/ 显示隐藏（按当前状态）
-    if (id === 'mp-gamecards-fallback') { const m = E.D.m.gamecards, own = !!m.fallback, on = m.fallbackOn !== false; return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="gcAiOpen" data-arg="fallback">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(on ? 'eye-slash-fill' : 'eye-fill')}${t(on ? 'ed/am-hide' : 'ed/am-show')}</button>`; }
-    const gcAi = '';
+    if (id === 'mp-gamecards-fallback') { const m = E.D.m.gamecards, own = !!m.fallback, on = m.fallbackOn !== false; return `${aiItem('gamecards|fallback')}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(on ? 'eye-slash-fill' : 'eye-fill')}${t(on ? 'ed/am-hide' : 'ed/am-show')}</button>`; }
     const lib = /^mp-(jackpot-bg|gamecards-fallback|sidebar-head)$/.test(id) ? `<button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button>` : '';
-    return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}${gcAi}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
+    return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
   }
   function assetMenu(id) {
     if (S.menu !== 'am:' + id || mobileEd()) return '';
@@ -750,7 +749,7 @@
   // 画布上点顶部栏图标：选中顶部栏 + 内容页签，电脑弹出菜单、手机出底部菜单（复用 assetMenuItems）
   A.tbIconMenu = (k) => {
     const prev = window.__prevMenu;
-    if (E.sel !== 'topbar') { E.ai = null; E.picker = null; E.iconAi = null; E.keys = null; }
+    if (E.sel !== 'topbar') { E.ai = null; E.picker = null; E.keys = null; }
     E.sel = 'topbar'; E.tab = 'content'; E.h5side = false;
     if (mobileEd()) { E.mpanel = 'module'; S.menu = 'am:tb-' + k; } else S.menu = prev === 'tbic:' + k ? null : 'tbic:' + k;
   };
@@ -951,9 +950,9 @@
   function modulePanel(id) {
     const b = baseName(id);
     if (window.AIG && window.AIG.isOpen(b)) return window.AIG.panel(); // 统一 AI 生成面板（docs/ai-unified.md）
-    if (E.iconAi && E.iconAi.b === b) return window.MP.aiPanel(); // 其余模块的图标 AI（还没迁到统一面板）
     // AD-04：侧边栏在电脑画布上没有浮动工具条，「AI 重新生成」放在面板标题右侧（测试修复）
-    const adBtn = b === 'sidebar' && window.AD && !mobileEd() ?`<span style="flex:1"></span>${window.AD.toolBtn(id, true)}` : '';
+    const sdAi = window.AIG && window.AIG.has(b) ? `<button class="ibtn ibtn-sm" data-act="aigOpen" data-arg="${id}" title="${esc(t('aig/menu'))}" aria-label="${esc(t('aig/menu'))}">${ic('sparkle-fill')}</button>` : '';
+    const adBtn = b === 'sidebar' && !mobileEd() ? `<span style="flex:1"></span>${sdAi}${window.AD ? window.AD.toolBtn(id, true) : ''}` : '';
     // 电脑：标题左边「‹」回到整页设置，标题下一行说明这个模块是什么（手机底部面板用右上角关闭返回，不加）
     const back = mobileEd() ? '' : `<button class="ibtn ibtn-sm p-back" data-act="selMod" data-arg="" title="${esc(t('ed/back-page'))}" aria-label="${esc(t('ed/back-page'))}">${ic('caret-left')}</button>`;
     const head = `<h2 class="p-title">${back}<span class="ellipsis">${esc(modName(id))}</span>${adBtn}</h2>${mobileEd() || !window.I18N['ed/desc-' + b] ? '' : `<p class="p-sub">${t('ed/desc-' + b)}</p>`}`;
@@ -1100,7 +1099,7 @@
     if (e && el && e.target.closest('[data-stop]') && !el.matches('[data-stop]')) return false;
     if (Date.now() - (E.swiped || 0) < 300) return false;
     const nid = id || null;
-    if (nid !== E.sel) { E.tab = 'content'; E.ai = null; E.picker = null; E.iconAi = null; E.rn = null; }
+    if (nid !== E.sel) { E.tab = 'content'; E.ai = null; E.picker = null; E.rn = null; }
     E.sel = nid; S.menu = null; E.keys = null;
     E.h5side = nid === 'sidebar';
     if (mobileEd()) E.mpanel = nid ? 'module' : null;
@@ -1108,7 +1107,7 @@
     if (nid && el && el.closest && el.closest('.ed-left')) setTimeout(() => { const n = document.querySelector(`.ed-canvas [data-mod="${nid}"]`); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 30);
   };
   A.setTab = (v) => { E.tab = v; E.picker = null; E.rn = null; };
-  A.tbTab = (v) => { E.tab = v; E.ai = null; E.iconAi = null; if (mobileEd()) E.mpanel = 'module'; };
+  A.tbTab = (v) => { E.tab = v; E.ai = null; if (mobileEd()) E.mpanel = 'module'; };
   A.toggleHide = (id) => {
     const was = !!E.D.hidden[id];
     commit(() => { E.D.hidden[id] = !was; }); S.menu = null; if (id === 'sidebar') E.h5side = false;
@@ -1286,7 +1285,7 @@
   // 顶部栏颜色：c 为空 = 恢复默认（跟绑定的 Key）；'key:<名>' = 跟整页配色的某个 Key
   A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); }); };
   ['h', 'pad', 'gap'].forEach((k) => { A['tbLayout_' + k] = (v) => { commit(() => { E.D.tb[k] = +v; }); }; });
-  A.setDevice = (v) => { E.device = v; E.ai = null; E.iconAi = null; E.picker = null; };
+  A.setDevice = (v) => { E.device = v; E.ai = null; E.picker = null; };
   A.mDevice = (v) => { E.device = v; E.mpanel = null; E.sel = null; E.picker = null; };
   A.zoom = (d) => { const z = [25, 50, 75, 100]; const i = z.indexOf(E.zoom) + +d; if (i >= 0 && i < z.length) E.zoom = z[i]; else return false; };
   A.togglePal = () => { E.palOpen = !E.palOpen; if (!E.palOpen && E.picker && E.picker.where === 'float') E.picker = null; };
@@ -1663,7 +1662,7 @@
   A.toolDock = () => { E.toolPos = null; lsSet('ed-tool-pos', null); S.menu = null; };
   document.addEventListener('dblclick', (e) => { if (e.target.closest && e.target.closest('[data-stgrip]')) { A.toolDock(); window.render(); } });
 
-  A.canvasBg = (a, el, e) => { if (e.target === el || e.target.classList.contains('ed-stage') || e.target.classList.contains('med-stage')) { if (E.sel || E.picker) { E.sel = null; E.ai = null; E.picker = null; E.iconAi = null; E.h5side = false; if (mobileEd()) E.mpanel = null; return; } } return false; };
+  A.canvasBg = (a, el, e) => { if (e.target === el || e.target.classList.contains('ed-stage') || e.target.classList.contains('med-stage')) { if (E.sel || E.picker) { E.sel = null; E.ai = null; E.picker = null; E.h5side = false; if (mobileEd()) E.mpanel = null; return; } } return false; };
 
   // ---------- 手机视图 ----------
   function mobile() {
@@ -1691,9 +1690,9 @@
   };
   A.closePreview = () => { E.preview = false; };
   A.mIconClose = () => { E.mpanel = 'module'; E.iconMenu = null; };
-  A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; E.keys = null; if (E.iconAi) A.iaClose(); if (E.sel) E.sel = null; E.h5side = false; S.menu = null; E.rn = null; };
+  A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; E.keys = null; if (E.sel) E.sel = null; E.h5side = false; S.menu = null; E.rn = null; };
   function mModuleHead(id) {
-    const b = baseName(id); if (E.iconAi && E.iconAi.b === b) return '';
+    const b = baseName(id);
     const ai = window.AIG && window.AIG.has(b) ? `<button class="ibtn ibtn-sm" data-act="aigOpen" data-arg="${id}" title="${esc(t('aig/menu'))}" aria-label="${esc(t('aig/menu'))}">${ic('sparkle-fill')}</button>` : '';
     const fixed = MODS[b].fixed; const idx = E.D.order.indexOf(id); const hid = !!E.D.hidden[id];
     const mv = fixed || b === 'sidebar' ? '' : `<button class="ibtn ibtn-sm" data-act="move" data-arg="-1" ${idx <= 0 ? 'disabled' : ''} aria-label="↑">${ic('arrow-up')}</button><button class="ibtn ibtn-sm" data-act="move" data-arg="1" ${idx >= E.D.order.length - 1 ? 'disabled' : ''} aria-label="↓">${ic('arrow-down')}</button>`;
@@ -1720,7 +1719,7 @@
     } else if (E.mpanel === 'module' && E.sel) {
       const inner = modulePanel(E.sel);
       body = inner.replace('<h2 class="p-title">', `<div class="sheet-head"><h2 class="p-title" style="margin:0;min-width:0">`).replace('</h2>', `</h2><span class="sb-spacer"></span>${mModuleHead(E.sel)}<button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>`);
-      return `<div class="sheet med-sheet m-mod ${E.iconAi ? 'is-tall' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${body}</div>`;
+      return `<div class="sheet med-sheet m-mod" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${body}</div>`;
     } else { E.mpanel = null; return ''; }
     return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet ${cls}" data-sk="msheet"><div class="sheet-grab"></div><div class="sheet-head"><h3>${head}</h3><button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>${body}</div>`;
   }
@@ -1750,7 +1749,6 @@
     if (E.adMod) { A.adModCancel(); return; }
     if (E.adp) { A.adEClose(); return; }
     if (E.keys) { E.keys = null; return; }
-    if (E.iconAi) { A.iaClose(); return; }
     if (E.h5side) { E.h5side = false; if (E.sel === 'sidebar') E.sel = null; return; }
     if (E.palOpen) { E.palOpen = false; }
   }
@@ -1837,19 +1835,20 @@
     const balTarget = () => (E.D.login && balCfg().mode !== 'nocur' ? { id: 'bal', label: t('aig/t-bal'), kind: 'icon', spec: [52, 52], count: 4, cost: 20, ratio: 1, cols: 4 } : null);
     const icTarget = (k) => ({ id: k, label: tbLabel(k), kind: 'icon', group: 'icons', entry: k, spec: (e) => TB_SPEC[e] || TB_SPEC[k], count: 4, cost: 20, ratio: 1, cols: 4, setName: t('aig/n-tb-set') });
     AIG.reg('topbar', {
+      upfront: true, // G2：整套在发送键上写全价（✦40 / ✦60）并先确认，确认后先出样板再出其余
       targets: () => [E.D.tb.items.logo ? { id: 'logo', label: 'Logo', kind: 'image', spec: [t('aig/w-range'), 100], count: 4, cost: 20, ratio: 230 / 76, cols: 2 } : null]
         .concat(['cur', 'search', 'side'].filter((k) => tbEnts().includes(k)).map(icTarget))
         .concat(E.D.tb.items.auth ? [balTarget()] : []),
       defaultTarget: () => 'logo',
       impl: (tg) => (tg.id === 'logo' ? LOGO_AI : tg.id === 'bal' ? BAL_AI : ICONS),
     });
-    // 帐户栏（带帐户区）的余额框币种：同一个目标；帐户栏入口图标还在旧面板，所以工具条上先不放 ✦ AI
-    AIG.reg('midnav', { tool: false, targets: () => [window.MP && E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account' ? balTarget() : null], defaultTarget: () => 'bal', impl: () => BAL_AI });
+    // 帐户栏 / 公告栏 / 游戏菜单 / 游戏卡片 / 底部导航 / 侧边栏在 modpanels 里（Figma G3 / G4）；帐户栏（带帐户区、已登录）多一个目标「余额框币种」，跟顶部栏同一个实现
+    if (window.MP && window.MP.aigReg) window.MP.aigReg({ target: balTarget, impl: BAL_AI });
   }
 
   window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), assetMenuItems: (id) => assetMenuItems(id), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
-  window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.iconAi || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod), escape };
+  window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod), escape };
 })();

@@ -1,15 +1,16 @@
 /* AI 生成 · 统一面板（docs/ai-unified.md；Figma「04-AI 统一生成」G1 Banner / G2 顶部栏，组件 03 页 AIG/*）
- * 所有「给模块生成图片」的 AI 共用这一个面板（已接入：Banner、顶部栏 Logo / 币种 / 搜索 / 侧边栏入口 / 余额框币种、帐户栏的余额框币种；
- * 公告栏 / 帐户栏入口 / 游戏菜单 / 游戏卡片 / 底部导航还在 modpanels 的旧面板，按同一套适配器接口迁过来即可）。
+ * 所有「给模块生成图片」的 AI 共用这一个面板：Banner、顶部栏（G2）、帐户栏 / 公告栏（G3）、游戏菜单 / 游戏卡片 / 底部导航 / 侧边栏（G4），手机 375 是底部弹层（G5）。
  * 面板从上到下（Figma AIG/Panel）：标题栏「✦ AI 生成 · {名字}  ✕」→ 生成哪张（目标分段，≥2 个目标才显示）→ 范围（只这一个 / 整套，图标组才有）
  *   → 整套时的入口清单 → 款式（5 实物 + 图标多 4 矢量）→ 输入框（参考图 + 提示词 + 规格标签 / 模型 + 发送 ✦N）→ 余额不足 / 提示行 → 结果区 → 操作行
  * 状态机：setup → generating → cands | failed；整套：样板 cands → rest（逐个生成）→ list（逐个重做 / 补齐失败 / 全部使用）
  * 扣点：点数写在发送键上；> ✦20 才弹确认；余额不足统一 lowBalance；失败不扣点；结果按「模块 + 目标 + 范围」保留在本次会话（E.aigS），并放进素材库。
  *
- * 适配器：AIG.reg(mod, { targets(), defaultTarget(), impl(tg) | T: { [目标 id]: 实现 }, tool?: false（工具条 / 手机标题栏不放 ✦ AI） })
+ * 适配器：AIG.reg(mod, { targets(), defaultTarget(), impl(tg) | T: { [目标 id]: 实现 }, tool?: false（工具条 / 手机标题栏不放 ✦ AI），
+ *           upfront?: true（整套在发送键上收全价并先确认，顶部栏 G2；默认 = 发送 ✦N 只出样板，「生成其余」时再报价确认，G3 / G4） })
  *   目标 tg = { id, label, kind: 'image' | 'icon', spec: [w, h] | (entry) => [w, h], count, cost, ratio, cols,
- *              group?: 组名（同组的图标目标可切「整套」）, entry?: 这个目标对应的入口 id（只这一个时生成它）, name?, setName? }
- *   实现 = { styles(tg, a) → [{ id, label, html }], preset(tg, st, a), refPrompt?(tg, res, a), where?(tg), entries?(tg) → [{ i, name, req, def, thumb, pics }],
+ *              group?: 组名（同组的图标目标可切「整套」）, scopeable?: 一个目标里含多个入口（帐户栏 / 公告栏 / 游戏菜单 / 底部导航）,
+ *              entry?: 这个目标对应的入口 id（只这一个时生成它）, name?, setName?, pair?(入口) → [左, 右]（一组两张：未选 / 选中、未登录 / 已登录）, lr?: 候选标题写「左 / 右」 }
+ *   实现 = { styles(tg, a) → [{ id, label, html }], preset(tg, st, a), refPrompt?(tg, res, a), where?(tg), entries?(tg) → [{ i, name, req, def, thumb, pics, cost? }], sample?(tg) → 整套默认样板入口, usedName?(a, tg) → toast 里的名字,
  *           gen(a, tg, i, n, base) → 候选数组, best?(a, tg, cands), tile(a, tg, i, c), old?(a, tg, i), preview?,
  *           apply(a, tg, i, c)（AIG 外面包 commit）, lib?(a, tg, i, c) → 素材值, pay(tg) → [kind, vars], onTarget?(tg) }
  * 依赖：core（refSlot / refPick / costConfirm / lowBalance / toast）、editor（window.EDX，运行时取）。 */
@@ -31,7 +32,15 @@
   const picked = (a, tg) => entriesOf(a, tg).filter((e) => a.picks[e.i]).map((e) => e.i);
   const oneIdx = (a, tg) => (tg.entry != null ? String(tg.entry) : a.idx);
   // 整套的样板：当前目标对应的入口（勾着的话），否则第一个勾着的
-  const sampleIdx = (a, tg) => { if (a.scope !== 'set') return oneIdx(a, tg); if (a.sample != null) return a.sample; const p = picked(a, tg); return tg.entry != null && p.includes(String(tg.entry)) ? String(tg.entry) : p[0]; };
+  const sampleIdx = (a, tg) => {
+    if (a.scope !== 'set') return oneIdx(a, tg); if (a.sample != null) return a.sample; const p = picked(a, tg);
+    const pref = tg.entry != null ? String(tg.entry) : a.pref != null ? a.pref : impl(a, tg).sample ? String(impl(a, tg).sample(tg)) : null;
+    return pref != null && p.includes(pref) ? pref : p[0];
+  };
+  // 一组两张（未选 / 选中、未登录 / 已登录）：规格写「×2」，候选标题写「挑一组」
+  const pairOf = (a, tg) => (tg.pair ? tg.pair(sampleIdx(a, tg)) : null);
+  const entCost = (a, tg, i) => { const e = entriesOf(a, tg).find((q) => q.i === String(i)); return (e && e.cost) || tg.cost; };
+  const sumCost = (a, tg, list) => list.reduce((s, i) => s + entCost(a, tg, i), 0);
   const specOf = (a, tg) => { const sp = typeof tg.spec === 'function' ? tg.spec(sampleIdx(a, tg)) : tg.spec; return sp || [0, 0]; };
   const model = () => X().E.aigModel || 'gpt';
   const mName = (m) => (m === 'gemini' ? 'Gemini' : 'GPT Image');
@@ -43,7 +52,8 @@
     return tg.name || (tg.entry == null && tg.kind === 'icon' ? entName(a, tg, a.idx) : '') || tg.label;
   }
   // 本次发送的价格：整套 = 勾选入口数 × 单价（确认框写明入口数和图片张数）
-  const sendCost = (a, tg) => (a.scope === 'set' ? Math.max(1, picked(a, tg).length) * tg.cost : tg.cost);
+  // 顶部栏（upfront）：发送键写整套价钱；其余模块：发送 = 只出样板 ✦N，「按这个款式生成其余」再报价
+  const sendCost = (a, tg) => (a.scope === 'set' && adp(a).upfront ? Math.max(tg.cost, sumCost(a, tg, picked(a, tg))) : tg.cost);
   const keyOf = (mod, id, tg, idx, scope) => [id, tg, scope === 'set' ? '*' : idx == null ? '' : idx].join('|') + '@' + mod;
 
   // ---------- 打开 / 关闭 ----------
@@ -72,8 +82,8 @@
       else a.prompt = m.preset(tg, a.style, a);
       E.aigS[key] = a;
     }
+    if (scope === 'set' && o.idx != null && o.idx !== '' && ents.some((e) => e.i === String(o.idx))) a.pref = String(o.idx);
     a.jump = true; E.ai = a; E.picker = null; E.keys = null; E.tab = 'content'; S().menu = null; S().sheet = null;
-    if (E.iconAi && window.ACT.iaClose) window.ACT.iaClose(); // 还没迁过来的旧图标面板先关掉
     if (impl(a, tg).onTarget) impl(a, tg).onTarget(tg);
     if (x.mobileEd()) E.mpanel = 'module';
     return true;
@@ -94,7 +104,7 @@
   A.aigScope = (v) => {
     const a = cur(); if (!a || busy(a) || a.scope === v) return false; const tg = tgOf(a);
     const idx = v === 'one' ? (oneIdx(a, tg) != null ? oneIdx(a, tg) : a.sample != null ? a.sample : picked(a, tg)[0] || entriesOf(a, tg)[0].i) : null;
-    open(a.mod, a.tg, { idx, scope: v });
+    open(a.mod, a.tg, { idx: v === 'set' ? oneIdx(a, tg) : idx, scope: v });
   };
 
   // ---------- 款式 / 提示词 / 参考图 / 模型 ----------
@@ -162,8 +172,8 @@
     const tg = tgOf(a);
     if (!a.prompt.trim()) { hint(a); return; }
     if (a.scope === 'set' && !picked(a, tg).length) return false;
-    const cost = sendCost(a, tg), n = a.scope === 'set' ? picked(a, tg).length : 1;
-    charge(cost, () => { a.okCost = cost; startGen(a); }, { title: t('aig/confirm-title', { name: nameOf(a, tg) }), body: t('aig/confirm-body', { n, k: a.scope === 'set' ? picsOf(a, tg, picked(a, tg)) : tg.count, x: cost }) });
+    const cost = sendCost(a, tg), all = a.scope === 'set' && adp(a).upfront, n = all ? picked(a, tg).length : 1;
+    charge(cost, () => { a.okCost = cost; startGen(a); }, { title: t('aig/confirm-title', { name: nameOf(a, tg) }), body: t('aig/confirm-body', { n, k: all ? picsOf(a, tg, picked(a, tg)) : tg.count, x: cost }) });
   };
   // 再生成 / 重试：只重做这一轮（整套 = 重出样板），按单价算
   A.aigAgain = () => { const a = cur(); if (!a || busy(a)) return false; const tg = tgOf(a); charge(tg.cost, () => startGen(a, true), { title: t('aig/confirm-title', { name: nameOf(a, tg) }), body: t('aig/confirm-body', { n: 1, k: tg.count, x: tg.cost }) }); };
@@ -198,7 +208,7 @@
     if (a.stage === 'generating') { a.tok = null; a.stage = a.back === 'cands' && a.cands.length ? 'cands' : 'setup'; return; }
     if (a.stage === 'rest') {
       a.tok = null; a.run.slice(a.done).forEach((i) => { a.failed[i] = true; });
-      payNow(a, tg, a.okN * tg.cost); a.stage = 'list';
+      payNow(a, tg, a.okX); a.stage = 'list';
       window.toast(t('aig/cancelled', { n: a.okN }), { info: true }); return;
     }
     if (a.stage === 'failed') { a.stage = a.cands.length ? 'cands' : 'setup'; return; }
@@ -212,7 +222,7 @@
   }
   A.aigUse = () => {
     const a = cur(); if (!a || a.stage !== 'cands' || a.pick == null) return false;
-    const tg = tgOf(a), m = impl(a, tg), c = a.cands[a.pick], i = sampleIdx(a, tg), name = a.scope === 'set' ? nameOf(a, tg) : nameOf(a, tg);
+    const tg = tgOf(a), m = impl(a, tg), c = a.cands[a.pick], i = sampleIdx(a, tg), name = a.scope !== 'set' && m.usedName ? m.usedName(a, tg) : nameOf(a, tg);
     X().commit(() => { m.apply(a, tg, i, c); });
     finish(a, name);
   };
@@ -221,23 +231,23 @@
     const a = cur(); if (!a || a.stage !== 'cands' || a.pick == null) return false;
     const tg = tgOf(a), rest = picked(a, tg).filter((i) => i !== String(a.sample));
     if (!rest.length) return A.aigUse();
-    const cost = rest.length * tg.cost;
+    const cost = sumCost(a, tg, rest);
     if (a.okCost && a.okCost >= cost + tg.cost) { if (!X().afford(cost)) { window.lowBalance(cost); return; } runRest(a, rest); return; }
     charge(cost, () => runRest(a, rest), { title: t('aig/confirm-title', { name: nameOf(a, tg) }), body: t('aig/confirm-body', { n: rest.length, k: picsOf(a, tg, rest), x: cost }), okLabel: t('aig/rest-ok', { m: rest.length }) });
   };
   function runRest(a, list) {
     const x = X(), tg = tgOf(a), m = impl(a, tg), tok = (a.tok = {});
     const base = a.cands[a.pick];
-    if (!a.rows[a.sample]) a.rows[a.sample] = base; a.base = base; a.stage = 'rest'; a.run = list.slice(); a.done = 0; a.okN = 0;
+    if (!a.rows[a.sample]) a.rows[a.sample] = base; a.base = base; a.stage = 'rest'; a.run = list.slice(); a.done = 0; a.okN = 0; a.okX = 0;
     const failSet = x.fail() ? new Set([list[Math.min(1, list.length - 1)], list[Math.min(4, list.length - 1)]]) : new Set();
     list.forEach((i) => { delete a.rows[i]; delete a.failed[i]; });
     const tick = setInterval(() => {
       if (a.tok !== tok) { clearInterval(tick); return; }
       const i = a.run[a.done];
-      if (failSet.has(i)) a.failed[i] = true; else { const c = m.gen(a, tg, i, 1, base)[0]; a.rows[i] = c; a.okN++; toLib(a, tg, i, [c]); }
+      if (failSet.has(i)) a.failed[i] = true; else { const c = m.gen(a, tg, i, 1, base)[0]; a.rows[i] = c; a.okN++; a.okX += entCost(a, tg, i); toLib(a, tg, i, [c]); }
       a.done++;
       if (a.done >= a.run.length) {
-        clearInterval(tick); a.tok = null; payNow(a, tg, a.okN * tg.cost); a.stage = 'list';
+        clearInterval(tick); a.tok = null; payNow(a, tg, a.okX); a.stage = 'list';
         const nf = Object.keys(a.failed).length, n = Object.keys(a.rows).length + nf;
         x.notice({ kind: nf ? 'partial' : 'done', cat: 'gen', title: t('aig/title', { name: nameOf(a, tg) }), body: nf ? t('rec/partial', { d: n - nf, n, f: nf }) : t('aig/set-done', { n }) });
       }
@@ -246,18 +256,18 @@
   }
   A.aigFill = () => {
     const a = cur(); if (!a || a.stage !== 'list') return false; const tg = tgOf(a), list = Object.keys(a.failed); if (!list.length) return false;
-    const cost = list.length * tg.cost;
-    charge(cost, () => { a.cands = [a.base]; a.pick = 0; runRest(a, list); }, { title: t('aig/confirm-title', { name: nameOf(a, tg) }), body: t('aig/confirm-body', { n: list.length, k: picsOf(a, tg, list), x: cost }) });
+    const cost = sumCost(a, tg, list);
+    charge(cost, () => { a.cands = [a.base]; a.pick = 0; runRest(a, list); }, { title: tg.unit ? t('aig/fill-title', { f: list.length, name: tg.unit }) : t('aig/confirm-title', { name: nameOf(a, tg) }), body: t('aig/confirm-body', { n: list.length, k: picsOf(a, tg, list), x: cost }) });
   };
   // 重做一个入口：这个入口的所有状态图（未选 / 选中）一起重新生成
   A.aigRedo = (i) => {
     const a = cur(); if (!a || a.stage !== 'list' || a.busy[i]) return false; const x = X(), tg = tgOf(a), m = impl(a, tg);
-    if (!x.afford(tg.cost)) { window.lowBalance(tg.cost); return; }
+    const c0 = entCost(a, tg, i); if (!x.afford(c0)) { window.lowBalance(c0); return; }
     a.busy[i] = true;
     setTimeout(() => {
       if (X().E.aigS[a.key] !== a) return; delete a.busy[i];
       if (x.fail()) window.toast(t('aig/failed'), { info: true });
-      else { a.round++; const c = m.gen(a, tg, i, 1, Object.assign({}, a.base, { redo: a.round }))[0]; a.rows[i] = c; delete a.failed[i]; payNow(a, tg, tg.cost); toLib(a, tg, i, [c]); }
+      else { a.round++; const c = m.gen(a, tg, i, 1, Object.assign({}, a.base, { redo: a.round }))[0]; a.rows[i] = c; delete a.failed[i]; payNow(a, tg, c0); toLib(a, tg, i, [c]); }
       window.render();
     }, 900);
   };
@@ -287,7 +297,7 @@
     const cols = tg.cols || (tg.kind === 'icon' ? 4 : 2), n = a.genN || tg.count, grid = (inner) => `<div class="aig-grid is-c${cols} ${tg.ratio && tg.ratio > 1.2 ? 'is-wide' : ''}">${inner}</div>`;
     const cost = tg.cost;
     const ents = entriesOf(a, tg);
-    const acts = (inner) => `<div class="aig-acts">${inner}</div>`;
+    const acts = (inner, cls = '') => `<div class="aig-acts ${cls}">${inner}</div>`; // is-stack：主按钮占一整行（Figma G3-04 / G3-08）
     if (a.stage === 'generating') {
       return `<div class="aig-res"><div class="aig-lab is-ing"><i class="aig-spin" aria-hidden="true"></i><span data-aig-pct>${t('aig/generating', { n, p: a.pct })}</span></div>${grid(Array.from({ length: n }, () => `<div class="aig-cand skeleton" style="${ratioCss(tg)}"><b data-aig-tp>${a.pct}%</b></div>`).join(''))}</div>
         ${acts(btn('btn-ghost', 'aigCancel', t('aig/cancel')))}`;
@@ -298,10 +308,12 @@
     }
     if (a.stage === 'cands') {
       const si = sampleIdx(a, tg), rest = a.scope === 'set' ? picked(a, tg).filter((i) => i !== String(si)) : [];
-      const lab = a.scope === 'set' ? t('aig/sample', { name: esc(entName(a, tg, si)) }) : t('aig/cands');
-      const tiles = a.cands.map((c, k) => `<button class="aig-cand ${a.pick === k ? 'is-on' : ''}" style="${ratioCss(tg)}" data-act="aigPick" data-arg="${k}" aria-pressed="${a.pick === k}">${tile(a, tg, si, c)}${k === a.best ? `<span class="best">${t('aig/best')}</span>` : ''}</button>`).join('');
-      const main = rest.length ? btn('btn-primary', 'aigRest', t('aig/rest', { m: rest.length, x: rest.length * cost }), '', a.pick == null) : btn('btn-primary', 'aigUse', t('aig/use'), '', a.pick == null);
-      return `<div class="aig-res"><div class="aig-lab">${lab}</div>${grid(tiles)}</div>${acts(main + btn('btn-secondary aig-again', 'aigAgain', t('aig/again', { n: cost })) + btn('btn-ghost', 'aigCancel', t('aig/cancel')))}`;
+      const pr = pairOf(a, tg);
+      const lab = a.scope === 'set' ? t('aig/sample', { name: esc(entName(a, tg, si)) }) : pr ? t(tg.lr ? 'aig/cands-pair-lr' : 'aig/cands-pair', { a: pr[0], b: pr[1] }) : t('aig/cands');
+      const cap = pr && tg.lr ? `<span class="aig-cap">${esc(pr[0])} / ${esc(pr[1])}</span>` : '';
+      const tiles = a.cands.map((c, k) => `<button class="aig-cand ${pr ? 'is-pair' : ''} ${cap ? 'has-cap' : ''} ${a.pick === k ? 'is-on' : ''}" style="${ratioCss(tg)}" data-act="aigPick" data-arg="${k}" aria-pressed="${a.pick === k}">${tile(a, tg, si, c)}${k === a.best ? `<span class="best">${t('aig/best')}</span>` : ''}${cap}</button>`).join('');
+      const main = rest.length ? btn('btn-primary', 'aigRest', t('aig/rest', { m: rest.length, x: sumCost(a, tg, rest) }), '', a.pick == null) : btn('btn-primary', 'aigUse', t('aig/use'), '', a.pick == null);
+      return `<div class="aig-res"><div class="aig-lab">${lab}</div>${grid(tiles)}</div>${acts(main + btn('btn-secondary aig-again', 'aigAgain', t('aig/again', { n: cost })) + btn('btn-ghost', 'aigCancel', t('aig/cancel')), rest.length ? 'is-stack' : '')}`;
     }
     if (a.stage === 'rest' || a.stage === 'list') {
       const inSet = (i) => i === String(a.sample) || a.rows[i] || a.failed[i] || (a.run || []).includes(i);
@@ -311,15 +323,19 @@
         const c = a.rows[i], f = a.failed[i], bz = a.busy[i];
         const cell = c && !bz ? `<span class="aig-c">${tile(a, tg, i, c)}</span>` : f && !bz ? `<span class="aig-c is-fail">${ic('warning-circle-fill')}</span>` : '<span class="aig-c skeleton"></span>';
         const old = impl(a, tg).old ? impl(a, tg).old(a, tg, i) : '';
-        return `<div class="aig-row ${f ? 'is-fail' : ''}"><span class="nm">${esc(e.name)}</span><span class="aig-c is-old">${old}</span>${ic('arrow-right', 'ic-16 aig-arr')}${cell}<span class="aig-rd">${a.stage === 'list' ? `<button class="aig-link" data-act="aigRedo" data-arg="${i}" ${bz ? 'disabled' : ''}>${t('aig/redo', { n: cost })}</button>` : ''}</span></div>`;
+        // 失败的行写「重试」，成功的写「重做」（Figma G3-08）
+        return `<div class="aig-row ${f && !bz ? 'is-fail' : ''}"><span class="nm">${esc(e.name)}</span><span class="aig-c is-old">${old}</span>${ic('arrow-right', 'ic-16 aig-arr')}${cell}<span class="aig-rd">${a.stage === 'list' ? `<button class="aig-link" data-act="aigRedo" data-arg="${i}" ${bz ? 'disabled' : ''}>${t(f && !c ? 'aig/retry' : 'aig/redo', { n: entCost(a, tg, i) })}</button>` : ''}</span></div>`;
       }).join('');
-      const tot = order.length, doneN = order.filter((i) => a.rows[i]).length;
+      // 进度和计数只算「其余」（样板另计）：正在生成 2/3、已生成 3/3 · 样板 1 + 其余 3、已生成 1/3 · 失败 2（Figma G3-06 / 07 / 08）
+      const restIds = order.filter((i) => i !== String(a.sample)), tot = Math.max(1, restIds.length), doneN = restIds.filter((i) => a.rows[i]).length;
       if (a.stage === 'rest') {
-        return `<div class="aig-res"><div class="aig-lab is-ing"><i class="aig-spin" aria-hidden="true"></i><span>${t('aig/rest-ing', { d: Math.min(tot, a.done + 1), m: tot })}</span></div><div class="aig-bar"><i style="width:${((a.done + 1) / tot) * 100}%"></i></div><div class="aig-list">${rows}</div></div>${acts(btn('btn-ghost', 'aigCancel', t('aig/cancel')))}`;
+        const runN = a.run.length, d = Math.min(runN, a.done + 1);
+        return `<div class="aig-res"><div class="aig-lab is-ing"><i class="aig-spin" aria-hidden="true"></i><span>${t('aig/rest-ing', { d, m: runN })}</span></div><div class="aig-bar"><i style="width:${(d / runN) * 100}%"></i></div><div class="aig-list">${rows}</div></div>${acts(btn('btn-ghost', 'aigCancel', t('aig/cancel')))}`;
       }
-      const nf = Object.keys(a.failed).length;
-      return `<div class="aig-res">${nf ? `<div class="aig-lab is-err" role="alert">${ic('warning-circle-fill')}<span>${t('rec/partial', { d: tot - nf, n: tot, f: nf })}</span></div>` : `<div class="aig-lab">${t('aig/rest-done', { d: doneN, m: tot })}<span class="aig-ok">${ic('check-circle-fill')}</span></div>`}<div class="aig-bar ${nf ? '' : 'is-ok'}"><i style="width:${(doneN / tot) * 100}%"></i></div><div class="aig-list">${rows}</div></div>
-        ${acts((nf ? btn('btn-secondary', 'aigFill', t('aig/fill', { f: nf, x: nf * cost })) : '') + btn('btn-primary', 'aigUseAll', t('aig/use-all'), '', !Object.keys(a.rows).length) + btn('btn-ghost', 'aigCancel', t('aig/cancel')))}`;
+      const nf = Object.keys(a.failed).length, fl = Object.keys(a.failed);
+      return `<div class="aig-res">${nf ? `<div class="aig-lab is-err" role="alert">${ic('warning-circle-fill')}<span>${t('aig/list-part', { d: doneN, m: tot, f: nf })}</span></div>` : `<div class="aig-lab">${t('aig/list-done', { d: doneN, m: tot })}<span class="aig-ok">${ic('check-circle-fill')}</span></div>`}<div class="aig-bar ${nf ? '' : 'is-ok'}"><i style="width:${(doneN / tot) * 100}%"></i></div><div class="aig-list">${rows}</div></div>
+        ${acts(nf ? btn('btn-primary aig-fill', 'aigFill', t('aig/fill', { f: nf, x: sumCost(a, tg, fl) })) + btn('btn-secondary', 'aigUseAll', t('aig/use-done'), '', !Object.keys(a.rows).length) + btn('btn-ghost', 'aigCancel', t('aig/cancel'))
+          : btn('btn-primary', 'aigUseAll', t('aig/use-all'), '', !Object.keys(a.rows).length) + btn('btn-ghost', 'aigCancel', t('aig/cancel')), nf ? 'is-stack' : '')}`;
     }
     return '';
   }
@@ -345,7 +361,7 @@
     const empty = !a.prompt.trim();
     const send = lock ? `<button class="send is-busy" disabled aria-label="${esc(t('aig/generating', { n: tg.count, p: a.pct }))}">${ic('sparkle-fill')}${cost}<i class="aig-spin" aria-hidden="true"></i></button>`
       : `<button class="send ${empty || a.analyzing ? 'is-disabled' : ''}" data-act="aigSend" title="${esc(t('aig/send-tip', { n: cost }))}" aria-label="${esc(t('aig/send-tip', { n: cost }))}">${ic('sparkle-fill')}${cost}${ic('arrow-up')}</button>`;
-    const specTxt = t('aig/count-spec', { n: tg.count, w: sp[0], h: sp[1] });
+    const specTxt = t(pairOf(a, tg) ? 'aig/count-spec-pair' : 'aig/count-spec', { n: tg.count, w: sp[0], h: sp[1] });
     const box = `<div class="aig-comp"><div class="c-box aig-box ${hintOn ? 'is-err' : ''} ${shake ? 'is-shake' : ''}"><div class="c-input">${window.refSlot(a.refSt, 'aigRef')}<div class="aig-main"><textarea rows="4" maxlength="300" data-input="aigPrompt" data-key="aigKey" placeholder="${esc(a.analyzing ? t('ed/tbai-analyzing') : t('aig/prompt-ph'))}" ${lock || a.analyzing ? 'disabled' : ''}>${esc(a.analyzing ? '' : a.prompt)}</textarea><span class="aig-spec" title="${esc(specTxt)}">${specTxt}</span></div></div>
       <div class="c-tools">${modelPill(lock)}<span class="sb-spacer"></span>${send}</div></div>${hintOn ? `<div class="c-hint" role="alert">${t('composer/empty-hint')}</div>` : ''}</div>`;
     const note = a.replaced ? `<div class="aig-note">${ic('arrow-counter-clockwise', 'ic-16')}<span>${t('aig/prompt-replaced')}</span><button class="aig-link" data-act="aigPromptUndo">${t('aig/prompt-undo')}</button></div>`
