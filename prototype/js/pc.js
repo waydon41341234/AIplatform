@@ -52,9 +52,11 @@
     const D = X().E.D, tb = D.tb || {}, it = tb.items || {};
     const nav = vis('gamemenu').slice(0, 6).map((x, i) => `<span class="${i ? '' : 'on'}">${esc(nm(x))}</span>`).join('');
     const lgx = window.tbImg ? window.tbImg(tb.logoF, 'assets/classic/logo.png') : { src: 'assets/classic/logo.png', f: tb.logoF || 'none' }; // Logo 可能是上传 / AI 图（'img:'）或滤镜模拟
-    const logo = it.logo !== false ? `<span class="lg" style="filter:${lgx.f}"><img class="lg-cl" src="${lgx.src}" alt="GAMING"></span>` : '';
-    const search = it.search !== false ? `<span class="srch">${ic('magnifying-glass')}<span>搜索游戏</span></span>` : '';
-    const auth = true ? (D.login ? `${window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>'}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
+    const fit = lgx.own && window.tbFitCss ? window.tbFitCss('logo') : ''; // 调整尺寸时选的裁切 / 留边
+    const logo = it.logo !== false ? `<span class="lg" style="filter:${lgx.f}"><img class="lg-cl" src="${lgx.src}" alt="GAMING"${fit ? ` style="${fit}"` : ''}></span>` : '';
+    const search = it.search !== false ? `<span class="srch">${ic('magnifying-glass')}<span>${t('pc/tb-search-games')}</span></span>` : '';
+    // 已登录只显示余额框，不放头像（Waydon 2026-11-26）；文案走多语言
+    const auth = D.login ? (window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>') : `<span class="login">${t('auth/login')}</span><span class="reg">${t('auth/register')}</span>`;
     return `<div class="pc-top"><div class="in">${logo}<nav class="nv">${nav}</nav><span class="sp"></span>${search}${auth}</div></div>`;
   }
   function slideF(i) {

@@ -292,7 +292,7 @@
       const files = Array.from(inp.files || []); inp.remove();
       if (!files.length) return;
       const bad = files.filter((f) => !ok(f)), big = files.filter((f) => ok(f) && f.size > opts.maxMB * 1048576);
-      if (bad.length) window.toast(t('composer/ref-bad-type'), { info: true });
+      if (bad.length) window.toast(t(opts.accept === window.IMG_ACCEPT ? 'mp/icon-bad' : 'composer/ref-bad-type'), { info: true }); // 提示跟实际支持的格式一致
       if (big.length) window.toast(opts.maxMB === 10 ? t('composer/ref-too-big') : t('common/file-too-big', { n: opts.maxMB }), { info: true });
       const good = files.filter((f) => ok(f) && f.size <= opts.maxMB * 1048576);
       if (!good.length) return;

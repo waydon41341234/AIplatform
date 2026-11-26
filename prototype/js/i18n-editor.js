@@ -405,5 +405,7 @@ Object.assign(window.I18N, {
   'mp/style-bottomnav': ['导航样式', '導覽樣式', 'Navigation style', 'Kiểu điều hướng'],
   'mp/style-sidebar': ['菜单样式', '選單樣式', 'Menu style', 'Kiểu menu'],
   'ed/preview-cap': ['预览', '預覽', 'Preview', 'Xem trước'],
-  'ed/page-reset-all': ['整页恢复默认', '整頁恢復預設', 'Reset whole page', 'Khôi phục cả trang'],
+  'ed/page-reset-all': ['整页恢复默认', '整頁恢復預設', 'Reset whole page', 'Khôi phục cả trang'],  // 顶部栏：AI 目标「侧边栏入口」；PC 预览顶部栏搜索框
+  'ed/tbai-t-side': ['侧边栏入口', '側邊欄入口', 'Sidebar button', 'Nút thanh bên'],
+  'pc/tb-search-games': ['搜索游戏', '搜尋遊戲', 'Search games', 'Tìm trò chơi'],
 });
