@@ -223,6 +223,7 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .med-login { position: absolute; left: 12px; bottom: 12px; z-index: 10; }
 .med-login .iseg { background: var(--bg-raised); box-shadow: var(--shadow-md); }
 .fab { position: absolute; right: 16px; bottom: 16px; z-index: 10; width: 48px; height: 48px; border-radius: 50%; background: var(--bg-raised); box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; color: var(--icon); }
+.med-canvas.has-bnav .fab { bottom: 100px; } /* 底部导航固定在画布底部（导航栏约 64px + 画布底边距）：调色按钮放到导航栏上方，不挡「我的」 */
 .fab i { position: absolute; right: 4px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg-raised); }
 .med-sheet { max-height: 72dvh; }
 .med-sheet .tabs3 { margin-bottom: 12px; }
@@ -283,7 +284,8 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .h5-bnav.h-98 .lb { -webkit-line-clamp: 1; }
 .h5-bnav.h-120 { height: 60px; padding-top: 5px; }
 .h5-bnav.h-140 { height: 70px; }
-.h5-bnav .lb { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: calc(100% - 4px); text-align: center; line-height: 1.1; overflow-wrap: anywhere; cursor: pointer; }
+.h5-bnav .lb { position: relative; z-index: 1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: calc(100% - 4px); text-align: center; line-height: 1.1; overflow-wrap: anywhere; cursor: pointer; }
+.h5-bnav .lb::after { content: ""; position: absolute; inset: -6px -4px; } /* 手机上导航文字只有 12px 高、紧挨图标：放大点按区域，点文字 = 预览选中，不会被吸到图标上 */
 .h5-bnav .it.raised .ic { width: 34px; height: 34px; padding: 7px; margin-top: -18px; border-radius: 50%; background: var(--e-bottomnav-active); color: var(--e-bottomnav-bg); box-shadow: 0 2px 6px #0003; box-sizing: border-box; }
 .h5-bnav .it { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--e-bottomnav-def); font-size: 12px; }
 .h5-bnav .it .ic { width: 20px; height: 20px; }
@@ -851,7 +853,7 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .gcai-pv i.fb { width: 72px; height: 72px; border-radius: 10px; }
 .gcai-pv i.st { width: 40px; height: 40px; border-radius: 50%; background-color: #7a8290; }
 .h5-bnav .it .bi img, .h5-bnav .it .bi img.cu { width: 25px; height: 25px; object-fit: contain; display: block; border-radius: 0; }
-.h5-bnav .it .bi.big img, .h5-bnav .it .bi.big img.cu { width: 50px; height: 50px; margin: -15px -12px -10px; } /* 未登录动效礼盒 100×100 */
+.h5-bnav .it .bi.big img, .h5-bnav .it .bi.big img.cu { width: 50px; height: 50px; margin: -25px -12px 0; } /* 未登录动效礼盒 100×100：多出的高度全往上顶出导航栏，不往下压住「优惠」文字 */
 .h5-bnav .it.raised { position: relative; }
 .h5-bnav .it.raised .bi img, .h5-bnav .it.raised .bi img.cu { width: 60px; height: 60px; margin: -35px 0 0; border-radius: 0; } /* 120×120，顶出导航栏 27px */
 .h5-bnav .it.raised .bi .ic { width: 34px; height: 34px; padding: 7px; margin-top: -18px; border-radius: 50%; background: var(--e-bottomnav-active); color: var(--e-bottomnav-bg); box-shadow: 0 2px 6px #0003; box-sizing: border-box; }
@@ -1188,6 +1190,8 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 /* 底部导航面板：两张缩略图（未选中 / 选中）右上角 ↺ 单独恢复 */
 .bn-hd { padding-right: 66px; }
 .bn-th { position: relative; display: inline-flex; flex: none; }
+.bn-pv { display: flex; flex-wrap: wrap; gap: 6px; }
+.bn-pv .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .bn-th .rb { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); color: var(--icon-2); box-shadow: 0 0 0 1px var(--border); z-index: 1; }
 .bn-th .rb .ic { width: 10px; height: 10px; }
 .bn-th .rb:hover { color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }

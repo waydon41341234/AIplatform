@@ -377,7 +377,7 @@ Object.assign(window.I18N, {
   'mp/bn-spec': ['图标 50×50（PNG 交付 @2x）', '圖示 50×50（PNG 交付 @2x）', 'Icons 50×50 (PNG @2x)', 'Biểu tượng 50×50 (PNG @2x)'],
   'mp/bn-spec-r': ['图标 50×50，中间凸起「分享赚钱」120×120', '圖示 50×50，中間凸起「分享賺錢」120×120', 'Icons 50×50, raised center 120×120', 'Biểu tượng 50×50, mục nổi giữa 120×120'],
   'mp/bn-spec-out': ['礼盒 100×100', '禮盒 100×100', 'gift box 100×100', 'hộp quà 100×100'],
-  'mp/bn-hint': ['点缩略图上传（PNG / SVG / APNG / AVIF / WebP），右上角 ↺ 恢复默认；点 ✦ 用 AI 生成这个入口；点画布上的导航名称可预览它的选中效果', '點縮圖上傳（PNG / SVG / APNG / AVIF / WebP），右上角 ↺ 恢復預設；點 ✦ 用 AI 生成這個入口；點畫布上的導航名稱可預覽它的選中效果', 'Click a thumbnail to upload (PNG / SVG / APNG / AVIF / WebP), ↺ restores the default, ✦ generates this entry with AI; click a label on the canvas to preview it as active', 'Nhấn ảnh nhỏ để tải lên (PNG / SVG / APNG / AVIF / WebP), ↺ khôi phục mặc định, ✦ tạo mục này bằng AI; nhấn tên trên khung xem để xem trạng thái đang chọn'],
+  'mp/bn-hint': ['点缩略图上传（PNG / SVG / APNG / AVIF / WebP），右上角 ↺ 恢复默认；点 ✦ 用 AI 生成这个入口；点画布上的导航名称或下方「预览选中」可预览它的选中效果', '點縮圖上傳（PNG / SVG / APNG / AVIF / WebP），右上角 ↺ 恢復預設；點 ✦ 用 AI 生成這個入口；點畫布上的導航名稱或下方「預覽選中」可預覽它的選中效果', 'Click a thumbnail to upload (PNG / SVG / APNG / AVIF / WebP), ↺ restores the default, ✦ generates this entry with AI; click a label on the canvas or use Preview as active below to see its active look', 'Nhấn ảnh nhỏ để tải lên (PNG / SVG / APNG / AVIF / WebP), ↺ khôi phục mặc định, ✦ tạo mục này bằng AI; nhấn tên trên khung xem hoặc dùng «Xem trạng thái đang chọn» bên dưới để xem trạng thái đang chọn'],
   'mp/bn-raised-note': ['「分享赚钱」用大图标凸出导航栏；隐藏它就没有凸起', '「分享賺錢」用大圖示凸出導航欄；隱藏它就沒有凸起', '“Share & earn” sticks out with a big icon; hiding it removes the raised item', '“Chia sẻ kiếm tiền” nổi lên với biểu tượng lớn; ẩn mục này thì không còn mục nổi'],
   'mp/bn-regular-note': ['5 个入口一样大，「分享赚钱」也按 50×50 显示', '5 個入口一樣大，「分享賺錢」也按 50×50 顯示', 'All 5 entries are the same size; “Share & earn” shows at 50×50', 'Cả 5 mục cùng cỡ; “Chia sẻ kiếm tiền” hiển thị 50×50'],
   'mp/bn-c-text': ['导航文字', '導航文字', 'Labels', 'Chữ điều hướng'],
@@ -430,5 +430,7 @@ Object.assign(window.I18N, {
   'ed/key-icon_tg_z': ['左侧栏图标', '左側欄圖示', 'Side menu icon', 'Biểu tượng menu bên'],
   'mp/ai-cost-one': ['只生成这 1 个图标 · 20 点', '只生成這 1 個圖示 · 20 點', 'Just this 1 icon · 20 credits', 'Chỉ 1 biểu tượng này · 20 điểm'],
   'mp/ai-one-ready': ['已生成。满意就点「采用」换上；不满意可重新生成。', '已生成。滿意就點「採用」換上；不滿意可重新生成。', 'Done. Tap Use to apply it, or generate again.', 'Đã tạo xong. Bấm Dùng để áp dụng, hoặc tạo lại.'],
+  'tx/note-bn': ['字号按 750 设计稿标注；颜色选「默认」跟随配色（未选中 / 选中各自一行，跟「颜色」页签同一个值）；字号太大放不下时画布上自动缩成一行', '字號按 750 設計稿標註；顏色選「預設」跟隨配色（未選中 / 選中各自一行，跟「顏色」頁籤同一個值）；字號太大放不下時畫布上自動縮成一行', 'Sizes are in 750 design units. "Default" follows the palette; inactive and active text each have their own row (same value as the Colors tab). Labels that no longer fit shrink to one line on the canvas.', 'Cỡ chữ theo bản 750; "Mặc định" theo bảng màu; chữ chưa chọn / đang chọn mỗi loại một dòng (cùng giá trị với thẻ Màu). Tên quá dài sẽ tự thu về một dòng trên khung xem.'],
+  'mp/bn-pv': ['预览选中', '預覽選中', 'Preview as active', 'Xem trạng thái đang chọn'],
   'mp/gm-bai-ref-c': ['；参考图主色约 {hex}', '；參考圖主色約 {hex}', '; reference main color about {hex}', '; màu chính ảnh tham chiếu khoảng {hex}'],
 });

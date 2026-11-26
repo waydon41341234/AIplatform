@@ -978,7 +978,7 @@
         <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
         ${txColors(id)}</div>`;
     }).join('');
-    return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t('tx/note')}</div></div>`;
+    return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t(b === 'bottomnav' ? 'tx/note-bn' : 'tx/note')}</div></div>`; // 底部导航有「选中」文字行，颜色可改，不能说「选中态文字颜色不变」
   }
   const txSet = (id, k, v) => {
     if (TX_EC[id] && k === 'c') {
@@ -1807,7 +1807,7 @@
         <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} aria-label="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} aria-label="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button><button class="ibtn ibtn-sm" data-act="pageReset" ${pageDirty() ? '' : 'disabled'} aria-label="${esc(t('ed/page-reset'))}">${ic('arrow-counter-clockwise')}</button>
         <button class="ibtn ibtn-sm warn ${n ? '' : 'is-ok'}" data-act="mPanel" data-arg="checks" aria-label="${esc(t('ed/checks-title'))}">${ic(n ? 'warning-circle-fill' : 'check-circle-fill')}${n ? `<i class="badge">${n}</i>` : ''}</button>
         <button class="btn btn-primary btn-sm" data-act="mPanel" data-arg="export">${ic('download-simple', 'ic-16')}<span class="ex-l">${t('ed/export')}</span></button></header>
-      <main class="med-canvas ${pc ? 'is-pc' : ''}" data-sk="med-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}
+      <main class="med-canvas ${pc ? 'is-pc' : ''} ${pc || E.D.hidden.bottomnav ? '' : 'has-bnav'}" data-sk="med-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}
         ${E.mpanel || pc ? '' : `<div class="med-login"><div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>`}
         ${E.mpanel || pc ? '' : `<button class="fab" data-act="mPanel" data-arg="colors" aria-label="${esc(t('ed/m-colors'))}">${ic('paint-brush-fill')}<i style="background:${E.D.theme.primary}"></i></button>`}${busyMask()}</main>
       <nav class="med-tools">${[['pages', 'squares-four-fill', 'ed/pages'], ['modules', 'layout-fill', 'ed/m-modules'], ['colors', 'palette-fill', 'ed/m-colors'], ['preview', 'eye-fill', 'ed/m-preview']].map(([id, i, k]) => `<button class="${E.mpanel === id ? 'is-on' : ''}" data-act="mPanel" data-arg="${id}">${ic(i)}${t(k)}</button>`).join('')}</nav>

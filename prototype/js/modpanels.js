@@ -237,8 +237,10 @@
         const hd = `<div class="gm-hd bn-hd"><span class="c1" title="${esc(t('mp/state-def'))}">${t('mp/gm-h-off')}</span><span class="c1" title="${esc(t('mp/state-act'))}">${t('mp/gm-h-on')}</span><span class="c2">${t('mp/gm-h-name')}</span></div>`;
         const rows = list('bottomnav', (it, i) => `${bnThumb(i, bnOffF(it, login))}${bnThumb(i, 'imgOn')}${nameCell('bottomnav', i)}<button class="ib-s tb-ai" data-act="iaOpenOne" data-arg="bottomnav|${i}" title="${esc(t('mp/ai-one'))}" aria-label="${esc(t('mp/ai-one'))}">${ic('sparkle-fill', 'ic-16')}</button>`);
         const r = M('bottomnav').style === 'raised';
+        // 画布预览哪个入口是选中态：面板里直接点选（手机上导航文字小、紧挨图标，不好点）
+        const ai = bnAct(), pv = `<div class="p-sec"><div class="lab">${t('mp/bn-pv')}</div><div class="bn-pv">${vis('bottomnav').map((it) => { const i = M('bottomnav').items.indexOf(it); return `<button class="chip ${i === ai ? 'is-on' : ''}" data-act="bnAct" data-arg="${i}">${esc(bnName(it, login))}</button>`; }).join('')}</div></div>`;
         const spec = `<div class="p-note">${ic('frame-corners', 'ic-16')}${t(r ? 'mp/bn-spec-r' : 'mp/bn-spec')}${login ? '' : ' · ' + t('mp/bn-spec-out')}</div>`;
-        return state + sec(t('mp/entries'), hd + rows + spec + note('mp/bn-hint') + iconBtns('bottomnav'), cnt('bottomnav')) + (x.txtSec ? x.txtSec('bottomnav') : '');
+        return state + sec(t('mp/entries'), hd + rows + spec + note('mp/bn-hint') + iconBtns('bottomnav'), cnt('bottomnav')) + pv + (x.txtSec ? x.txtSec('bottomnav') : '');
       },
       layout: () => sec(t('mp/style-bottomnav'), seg([{ v: 'regular', label: t('mp/bn-regular') }, { v: 'raised', label: t('mp/bn-raised') }], M('bottomnav').style, 'mpSet_bottomnav_style') + note(M('bottomnav').style === 'raised' ? 'mp/bn-raised-note' : 'mp/bn-regular-note'))
         + px('bottomnav', 'h', [98, 120, 140], { title: t('mp/height') }),
@@ -643,6 +645,23 @@
       <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
   }
   const bnavCls = () => `h-${M('bottomnav').h}`;
+  // 导航文字放不下（字号调大 / 越南文长名 / 98 矮栏）时不掉出导航栏：改成一行，字号在画布上最多缩到设定的 75%（不小于 8px），
+  // 还放不下就省略号；鼠标悬停看全名。只改画布显示，面板里的字号设定不变
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('.h5-bnav').forEach((bar) => {
+      const bb = bar.getBoundingClientRect(); if (!bb.height) return;
+      const s = bb.height / bar.offsetHeight || 1;
+      bar.querySelectorAll('.lb').forEach((lb) => {
+        lb.removeAttribute('style'); lb.removeAttribute('title');
+        const over = () => lb.getBoundingClientRect().bottom > bb.bottom + 0.5 * s;
+        if (!over()) return;
+        Object.assign(lb.style, { display: 'block', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }); lb.title = lb.textContent;
+        const fs0 = parseFloat(getComputedStyle(lb).fontSize), min = Math.max(8, Math.floor(fs0 * 0.75)); let fs = fs0;
+        while ((over() || lb.scrollWidth > lb.clientWidth) && fs > min) { fs -= 1; lb.style.fontSize = fs + 'px'; }
+        while (over() && fs > 8) { fs -= 1; lb.style.fontSize = fs + 'px'; }
+      });
+    });
+  });
   function side() {
     const m = M('sidebar');
     const head = m.head && m.headOn ? `<div class="hd" style="filter:${m.head}"></div>` : '';
@@ -716,7 +735,8 @@
           const { b: mb, i: mi, f: mf } = target; const x = X();
           x.commit(() => { x.E.D.m[mb].items[mi][mf] = rd.result; });
           if (x.E.mpanel === 'iconmenu') x.E.mpanel = 'module';
-          window.toast(t('mp/icon-replaced', { n: nm(x.E.D.m[mb].items[mi]) }), x.undoOpt(4000));
+          const mit = x.E.D.m[mb].items[mi];
+          window.toast(t('mp/icon-replaced', { n: mb === 'bottomnav' ? bnName(mit, mf === 'imgOut' ? false : bnLogin()) : nm(mit) }), x.undoOpt(4000));
           window.render();
         };
         rd.readAsDataURL(file);
@@ -767,13 +787,13 @@
   const RMAP = {
     notice: (it) => ({ 'mp/nt-i-spk': 'ai-notice/spk', 'mp/nt-i-mail': 'ai-notice/mail' })[it.k],
     midnav: (it) => ({ mid0: 'ai-acct/dep', mid1: 'ai-acct/vip', mid2: 'ai-acct/share', mid3: 'ai-acct/more' })[baseOf(it.def)],
-    bottomnav: (it) => ({ bi0: 'ai-bnav/home', bi1: 'ai-bnav/promo', bi2: 'ai-bnav/bonus', bi3: 'ai-bnav/invite', bi4: 'ai-bnav/mine' })[baseOf(it.def)],
+    bottomnav: (it, f) => (baseOf(it.def) === 'bi3' && f !== 'imgOut' && (f === 'img' || bnLogin()) ? null : { bi0: 'ai-bnav/home', bi1: 'ai-bnav/promo', bi2: 'ai-bnav/bonus', bi3: 'ai-bnav/invite', bi4: 'ai-bnav/mine' }[baseOf(it.def)]),
     gamemenu: (it) => { const m = /^mp\/gm-n-(\d+)$/.exec(it.k || ''); return m ? 'ai-gm/g' + m[1] : null; },
   };
   // 某个入口在某款式下的图：有真实风格图就用图（底部导航默认态用 -off 灰图），没有就用对应矢量款式画
   function styleSrc(b, it, style, color, f) {
     if (/^r-/.test(style)) {
-      const st = style.slice(2); const r = RMAP[b] && RMAP[b](it);
+      const st = style.slice(2); const r = RMAP[b] && RMAP[b](it, f);
       if (r) return 'assets/' + r + '-' + st + (b === 'bottomnav' && (f === 'img' || (f === 'imgOut' && !bnBig(it))) ? '-off' : '') + '.webp';
       const [vs, c] = R_FALL[st]; return aiSvg(it.i || 'sparkle-fill', vs, c || color);
     }
@@ -902,9 +922,12 @@
     window.toast(t('mp/ai-adopted', { n }), x.undoOpt());
   };
   const failTile = (cls = '') => `<div class="ia-fail ${cls}">${ic('x-circle-fill')}</div>`;
+  // 底部导航：名称和缩略图跟当前登录态走（未登录第 4 个是「注册」、优惠是动效礼盒）
+  const iaNm = (b, it) => (b === 'bottomnav' ? bnName(it) : nm(it));
+  const iaTh = (b, it) => (b === 'bottomnav' ? bnSrc(it, bnOffF(it)) : it.img || it.def);
   function aiPanel() {
     const x = X(); const ia = x.E.iconAi; const b = ia.b; const its = M(b).items; const all = jobs(ia); const m = Math.max(0, all.length - 1);
-    const head = `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="iaClose" title="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${ia.one != null && its[ia.one] ? t('mp/ai-title-one', { mod: modTitle(b), n: esc(nm(its[ia.one])) }) : t('mp/ai-title', { mod: modTitle(b) })}</span></h2>`;
+    const head = `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="iaClose" title="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${ia.one != null && its[ia.one] ? t('mp/ai-title-one', { mod: modTitle(b), n: esc(iaNm(b, its[ia.one])) }) : t('mp/ai-title', { mod: modTitle(b) })}</span></h2>`;
     const credits = `<div class="ia-bal">${t('confirm/balance-label')} · ${t('confirm/points', { n: window.num(S().credits || 0) })}</div>`;
     let body = '', foot = '';
     if (ia.stage === 'setup') {
@@ -916,7 +939,7 @@
         <div class="p-note">${ia.fromRef ? ic('sparkle-fill', 'ic-16') + t('ed/tbai-prompt-tip2') : t('ed/tbai-box-tip')}</div>`;
       body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${styleSrc(b, pv, s, x.E.D.theme.primary, 'imgOn')}" alt=""><span>${styleName(s)}</span></button>`).join('')}</div>`)
         + sec(t('ed/tbai-sprompt'), box)
-        + (ia.one != null && its[ia.one] ? (() => { const it = its[ia.one]; return `<div class="p-sec"><div class="lab">${t('mp/ai-one-lab')}</div><div class="ia-list"><div class="ia-row"><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-top:8px" data-act="iaToSet">${ic('squares-four', 'ic-16')}${t('mp/ai-to-set')}</button></div>`; })() : `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`)
+        + (ia.one != null && its[ia.one] ? (() => { const it = its[ia.one]; return `<div class="p-sec"><div class="lab">${t('mp/ai-one-lab')}</div><div class="ia-list"><div class="ia-row"><span class="thumb sq">${iaTh(b, it) ? img(iaTh(b, it)) : ic(it.i || 'plus')}</span><span class="nm">${esc(iaNm(b, it))}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-top:8px" data-act="iaToSet">${ic('squares-four', 'ic-16')}${t('mp/ai-to-set')}</button></div>`; })() : `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${iaTh(b, it) ? img(iaTh(b, it)) : ic(it.i || 'plus')}</span><span class="nm">${esc(iaNm(b, it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`)
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${m ? t('mp/ai-cost', { m, c: m * 20 }) : t('mp/ai-cost-one')}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
         : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;
@@ -929,14 +952,14 @@
     } else if (ia.stage === 'sampleOk') {
       const k0 = all[0]; const it0 = its[+k0.split('|')[0]];
       // 只生成一个图标（m = 0）：没有「其余」这一步，样板满意直接采用
-      body = `<div class="ia-big"><img class="ia-sample" src="${candSrc(ia, k0)}" alt=""><b>${esc(nm(it0))}</b>${m ? `<span class="caption faint">${t('rec/sample-tag', { n: all.length })}</span>` : ''}</div><div class="p-note">${m ? t('rec/sample-ready', { m, c: m * 20 }) : t('mp/ai-one-ready')}</div>${credits}`;
+      body = `<div class="ia-big"><img class="ia-sample" src="${candSrc(ia, k0)}" alt=""><b>${esc(iaNm(b, it0))}</b>${m ? `<span class="caption faint">${t('rec/sample-tag', { n: all.length })}</span>` : ''}</div><div class="p-note">${m ? t('rec/sample-ready', { m, c: m * 20 }) : t('mp/ai-one-ready')}</div>${credits}`;
       foot = `<button class="btn btn-primary btn-block" data-act="${m ? 'iaRest' : 'iaAdopt'}">${m ? t('rec/continue', { m }) : ic('check', 'ic-16') + t('ed/tbai-use')}</button><button class="btn btn-secondary btn-block" data-act="iaSample">${t('rec/redo-sample-cost', { c: 20 })}</button>`;
     } else {
       const rows = [...new Set(all.map((k) => k.split('|')[0]))].map((i) => {
         const it = its[+i]; const ks = all.filter((k) => k.split('|')[0] === i);
         const cell = (k) => ia.cands[k] ? `<span class="ia-c ${ia.busy[k] ? 'skeleton' : ''}">${ia.busy[k] ? '' : `<img src="${candSrc(ia, k)}" alt="">`}</span>` : ia.failed[k] ? `<span class="ia-c is-fail">${ic('x-circle-fill')}</span>` : `<span class="ia-c skeleton"></span>`;
         const redo = ia.stage === 'adopt' ? ks.filter((k) => ia.cands[k] || ia.failed[k]).map((k) => `<button class="btn btn-ghost btn-sm" data-act="iaRedo" data-arg="${k}">${t('mp/ai-redo')}</button>`).slice(0, 1).join('') : '';
-        return `<div class="ia-res"><span class="nm">${esc(nm(it))}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span>${ic('arrow-right', 'ic-16 faint')}${ks.map(cell).join('')}${redo}</div>`;
+        return `<div class="ia-res"><span class="nm">${esc(iaNm(b, it))}</span><span class="thumb sq">${iaTh(b, it) ? img(iaTh(b, it)) : ic(it.i || 'plus')}</span>${ic('arrow-right', 'ic-16 faint')}${ks.map(cell).join('')}${redo}</div>`;
       }).join('');
       const nf = Object.keys(ia.failed).length;
       if (ia.stage === 'rest') {
@@ -962,8 +985,7 @@
     }
     bxIn.click(); return false;
   };
-  function bxMatch(b, base) {
-    const its = M(b).items; const names = its.map(nm);
+  function bxMatch(b, base, names = M(b).items.map(nm)) {
     let i = names.indexOf(base);
     if (i < 0) i = names.findIndex((n) => n.toLowerCase() === base.toLowerCase());
     if (i < 0) i = names.findIndex((n) => n && (base.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(base.toLowerCase())));
@@ -980,6 +1002,14 @@
       if (on && (b === 'bottomnav' || b === 'gamemenu')) row.f = 'imgOn';
       if (row.bad) { doneOne(); return; }
       row.target = bxMatch(b, base);
+      if (b === 'bottomnav') {
+        // 底部导航：先按当前登录态的名称配（未登录「注册」→ 未登录图 imgOut），再按另一种状态的名称配
+        const its = M(b).items, login = bnLogin(), outNm = (it) => (bnHasOut(it) && (it.outN || it.outK) ? bnName(it, false) : '');
+        const first = login ? its.map(nm) : its.map((it) => outNm(it) || nm(it)), other = login ? its.map(outNm) : its.map((it) => (outNm(it) ? nm(it) : ''));
+        let i = bxMatch(b, base, first), out = !login && i >= 0 && bnOffF(its[i], false) === 'imgOut';
+        if (i < 0) { i = bxMatch(b, base, other); out = login && i >= 0; }
+        row.target = i; if (i >= 0 && out && row.f === 'img') row.f = 'imgOut';
+      }
       const rd = new FileReader();
       rd.onload = () => { row.src = rd.result; const im = new Image(); im.onload = () => { row.w = im.naturalWidth; row.h = im.naturalHeight; doneOne(); }; im.onerror = () => { row.bad = true; row.target = -1; doneOne(); }; im.src = rd.result; };
       rd.onerror = () => { row.bad = true; doneOne(); };
