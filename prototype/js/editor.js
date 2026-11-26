@@ -298,7 +298,7 @@
     const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
     // 经典蓝白：Logo 图 + 币种切换 + 带文字的搜索
     const search = it.search ? `<span class="srch-cl"><img src="assets/classic/search.png" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
-    const cur = it.cur ? `<img class="cur-cl" src="assets/classic/cur.png" alt="CNY">` : '';
+    const cur = it.cur && !D.login ? `<img class="cur-cl" src="assets/classic/cur.png" alt="CNY">` : '';
     const logo = it.logo ? `<span class="lg lg-cl" style="filter:${tb.logoF}"><img src="assets/classic/logo.png" alt="GAMING"></span>` : '';
     // 未登录：顶部栏只留币种切换，不显示余额框 / 登录注册 / 头像（Waydon 2026-11-26，登录入口在帐户栏）
     const auth = it.auth && D.login ? balHtml() : ''; // 头像不放顶部栏（Waydon 2026-11-26）
@@ -543,13 +543,13 @@
     const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
     const searchRow = row('search', `<span class="thumb sq"><img src="assets/classic/search.png" alt=""></span>`, t('ed/tb-search'), '56×49');
     const curRow = row('cur', `<span class="thumb cur"><img src="assets/classic/cur.png" alt=""></span>`, t('ed/tb-cur'), '142×46');
-    const entries = curRow + (D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow);
+    const entries = (D.login ? '' : curRow) + (D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow);
     const pos = `<div class="tb-item tb-pos"><span class="tx"><b>${t('ed/side-pos')}</b></span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>`;
     const auth = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic(D.login ? 'wallet-fill' : 'sign-in-fill')}</span><span class="tx"><b class="ellipsis">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</b></span>${eye('auth')}</div>`;
     return `<div class="p-sec"><div class="lab">${t('ed/tb-state')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}</div>
       <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${row('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/classic/logo.png" alt=""></span>`, 'Logo', '230×76 · PNG / SVG', false)}</div>${ups(['logo'])}</div>
       <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${entries}${pos}</div>${ups(['cur', 'side', 'search'])}</div>
-      ${D.login ? `<div class="p-sec"><div class="tb-group">${auth}</div><div class="p-note">${t('ed/tb-balance-note')}</div></div>` : `<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/tb-out-note')}</div>`}
+      ${D.login ? `<div class="p-sec"><div class="tb-group">${auth}</div><div class="p-note">${t('ed/tb-balance-note')}</div><div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/tb-in-note')}</div></div>` : `<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/tb-out-note')}</div>`}
       <div class="p-note">${t('ed/tb-del-note')}</div><div class="p-note">${t('ed/tb-fixed')}</div>`;
   }
   function tbLayout() {

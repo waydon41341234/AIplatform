@@ -427,6 +427,7 @@ window.I18N = {
   'mod/notice': ['公告栏', '公告欄', 'Notice bar', 'Thanh thông báo'],
   'mod/account': ['帐户栏', '帳戶欄', 'Account bar', 'Thanh tài khoản'],
   'ed/tb-out-note': ['未登录时顶部栏只显示币种切换，不显示余额框；登录 / 注册入口在帐户栏。', '未登入時頂部欄只顯示幣種切換，不顯示餘額框；登入 / 註冊入口在帳戶欄。', 'Signed out, the top bar shows only the currency switch (no balance box). Sign in / register lives in the account bar.', 'Khi chưa đăng nhập, thanh trên chỉ hiện chuyển tiền tệ, không có ô số dư. Đăng nhập / đăng ký nằm ở thanh tài khoản.'],
+  'ed/tb-in-note': ['已登录时顶部栏不显示币种切换，也不放头像。', '已登入時頂部欄不顯示幣種切換，也不放頭像。', 'Signed in, the top bar hides the currency switch and avatar.', 'Khi đã đăng nhập, thanh trên ẩn chuyển tiền tệ và ảnh đại diện.'],
   'ed/tb-cur': ['币种切换', '幣種切換', 'Currency switch', 'Chuyển tiền tệ'],
   'mp/nt-text': ['公告内容', '公告內容', 'Notice text', 'Nội dung thông báo'],
   'mp/nt-hl': ['“引号”里的字和数字会自动用强调色', '「引號」裡的字和數字會自動用強調色', 'Text in “quotes” and numbers use accent colors automatically', 'Chữ trong “ngoặc kép” và số tự dùng màu nhấn'],
