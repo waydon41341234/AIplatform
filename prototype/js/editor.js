@@ -42,7 +42,9 @@
   const TB_KEY = { bg: 'bs_topnav_bg', side: 'lead' };
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
   // Banner AI 候选 = Figma generate image 生成的 4 种默认风格（2026-11-26，assets/ai-banner/）
-  const CAND_F = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
+  const CAND_W = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
+  // AI 候选也按当前样式出对应比例的图（大 1500×680、小 320×202，其它 1020×300）
+  const candList = () => (E.D.banner.size === 'large' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/large-' + n + '.webp') : E.D.banner.size === 'small' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/small-' + n + '.webp') : CAND_W);
   const BNAV_PX = { 98: 49, 110: 55, 120: 60, 140: 70 };
   const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
@@ -224,7 +226,7 @@
     }
     if (inPage('banner')) {
       const sz = BANNER[D.banner.size]; let bad = 0;
-      D.banner.slides.forEach((s, i) => { if (!s.hid && (s.w !== sz.w || s.h !== sz.h)) { bad++; req.push({ id: 'banner' + i, mod: 'banner', act: 'openResize', arg: 'slide' + i, name: 'Banner', text: t('ed/chk-banner', { i: i + 1, w: sz.w, h: sz.h }) }); } });
+      D.banner.slides.forEach((s, i) => { const d = slideDim(s, sz); if (!s.hid && (d.w !== sz.w || d.h !== sz.h)) { bad++; req.push({ id: 'banner' + i, mod: 'banner', act: 'openResize', arg: 'slide' + i, name: 'Banner', text: t('ed/chk-banner', { i: i + 1, w: sz.w, h: sz.h }) }); } });
       if (!bad) ok.push({ id: 'banner', mod: 'banner', name: 'Banner', text: 'Banner' });
     }
     if (!D.hidden.bottomnav) {
@@ -377,7 +379,7 @@
   const visIdx = () => E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
   function fixSlide() { const v = visIdx(); if (!v.includes(E.slide)) E.slide = v.find((i) => i > E.slide) ?? v[0] ?? 0; }
   function slideF(i) {
-    if (E.ai && E.ai.cand != null && i === E.slide) return CAND_F[E.ai.cand];
+    if (E.ai && E.ai.cand != null && i === E.slide) return candList()[E.ai.cand];
     return (E.D.banner.slides[i] || {}).f || 'none';
   }
   // 轮播图背景（画布 / PC / 面板缩略图共用）：真实图 'img:' 或滤镜模拟；调整尺寸选「留边」时整图放进去、空白用底色，「裁切」按框的位置
@@ -389,7 +391,11 @@
     else if (f === s.f && s.fit === 'crop' && s.x != null) css += `;background-position:${Math.round(s.x * 100)}% ${Math.round(s.y * 100)}%`;
     return css;
   }
-  const slideStyle = (i) => slideBg(E.D.banner.slides[i], slideF(i), E.D.banner.size === 'small' ? SMALL_DEF[i % 3] : E.D.banner.size === 'large' ? LARGE_DEF[i % 3] : null);
+  // 当前样式的默认图（Waydon 2026-11-26 16:06：什么样式就展示什么尺寸的默认 Banner）；没上传自己的图 = 用默认图 = 尺寸自动符合
+  const defImg = (i, k = E.D.banner.size) => (k === 'small' ? SMALL_DEF[i % 3] : k === 'large' ? LARGE_DEF[i % 3] : null);
+  const ownImg = (s) => /^img:/.test((s && s.f) || '');
+  const slideDim = (s, sz) => (ownImg(s) ? { w: s.w, h: s.h } : { w: sz.w, h: sz.h });
+  const slideStyle = (i) => slideBg(E.D.banner.slides[i], slideF(i), defImg(i));
   function h5Banner() {
     const B = E.D.banner, sz = BANNER[B.size];
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
@@ -567,16 +573,16 @@
   // Banner 样式（Waydon 2026-11-26：大/通用/中/小 作为样式给业主切换，只是前端显示尺寸不同，上传统一 1020×300）
   function bannerStyles(cur) {
     const i0 = visIdx()[0] ?? 0;
-    return `<div class="bs-opts">${SIZES.map((k) => { const b = BANNER[k]; const prev = slideBg(E.D.banner.slides[i0], slideF(i0), k === 'small' ? SMALL_DEF[i0 % 3] : k === 'large' ? LARGE_DEF[i0 % 3] : null); const w = Math.round(b.dw / 750 * 64), h = Math.round(b.dh / 750 * 64); return `<button class="bs-opt ${cur === k ? 'is-on' : ''}" data-act="bannerSize" data-arg="${k}" title="${esc(t('ed/banner-' + k) + ' · ' + b.dw + '×' + b.dh)}"><span class="bs-prev"><i style="width:${w}px;height:${h}px;${prev}"></i></span><b>${t('ed/banner-' + k)}</b><small>${b.dw}×${b.dh}</small></button>`; }).join('')}</div>`;
+    return `<div class="bs-opts">${SIZES.map((k) => { const b = BANNER[k]; const prev = slideBg(E.D.banner.slides[i0], slideF(i0), defImg(i0, k)); const w = Math.round(b.dw / 750 * 64), h = Math.round(b.dh / 750 * 64); return `<button class="bs-opt ${cur === k ? 'is-on' : ''}" data-act="bannerSize" data-arg="${k}" title="${esc(t('ed/banner-' + k) + ' · ' + b.dw + '×' + b.dh)}"><span class="bs-prev"><i style="width:${w}px;height:${h}px;${prev}"></i></span><b>${t('ed/banner-' + k)}</b><small>${b.dw}×${b.dh}</small></button>`; }).join('')}</div>`;
   }
   function bannerContent() {
     const B = E.D.banner, sz = BANNER[B.size];
-    const spLine = (s, i) => (s.w !== sz.w || s.h !== sz.h ? `<button class="warn-link" data-act="openResize" data-arg="slide${i}" data-stop>${ic('warning-circle-fill', 'ic-16')}${t('ed/slide-bad', { w: s.w, h: s.h })}</button>` : `${s.w}×${s.h}`);
+    const spLine = (s0, i) => { const s = slideDim(s0, sz); return (s.w !== sz.w || s.h !== sz.h ? `<button class="warn-link" data-act="openResize" data-arg="slide${i}" data-stop>${ic('warning-circle-fill', 'ic-16')}${t('ed/slide-bad', { w: s.w, h: s.h })}</button>` : `${s.w}×${s.h}`); };
     const hidTag = (s) => (s.hid ? `<span class="pill-tag is-gray">${t('ed/slide-hidden')}</span>` : '');
     // 行内眼睛（跟其它列表模块一致）；最后一张可见的不能隐藏
     const vis = visIdx();
     const eye = (s, i) => { const lastVis = !s.hid && vis.length <= 1; return `<button class="eye ${lastVis ? 'is-off' : ''}" data-act="amToggle" data-arg="slide${i}" data-stop ${lastVis ? 'disabled' : ''} title="${esc(t(lastVis ? 'ed/slide-keep-one' : s.hid ? 'ed/am-show' : 'ed/am-hide'))}" aria-label="${esc(t(s.hid ? 'ed/am-show' : 'ed/am-hide'))}">${ic(s.hid ? 'eye-slash-fill' : 'eye-fill', 'ic-16')}</button>`; };
-    const thumb = (i) => `<span class="thumb" style="${slideBg(B.slides[i])}"></span>`;
+    const thumb = (i) => `<span class="thumb" style="${slideBg(B.slides[i], null, defImg(i))}"></span>`;
     const slides = B.slides.map((s, i) => {
       const grip = `<span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>`;
       if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })} · ${t('ed/previewing-slide')}</div><div class="sp">${spLine(s, i)}${hidTag(s)}</div></span>${eye(s, i)}${moreBtn('slide' + i)}</div>
@@ -642,7 +648,7 @@
     let cands = '';
     if (a.stage === 'generating') cands = `<div class="cands">${[0, 1, 2, 3].map(() => '<div class="cand skeleton"></div>').join('')}</div><div class="rec-note">${ic('clock', 'ic-16')}${t('rec/generating')}</div>`;
     else if (a.stage === 'failed') cands = `<div class="cands">${[0, 1, 2, 3].map(() => `<div class="cand is-fail">${ic('x-circle-fill')}</div>`).join('')}</div><div class="ia-msg is-err">${ic('warning-circle-fill', 'ic-16')}${t('ed/ai-failed')}</div><div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm" data-act="aiGen">${t('rec/retry', { c: 20 })}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button></div>`;
-    else if (a.stage === 'cands') cands = `<div class="cands">${CAND_F.map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="${window.fxStyle(f)}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}</button>`).join('')}</div>
+    else if (a.stage === 'cands') cands = `<div class="cands">${candList().map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="${window.fxStyle(f)}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}</button>`).join('')}</div>
         <div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm ${a.cand == null ? 'is-disabled' : ''}" data-act="adoptCand">${t('ed/adopt')}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button><button class="btn btn-outline btn-sm" data-act="aiGen">${ic('clock-counter-clockwise', 'ic-16')}${t('rec/regenerate-cost', { c: 20 })}</button></div><div class="p-note">${t('ed/ai-note')}</div>`;
     const ref = window.refSlot ? window.refSlot(a.refSt, 'edRef') : '';
     return `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="closeAi" title="${esc(t('ed/keep-current'))}">${ic('caret-left')}</button>${t('ed/ai-title')}</h2>
@@ -1497,7 +1503,7 @@
   A.pickCand = (i) => { E.ai.cand = +i; };
   A.adoptCand = () => {
     const a = E.ai; if (a.cand == null) return false;
-    const slot = 'slide' + E.slide; const prev = getAsset(slot); const f = CAND_F[a.cand];
+    const slot = 'slide' + E.slide; const prev = getAsset(slot); const f = candList()[a.cand];
     const sz = BANNER[E.D.banner.size]; commit(() => { setAsset(slot, { f, w: sz.w, h: sz.h }); }); // AI 图按规格出，尺寸提醒随之消失
     E.ai = null; E.replaced = { slot, prev };
     if (!E.projAssets.some((x) => x.f === f)) E.projAssets.push({ f, name: 'AI · ' + (E.projAssets.length + 1) });
