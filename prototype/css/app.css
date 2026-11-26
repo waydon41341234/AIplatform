@@ -664,3 +664,6 @@ html[lang="vi"] .wb-full .vw-acts.n3 .btn:nth-child(3) { grid-column: 1 / -1; }
 .tpl-th.is-soon { display: flex; align-items: center; justify-content: center; }
 .tpl-prev .tpl-real { display: block; width: 100%; height: auto; }
 .tpl-prev:has(.tpl-real) { background: #fff; }
+
+/* 项目封面用模板缩略图，顶部对齐 */
+.cover.is-tplcov > img { object-fit: cover; object-position: top center; }
