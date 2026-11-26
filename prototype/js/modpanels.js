@@ -319,10 +319,25 @@
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 70" width="300" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect x="1" y="1" width="148" height="68" rx="12" fill="url(#g)"/>${hl}${glow}${line ? `<rect x="1.5" y="1.5" width="147" height="67" rx="11.5" fill="none" stroke="${line}" stroke-width="${st === 'festive' || st === 'blackgold' ? 2 : 1}"/>` : ''}</svg>`;
     return 'img:data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg).replace(/\(/g, '%28').replace(/\)/g, '%29'); // 括号也转义，放进 CSS url() 才不会断
   }
-  const gmBai = () => { const E = X().E; return (E.gmBai = E.gmBai || { style: 'glossy', prompt: t('mp/gm-bai-p-glossy'), stage: 'setup' }); };
+  const gmBai = () => { const E = X().E; return (E.gmBai = E.gmBai || { style: 'glossy', prompt: t('mp/gm-bai-p-glossy'), stage: 'setup', model: 'gpt', refSt: null }); };
+  // 参考图 + 模型（跟图标 AI / 顶部栏 AI 同一套输入框）：上传参考图后反推款式和提示词（主色写进提示词）
+  A.gmBaiModel = (v) => { gmBai().model = v; S().menu = null; };
+  A.gmBaiRefPick = () => { const a = gmBai(); if (a.stage === 'busy') return false; window.pickImage({ accept: window.IMG_ACCEPT, maxMB: 10 }, (src, file) => {
+    if (file && !window.imgOk(file)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
+    a.refSt = { uploading: true, pct: 60 }; a.analyzing = true; window.render();
+    window.aiRefRead(src, ['', ''], (res) => {
+      if (X().E.gmBai !== a) return; a.analyzing = false;
+      if (!res) { a.refSt = null; window.toast(t('mp/icon-bad'), { info: true }); window.render(); return; }
+      const st = GMB_ST.includes(res.style) ? res.style : 'glossy';
+      a.refSt = { src, name: file ? file.name : '' }; a.style = st; a.prompt = t('mp/gm-bai-p-' + st) + t('mp/gm-bai-ref-c', { hex: res.hex }); a.fromRef = true; a.stage = 'setup'; window.render();
+    });
+  }); return false; };
+  A.gmBaiRefRm = () => { const a = gmBai(); a.refSt = null; a.analyzing = false; a.fromRef = false; a.prompt = t('mp/gm-bai-p-' + a.style); };
+  A.gmBaiRefCancel = () => A.gmBaiRefRm();
+  A.gmBaiRefView = () => false;
   A.gmBaiOpen = () => { const E = X().E; S().menu = null; E.tab = 'content'; gmBai(); E.gmBaiOpen = true; E.tbAiFocus = '.gmbai'; };
   A.gmBaiClose = () => { X().E.gmBaiOpen = false; };
-  A.gmBaiStyle = (v) => { const a = gmBai(); if (a.stage === 'busy') return false; a.style = v; a.prompt = t('mp/gm-bai-p-' + v); a.stage = 'setup'; };
+  A.gmBaiStyle = (v) => { const a = gmBai(); if (a.stage === 'busy') return false; a.style = v; a.prompt = t('mp/gm-bai-p-' + v); a.fromRef = false; a.stage = 'setup'; };
   A.gmBaiGen = () => {
     const x = X(), a = gmBai(); if (a.stage === 'busy' || !(a.prompt || '').trim()) return false;
     if (!x.afford(20)) { x.topup(); return false; }
@@ -340,10 +355,12 @@
     const x = X(), a = gmBai(), busy = a.stage === 'busy', empty = !(a.prompt || '').trim(), pc = x.liveTheme().th.primary;
     const pair = (st) => `<i style="${window.fxStyle(gmBtnSvg(st, false, pc))}"></i><i style="${window.fxStyle(gmBtnSvg(st, true, pc))}"></i>`;
     const tiles = `<div class="tbai-opts gmbai-opts">${GMB_ST.map((v) => `<button class="tbai-opt ${a.style === v ? 'is-on' : ''}" data-act="gmBaiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
-    const box = `<div class="c-box tbai-box"><div class="c-input"><textarea rows="3" maxlength="300" data-gmbaiprompt placeholder="${esc(t('mp/gm-bai-ph'))}" ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea></div>
-      <div class="c-tools"><div class="c-opts"></div>${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="gmBaiGen" title="${esc(t('ed/tbai-gen', { n: 20 }))}">${ic('sparkle-fill')}20${ic('arrow-up')}</button>`}</div></div>`;
+    const model = a.model || 'gpt', mname = model === 'gemini' ? 'Gemini' : 'GPT Image';
+    const mMenu = S().menu === 'gmbai-model' ? `<div class="menu c-menu tbai-mmenu">${['gpt', 'gemini'].map((m) => `<button class="menu-item model-item ${model === m ? 'is-on' : ''}" data-act="gmBaiModel" data-arg="${m}">${(window.MODEL_LOGO || {})[m] || ''}<span><div class="nm">${m === 'gemini' ? 'Gemini' : 'GPT Image'}</div><div class="ds">${m === 'gpt' ? 'Sunburst Flare' : 'Nano Banana Pro'}</div></span></button>`).join('')}</div>` : '';
+    const box = `<div class="c-box tbai-box"><div class="c-input">${window.refSlot(a.refSt, 'gmBaiRef')}<textarea rows="3" maxlength="300" data-gmbaiprompt placeholder="${esc(a.analyzing ? t('ed/tbai-analyzing') : t('mp/gm-bai-ph'))}" ${busy || a.analyzing ? 'disabled' : ''}>${esc(a.analyzing ? '' : a.prompt || '')}</textarea></div>
+      <div class="c-tools"><div class="c-opts"><div class="rel"><button class="c-opt ${S().menu === 'gmbai-model' ? 'is-open' : ''}" data-act="menu:toggle" data-arg="gmbai-model" ${busy ? 'disabled' : ''}>${(window.MODEL_LOGO || {})[model] || ''}<span class="ellipsis">${mname}</span>${ic('caret-down', 'chev')}</button>${mMenu}</div></div>${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="gmBaiGen" title="${esc(t('ed/tbai-gen', { n: 20 }))}">${ic('sparkle-fill')}20${ic('arrow-up')}</button>`}</div></div>`;
     const res = a.stage === 'done' && a.res ? `<div class="tbai-res"><span class="pv gmbai-pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="gmBaiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="gmBaiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n: 20 })}</button></div></div>` : '';
-    return `<div class="gmbai tblogo"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('mp/gm-bai-title')}<span class="tbai-hd"><button class="ib-s" data-act="gmBaiClose" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>${tiles}${box}${res}<div class="p-note">${t('mp/gm-bai-note')}</div></div>`;
+    return `<div class="gmbai tblogo"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('mp/gm-bai-title')}<span class="tbai-hd"><button class="ib-s" data-act="gmBaiClose" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>${tiles}${box}${a.fromRef ? `<div class="p-note">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt-tip2')}</div>` : ''}${res}<div class="p-note">${t('mp/gm-bai-note')}</div></div>`;
   }
   // 按钮底图两行：缩略图（点一下上传）· 名称 / 规格 · ✦ AI · 恢复 · ⋯
   function gmBtnSec() {
@@ -763,7 +780,7 @@
   function candSrc(ia, key) { const c = ia.cands[key]; if (!c) return ''; const [i, f] = key.split('|'); return styleSrc(ia.b, M(ia.b).items[+i], c.style, c.color, f); }
   A.iaOpen = (b) => {
     const x = X(); const its = M(b).items;
-    x.E.iconAi = { b, style: 'r-glossy', extra: window.aiPreset ? window.aiPreset('glossy') : '', model: 'gpt', refSt: null, picks: its.map((it) => isReq(b, it) || b === 'gamemenu' || (b === 'midnav' && M(b).mode === 'conf')), stage: 'setup', pct: 0, cands: {}, failed: {}, busy: {}, done: 0, attempt: 0 };
+    x.E.iconAi = { b, style: 'r-glossy', extra: window.aiPreset ? window.aiPreset('glossy') : '', model: 'gpt', refSt: null, picks: its.map((it) => isReq(b, it) || (b === 'gamemenu' && !!it.on) || (b === 'midnav' && M(b).mode === 'conf')), stage: 'setup', pct: 0, cands: {}, failed: {}, busy: {}, done: 0, attempt: 0 };
     x.E.picker = null; S().menu = null; if (x.mobileEd()) x.E.mpanel = 'module';
   };
   const iaStop = () => { const ia = X().E.iconAi; if (ia && ia.timer) { clearInterval(ia.timer); clearTimeout(ia.timer); ia.timer = null; } };
@@ -872,7 +889,7 @@
       body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${styleSrc(b, pv, s, x.E.D.theme.primary, 'imgOn')}" alt=""><span>${styleName(s)}</span></button>`).join('')}</div>`)
         + sec(t('ed/tbai-sprompt'), box)
         + (ia.one != null && its[ia.one] ? (() => { const it = its[ia.one]; return `<div class="p-sec"><div class="lab">${t('mp/ai-one-lab')}</div><div class="ia-list"><div class="ia-row"><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-top:8px" data-act="iaToSet">${ic('squares-four', 'ic-16')}${t('mp/ai-to-set')}</button></div>`; })() : `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`)
-        + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
+        + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${m ? t('mp/ai-cost', { m, c: m * 20 }) : t('mp/ai-cost-one')}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
         : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;
     } else if (ia.stage === 'sample') {
@@ -883,8 +900,9 @@
       foot = `<button class="btn btn-primary btn-block" data-act="iaSample">${t('rec/retry', { c: 20 })}</button><button class="btn btn-secondary btn-block" data-act="iaClose">${t('ed/tpl-back')}</button>`;
     } else if (ia.stage === 'sampleOk') {
       const k0 = all[0]; const it0 = its[+k0.split('|')[0]];
-      body = `<div class="ia-big"><img class="ia-sample" src="${candSrc(ia, k0)}" alt=""><b>${esc(nm(it0))}</b><span class="caption faint">${t('rec/sample-tag', { n: all.length })}</span></div><div class="p-note">${t('rec/sample-ready', { m, c: m * 20 })}</div>${credits}`;
-      foot = `<button class="btn btn-primary btn-block" data-act="iaRest">${t('rec/continue', { m })}</button><button class="btn btn-secondary btn-block" data-act="iaSample">${t('rec/redo-sample-cost', { c: 20 })}</button>`;
+      // 只生成一个图标（m = 0）：没有「其余」这一步，样板满意直接采用
+      body = `<div class="ia-big"><img class="ia-sample" src="${candSrc(ia, k0)}" alt=""><b>${esc(nm(it0))}</b>${m ? `<span class="caption faint">${t('rec/sample-tag', { n: all.length })}</span>` : ''}</div><div class="p-note">${m ? t('rec/sample-ready', { m, c: m * 20 }) : t('mp/ai-one-ready')}</div>${credits}`;
+      foot = `<button class="btn btn-primary btn-block" data-act="${m ? 'iaRest' : 'iaAdopt'}">${m ? t('rec/continue', { m }) : ic('check', 'ic-16') + t('ed/tbai-use')}</button><button class="btn btn-secondary btn-block" data-act="iaSample">${t('rec/redo-sample-cost', { c: 20 })}</button>`;
     } else {
       const rows = [...new Set(all.map((k) => k.split('|')[0]))].map((i) => {
         const it = its[+i]; const ks = all.filter((k) => k.split('|')[0] === i);
@@ -1059,7 +1077,8 @@
   const DESIGN_DEF = { home_bg: '#FFFFFF', home_db: '#FFFFFF', btmnav_def: '#999999', btmnav_active: '#1678FF', bs_topnav_bg: '#FFFFFF', web_bs_yj_bg: '#1C2033', web_btmnav_db: '#FFFFFF' };
   const EXT = Object.fromEntries(KEYS68.ext.map((e) => [e[0], e]));
   const BASE = Object.fromEntries(KEYS68.base);
-  const keyLabel = (k) => (BASE[k] ? t('ed/key-' + k) : EXT[k] ? EXT[k][3] : k);
+  // 扩展 Key 有翻译就用翻译（i18n-editor.js 的 ed/key-<名>），没有才用规范表里的中文说明
+  const keyLabel = (k) => (BASE[k] || window.I18N['ed/key-' + k] ? t('ed/key-' + k) : EXT[k] ? EXT[k][3] : k);
   function resolveKey(k, th, ec, d = 0) {
     if (d > 8) return '#000000';
     if (ec['key:' + k]) return ec['key:' + k];

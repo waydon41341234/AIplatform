@@ -1000,6 +1000,10 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .cl-gm > span.has-img { background: none; }
 .cl-gm > span > .bgi { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background-position: center; background-size: 100% 100%; background-repeat: no-repeat; pointer-events: none; }
 .cl-gm .gi { width: 29px; height: 22px; opacity: 1; }
+/* 英 / 越文分类名较长（Cockfight、Thể thao）：图标区收窄到 22、间距 2，文字区 36→46；仍放不下的按词换成两行，不再被省略号截断 */
+html:not([lang^="zh"]) .cl-gm > span { padding: 0 3px; gap: 2px; }
+html:not([lang^="zh"]) .cl-gm .gi { width: 22px; }
+html:not([lang^="zh"]) .cl-gm > span b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; line-height: 1.1; min-width: 0; }
 
 /* 游戏菜单面板：列头、选中单选、选中图沿用未选中图（虚线）、按钮底图缩略图 */
 .gm-hd { display: flex; align-items: center; gap: 8px; padding: 0 6px 4px 30px; font-size: var(--fs-caption); color: var(--text-3); }

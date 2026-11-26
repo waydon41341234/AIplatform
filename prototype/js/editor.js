@@ -482,18 +482,25 @@
     if (mr.top < br.top || mr.bottom > br.bottom) b.scrollTop += mr.top - br.top - 8;
   });
   // 手机编辑器：底部面板（.m-mod）盖住画布下半部分；选中模块后把画布滚到模块露在面板上方（不够滚就给画布底部垫出面板高度）
-  let mLastSel = null;
+  let mLastSel = null, mWant = null;
   window.AFTER_RENDER.push(() => {
-    const c = document.querySelector('.med-canvas'); if (!c) { mLastSel = null; return; }
+    const c = document.querySelector('.med-canvas'); if (!c) { mLastSel = null; mWant = null; return; }
     const sh = document.querySelector('.med-sheet.m-mod');
     c.style.paddingBottom = sh ? sh.offsetHeight + 'px' : '';
+    // 重新渲染时 core 先恢复滚动位置、这里才垫底部高度，滚动会被夹回 0（游戏菜单 / 游戏卡片又被面板盖住）：垫好后再滚回去
+    if (sh && mWant != null && Math.abs(c.scrollTop - mWant) > 1) c.scrollTop = mWant;
+    c.onscroll = () => { mWant = c.scrollTop; };
+    if (!sh) mWant = null;
     if (S.route !== 'editor' || !E.sel || !sh) { mLastSel = sh ? mLastSel : null; return; }
     if (E.sel === mLastSel) return; mLastSel = E.sel;
     const fit = () => {
+      // 定时器里再取一次：期间可能又渲染过，旧节点已不在页面上
+      const c = document.querySelector('.med-canvas'), sh = document.querySelector('.med-sheet.m-mod'); if (!c || !sh) return;
       const m = c.querySelector(`[data-mod="${E.sel}"]`); if (!m) return;
       const cr = c.getBoundingClientRect(), mr = m.getBoundingClientRect(), top = Math.min(cr.bottom, sh.getBoundingClientRect().top);
       if (mr.top >= cr.top + 8 && mr.bottom <= top - 8) return;
       c.scrollTop += mr.bottom > top - 8 && mr.height < top - cr.top - 16 ? mr.bottom - (top - 8) : mr.top - cr.top - 8;
+      mWant = c.scrollTop;
     };
     fit(); setTimeout(fit, 320); // 面板有进场动画，动画结束后再对一次
   });
@@ -915,6 +922,9 @@
     bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it:not(.on) .lb', '.h5-bnav .it:not(.on) .lb', 12, 400], ['bottomnav.nameOn', 'tx/bottomnav-on', '.h5-bnav .it.on .lb', '.h5-bnav .it.on .lb', 12, 400]],
   };
   const TX_ALL = Object.values(TXT).flat();
+  // 非中文界面的默认字号（跟 editor.css 里 html:not([lang^="zh"]) 的规则一致）：竖排分类名英 / 越文偏长，默认 11 而不是 13
+  const TX_DS_LATIN = { 'gamemenu.name': 11, 'gamemenu.nameOn': 11 };
+  const txDs = (df) => (!/^zh/.test(S.lang) && TX_DS_LATIN[df[0]]) || df[4];
   const TX_W = [400, 500, 700];
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
@@ -957,7 +967,8 @@
   }
   function txtSec(b) {
     const els = (TXT[b] || []).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
-    const rows = els.map(([id, k, , , ds, dw, mx = 24]) => {
+    const rows = els.map((df) => {
+      const [id, k, , , , dw, mx = 24] = df, ds = txDs(df);
       const v = txOf(id), size = v.s || ds, w = v.w || dw;
       const changed = v.s || v.w || v.c;
       return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
@@ -977,7 +988,7 @@
     }
     commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
   const txDef = (id) => TX_ALL.find((x) => x[0] === id);
-  A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const cur = txOf(id).s || df[4]; const n = Math.max(8, Math.min(df[6] || 24, cur + (+d))); txSet(id, 's', n === df[4] ? null : n); };
+  A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const ds = txDs(df), cur = txOf(id).s || ds; const n = Math.max(8, Math.min(df[6] || 24, cur + (+d))); txSet(id, 's', n === ds ? null : n); };
   A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
   A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[TX_EC[id]]; }); };

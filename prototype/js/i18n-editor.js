@@ -423,4 +423,12 @@ Object.assign(window.I18N, {
   'mp/ai-one-lab': ['只生成这个图标', '只生成這個圖示', 'Only this icon', 'Chỉ biểu tượng này'],
   'mp/ai-to-set': ['改为生成整套', '改為生成整套', 'Generate the whole set instead', 'Tạo cả bộ thay thế'],
   'pc/tb-search-games': ['搜索游戏', '搜尋遊戲', 'Search games', 'Tìm trò chơi'],
+  // 游戏菜单 QA：扩展 Key 名称（颜色页签色块提示）、单个图标 AI、按钮底图参考图
+  'ed/key-web_left_bg_shadow': ['左侧按钮投影', '左側按鈕投影', 'Side button shadow', 'Bóng nút bên trái'],
+  'ed/key-leftnav_def': ['左侧栏未选中文字', '左側欄未選中文字', 'Side menu text', 'Chữ menu bên'],
+  'ed/key-leftnav_active': ['左侧栏选中文字', '左側欄選中文字', 'Side menu selected text', 'Chữ menu bên đang chọn'],
+  'ed/key-icon_tg_z': ['左侧栏图标', '左側欄圖示', 'Side menu icon', 'Biểu tượng menu bên'],
+  'mp/ai-cost-one': ['只生成这 1 个图标 · 20 点', '只生成這 1 個圖示 · 20 點', 'Just this 1 icon · 20 credits', 'Chỉ 1 biểu tượng này · 20 điểm'],
+  'mp/ai-one-ready': ['已生成。满意就点「采用」换上；不满意可重新生成。', '已生成。滿意就點「採用」換上；不滿意可重新生成。', 'Done. Tap Use to apply it, or generate again.', 'Đã tạo xong. Bấm Dùng để áp dụng, hoặc tạo lại.'],
+  'mp/gm-bai-ref-c': ['；参考图主色约 {hex}', '；參考圖主色約 {hex}', '; reference main color about {hex}', '; màu chính ảnh tham chiếu khoảng {hex}'],
 });
