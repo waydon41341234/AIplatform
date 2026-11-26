@@ -72,7 +72,8 @@
     // 隐藏的轮播图不播放（ED-06），位置按可见序号算
     const v = visIdx(), n = v.length, pos = Math.max(0, v.indexOf(E.slide));
     const slides = v.map((i) => `<div class="slide" style="background-image:url(assets/classic/banner.webp);filter:${slideF(i)}"></div>`).join('');
-    const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
+    const indC = { s1: 'dots', s2: 'dots', s3: 'dots', s4: 'bars' }[B.ind] || B.ind;
+    const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${indC}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span></div>${ind}</div>`;
   }
   function jackpot() {

@@ -23,13 +23,19 @@
     midnav: { key: 'mod/account' }, gamemenu: { key: 'mod/gamemenu' }, gamecards: { key: 'mod/gamecards' },
     footer: { key: 'cat/footer' }, sidebar: { key: 'mod/sidebar' }, bottomnav: { key: 'mod/bottomnav', fixed: true },
   };
-  const BANNER = { large: { w: 1080, h: 490, dw: 710, dh: 322, cw: 351, ch: 159 }, general: { w: 1020, h: 300, dw: 710, dh: 209, cw: 351, ch: 103 }, small: { w: 386, h: 244, dw: 386, dh: 244, cw: 193, ch: 122 } };
+  // Banner 规格（照真实组件「H5 / Banner 画布（750）」317:55632）：dw/dh = 750 稿显示尺寸，cw/ch = 画布 CSS 尺寸；w/h = 交付图尺寸
+  // 「中」在原稿里和「通用」一样大（708×208），差别待 Waydon 确认
+  const BANNER = { large: { w: 1080, h: 490, dw: 750, dh: 340, cw: 375, ch: 170, ib: 7.5 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, small: { w: 386, h: 244, dw: 160, dh: 101, cw: 80, ch: 50.5, ib: 2.5 } };
+  const SIZES = ['large', 'general', 'medium', 'small'];
+  // 指示器 4 种样式（真实组件「H5 / Banner 指示器」317:55641），旧数据 dots/bars 映射过来
+  const IND = ['s1', 's2', 's3', 's4', 'none'];
+  const indOf = (v) => (v === 'dots' ? 's1' : v === 'bars' ? 's4' : IND.includes(v) ? v : 's1');
   const TB = { h: [88, 96, 112], pad: [24, 32, 48], gap: [16, 24, 32] };
   const TB_SW = { bg: ['#ffffff', '#f8f8f8', '#1c2033', '#1678ff'], text: ['#333333', '#1c2033', '#ffffff', '#666666'], search: ['#1678ff', '#333333', '#ffaa09', '#ffffff'], reg: ['#ffaa09', '#1678ff', '#ea4e3d', '#10b26c'] };
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
   const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
   const BNAV_PX = { 98: 49, 110: 55, 120: 60 };
-  const DV = 7; // 设计数据版本（LS 里旧数据不兼容时丢弃）
+  const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
   const modName = (id) => { const b = baseName(id); const n = id.includes('~') ? ' ' + (+id.split('~')[1] + 1) : ''; return t((MODS[b] || MODS.banner).key) + n; };
 
@@ -38,7 +44,7 @@
   // 经典蓝白 = 真实 UI 结构（Waydon 2026-11-26 选「改成真实结构」）：没有彩金池 / 页脚 / 侧边栏
   const ORDER_CL = ['banner', 'notice', 'midnav', 'gamemenu', 'gamecards'];
   const TPL = {
-    'classic-blue': { preset: 'blue', order: ORDER_CL, size: 'general', slides: ['none', 'none', 'none'], ind: 'dots' }, // 真实 Banner 原图，不再调色
+    'classic-blue': { preset: 'blue', order: ORDER_CL, size: 'general', slides: ['none', 'none', 'none'], ind: 's1' }, // 真实 Banner 原图，不再调色
     'midnight-gold': { preset: 'gold', order: ORDER9, size: 'large', slides: ['sepia(.6) saturate(1.3)', 'sepia(.4) hue-rotate(-15deg)', 'sepia(.8) brightness(.9)'] },
     'fresh-green': { preset: 'green', order: ['banner', 'midnav', 'gamemenu', 'gamecards', 'jackpot', 'footer'], size: 'general', slides: ['hue-rotate(60deg)', 'hue-rotate(80deg) saturate(.9)', 'hue-rotate(40deg) brightness(1.05)'] },
     'western-white': { preset: 'platinum', order: ['banner', 'gamemenu', 'gamecards', 'midnav', 'footer', 'jackpot'], size: 'small', slides: ['hue-rotate(220deg)', 'hue-rotate(250deg) saturate(.8)', 'grayscale(.3) hue-rotate(200deg)'] },
@@ -265,10 +271,10 @@
     const B = E.D.banner, sz = BANNER[B.size];
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
     const slides = v.map((i) => `<div class="slide" style="background-image:url(assets/classic/banner.webp);filter:${slideF(i)}"></div>`).join('');
-    const ind = B.ind === 'none' ? '' : `<div class="h5-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
-    // 圆点样式叠在图片底部（经典蓝白原稿：白点 + 选中长条）；短线样式放图片下方
-    const inside = B.ind === 'dots';
-    return `<div class="h5-banner" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div>${inside ? ind : ''}</div>${inside ? '' : ind}</div>`;
+    const st = indOf(B.ind);
+    const ind = st === 'none' ? '' : `<div class="h5-ind ${st}" style="bottom:${sz.ib}px">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
+    // 指示器叠在图片底部（真实组件）
+    return `<div class="h5-banner sz-${B.size}" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div>${ind}</div></div>`;
   }
   function modHtml(id) {
     switch (baseName(id)) {
@@ -406,7 +412,7 @@
   }
   function bannerContent() {
     const B = E.D.banner, sz = BANNER[B.size];
-    const sizeSeg = segBtns(['large', 'general', 'small'].map((v) => ({ v, label: t('ed/banner-' + v) })), B.size, 'bannerSize');
+    const sizeSeg = segBtns(SIZES.map((v) => ({ v, label: t('ed/banner-' + v) })), B.size, 'bannerSize');
     const spLine = (s, i) => (s.w !== sz.w || s.h !== sz.h ? `<button class="warn-link" data-act="openResize" data-arg="slide${i}" data-stop>${ic('warning-circle-fill', 'ic-16')}${t('ed/slide-bad', { w: s.w, h: s.h })}</button>` : `${s.w}×${s.h}`);
     const hidTag = (s) => (s.hid ? `<span class="pill-tag is-gray">${t('ed/slide-hidden')}</span>` : '');
     const slides = B.slides.map((s, i) => {
@@ -420,7 +426,7 @@
       <div class="p-sec"><div class="lab">${t('ed/banner-spec')}</div>${sizeSeg}<div class="p-note">${t('ed/spec-line', sz)}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/banner-images', { n: B.slides.length })}</div><div data-drag-list="banner" class="slide-list">${slides}</div>
         ${B.slides.length < 5 ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" data-act="addSlide">${ic('plus', 'ic-16')}${t('ed/add-slide')}</button>` : ''}<div class="p-note">${t('mp/drag-hint')}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/indicator')}</div>${segBtns([{ v: 'dots', label: t('ed/ind-dots') }, { v: 'bars', label: t('ed/ind-bars') }, { v: 'none', label: t('ed/ind-none') }], B.ind, 'bannerInd')}</div>`;
+      <div class="p-sec"><div class="lab">${t('ed/indicator')}</div><div class="ind-opts">${IND.map((v) => `<button class="ind-opt ${indOf(B.ind) === v ? 'is-on' : ''}" data-act="bannerInd" data-arg="${v}"><span class="ind-prev">${v === 'none' ? `<small>${t('ed/ind-none')}</small>` : `<span class="h5-ind ${v}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k === 2 ? 'on' : ''}"></i>`).join('')}</span>`}</span></button>`).join('')}</div><div class="p-note">${t('ed/ind-note')}</div></div>`;
   }
   function pxSeg(vals, cur, act, labels) {
     return `${segBtns(vals.map((v, i) => ({ v: String(v), label: labels ? labels[i] : v + ' px' })), String(cur), act)}`;
@@ -430,7 +436,7 @@
     const mk = [8, 16, 24], ck = [0, 8, 16];
     return `<div class="p-sec"><div class="lab">${t('ed/margin')}<span class="v">${B.margin} px</span></div>${pxSeg(mk, B.margin, 'bannerMargin', [t('ed/s-small'), t('ed/s-medium'), t('ed/s-large')])}<div class="seg-sub">${mk.map((v) => `<span class="${v === B.margin ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/corner')}<span class="v">${B.corner} px</span></div>${pxSeg(ck, B.corner, 'bannerCorner', [t('ed/c-none'), t('ed/s-small'), t('ed/s-large')])}<div class="seg-sub">${ck.map((v) => `<span class="${v === B.corner ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/banner-spec')}</div>${segBtns(['large', 'general', 'small'].map((v) => ({ v, label: t('ed/banner-' + v) })), B.size, 'bannerSize')}<div class="seg-sub">${Object.entries(BANNER).map(([k, v]) => `<span class="${k === B.size ? 'is-on' : ''}">${v.w}×${v.h}</span>`).join('')}</div></div>
+      <div class="p-sec"><div class="lab">${t('ed/banner-spec')}</div>${segBtns(SIZES.map((v) => ({ v, label: t('ed/banner-' + v) })), B.size, 'bannerSize')}<div class="seg-sub">${SIZES.map((k) => `<span class="${k === B.size ? 'is-on' : ''}">${BANNER[k].dw}×${BANNER[k].dh}</span>`).join('')}</div></div>
       <div class="p-note">${ic('lock-fill', 'ic-16')}${t('ed/layout-note')}</div><div class="p-note">${t('ed/unit-750')}</div>`;
   }
   function bannerColor() {

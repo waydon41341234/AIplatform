@@ -288,6 +288,8 @@ window.I18N = {
   'ed/banner-large': ['大', '大', 'Large', 'Lớn'],
   'ed/banner-general': ['通用', '通用', 'Standard', 'Chuẩn'],
   'ed/banner-small': ['小', '小', 'Small', 'Nhỏ'],
+  'ed/banner-medium': ['中', '中', 'Medium', 'Vừa'],
+  'ed/ind-note': ['4 种样式来自经典蓝白真实组件，叠在 Banner 图片底部', '4 種樣式來自經典藍白真實組件，疊在 Banner 圖片底部', 'Four styles from the real Classic Blue component, overlaid at the bottom of the banner', '4 kiểu từ thành phần thật Xanh trắng cổ điển, nằm đè ở đáy banner'],
   'ed/device-h5': ['H5 手机版', 'H5 手機版', 'H5 mobile', 'H5 di động'],
   'ed/device-pc': ['PC 电脑版', 'PC 電腦版', 'PC desktop', 'PC máy tính'],
   'ed/tb-state': ['登录状态', '登入狀態', 'Login state', 'Trạng thái đăng nhập'],
