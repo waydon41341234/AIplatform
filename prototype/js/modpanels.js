@@ -97,13 +97,15 @@
   const seg = (opts, cur, act) => X().segBtns(opts, String(cur), act);
   const sec = (lab, body, v) => `<div class="p-sec"><div class="lab">${lab}${v != null ? `<span class="v">${v}</span>` : ''}</div>${body}</div>`;
   const note = (k, p) => `<div class="p-note">${t(k, p)}</div>`;
+  // 列表标题右侧显示「显示中 / 总数」（壳层整理）
+  const cnt = (b) => { const its = (M(b) && M(b).items) || []; return `${its.filter((x) => x.on).length} / ${its.length}`; };
   // 每个档位参数都带「自定义」输入（范围按参数）
   const PX_RNG = { margin: [0, 64], corner: [0, 60], per: [3, 6], size: [40, 80], gap: [0, 64], width: [40, 90], h: [80, 160], cols: [2, 5] };
   const px = (b, k, vals, labels) => { const u = labels.unit == null ? 'px' : labels.unit.trim(); const r = PX_RNG[k] || [0, 200]; return sec(labels.title, seg(vals.map((v, i) => ({ v: String(v), label: labels.opts ? labels.opts[i] : v + (labels.unit || ' px') })), M(b)[k], `mpSet_${b}_${k}`) + X().pxCustom(vals, M(b)[k], `mpSet_${b}_${k}`, [r[0], r[1], u]), M(b)[k] + (labels.unit || ' px')); };
   const toggle = (on, act, arg, label) => `<button class="tg-row" data-act="${act}" data-arg="${arg}"><span>${label}</span><span class="switch ${on ? 'is-on' : ''}"><i></i></span></button>`;
   function list(b, render) {
     const R = X().E.rn;
-    return `<div class="mp-list" data-drag-list="${b}">${M(b).items.map((it, i) => `<div class="lrow ${it.on ? '' : 'is-hidden'} ${R && R.b === b && R.i === i ? 'is-editing' : ''}" data-row="${i}"><span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>${render ? render(it, i) : nameCell(b, i)}${it.req && M(b).mode === 'fixed' ? `${b === 'bottomnav' ? '' : `<span class="req">${t('mp/required')}</span>`}<span class="eye is-off" title="${esc(t('mp/bn-locked'))}" aria-label="${esc(t('mp/bn-locked'))}">${ic('lock-fill', 'ic-16')}</span>` : `<button class="eye" data-act="mpItem" data-arg="${b}|${i}">${ic(it.on ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`}</div>`).join('')}</div><div class="p-note">${t('mp/drag-hint')}</div>`;
+    return `<div class="mp-list" data-drag-list="${b}">${M(b).items.map((it, i) => `<div class="lrow ${it.on ? '' : 'is-hidden'} ${R && R.b === b && R.i === i ? 'is-editing' : ''}" data-row="${i}"><span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>${render ? render(it, i) : nameCell(b, i)}${it.req && M(b).mode === 'fixed' ? `${b === 'bottomnav' ? '' : `<span class="req">${t('mp/required')}</span>`}<span class="eye is-off" title="${esc(t('mp/bn-locked'))}" aria-label="${esc(t('mp/bn-locked'))}">${ic('lock-fill', 'ic-16')}</span>` : `<button class="eye" data-act="mpItem" data-arg="${b}|${i}">${ic(it.on ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`}</div>`).join('')}</div>`;
   }
   // 入口名：点铅笔或双击名称改名（ED-19）
   function nameCell(b, i) {
@@ -140,8 +142,8 @@
       content: () => sec(t('mp/jp-title'), `<input class="input" data-input="mpJpTitle" value="${esc(M('jackpot').title)}" maxlength="12">`)
         + sec(t('mp/jp-amount'), seg([{ v: 'roll', label: t('mp/jp-roll') }, { v: 'static', label: t('mp/jp-static') }], M('jackpot').anim, 'mpSet_jackpot_anim'))
         + sec(t('mp/jp-bg'), asset('jackpot', 'bg', t('mp/jp-bg'), t('mp/jp-bg-spec'), `<span class="thumb" style="background:${M('jackpot').bg ? 'linear-gradient(135deg,#f6c445,#c9963b)' : 'var(--e-jackpot-bg, #1678ff)'};filter:${M('jackpot').bg || 'none'}"></span>`)),
-      layout: () => sec(t('mp/style'), seg([{ v: 'flow', label: t('mp/lay-flow') }, { v: 'compact', label: t('mp/lay-compact') }], M('jackpot').layout, 'mpSet_jackpot_layout'))
-        + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }) + note('ed/unit-750'),
+      layout: () => sec(t('mp/style-jackpot'), seg([{ v: 'flow', label: t('mp/lay-flow') }, { v: 'compact', label: t('mp/lay-compact') }], M('jackpot').layout, 'mpSet_jackpot_layout'))
+        + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }),
     },
     notice: {
       // 顺序：公告内容 → 文字样式（紧跟文字）→ 图标（喇叭；信箱开关紧挨信箱）→ AI 生成
@@ -152,7 +154,7 @@
         const mail = `<div class="nt-ic-row ${m.mail ? '' : 'is-off'}">${upThumb('notice', 1, 'img', its[1].i, 'st2', t('ed/signed-out'))}${upThumb('notice', 1, 'imgOn', its[1].i, 'st2', t('mp/nt-st-in'))}<span class="tx"><b>${esc(nm(its[1]))}</b><small>${sp(1)} · ${t('mp/nt-two')}</small></span>${resetBtn('notice', 1)}</div>`;
         return sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;resize:vertical" data-input="mpNtText" maxlength="80">${esc(m.text)}</textarea>`) + note('mp/nt-hl')
           + (x.txtSec ? x.txtSec('notice') : '')
-          + sec(t('mp/nt-icons'), spk + toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')) + mail + (m.mail ? '' : note('mp/nt-mail-off')) + note('mp/icon-hint')
+          + sec(t('mp/nt-icons'), spk + toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')) + mail + (m.mail ? '' : note('mp/nt-mail-off'))
             + `<div class="r2" style="margin-top:10px"><button class="btn btn-primary btn-sm" data-act="iaOpen" data-arg="notice">${ic('magic-wand', 'ic-16')}${t('mp/ai-icons')}</button></div>`);
       },
       layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-speed-note') + note('mp/nt-size'),
@@ -163,7 +165,7 @@
       content: () => {
         const x = X(), D = x.E.D, m = M('midnav'), acct = m.layout === 'account';
         const state = sec(t('ed/tb-state2'), seg([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin') + note(D.login ? 'mp/mn-note-in' : 'mp/mn-note-out'));
-        const ents = sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/mn-icon-spec', { s: specOf('midnav').join('×') }) + note('mp/icon-hint') + iconBtns('midnav'));
+        const ents = sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/mn-icon-spec', { s: specOf('midnav').join('×') }) + iconBtns('midnav'), cnt('midnav'));
         const bds = sec(t('mp/mn-badges'), `<div class="mn-bds">${m.items.map((it, i) => `<label class="mn-bd ${it.on ? '' : 'is-hidden'}"><span class="ellipsis">${esc(nm(it))}</span><input class="input" data-input="mpMidBadge" data-i="${i}" value="${esc(it.badge || '')}" maxlength="9" placeholder="${esc(t('mp/mn-badge-ph'))}"></label>`).join('')}</div>` + note('mp/mn-badge-note'));
         const area = !acct ? sec(t('mp/mn-acct'), note('mp/mn-acct-row') + `<button class="btn btn-secondary btn-sm" data-act="mpSet_midnav_layout" data-arg="account">${t('mp/mn-acct-on')}</button>`)
           : D.login ? (x.balSec ? x.balSec(true) : '') : sec(t('mp/mn-acct'), note('mp/mn-btn-note'));
@@ -172,9 +174,9 @@
       // 每行个数只在「单行」样式生效（带账户区时入口全部排在右侧一行）；图标大小 = 图标宽度（750 稿，Figma 57）
       layout: () => {
         const m = M('midnav');
-        return sec(t('mp/style'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], m.layout, 'mpSet_midnav_layout'))
+        return sec(t('mp/style-midnav'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], m.layout, 'mpSet_midnav_layout'))
           + (m.layout === 'row' ? px('midnav', 'per', [4, 5], { title: t('mp/per-row'), unit: '' }) : note('mp/mn-per-acct'))
-          + px('midnav', 'size', [48, 57, 68], { title: t('mp/mn-icon-w') }) + note('ed/unit-750');
+          + px('midnav', 'size', [48, 57, 68], { title: t('mp/mn-icon-w') });
       },
       color: () => mnColor(),
     },
@@ -187,11 +189,11 @@
           const on = i === ai, same = !it.imgOn && !it.defOn; // 没有单独的选中图 = 跟未选中同一张（虚线框提示）
           return `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on' + (same ? ' is-same' : ''), t('mp/state-act') + (same ? ' · ' + t('mp/gm-same') : ''))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}<button class="gm-rad ${on ? 'is-on' : ''}" data-act="mpGmActive" data-arg="${i}" ${it.on ? '' : 'disabled'} role="radio" aria-checked="${on}" title="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}" aria-label="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}"><i></i></button>`;
         });
-        const cats = sec(t('mp/gm-cats'), hd + rows + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec2', { w: sp[0], h: sp[1], w2: sp[0] * 2, h2: sp[1] * 2 })}</div>` + note('mp/gm-first2') + note('mp/icon-hint') + iconBtns('gamemenu'));
+        const cats = sec(t('mp/gm-cats') + x.tipI('mp/gm-first2'), hd + rows + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec2', { w: sp[0], h: sp[1], w2: sp[0] * 2, h2: sp[1] * 2 })}</div>` + iconBtns('gamemenu'), cnt('gamemenu'));
         return cats + (side ? gmBtnSec() : '') + (x.txtSec ? x.txtSec('gamemenu') : '');
       },
-      layout: () => sec(t('mp/style'), seg([{ v: 'side', label: t('mp/gm-side') }, { v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
-        + (M('gamemenu').style === 'side' ? note('mp/gm-side-note') : sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')) + note('mp/gm-scroll')),
+      layout: () => sec(t('mp/style-gamemenu'), seg([{ v: 'side', label: t('mp/gm-side') }, { v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
+        + (M('gamemenu').style === 'side' ? note('mp/gm-side-note') : sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')).replace('</div>', X().tipI('mp/gm-scroll') + '</div>')),
       color: () => gmColor(),
     },
     gamecards: {
@@ -206,7 +208,7 @@
       layout: () => {
         const m = M('gamecards'), side = gcSide();
         return sec(t('mp/cols'), seg((side ? [2, 3] : [2, 3, 4]).map((n) => ({ v: String(n), label: t('mp/cols-n', { n }) })), gcCols(m, side), 'mpSet_gamecards_cols') + (side ? note('mp/gc-cols-side') : ''))
-          + px('gamecards', 'corner', [0, 20, 32], { title: t('ed/corner') }) + px('gamecards', 'gap', [12, 20, 32], { title: t('mp/gc-gap') }) + note('mp/gc-gap-note') + note('ed/unit-750');
+          + px('gamecards', 'corner', [0, 20, 32], { title: t('ed/corner') }) + px('gamecards', 'gap', [12, 20, 32], { title: t('mp/gc-gap') }) + note('mp/gc-gap-note');
       },
       color: () => gcColor(),
     },
@@ -217,11 +219,11 @@
     sidebar: {
       content: () => {
         const D = X().E.D;
-        return sec(t('ed/side-pos'), seg([{ v: 'left', label: t('ed/side-left') }, { v: 'right', label: t('ed/side-right') }], D.side, 'setSide'))
-          + sec(t('mp/sd-head'), asset('sidebar', 'head', t('mp/sd-head'), t('mp/sd-head-spec'), `<span class="thumb" style="filter:${M('sidebar').head || 'none'}"></span>`))
-          + sec(t('mp/entries'), list('sidebar', (it, i) => `${upThumb('sidebar', i, 'img', it.i)}${nameCell('sidebar', i)}${resetBtn('sidebar', i)}`) + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/sd-icon-spec')}</div>`);
+        return sec(t('mp/sd-head'), asset('sidebar', 'head', t('mp/sd-head'), t('mp/sd-head-spec'), `<span class="thumb" style="filter:${M('sidebar').head || 'none'}"></span>`))
+          + sec(t('mp/entries'), list('sidebar', (it, i) => `${upThumb('sidebar', i, 'img', it.i)}${nameCell('sidebar', i)}${resetBtn('sidebar', i)}`) + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/sd-icon-spec')}</div>`, cnt('sidebar'));
       },
-      layout: () => sec(t('mp/style'), seg([{ v: 'list', label: t('mp/sd-list') }, { v: 'grid', label: t('mp/sd-grid') }], M('sidebar').style, 'mpSet_sidebar_style'))
+      layout: () => sec(t('ed/side-pos'), seg([{ v: 'left', label: t('ed/side-left') }, { v: 'right', label: t('ed/side-right') }], X().E.D.side, 'setSide'))
+        + sec(t('mp/style-sidebar'), seg([{ v: 'list', label: t('mp/sd-list') }, { v: 'grid', label: t('mp/sd-grid') }], M('sidebar').style, 'mpSet_sidebar_style'))
         + px('sidebar', 'width', [62, 75], { title: t('mp/width'), unit: '%' }),
     },
     bottomnav: {
@@ -234,10 +236,10 @@
         const rows = list('bottomnav', (it, i) => `${bnThumb(i, bnOffF(it, login))}${bnThumb(i, 'imgOn')}${nameCell('bottomnav', i)}<button class="ib-s tb-ai" data-act="iaOpenOne" data-arg="bottomnav|${i}" title="${esc(t('mp/ai-one'))}" aria-label="${esc(t('mp/ai-one'))}">${ic('sparkle-fill', 'ic-16')}</button>`);
         const r = M('bottomnav').style === 'raised';
         const spec = `<div class="p-note">${ic('frame-corners', 'ic-16')}${t(r ? 'mp/bn-spec-r' : 'mp/bn-spec')}${login ? '' : ' · ' + t('mp/bn-spec-out')}</div>`;
-        return state + sec(t('mp/entries'), hd + rows + spec + note('mp/bn-hint') + iconBtns('bottomnav')) + (x.txtSec ? x.txtSec('bottomnav') : '');
+        return state + sec(t('mp/entries'), hd + rows + spec + note('mp/bn-hint') + iconBtns('bottomnav'), cnt('bottomnav')) + (x.txtSec ? x.txtSec('bottomnav') : '');
       },
-      layout: () => sec(t('mp/style'), seg([{ v: 'regular', label: t('mp/bn-regular') }, { v: 'raised', label: t('mp/bn-raised') }], M('bottomnav').style, 'mpSet_bottomnav_style') + note(M('bottomnav').style === 'raised' ? 'mp/bn-raised-note' : 'mp/bn-regular-note'))
-        + px('bottomnav', 'h', [98, 120, 140], { title: t('mp/height') }) + note('ed/unit-750'),
+      layout: () => sec(t('mp/style-bottomnav'), seg([{ v: 'regular', label: t('mp/bn-regular') }, { v: 'raised', label: t('mp/bn-raised') }], M('bottomnav').style, 'mpSet_bottomnav_style') + note(M('bottomnav').style === 'raised' ? 'mp/bn-raised-note' : 'mp/bn-regular-note'))
+        + px('bottomnav', 'h', [98, 120, 140], { title: t('mp/height') }),
       color: () => bnColor(),
     },
   };
