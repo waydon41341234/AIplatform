@@ -24,8 +24,8 @@
     footer: { key: 'cat/footer' }, sidebar: { key: 'mod/sidebar' }, bottomnav: { key: 'mod/bottomnav', fixed: true },
   };
   // Banner 规格（照真实组件「H5 / Banner 画布（750）」317:55632）：dw/dh = 750 稿显示尺寸，cw/ch = 画布 CSS 尺寸；w/h = 交付图尺寸
-  // 「中」在原稿里和「通用」一样大（708×208），差别待 Waydon 确认
-  const BANNER = { large: { w: 1080, h: 490, dw: 750, dh: 340, cw: 375, ch: 170, ib: 7.5 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, small: { w: 386, h: 244, dw: 160, dh: 101, cw: 80, ch: 50.5, ib: 2.5 } };
+  // Waydon 2026-11-26：规格只是前端显示尺寸不同，后台上传统一 1020×300
+  const BANNER = { large: { w: 1020, h: 300, dw: 750, dh: 340, cw: 375, ch: 170, ib: 7.5 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, small: { w: 1020, h: 300, dw: 160, dh: 101, cw: 80, ch: 50.5, ib: 2.5 } };
   const SIZES = ['large', 'general', 'medium', 'small'];
   // 指示器 4 种样式（真实组件「H5 / Banner 指示器」317:55641），旧数据 dots/bars 映射过来
   const IND = ['s1', 's2', 's3', 's4', 'none'];
