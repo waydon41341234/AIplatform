@@ -66,7 +66,9 @@
   const seg = (opts, cur, act) => X().segBtns(opts, String(cur), act);
   const sec = (lab, body, v) => `<div class="p-sec"><div class="lab">${lab}${v != null ? `<span class="v">${v}</span>` : ''}</div>${body}</div>`;
   const note = (k, p) => `<div class="p-note">${t(k, p)}</div>`;
-  const px = (b, k, vals, labels) => sec(labels.title, seg(vals.map((v, i) => ({ v: String(v), label: labels.opts ? labels.opts[i] : v + (labels.unit || ' px') })), M(b)[k], `mpSet_${b}_${k}`), M(b)[k] + (labels.unit || ' px'));
+  // 每个档位参数都带「自定义」输入（范围按参数）
+  const PX_RNG = { margin: [0, 64], corner: [0, 60], per: [3, 6], size: [48, 160], gap: [0, 64], width: [40, 90], h: [80, 160], cols: [2, 5] };
+  const px = (b, k, vals, labels) => { const u = labels.unit == null ? 'px' : labels.unit.trim(); const r = PX_RNG[k] || [0, 200]; return sec(labels.title, seg(vals.map((v, i) => ({ v: String(v), label: labels.opts ? labels.opts[i] : v + (labels.unit || ' px') })), M(b)[k], `mpSet_${b}_${k}`) + X().pxCustom(vals, M(b)[k], `mpSet_${b}_${k}`, [r[0], r[1], u]), M(b)[k] + (labels.unit || ' px')); };
   const toggle = (on, act, arg, label) => `<button class="tg-row" data-act="${act}" data-arg="${arg}"><span>${label}</span><span class="switch ${on ? 'is-on' : ''}"><i></i></span></button>`;
   function list(b, render) {
     const R = X().E.rn;

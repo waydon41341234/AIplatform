@@ -856,3 +856,33 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .bs-opt .bs-prev i { display: block; background: center / cover; border-radius: 2px; }
 .bs-opt b { font-size: 12px; font-weight: 500; margin-top: 2px; }
 .bs-opt small { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+/* 文字样式（字号 / 粗细 / 颜色） */
+.tx-row { padding: 10px 12px; border-radius: 12px; background: var(--fill-3); display: flex; flex-direction: column; gap: 8px; }
+.tx-row + .tx-row { margin-top: 8px; }
+.tx-hd { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.tx-hd b { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-reset { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--brand); flex: none; }
+.tx-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tx-size { display: inline-flex; align-items: center; height: 30px; border-radius: 8px; background: var(--bg-surface); border: var(--stroke-thin) solid var(--border); flex: none; }
+.tx-size button { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text); }
+.tx-size button:disabled { opacity: .3; }
+.tx-size em { font-style: normal; min-width: 26px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tx-w { display: inline-flex; flex: 1; min-width: 150px; height: 30px; padding: 2px; border-radius: 8px; background: var(--bg-surface); border: var(--stroke-thin) solid var(--border); }
+.tx-w button { flex: 1; border-radius: 6px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.tx-w button.is-on { background: var(--brand-subtle, #0a84ff26); color: var(--brand); }
+.tx-colors { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tx-colors .sw-btn { width: 22px; height: 22px; }
+.tx-auto { height: 22px; padding: 0 8px; border-radius: 11px; font-size: 11px; background: var(--bg-surface); border: var(--stroke-thin) solid var(--border); color: var(--text-2); }
+.tx-auto.is-on { border-color: var(--brand); color: var(--brand); }
+.tx-custom { position: relative; width: 22px; height: 22px; border-radius: 6px; overflow: hidden; cursor: pointer; flex: none; }
+.tx-custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+/* 布局参数「自定义」输入 */
+.px-custom { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--text-2); }
+.px-custom > span { flex: none; }
+.px-custom .input { width: 76px; height: 30px; padding: 0 8px; font-size: 13px; }
+.px-custom em { font-style: normal; color: var(--text-3); }
+.px-custom small { margin-left: auto; color: var(--text-3); font-size: 11px; }
+.px-custom.is-on > span { color: var(--brand); font-weight: 500; }
+.px-custom.is-on .input { border-color: var(--brand); }
+html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 3px; padding: 0 4px; }
+.h5-bnav .seltool { top: auto; bottom: 0; }

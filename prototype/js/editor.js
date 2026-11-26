@@ -293,14 +293,14 @@
       if (baseName(id) === 'gamemenu' && D.m.gamemenu.style === 'side' && nx && baseName(nx) === 'gamecards') { body += `<div class="cl-games">${modWrap(id, modHtml(id))}${modWrap(nx, modHtml(nx))}</div>`; k++; continue; }
       body += modWrap(id, modHtml(id));
     }
-    const topPx = D.hidden.topbar ? 0 : D.tb.h / 2, bnPx = D.hidden.bottomnav ? 0 : BNAV_PX[D.m.bottomnav.h] || 55;
+    const topPx = D.hidden.topbar ? 0 : D.tb.h / 2, bnPx = D.hidden.bottomnav ? 0 : BNAV_PX[D.m.bottomnav.h] || (+D.m.bottomnav.h / 2) || 55;
     const top = D.hidden.topbar ? '' : modWrap('topbar', h5Topbar(), { top: true });
-    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
+    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" style="height:${bnPx}px" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
     const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop>${window.MP.side()}${window.AD ? window.AD.modMask('sidebar') : ''}</div>` : '';
     // ED-13：画布按页面高度显示，1334 处画首屏线
     const minBody = Math.max(0, D.height / 2 - topPx - bnPx);
     const fold = opts.noFold ? '' : `<div class="h5-fold" style="top:${667}px"><span>${t('ed/fold-line')}</span></div>`;
-    return `<div class="h5 ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" style="${themeStyle()}${opts.style || ''}">${top}<div class="h5-body" ${opts.measure ? 'data-measure' : ''} data-top="${topPx}" data-bn="${bnPx}" style="min-height:${minBody}px">${body}</div>${bnav}${fold}${side}</div>`;
+    return `<div class="h5 ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" style="${themeStyle()}${opts.style || ''}">${txtCss()}${top}<div class="h5-body" ${opts.measure ? 'data-measure' : ''} data-top="${topPx}" data-bn="${bnPx}" style="min-height:${minBody}px">${body}</div>${bnav}${fold}${side}</div>`;
   }
   // 内容高度（750 稿单位）：渲染后量一次，变了再渲染
   window.AFTER_RENDER.push(() => {
@@ -432,14 +432,27 @@
         ${B.slides.length < 5 ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" data-act="addSlide">${ic('plus', 'ic-16')}${t('ed/add-slide')}</button>` : ''}<div class="p-note">${t('mp/drag-hint')}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/indicator')}</div><div class="ind-opts">${IND.map((v) => `<button class="ind-opt ${indOf(B.ind) === v ? 'is-on' : ''}" data-act="bannerInd" data-arg="${v}"><span class="ind-prev">${v === 'none' ? `<small>${t('ed/ind-none')}</small>` : `<span class="h5-ind ${v}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k === 2 ? 'on' : ''}"></i>`).join('')}</span>`}</span></button>`).join('')}</div><div class="p-note">${t('ed/ind-note')}</div></div>`;
   }
-  function pxSeg(vals, cur, act, labels) {
-    return `${segBtns(vals.map((v, i) => ({ v: String(v), label: labels ? labels[i] : v + ' px' })), String(cur), act)}`;
+  function pxSeg(vals, cur, act, labels, rng) {
+    return `${segBtns(vals.map((v, i) => ({ v: String(v), label: labels ? labels[i] : v + ' px' })), String(cur), act)}${pxCustom(vals, cur, act, rng)}`;
   }
+  // 布局参数的「自定义」（Waydon 2026-11-26）：档位之外可直接输入数值，回车或失焦生效，越界自动夹到范围内
+  function pxCustom(vals, cur, act, rng) {
+    const [min, max, unit] = rng || [0, 200, 'px'];
+    const on = !vals.map(Number).includes(+cur);
+    return `<label class="px-custom ${on ? 'is-on' : ''}"><span>${t('ed/custom')}</span><input class="input" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" value="${esc(String(cur))}" data-pxact="${act}" data-min="${min}" data-max="${max}"><em>${unit}</em><small>${min}–${max}</small></label>`;
+  }
+  document.addEventListener('change', (e) => {
+    const el = e.target; if (!el.matches || !el.matches('[data-pxact]')) return;
+    let n = Math.round(+el.value); if (!Number.isFinite(n)) { window.render(); return; }
+    const min = +el.dataset.min, max = +el.dataset.max; if (n < min || n > max) { n = Math.max(min, Math.min(max, n)); window.toast(t('ed/custom-clamped', { min, max }), { info: true }); }
+    const fn = A[el.dataset.pxact]; if (fn) fn(String(n)); window.render();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-pxact]')) e.target.blur(); });
   function bannerLayout() {
     const B = E.D.banner;
     const mk = [8, 16, 24], ck = [0, 8, 16];
-    return `<div class="p-sec"><div class="lab">${t('ed/margin')}<span class="v">${B.margin} px</span></div>${pxSeg(mk, B.margin, 'bannerMargin', [t('ed/s-small'), t('ed/s-medium'), t('ed/s-large')])}<div class="seg-sub">${mk.map((v) => `<span class="${v === B.margin ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/corner')}<span class="v">${B.corner} px</span></div>${pxSeg(ck, B.corner, 'bannerCorner', [t('ed/c-none'), t('ed/s-small'), t('ed/s-large')])}<div class="seg-sub">${ck.map((v) => `<span class="${v === B.corner ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
+    return `<div class="p-sec"><div class="lab">${t('ed/margin')}<span class="v">${B.margin} px</span></div>${pxSeg(mk, B.margin, 'bannerMargin', [t('ed/s-small'), t('ed/s-medium'), t('ed/s-large')], [0, 64, 'px'])}<div class="seg-sub">${mk.map((v) => `<span class="${v === B.margin ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
+      <div class="p-sec"><div class="lab">${t('ed/corner')}<span class="v">${B.corner} px</span></div>${pxSeg(ck, B.corner, 'bannerCorner', [t('ed/c-none'), t('ed/s-small'), t('ed/s-large')], [0, 60, 'px'])}<div class="seg-sub">${ck.map((v) => `<span class="${v === B.corner ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${bannerStyles(B.size)}<div class="p-note">${t('ed/spec-line2', BANNER[B.size])}</div></div>
       <div class="p-note">${ic('lock-fill', 'ic-16')}${t('ed/layout-note')}</div><div class="p-note">${t('ed/unit-750')}</div>`;
   }
@@ -493,7 +506,7 @@
   }
   function tbLayout() {
     const tb = E.D.tb;
-    const sec = (k, lab) => `<div class="p-sec"><div class="lab">${t(lab)}<span class="v">${tb[k]} px</span></div>${pxSeg(TB[k], tb[k], 'tbLayout_' + k)}</div>`;
+    const sec = (k, lab) => `<div class="p-sec"><div class="lab">${t(lab)}<span class="v">${tb[k]} px</span></div>${pxSeg(TB[k], tb[k], 'tbLayout_' + k, null, { h: [60, 160, 'px'], pad: [0, 80, 'px'], gap: [0, 64, 'px'] }[k])}</div>`;
     return sec('h', 'ed/tb-height') + sec('pad', 'ed/tb-padding') + sec('gap', 'ed/tb-gap') + `<div class="p-note">${t('ed/unit-750')}</div>`;
   }
   function tbColor() {
@@ -502,6 +515,50 @@
     const rows = [['bg', 'ed/tb-c-bg'], ['text', 'ed/tb-c-text'], ['search', 'ed/tb-c-search'], ['reg', 'ed/tb-c-reg']];
     return rows.map(([k, lab]) => `<div class="crow"><div class="k">${t(lab)}</div><div class="sws">${TB_SW[k].map((c) => `<button class="sw-btn ${cur[k].toLowerCase() === c ? 'is-on' : ''}" style="background:${c}" data-act="tbColor" data-arg="${k}|${c}"></button>`).join('')}<button class="rainbow ${E.picker && E.picker.tbRow === k ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}"></button></div>${E.picker && E.picker.tbRow === k ? pickerHtml('in-panel', t(lab)) : ''}</div>`).join('') + `<div class="p-note">${t('ed/tb-c-note')}</div>`;
   }
+  // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
+  // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细]
+  const TXT = {
+    topbar: [['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 10, 400]],
+    notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 12, 400]],
+    midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.cl-user .u b', '.cl-user .u b', 11, 500], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bl b', '.cl-user .bl b', 11, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
+    gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],
+    gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm, .h5-gc .c', '.cl-gc .nm, .h5-gc .c', 11.5, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 12, 400]],
+    bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it', '.h5-bnav .it:not(.on)', 10, 400]],
+  };
+  const TX_ALL = Object.values(TXT).flat();
+  const TX_W = [400, 500, 700];
+  const txOf = (id) => ((E.D.txt || {})[id]) || {};
+  function txtCss() {
+    const T = E.D.txt || {}; let css = '';
+    for (const [id, , sel, csel] of TX_ALL) {
+      const v = T[id]; if (!v) continue;
+      const scope = (q) => q.split(',').map((x) => '.h5 ' + x.trim()).join(',');
+      if (v.s || v.w) css += `${scope(sel)}{${v.s ? `font-size:${v.s}px;` : ''}${v.w ? `font-weight:${v.w};` : ''}}`;
+      if (v.c) css += `${scope(csel)}{color:${v.c}}`;
+    }
+    return css ? `<style>${css}</style>` : '';
+  }
+  function txtSec(b) {
+    const els = TXT[b]; if (!els) return '';
+    const th = liveTheme().th;
+    const sw = [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i);
+    const rows = els.map(([id, k, , , ds, dw]) => {
+      const v = txOf(id), size = v.s || ds, w = v.w || dw, c = (v.c || '').toLowerCase();
+      const changed = v.s || v.w || v.c;
+      return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
+        <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em>${size * 2}</em><button data-act="txSize" data-arg="${id}|1" ${size >= 24 ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
+        <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
+        <div class="tx-colors"><button class="tx-auto ${c ? '' : 'is-on'}" data-act="txColor" data-arg="${id}|" title="${esc(t('tx/c-auto'))}">${t('tx/c-auto')}</button>${sw.map((x) => `<button class="sw-btn ${c === x ? 'is-on' : ''}" style="background:${x}" data-act="txColor" data-arg="${id}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${c && !sw.includes(c) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-txcolor="${id}" value="${c || '#333333'}"></label></div></div>`;
+    }).join('');
+    return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t('tx/note')}</div></div>`;
+  }
+  const txSet = (id, k, v) => { commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
+  const txDef = (id) => TX_ALL.find((x) => x[0] === id);
+  A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const cur = txOf(id).s || df[4]; const n = Math.max(8, Math.min(24, cur + (+d))); txSet(id, 's', n === df[4] ? null : n); };
+  A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
+  A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
+  A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; }); };
+  document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
   function modulePanel(id) {
     const b = baseName(id);
     if (b === 'banner' && E.ai) return aiPanel();
@@ -511,8 +568,8 @@
     const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() : bannerColor());
-    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() : E.tab === 'layout' ? tbLayout() : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab);
+    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() : tbColor());
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? txtSec(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -1247,7 +1304,7 @@
     if (E.palOpen) { E.palOpen = false; }
   }
 
-  window.EDX = { E, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
+  window.EDX = { E, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
