@@ -152,7 +152,7 @@
         const sp = (i) => specOf('notice', i).join('×');
         const spk = `<div class="nt-ic-row">${upThumb('notice', 0, 'img', its[0].i)}<span class="tx"><b>${esc(nm(its[0]))}</b><small>${sp(0)}</small></span>${resetBtn('notice', 0)}</div>`;
         const mail = `<div class="nt-ic-row ${m.mail ? '' : 'is-off'}">${upThumb('notice', 1, 'img', its[1].i, 'st2', t('ed/signed-out'))}${upThumb('notice', 1, 'imgOn', its[1].i, 'st2', t('mp/nt-st-in'))}<span class="tx"><b>${esc(nm(its[1]))}</b><small>${sp(1)} · ${t('mp/nt-two')}</small></span>${resetBtn('notice', 1)}</div>`;
-        return sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;resize:vertical" data-input="mpNtText" maxlength="80">${esc(m.text)}</textarea>`) + note('mp/nt-hl')
+        return sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;height:auto;min-height:84px;padding:8px 12px;line-height:1.5;resize:vertical" data-input="mpNtText" maxlength="80">${esc(m.text)}</textarea>`) + note('mp/nt-hl')
           + (x.txtSec ? x.txtSec('notice') : '')
           + sec(t('mp/nt-icons'), spk + toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')) + mail + (m.mail ? '' : note('mp/nt-mail-off'))
             + `<div class="r2" style="margin-top:10px"><button class="btn btn-primary btn-sm" data-act="iaOpen" data-arg="notice">${ic('magic-wand', 'ic-16')}${t('mp/ai-icons')}</button></div>`);
@@ -256,7 +256,7 @@
     const spkUp = !!its[0].img, badge = D.login && m.mail;
     return `<div class="p-sec">${row('notice.bg')}</div>
       <div class="p-sec"><div class="lab">${t('mp/nt-c-text')}</div>${row('notice.text')}${row('notice.hl')}${row('notice.g')}${row('notice.num')}</div>
-      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note('mp/nt-c-badge-out')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note(m.mail ? 'mp/nt-c-badge-out' : 'mp/nt-c-badge-nomail')}</div>
       <div class="p-note">${t('mp/nt-c-note')}</div>
       <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
   }
@@ -769,6 +769,8 @@
   A.iaStyle = (s) => { const ia = X().E.iconAi; ia.style = s; ia.fromRef = false; if (/^r-/.test(s) && window.aiPreset) ia.extra = window.aiPreset(s.slice(2)); };
   // 只给某一个图标生成（画布 / 内容页签里点单个图标 → AI 生成）
   A.iaOpenOne = (arg) => { const [b, i] = arg.split('|'); A.iaOpen(b); const ia = X().E.iconAi; M(b).items.forEach((it, j) => { ia.picks[j] = j === +i; }); ia.one = +i; S().menu = null; X().E.tab = 'content'; };
+  // 单个图标流程 → 改为生成整套（保留已选款式 / 提示词 / 参考图）
+  A.iaToSet = () => { const o = X().E.iconAi; if (!o) return false; A.iaOpen(o.b); Object.assign(X().E.iconAi, { style: o.style, extra: o.extra, model: o.model, refSt: o.refSt, fromRef: o.fromRef }); };
   A.iaModel = (v) => { X().E.iconAi.model = v; S().menu = null; };
   // 参考图：上传后自动反推款式 + 提示词
   A.iaRefPick = () => { const ia = X().E.iconAi; if (!ia) return false; window.pickImage({ accept: window.IMG_ACCEPT + ',image/jpeg', maxMB: 10 }, (src, file) => {
@@ -786,7 +788,7 @@
   I.iaExtra = (v) => { X().E.iconAi.extra = v; };
   // 全选 / 全不选（必交项始终保留）
   A.iaAll = (v) => { const ia = X().E.iconAi; if (!ia) return false; M(ia.b).items.forEach((it, i) => { ia.picks[i] = v === '1' || isReq(ia.b, it); }); };
-  A.iaPick = (i) => { const ia = X().E.iconAi; const it = M(ia.b).items[+i]; if (isReq(ia.b, it)) return false; ia.picks[+i] = !ia.picks[+i]; };
+  A.iaPick = (i) => { const ia = X().E.iconAi; const it = M(ia.b).items[+i]; if (ia.one != null || isReq(ia.b, it)) return false; ia.picks[+i] = !ia.picks[+i]; };
   A.iaSample = () => {
     const x = X(); const ia = x.E.iconAi; if (!ia) return false;
     if (!jobs(ia).length) return false;
@@ -855,7 +857,7 @@
   const failTile = (cls = '') => `<div class="ia-fail ${cls}">${ic('x-circle-fill')}</div>`;
   function aiPanel() {
     const x = X(); const ia = x.E.iconAi; const b = ia.b; const its = M(b).items; const all = jobs(ia); const m = Math.max(0, all.length - 1);
-    const head = `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="iaClose" title="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${t('mp/ai-title', { mod: modTitle(b) })}</span></h2>`;
+    const head = `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="iaClose" title="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${ia.one != null && its[ia.one] ? t('mp/ai-title-one', { mod: modTitle(b), n: esc(nm(its[ia.one])) }) : t('mp/ai-title', { mod: modTitle(b) })}</span></h2>`;
     const credits = `<div class="ia-bal">${t('confirm/balance-label')} · ${t('confirm/points', { n: window.num(S().credits || 0) })}</div>`;
     let body = '', foot = '';
     if (ia.stage === 'setup') {
@@ -867,7 +869,7 @@
         <div class="p-note">${ia.fromRef ? ic('sparkle-fill', 'ic-16') + t('ed/tbai-prompt-tip2') : t('ed/tbai-box-tip')}</div>`;
       body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${styleSrc(b, pv, s, x.E.D.theme.primary, 'imgOn')}" alt=""><span>${styleName(s)}</span></button>`).join('')}</div>`)
         + sec(t('ed/tbai-sprompt'), box)
-        + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
+        + (ia.one != null && its[ia.one] ? (() => { const it = its[ia.one]; return `<div class="p-sec"><div class="lab">${t('mp/ai-one-lab')}</div><div class="ia-list"><div class="ia-row"><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-top:8px" data-act="iaToSet">${ic('squares-four', 'ic-16')}${t('mp/ai-to-set')}</button></div>`; })() : `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`)
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
         : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;

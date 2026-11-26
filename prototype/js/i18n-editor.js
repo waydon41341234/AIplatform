@@ -413,5 +413,10 @@ Object.assign(window.I18N, {
   'ed/preview-cap': ['预览', '預覽', 'Preview', 'Xem trước'],
   'ed/page-reset-all': ['整页恢复默认', '整頁恢復預設', 'Reset whole page', 'Khôi phục cả trang'],  // 顶部栏：AI 目标「侧边栏入口」；PC 预览顶部栏搜索框
   'ed/tbai-t-side': ['侧边栏入口', '側邊欄入口', 'Sidebar button', 'Nút thanh bên'],
+  // 公告栏：信箱关掉时未读数的说明；单个图标 AI 流程
+  'mp/nt-c-badge-nomail': ['未读数长在右侧信箱上，信箱已关闭；到「内容」打开「显示右侧信箱」后可改它的颜色', '未讀數長在右側信箱上，信箱已關閉；到「內容」打開「顯示右側信箱」後可改它的顏色', 'The unread count sits on the inbox, which is turned off. Turn on "Show the inbox on the right" under Content to change its color.', 'Số chưa đọc nằm trên hộp thư, hiện đang tắt. Bật "Hiện hộp thư bên phải" ở Nội dung để đổi màu.'],
+  'mp/ai-title-one': ['AI 生成图标 · {mod} · {n}', 'AI 生成圖示 · {mod} · {n}', 'AI icon · {mod} · {n}', 'Biểu tượng AI · {mod} · {n}'],
+  'mp/ai-one-lab': ['只生成这个图标', '只生成這個圖示', 'Only this icon', 'Chỉ biểu tượng này'],
+  'mp/ai-to-set': ['改为生成整套', '改為生成整套', 'Generate the whole set instead', 'Tạo cả bộ thay thế'],
   'pc/tb-search-games': ['搜索游戏', '搜尋遊戲', 'Search games', 'Tìm trò chơi'],
 });
