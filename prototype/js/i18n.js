@@ -185,6 +185,8 @@ window.I18N = {
   'ed/upload': ['上传', '上傳', 'Upload', 'Tải lên'],
   'ed/library': ['素材库', '素材庫', 'Library', 'Thư viện'],
   'ed/banner-spec': ['Banner 规格', 'Banner 規格', 'Banner size', 'Kích thước banner'],
+  'ed/banner-style': ['Banner 样式', 'Banner 樣式', 'Banner style', 'Kiểu banner'],
+  'ed/spec-line2': ['上传统一 {w}×{h} · 页面显示 {dw}×{dh}（750 稿）', '上傳統一 {w}×{h} · 頁面顯示 {dw}×{dh}（750 稿）', 'Upload {w}×{h} for all styles · shown at {dw}×{dh} (750 design)', 'Tải lên {w}×{h} · hiển thị {dw}×{dh} (bản 750)'],
   'ed/spec-line': ['规范 {w}×{h} · 页面显示 {dw}×{dh}', '規範 {w}×{h} · 頁面顯示 {dw}×{dh}', 'Spec {w}×{h} · shown at {dw}×{dh}', 'Chuẩn {w}×{h} · hiển thị {dw}×{dh}'],
   'ed/banner-images': ['轮播图片（{n} 张）', '輪播圖片（{n} 張）', 'Carousel images ({n})', 'Ảnh trình chiếu ({n})'],
   'ed/slide-n': ['第 {n} 张', '第 {n} 張', 'Slide {n}', 'Ảnh {n}'],
