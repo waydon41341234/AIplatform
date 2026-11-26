@@ -92,7 +92,7 @@ Object.assign(window.I18N, {
   'ed/rs-from-to': ['原图 {w}×{h} → {tw}×{th}', '原圖 {w}×{h} → {tw}×{th}', 'Original {w}×{h} → {tw}×{th}', 'Ảnh gốc {w}×{h} → {tw}×{th}'],
   'ed/rs-done': ['已调整为 {w}×{h}', '已調整為 {w}×{h}', 'Resized to {w}×{h}', 'Đã chỉnh thành {w}×{h}'],
   'ed/slide-bad': ['{w}×{h} · 尺寸不符，点此调整', '{w}×{h} · 尺寸不符，點此調整', '{w}×{h} · wrong size, tap to fix', '{w}×{h} · sai cỡ, bấm để chỉnh'],
-  'ed/fp-note': ['支持 PNG / SVG，单张不超过 2 MB；尺寸不符的图片可以选，选后进入调整', '支援 PNG / SVG，單張不超過 2 MB；尺寸不符的圖片可以選，選後進入調整', 'PNG / SVG, up to 2 MB. Wrong-size images can be picked, then resized.', 'PNG / SVG, tối đa 2 MB. Ảnh sai cỡ vẫn chọn được, sau đó chỉnh cỡ.'],
+  'ed/fp-note': ['支持 PNG / SVG / APNG / AVIF / WebP，单张不超过 5 MB；尺寸不符的图片选后进入调整', '支援 PNG / SVG / APNG / AVIF / WebP，單張不超過 5 MB；尺寸不符的圖片選後進入調整', 'PNG / SVG / APNG / AVIF / WebP, up to 5 MB. Wrong-size images go to resize after picking.', 'PNG / SVG / APNG / AVIF / WebP, tối đa 5 MB. Ảnh sai cỡ sẽ được chỉnh cỡ sau khi chọn.'],
   // ED-09 Banner AI
   'ed/ai-low': ['余额不足', '餘額不足', 'Not enough credits', 'Không đủ điểm'],
   'ed/ai-failed': ['生成失败，本次未扣点，当前图片保持不变', '生成失敗，本次未扣點，目前圖片保持不變', 'Failed. No credits used; current image unchanged.', 'Lỗi. Không trừ điểm; ảnh hiện tại giữ nguyên.'],
@@ -199,4 +199,6 @@ Object.assign(window.I18N, {
   'ed/rz-tip': ['拖动调整宽度 · 双击恢复默认', '拖動調整寬度 · 雙擊恢復預設', 'Drag to resize · double-click to reset', 'Kéo để đổi độ rộng · nhấp đúp để đặt lại'],
   'mp/ai-where': ['适合{m}的图标小尺寸显示', '適合{m}的圖示小尺寸顯示', 'readable at small size as a {m} icon', 'dễ nhìn ở cỡ nhỏ cho biểu tượng {m}'],
   'mp/ai-one': ['AI 生成这个图标', 'AI 生成這個圖示', 'Generate this icon with AI', 'Tạo biểu tượng này bằng AI'],
+  'ed/fp-local': ['从电脑选择图片（建议 {w}×{h}）', '從電腦選擇圖片（建議 {w}×{h}）', 'Choose from computer ({w}×{h} recommended)', 'Chọn từ máy tính (nên {w}×{h})'],
+  'ed/fp-recent': ['或用最近上传过的图片（示例）', '或用最近上傳過的圖片（示例）', 'Or use a recent upload (sample)', 'Hoặc dùng ảnh tải lên gần đây (mẫu)'],
 });

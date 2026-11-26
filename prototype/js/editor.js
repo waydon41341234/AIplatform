@@ -33,7 +33,8 @@
   const TB = { h: [88, 96, 112], pad: [24, 32, 48], gap: [16, 24, 32] };
   const TB_SW = { bg: ['#ffffff', '#f8f8f8', '#1c2033', '#1678ff'], text: ['#333333', '#1c2033', '#ffffff', '#666666'], search: ['#1678ff', '#333333', '#ffaa09', '#ffffff'], reg: ['#ffaa09', '#1678ff', '#ea4e3d', '#10b26c'] };
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
-  const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
+  // Banner AI 候选 = Figma generate image 生成的 4 种默认风格（2026-11-26，assets/ai-banner/）
+  const CAND_F = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
   const BNAV_PX = { 98: 49, 110: 55, 120: 60 };
   const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
@@ -326,7 +327,7 @@
   function h5Banner() {
     const B = E.D.banner, sz = BANNER[B.size];
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
-    const slides = v.map((i) => `<div class="slide" style="background-image:url(assets/classic/banner.webp);filter:${slideF(i)}"></div>`).join('');
+    const slides = v.map((i) => `<div class="slide" style="${window.fxStyle(slideF(i), 'assets/classic/banner.webp')}"></div>`).join('');
     const st = indOf(B.ind);
     const ind = st === 'none' ? '' : `<div class="h5-ind ${st}" style="bottom:${sz.ib}px">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     // 指示器叠在图片底部（真实组件）
@@ -485,9 +486,9 @@
     const hidTag = (s) => (s.hid ? `<span class="pill-tag is-gray">${t('ed/slide-hidden')}</span>` : '');
     const slides = B.slides.map((s, i) => {
       const grip = `<span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>`;
-      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top"><span class="thumb" style="filter:${s.f}"></span><span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })} · ${t('ed/previewing-slide')}</div><div class="sp">${spLine(s, i)}</div></span>${hidTag(s)}${moreBtn('slide' + i)}</div>
+      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top"><span class="thumb" style="${window.fxStyle(s.f)}"></span><span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })} · ${t('ed/previewing-slide')}</div><div class="sp">${spLine(s, i)}</div></span>${hidTag(s)}${moreBtn('slide' + i)}</div>
         <div class="acts"><button class="btn btn-primary btn-sm" data-act="openAi">${ic('magic-wand', 'ic-16')}${t('ed/ai')}</button><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="slide${i}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="slide${i}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div></div>${uploadUI('slide' + i)}`;
-      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}"><div class="top"><span class="thumb" style="filter:${s.f}"></span><span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })}</div><div class="sp">${spLine(s, i)}</div></span>${hidTag(s)}${moreBtn('slide' + i)}</div></div></div>${uploadUI('slide' + i)}`;
+      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}"><div class="top"><span class="thumb" style="${window.fxStyle(s.f)}"></span><span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })}</div><div class="sp">${spLine(s, i)}</div></span>${hidTag(s)}${moreBtn('slide' + i)}</div></div></div>${uploadUI('slide' + i)}`;
     }).join('');
     const bad = checks().req.filter((x) => x.mod === 'banner');
     return `${bad.length ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${esc(bad[0].text)}<div class="caption faint">Banner</div></div></div>` : ''}
@@ -536,7 +537,7 @@
     let cands = '';
     if (a.stage === 'generating') cands = `<div class="cands">${[0, 1, 2, 3].map(() => '<div class="cand skeleton"></div>').join('')}</div><div class="rec-note">${ic('clock', 'ic-16')}${t('rec/generating')}</div>`;
     else if (a.stage === 'failed') cands = `<div class="cands">${[0, 1, 2, 3].map(() => `<div class="cand is-fail">${ic('x-circle-fill')}</div>`).join('')}</div><div class="ia-msg is-err">${ic('warning-circle-fill', 'ic-16')}${t('ed/ai-failed')}</div><div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm" data-act="aiGen">${t('rec/retry', { c: 20 })}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button></div>`;
-    else if (a.stage === 'cands') cands = `<div class="cands">${CAND_F.map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="filter:${f}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}</button>`).join('')}</div>
+    else if (a.stage === 'cands') cands = `<div class="cands">${CAND_F.map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="${window.fxStyle(f)}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}</button>`).join('')}</div>
         <div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm ${a.cand == null ? 'is-disabled' : ''}" data-act="adoptCand">${t('ed/adopt')}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button><button class="btn btn-outline btn-sm" data-act="aiGen">${ic('clock-counter-clockwise', 'ic-16')}${t('rec/regenerate-cost', { c: 20 })}</button></div><div class="p-note">${t('ed/ai-note')}</div>`;
     const ref = window.refSlot ? window.refSlot(a.refSt, 'edRef') : '';
     return `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="closeAi" title="${esc(t('ed/keep-current'))}">${ic('caret-left')}</button>${t('ed/ai-title')}</h2>
@@ -1142,6 +1143,15 @@
       }
     }, 140);
   }
+  // 从电脑选真实图片（PNG / SVG / APNG / AVIF / WebP）：尺寸对就直接上传，不对先进「调整尺寸」
+  A.fpLocal = () => {
+    const slot = E.fpSlot; const sp = slotSpec(slot);
+    window.pickImage({ accept: window.IMG_ACCEPT, maxMB: 5 }, (src) => {
+      const im = new Image(); im.onload = () => { const w = im.naturalWidth || sp.w, h = im.naturalHeight || sp.h; const f = 'img:' + src; if (w !== sp.w || h !== sp.h) { openResize(slot, f, w, h); window.render(); } else uploadTo(slot, f, sp.w, sp.h); };
+      im.onerror = () => window.toast(t('mp/icon-bad'), { info: true }); im.src = src;
+    });
+    return false;
+  };
   A.fpPick = (arg) => {
     const [f, w, h] = arg.split('|'); const slot = E.fpSlot; const sp = slotSpec(slot);
     if (+w !== sp.w || +h !== sp.h) { openResize(slot, f, +w, +h); return; }
@@ -1181,7 +1191,7 @@
     const ratio = `aspect-ratio:${sp.w} / ${sp.h}`;
     const list = libList();
     const grid = L.loading ? `<div class="lib-grid">${[0, 1, 2, 3, 4, 5].map(() => `<div class="lib-it"><span class="im skeleton" style="${ratio}"></span><span class="skeleton sk-line"></span></div>`).join('')}</div>`
-      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = it.w !== sp.w || it.h !== sp.h; return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};filter:${it.f}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
+      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = it.w !== sp.w || it.h !== sp.h; return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};${window.fxStyle(it.f)}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
         : window.empty('stack-fill', t('ed/lib-empty'), t('ed/lib-empty-d'));
     return `<div class="dialog-head"><h3>${t('ed/lib-title', { name: sp.name, w: sp.w, h: sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>${tabs}${chips}<div class="lib-body" data-sk="lib">${grid}</div>
       <div class="dialog-foot lib-foot"><span class="caption faint">${t('ed/lib-free')}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary ${L.sel == null ? 'is-disabled' : ''}" data-act="libUse">${t('ed/lib-use')}</button></div>`;
@@ -1208,8 +1218,8 @@
   function resizeBody(mobile) {
     const r = E.rs; const g = rsGeom(mobile); const th = E.D.theme;
     let stage;
-    if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;filter:${r.f}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px"></div></div>`;
-    else { const ratio = g.sp.w / g.sp.h; let tw = g.BW, thh = g.BW / ratio; if (thh > g.BH) { thh = g.BH; tw = g.BH * ratio; } const s = Math.min(tw / r.w, thh / r.h); stage = `<div class="rs-pad" style="width:${tw}px;height:${thh}px;background:${th[r.fill]}"><span class="rs-img in" style="width:${r.w * s}px;height:${r.h * s}px;filter:${r.f}"></span></div>`; }
+    if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;${window.fxStyle(r.f)}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px"></div></div>`;
+    else { const ratio = g.sp.w / g.sp.h; let tw = g.BW, thh = g.BW / ratio; if (thh > g.BH) { thh = g.BH; tw = g.BH * ratio; } const s = Math.min(tw / r.w, thh / r.h); stage = `<div class="rs-pad" style="width:${tw}px;height:${thh}px;background:${th[r.fill]}"><span class="rs-img in" style="width:${r.w * s}px;height:${r.h * s}px;${window.fxStyle(r.f)}"></span></div>`; }
     const card = (m, icn, k) => `<button class="rcard ${r.mode === m ? 'is-on' : ''}" data-act="rsMode" data-arg="${m}">${ic(icn)}<span><b>${t(k)}</b></span></button>`;
     return `<div class="dialog-head"><h3>${t('ed/rs-title', { w: g.sp.w, h: g.sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>
       <div class="rs ${mobile ? 'is-m' : ''}"><div class="rs-stage">${stage}</div><div class="rs-opts">${card('crop', 'crop', 'ed/rs-crop')}${card('pad', 'frame-corners', 'ed/rs-pad')}
@@ -1343,7 +1353,8 @@
     const sp = slotSpec(E.fpSlot || 'slide0');
     const files = [['banner-spring.png', sp.w, sp.h, '820 KB', 'hue-rotate(170deg) saturate(1.3)'], ['banner-match.png', sp.w, sp.h, '1.1 MB', 'hue-rotate(-90deg)'], ['banner-old.jpg', 800, 600, '640 KB', 'grayscale(.6)']];
     return `<div class="dialog-head"><h3>${t('ed/fp-title')}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div><p class="caption muted" style="margin:0 0 12px">${t('ed/fp-note')}</p>
-      <div class="fp-grid">${files.map(([n, w, h, kb, f]) => { const ok = w === sp.w && h === sp.h; return `<button class="fp" data-act="fpPick" data-arg="${f}|${w}|${h}"><span class="im" style="filter:${f};aspect-ratio:${sp.w} / ${sp.h}"></span><span class="n ellipsis">${n}</span><span class="s ${ok ? '' : 'bad'}">${w}×${h} · ${kb}${ok ? '' : ' · ' + t('ed/lib-bad')}</span></button>`; }).join('')}</div>`;
+      <button class="btn btn-primary btn-block fp-local" data-act="fpLocal">${ic('upload-simple', 'ic-16')}${t('ed/fp-local', { w: sp.w, h: sp.h })}</button><div class="caption faint fp-or">${t('ed/fp-recent')}</div>
+      <div class="fp-grid">${files.map(([n, w, h, kb, f]) => { const ok = w === sp.w && h === sp.h; return `<button class="fp" data-act="fpPick" data-arg="${f}|${w}|${h}"><span class="im" style="${window.fxStyle(f)};aspect-ratio:${sp.w} / ${sp.h}"></span><span class="n ellipsis">${n}</span><span class="s ${ok ? '' : 'bad'}">${w}×${h} · ${kb}${ok ? '' : ' · ' + t('ed/lib-bad')}</span></button>`; }).join('')}</div>`;
   }
   function dialogs() {
     if (!E.dlg) return '';

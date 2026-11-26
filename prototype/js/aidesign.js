@@ -799,7 +799,7 @@
   function slThumb(s, D) {
     const th = s.thumb;
     if (th.k === 'logo') return `<span class="ad-slt is-logo"><img src="assets/logo-orb.webp" alt="" style="filter:${D.tb.logoF || 'none'}">星河体育</span>`;
-    if (th.k === 'slide') return `<span class="ad-slt is-slide ${th.pc ? 'is-pc' : ''}" style="filter:${th.f || 'none'}"></span>`;
+    if (th.k === 'slide') return `<span class="ad-slt is-slide ${th.pc ? 'is-pc' : ''}" style="${window.fxStyle(th.f)}"></span>`;
     if (th.k === 'jack') return `<span class="ad-slt is-jack" style="background:linear-gradient(135deg,${D.ec['jackpot.bg'] || D.theme.primary},${mix(D.ec['jackpot.bg'] || D.theme.primary, D.theme.bg_1, 0.5)})"></span>`;
     if (th.k === 'icon') { const src = th.it[th.f] || (th.f === 'imgOn' ? th.it.img : null); return `<span class="ad-slt is-icon ics-${D.iconStyle || 'fill'}" style="--o-primary:${th.off ? D.theme.neutral_2 : D.theme.primary};--o-accent_3:${D.theme.accent_3}"><span class="ib">${src ? `<img src="${src}" alt="">` : ic(th.it.i || 'sparkle-fill')}</span></span>`; }
     return `<span class="ad-slt is-glyph">${ic(th.i)}</span>`;

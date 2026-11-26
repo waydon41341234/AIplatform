@@ -400,7 +400,7 @@ window.I18N = {
   'ed/am-reset': ['恢复默认', '恢復預設', 'Reset to default', 'Khôi phục mặc định'],
   'ed/am-toggle': ['显示 / 隐藏', '顯示 / 隱藏', 'Show / hide', 'Hiện / ẩn'],
   'ed/fp-title': ['选择图片', '選擇圖片', 'Choose an image', 'Chọn ảnh'],
-  'ed/fp-note': ['支持 PNG / SVG，单张不超过 2 MB；尺寸不符的图片不能选', '支援 PNG / SVG，單張不超過 2 MB；尺寸不符的圖片不能選', 'PNG / SVG, up to 2 MB. Images with the wrong size can’t be picked.', 'PNG / SVG, tối đa 2 MB. Ảnh sai kích thước không chọn được'],
+  'ed/fp-note': ['支持 PNG / SVG / APNG / AVIF / WebP，单张不超过 5 MB；尺寸不符的图片选后进入调整', '支援 PNG / SVG / APNG / AVIF / WebP，單張不超過 5 MB；尺寸不符的圖片選後進入調整', 'PNG / SVG / APNG / AVIF / WebP, up to 5 MB. Wrong-size images go to resize after picking.', 'PNG / SVG / APNG / AVIF / WebP, tối đa 5 MB. Ảnh sai cỡ sẽ được chỉnh cỡ sau khi chọn.'],
   'ed/fp-bad-size': ['尺寸不符', '尺寸不符', 'Wrong size', 'Sai kích thước'],
   'ed/am-replaced': ['已替换为新图片', '已替換為新圖片', 'Replaced with new image', 'Đã thay ảnh mới'],
   'ed/am-undo': ['撤销', '復原', 'Undo', 'Hoàn tác'],

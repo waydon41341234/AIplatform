@@ -1034,3 +1034,5 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .ia-st img { width: 40px; height: 40px; object-fit: contain; }
 .ia-st span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .ia-box { margin-top: 0; }
+.fp-local { margin-bottom: 8px; }
+.fp-or { margin: 4px 0 8px; }

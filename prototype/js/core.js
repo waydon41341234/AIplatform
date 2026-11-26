@@ -278,6 +278,8 @@
   // ---------- 选图 ----------
   // 模块图片（图标 / Banner / 卡片封面等）统一支持的格式（Waydon 2026-11-26）
   window.IMG_ACCEPT = 'image/png,image/svg+xml,image/apng,image/avif,image/webp';
+  // 图片素材值：'img:<地址>' = 业主上传 / AI 生成的真实图片；其余 = 在默认图上叠的 CSS 滤镜（原型模拟换图）
+  window.fxStyle = (f, def) => (/^img:/.test(f || '') ? `background-image:url(${f.slice(4)});filter:none` : `${def ? `background-image:url(${def});` : ''}filter:${f || 'none'}`);
   window.imgOk = (f) => !!f && /^image\/(png|svg\+xml|apng|avif|webp)$/.test(f.type);
   // pickImage({accept, maxMB, multiple}, cb)：单选 cb(dataURL, file)；多选 cb([{src, name, file}])。类型 / 大小不合规自己 toast，不回调
   window.pickImage = function (opts, cb) {
