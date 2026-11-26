@@ -991,3 +991,8 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .btn-check .cn { display: none; font-weight: 600; }
 @media (max-width: 1099px) { .ed-top .btn-check .ellipsis { display: none; } .ed-top .btn-check .cn { display: inline; } }
 @media (max-width: 959px) { .ed-top { gap: 6px; padding: 0 10px; } .ed-top .ed-name { min-width: 40px; } .ed-top .iseg button { padding-left: 8px; padding-right: 8px; } }
+
+.tb-item .tb-ai { color: var(--brand); flex: none; }
+.tb-item .tb-ai:hover { background: var(--brand-subtle); }
+.tbai.is-flash { animation: tbflash 1.2s ease-out; border-radius: 12px; }
+@keyframes tbflash { 0%, 40% { box-shadow: 0 0 0 2px var(--brand); } 100% { box-shadow: 0 0 0 2px transparent; } }

@@ -597,6 +597,9 @@
   };
   A.tbAiUse = () => { const a = tbAi(), r = a.res; if (!r) return false; commit(() => { const ic0 = Object.assign({}, E.D.tb.icons); if (a.target !== 'cur') ic0.search = AIT + 'search-' + r + '.png'; if (a.target !== 'search') ic0.cur = AIT + 'cur-' + r + '.png'; E.D.tb.icons = ic0; }); a.stage = 'setup'; window.toast(t('ed/tbai-used'), undoOpt()); };
   A.tbAiReset = () => { if (!E.D.tb.icons) return false; commit(() => { delete E.D.tb.icons; }); window.toast(t('ed/tbai-reset'), undoOpt()); };
+  // 入口图标行的 ✦ 按钮：跳到 AI 生成并选好目标（Waydon 2026-11-26）
+  A.tbAiJump = (k) => { const a = tbAi(); if (a.stage === 'busy') return false; a.target = k; if (a.stage === 'done') a.stage = 'setup'; E.tbAiFocus = true; };
+  window.AFTER_RENDER.push(() => { if (!E.tbAiFocus) return; E.tbAiFocus = false; const go = () => { const m = document.querySelector('.tbai'); if (!m) return; let c = m.parentElement; while (c && !(c.scrollHeight > c.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(c).overflowY))) c = c.parentElement; if (c) c.scrollTop += m.getBoundingClientRect().top - c.getBoundingClientRect().top - 8; m.classList.add('is-flash'); }; setTimeout(go, 30); setTimeout(go, 320); }); // 等滚动位置还原后再滚
   function tbAiSec() {
     const a = tbAi(), busy = a.stage === 'busy', n = tbAiCost();
     const pair = (st) => `${a.target !== 'cur' ? `<img src="${AIT}search-${st}.png" alt="">` : ''}${a.target !== 'search' ? `<img src="${AIT}cur-${st}.png" alt="">` : ''}`;
@@ -617,7 +620,7 @@
     // 顶部栏内容（Waydon 2026-11-26 排版优化）：分组列表，每行 拖动 · 缩略图 · 名称/规格 · ⋯ · 眼睛 都在同一张卡内
     const D = E.D, it = D.tb.items;
     const eye = (k) => `<button class="eye" data-act="tbItem" data-arg="${k}" aria-label="${esc(t('ed/am-toggle'))}">${ic(it[k] ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`;
-    const row = (k, thumb, name, spec, grip = true) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${grip ? `<span class="grip" ${k === 'side' || k === 'search' ? 'data-act="tbSwap"' : ''}>${ic('dots-six-vertical', 'ic-16')}</span>` : ''}${thumb}<span class="tx"><b class="ellipsis">${name}</b>${spec ? `<small class="ellipsis">${spec}</small>` : ''}</span>${moreBtn('tb-' + k)}${eye(k)}</div>`;
+    const row = (k, thumb, name, spec, grip = true) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${grip ? `<span class="grip" ${k === 'side' || k === 'search' ? 'data-act="tbSwap"' : ''}>${ic('dots-six-vertical', 'ic-16')}</span>` : ''}${thumb}<span class="tx"><b class="ellipsis">${name}</b>${spec ? `<small class="ellipsis">${spec}</small>` : ''}</span>${k === 'cur' || k === 'search' ? `<button class="ib-s tb-ai" data-act="tbAiJump" data-arg="${k}" title="${esc(t('ed/tbai-title'))}">${ic('sparkle-fill', 'ic-16')}</button>` : ''}${moreBtn('tb-' + k)}${eye(k)}</div>`;
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
     const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
     const searchRow = row('search', `<span class="thumb sq"><img src="${(D.tb.icons || {}).search || 'assets/classic/search.png'}" alt=""></span>`, t('ed/tb-search'), '56×49');
@@ -645,7 +648,7 @@
   // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
   // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细]
   const TXT = {
-    topbar: [['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 10, 400]],
+    topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 12, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 10, 400]],
     notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 12, 400]],
     midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.bx b', '.bx b', 12, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],

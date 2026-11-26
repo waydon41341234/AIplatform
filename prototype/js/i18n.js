@@ -198,6 +198,7 @@ window.I18N = {
   'tx/w-700': ['粗体', '粗體', 'Bold', 'Đậm'],
   'tx/c-auto': ['默认', '預設', 'Default', 'Mặc định'],
   'tx/c-custom': ['自定义颜色', '自訂顏色', 'Custom color', 'Màu tùy chỉnh'],
+  'tx/tb-cur': ['币种文案（CNY）', '幣種文案（CNY）', 'Currency label (CNY)', 'Chữ tiền tệ (CNY)'],
   'tx/tb-search': ['搜索文字', '搜尋文字', 'Search label', 'Chữ tìm kiếm'],
   'tx/notice-text': ['公告文字', '公告文字', 'Notice text', 'Chữ thông báo'],
   'tx/midnav-btn': ['登录 / 注册按钮', '登入 / 註冊按鈕', 'Sign-in / sign-up buttons', 'Nút đăng nhập / đăng ký'],
