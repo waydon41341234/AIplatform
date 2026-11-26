@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hans" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>定制设计平台 · 交互原型</title>
+<link rel="icon" href="assets/logo-orb.webp">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/editor.css">
+<link rel="stylesheet" href="css/pages.css"> <!-- D -->
+<link rel="stylesheet" href="css/pc.css"> <!-- E -->
+<link rel="stylesheet" href="css/aidesign.css"> <!-- AD：AI 首页设计 -->
+<link rel="stylesheet" href="css/auth.css"> <!-- AU：未登录与登录 / 注册 -->
+</head>
+<body>
+<div id="app"></div>
+<script src="js/icons.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/i18n-shell.js"></script>
+<script src="js/i18n-editor.js"></script>
+<script src="js/i18n-pages.js"></script> <!-- D -->
+<script src="js/i18n-ad.js"></script> <!-- AD -->
+<script src="js/i18n-auth.js"></script> <!-- AU -->
+<script src="js/core.js"></script>
+<script src="js/home.js"></script>
+<script src="js/workbench.js"></script>
+<script src="js/pages.js"></script> <!-- D -->
+<script src="js/modpanels.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/pc.js"></script> <!-- E -->
+<script src="js/aidesign.js"></script> <!-- AD：AI 首页设计（依赖 home / workbench / editor / pc） -->
+<script src="js/auth.js"></script> <!-- AU：未登录与登录 / 注册（守卫各入口，必须最后加载） -->
+<script>
+  /* 原型专用的快捷切换条（右下角，手机宽度隐藏），不属于平台界面。 */
+  window.PROTO_BAR = function () {
+    var L = window.LANGS.map(function (l) { return '<button data-act="setLang" data-arg="' + l.code + '"' + (S.lang === l.code ? ' style="background:#ffffff33"' : '') + '>' + l.code + '</button>'; }).join('');
+    /* 第五轮 A：演示开关（亮 = 开；「下次生成失败」用一次自动熄灭，其余常亮直到再点）。手机用 ?fail=gen,load,save,export */
+    var D = [['failNext', 'demo/fail-gen'], ['loadFail', 'demo/fail-load'], ['saveFail', 'demo/fail-save'], ['exportFail', 'demo/fail-export']].map(function (d) { return '<button data-act="demoToggle" data-arg="' + d[0] + '"' + (S.demo && S.demo[d[0]] ? ' class="is-on"' : '') + '>' + window.t(d[1]) + '</button>'; }).join('');
+    return '<div class="proto-bar" aria-hidden="true"><button data-act="setTheme">' + (S.theme === 'dark' ? '☾' : '☀') + '</button>' + L + '<i class="pb-sep"></i>' + D + '</div>';
+  };
+</script>
+</body>
+</html>

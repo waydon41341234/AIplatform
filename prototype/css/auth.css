@@ -1,0 +1,130 @@
+/* AU：平台未登录状态与登录 / 注册（只用 tokens.css 变量，日夜通用） */
+
+/* ---------- 外壳：电脑顶栏「登录」「注册」、手机顶栏「登录」文字按钮 ---------- */
+.au-tb-btn { flex: none; }
+.au-m-login { flex: none; height: 32px; padding: 0 var(--space-8); border-radius: var(--radius-full); color: var(--brand); font-weight: 600; font-size: var(--fs-body-sm); white-space: nowrap; }
+.au-m-login:hover { background: var(--brand-subtle); }
+
+/* 侧栏：未登录小卡（展开）/ 登录入口（收起） */
+.au-sb-card { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); margin-top: var(--space-8); padding: var(--space-16) var(--space-12) var(--space-12); border-radius: var(--radius-md); background: var(--fill-3); border: var(--stroke-thin) solid var(--border-glass); text-align: center; }
+.au-sb-card p { margin: 0; font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); color: var(--text-2); }
+.au-sb-ic .ic { width: 32px; height: 32px; color: var(--icon-3); }
+.au-sb-card .btn { min-width: 0; }
+.nav.au-sb-login .ic { color: var(--brand); }
+
+/* 首页「最近项目」位置的引导卡 */
+.au-guide { display: flex; align-items: center; gap: var(--space-16); padding: var(--space-20) var(--space-24); border-radius: var(--radius-lg); background: linear-gradient(120deg, var(--brand-subtle), transparent 70%), var(--bg-surface); border: var(--stroke-thin) solid var(--border-glass); }
+.au-guide-ic { width: 48px; height: 48px; flex: none; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; background: var(--brand-subtle); color: var(--brand); }
+.au-guide-t { flex: 1; min-width: 0; }
+.au-guide-t h3 { margin: 0; font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); font-weight: 600; }
+.au-guide-t p { margin: var(--space-2) 0 0; font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); color: var(--text-2); }
+.au-guide-btns { display: flex; gap: var(--space-8); flex: none; }
+@media (max-width: 839px) {
+  .au-guide { flex-wrap: wrap; padding: var(--space-16); }
+  .au-guide-t { flex-basis: calc(100% - 64px); }
+  .au-guide-btns { width: 100%; }
+  .au-guide-btns .btn { flex: 1; min-width: 0; }
+}
+
+/* 未登录「我的」 */
+.au-me { display: flex; flex-direction: column; align-items: center; gap: var(--space-12); padding: var(--space-32) var(--space-20) var(--space-24); text-align: center; }
+.au-me-av { width: 72px; height: 72px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--fill-2); color: var(--icon-3); }
+.au-me-av .ic { width: 40px; height: 40px; }
+.au-me-t h2 { margin: 0; font-size: var(--fs-title-sm); line-height: var(--lh-title-sm); font-weight: 600; }
+.au-me-t p { margin: var(--space-4) auto 0; max-width: 360px; font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); }
+.au-me-btn { width: min(320px, 100%); height: var(--control-lg); font-size: var(--fs-body-lg); }
+
+/* ---------- 登录 / 注册弹窗 ---------- */
+.au-scrim { position: fixed; inset: 0; z-index: 100; background: var(--bg-overlay); animation: fade .18s ease; }
+.au-dlg { position: fixed; z-index: 101; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; padding: var(--space-24); border-radius: var(--radius-xl); background: var(--bg-surface); border: var(--stroke-thin) solid var(--border-glass); box-shadow: var(--shadow-lg); animation: pop .2s ease; color: var(--text); }
+/* 手机：全屏底部面板，可下拉关闭 */
+.au-dlg.is-sheet { left: 0; right: 0; bottom: 0; top: max(12px, env(safe-area-inset-top)); width: auto; max-height: none; transform: none; padding: 0 var(--space-16) calc(var(--space-24) + env(safe-area-inset-bottom)); border-radius: var(--radius-xl) var(--radius-xl) 0 0; border-bottom: 0; animation: up .22s ease; transition: transform .2s ease; }
+.au-grab { position: sticky; top: 0; z-index: 2; display: flex; justify-content: center; padding: var(--space-8) 0 var(--space-12); margin: 0 calc(-1 * var(--space-16)); background: var(--bg-surface); touch-action: none; cursor: grab; }
+.au-grab i { width: 36px; height: 5px; border-radius: 3px; background: var(--fill-1); }
+.au-dlg.is-sheet .au-head { touch-action: none; }
+
+.au-head { display: flex; align-items: flex-start; gap: var(--space-12); margin-bottom: var(--space-16); }
+.au-orb { width: 40px; height: 40px; border-radius: 50%; flex: none; }
+.au-head-t { flex: 1; min-width: 0; }
+.au-head-t h3 { margin: 0; font-size: var(--fs-title); line-height: var(--lh-title); font-weight: 600; }
+.au-head-t p { margin: 2px 0 0; font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); }
+.au-x { margin: -4px -4px 0 0; }
+.au-tabs { margin-bottom: var(--space-16); }
+.au-tabs .seg-opt { height: 36px; font-size: var(--fs-body); }
+
+.au-form { display: flex; flex-direction: column; gap: var(--space-12); }
+.au-methods { display: flex; align-items: center; gap: var(--space-12); }
+.au-methods > i { width: 1px; height: 14px; background: var(--border); }
+.au-method { height: 28px; padding: 0; color: var(--text-2); font-size: var(--fs-body-sm); font-weight: 500; white-space: nowrap; border-bottom: 2px solid transparent; }
+.au-method:hover:not(:disabled) { color: var(--text); }
+.au-method.is-on { color: var(--brand); border-bottom-color: var(--brand); }
+
+.au-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.au-lab { font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); color: var(--text-2); }
+.au-input { position: relative; display: flex; align-items: center; }
+.au-input .input { flex: 1; min-width: 0; width: 100%; height: 44px; color: var(--text); font-size: var(--fs-body); }
+.au-input .input::placeholder { color: var(--text-3); }
+.au-input .input:disabled { opacity: .6; }
+.au-field.is-err .input { border-color: var(--error); }
+.au-code .input { padding-right: 132px; letter-spacing: .04em; }
+.au-cd { position: absolute; right: 6px; top: 6px; bottom: 6px; max-width: 124px; padding: 0 var(--space-12); border-radius: 6px; color: var(--brand); font-size: var(--fs-body-sm); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.au-cd:hover:not(:disabled) { background: var(--brand-subtle); }
+.au-cd.is-wait, .au-cd:disabled { color: var(--text-3); cursor: default; }
+.au-pwd .input { padding-right: 44px; }
+.au-eye { position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--icon-2); }
+.au-eye:hover:not(:disabled) { background: var(--bg-hover); color: var(--icon); }
+.au-err { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px 6px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--error); }
+.au-err > .ic { flex: none; margin-top: 1px; width: 14px; height: 14px; }
+.au-err > span { flex: 1 1 0; min-width: 0; }
+.au-err > .au-link { flex: none; }
+.au-link { color: var(--link); font-size: inherit; font-weight: 600; white-space: nowrap; }
+.au-link:hover:not(:disabled) { text-decoration: underline; }
+.au-forgot { display: flex; justify-content: flex-end; margin-top: -4px; font-size: var(--fs-body-sm); }
+.au-tip > .ic { color: var(--brand); }
+.notice.is-err { border-color: color-mix(in srgb, var(--error) 40%, transparent); background: color-mix(in srgb, var(--error) 10%, transparent); }
+.au-net { align-items: center; flex-wrap: wrap; }
+.au-net > .ic { color: var(--error); margin-top: 0; }
+.au-net .grow { flex: 1; min-width: 120px; }
+
+/* 密码强度 */
+.au-meter { display: flex; align-items: center; gap: var(--space-8); color: var(--text-2); }
+.au-bars { display: inline-flex; gap: 4px; }
+.au-bars i { width: 28px; height: 4px; border-radius: 2px; background: var(--fill-2); }
+.au-meter.is-s1 .au-bars i:nth-child(-n+1) { background: var(--error); }
+.au-meter.is-s2 .au-bars i:nth-child(-n+2) { background: var(--warning); }
+.au-meter.is-s3 .au-bars i { background: var(--success); }
+.au-meter.is-s1 .caption { color: var(--error); }
+
+/* 协议 */
+.au-agree { display: flex; align-items: flex-start; gap: var(--space-6); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--text-2); }
+.au-check { flex: none; width: 20px; height: 18px; display: inline-flex; align-items: center; justify-content: center; color: var(--icon-2); }
+.au-check .ic { width: 18px; height: 18px; }
+.au-check.is-on { color: var(--brand); }
+.au-agree.is-err .au-check { color: var(--error); }
+.au-agree-t { min-width: 0; }
+.au-doc { color: var(--link); font-size: inherit; line-height: inherit; }
+.au-doc:hover { text-decoration: underline; }
+.au-err.is-agree { margin-top: -6px; padding-left: 26px; }
+
+.au-submit { height: var(--control-lg); margin-top: var(--space-4); font-size: var(--fs-body-lg); }
+.au-submit.is-busy { opacity: .85; pointer-events: none; }
+.au-spin { animation: au-spin .8s linear infinite; }
+@keyframes au-spin { to { transform: rotate(360deg); } }
+.au-more { text-align: center; color: var(--text-3); }
+
+/* ---------- 独立登录页 #/login（背景用首页 Hero） ---------- */
+.au-page { min-height: 100dvh; display: flex; flex-direction: column; background: #0b2a8a url(../assets/hero-1440x480.jpg) center / cover; }
+.au-page-top { display: flex; align-items: center; gap: var(--space-8); height: var(--nav-topbar-height); padding: 0 var(--grid-margin); }
+.au-page-top .grow { flex: 1; }
+.au-page-top > .demo-tag { margin: 0; }
+.au-glass { background: #ffffff26; color: #fff; }
+.au-glass:hover { background: #ffffff40; }
+.au-lmenu { top: calc(100% + 8px); right: 0; }
+.au-page-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-16); padding: var(--space-16) var(--grid-margin) var(--space-48); }
+.au-dlg.is-page { position: static; transform: none; width: min(440px, 100%); max-height: none; overflow: visible; animation: none; }
+.au-page-back { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 var(--space-12); border-radius: var(--radius-full); color: #fff; background: #00000033; font-size: var(--fs-body-sm); }
+.au-page-back:hover { background: #00000055; }
+@media (max-width: 599px) {
+  .au-page-main { justify-content: flex-start; padding-top: var(--space-8); }
+  .au-dlg.is-page { padding: var(--space-20) var(--space-16); }
+}

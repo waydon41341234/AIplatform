@@ -45,6 +45,7 @@ src/               React 前端
   lib/               api 客户端、路由、图片处理、导出打包
 tests/             vitest
 docs/              设计与交接文档（source/ 方案原文，figma-shots/ 设计稿截图）
+prototype/         静态 HTML 交互原型（验证 Figma 交互用，不是正式代码，见 prototype/README.md）
 PROGRESS.md        当前进度
 public/brand/      平台 Logo
 ```

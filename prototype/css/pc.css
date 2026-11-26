@@ -1,0 +1,150 @@
+/* E · PC 电脑版画布（ED-22）。页面 1920 宽、内容区 1200；业主主题色走 --o-* / --e-* / --tb-*（同 H5）。
+ * 画布用 CSS zoom 缩放；选中标签、工具条用 --pc-iz（1/缩放）反向放大，保持屏幕上原尺寸。 */
+
+/* ---------- 画布容器 ---------- */
+.pc-stage.ed-stage { display: block; padding: 56px 24px 120px; }
+.pc-page { margin: 0 auto; }
+.ed-canvas:has(.pc-stage) .ed-floats .zb { display: none; }
+.pc-floats { position: sticky; bottom: 16px; left: 0; height: 0; z-index: 16; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
+.pc-floats > div { pointer-events: auto; }
+.pc-zb { display: flex; align-items: center; gap: 6px; padding: 3px 3px 3px 10px; border-radius: var(--radius-md); background: var(--bg-raised); border: var(--stroke-thin) solid var(--border-glass); box-shadow: var(--shadow-md); }
+.pc-zb .pct { min-width: 40px; font-size: var(--fs-body-sm); font-weight: 500; color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+.pc-zb .iseg button { height: 32px; min-width: 0; padding: 0 9px; }
+
+/* 手机：画布原生滚动（横向拖动），缩放条固定在底部工具栏上方左侧 */
+.pc-m { flex: none; margin: 0 auto; padding: 12px 12px 88px; width: max-content; min-width: 100%; box-sizing: border-box; }
+.pc-mfloat { position: fixed; left: 12px; bottom: calc(64px + env(safe-area-inset-bottom) + 12px); z-index: 12; max-width: calc(100vw - 88px); }
+.pc-mfloat .pc-zb { overflow-x: auto; }
+.pc-mfloat .pc-zb .iseg button { height: 30px; padding: 0 7px; font-size: var(--fs-caption); }
+
+/* ---------- 页面 ---------- */
+.pc { --pc-iz: 1; position: relative; width: 1920px; background: var(--o-bg_1); color: var(--o-lead); font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; font-size: 16px; line-height: 1.5; box-shadow: 0 0 0 1px #0000001a, var(--shadow-md); }
+.pc .ic { width: 1em; height: 1em; }
+.pc-body { position: relative; min-height: 600px; padding-bottom: 0; }
+.pc-sec { width: 1200px; margin: 0 auto; box-sizing: border-box; }
+
+/* 选中框：与 H5 同款 2px --brand（反向放大，缩放后仍是 2px） */
+.pc .mod { position: relative; }
+.pc .mod.is-sel { outline: calc(2px * var(--pc-iz)) solid var(--brand); outline-offset: calc(-1px * var(--pc-iz)); z-index: 3; }
+.pc .mod:not(.is-sel):hover { outline: calc(1px * var(--pc-iz)) dashed var(--brand); outline-offset: calc(-1px * var(--pc-iz)); cursor: pointer; }
+.pc .sel-label, .pc .seltool { zoom: var(--pc-iz); }
+.pc .seltool { font-size: 12px; line-height: normal; }
+.pc .seltool .ic { width: 16px; height: 16px; }
+
+/* 顶部栏：通栏 1920 × 80 */
+.pc-top { height: 80px; background: var(--tb-bg, var(--o-bg_2)); color: var(--tb-text, var(--o-lead)); border-bottom: 1px solid var(--o-border); }
+.pc-top .in { width: 1200px; height: 100%; margin: 0 auto; display: flex; align-items: center; gap: 32px; }
+.pc-top .lg { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 22px; white-space: nowrap; }
+.pc-top .lg img { width: 40px; height: 40px; border-radius: 50%; }
+.pc-top .nv { display: flex; align-items: center; gap: 28px; font-size: 16px; white-space: nowrap; }
+.pc-top .nv span { position: relative; padding: 26px 0; }
+.pc-top .nv span.on { color: var(--tb-search, var(--o-primary)); font-weight: 600; }
+.pc-top .nv span.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: 18px; height: 3px; border-radius: 2px; background: currentColor; }
+.pc-top .sp { flex: 1; }
+.pc-top .srch { display: inline-flex; align-items: center; gap: 8px; width: 200px; height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid var(--o-border); background: var(--o-bg_1); color: var(--o-neutral_2); font-size: 14px; box-sizing: border-box; }
+.pc-top .srch .ic { width: 18px; height: 18px; color: var(--tb-search, var(--o-primary)); flex: none; }
+.pc-top .login { color: var(--o-primary); font-weight: 600; font-size: 15px; padding: 8px 4px; }
+.pc-top .reg { background: var(--tb-reg, var(--o-accent_3)); color: var(--o-bg_2); padding: 9px 24px; border-radius: 20px; font-weight: 600; font-size: 15px; margin-left: -16px; }
+.pc-top .bal { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 20px; background: var(--o-bg_1); border: 1px solid var(--o-border); color: var(--o-primary); font-weight: 600; font-size: 15px; }
+.pc-top .ava { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--o-primary), var(--o-accent_3)); margin-left: -16px; }
+
+/* Banner：大 1200×545、通用 1200×353、小 3 × 386×244 并排 */
+.pc-banner { background: var(--o-bg_1); }
+.pc-banner .vp { position: relative; overflow: hidden; margin: 0 auto; background: var(--o-ext_ddt_bg, var(--o-border)); touch-action: pan-y; }
+.pc-banner .track { display: flex; height: 100%; transition: transform .4s ease; }
+.pc-banner .slide { flex: 0 0 100%; height: 100%; background: center / cover url(../assets/hero-1440x480.jpg); }
+.pc-banner.is-small .vp { background: none; }
+.pc-banner.is-small .track { gap: 21px; }
+.pc-banner.is-small .slide { flex: 0 0 386px; background-color: var(--o-border); }
+.pc-ind { display: flex; justify-content: center; gap: 8px; padding: 12px 0 0; }
+.pc-ind i { width: 10px; height: 10px; border-radius: 50%; background: var(--o-neutral_3); cursor: pointer; }
+.pc-ind.bars i { width: 24px; height: 4px; border-radius: 2px; }
+.pc-ind i.on { background: var(--o-primary); }
+.pc-ind.dots i.on { width: 24px; border-radius: 5px; }
+
+/* 彩金池：1200 × 120 横条 */
+.pc-jack { position: relative; height: 120px; display: flex; align-items: center; padding: 0 40px; box-sizing: border-box; background: var(--e-jackpot-bg) center / cover; color: var(--e-jackpot-title); overflow: hidden; }
+.pc-jack .tt { flex: 1; display: inline-flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 600; }
+.pc-jack .tt .ic { width: 26px; height: 26px; }
+.pc-jack b { font-size: 52px; line-height: 1; letter-spacing: 1px; color: var(--e-jackpot-amount); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pc-jack b.roll { animation: jp-roll 2.4s ease-in-out infinite; }
+.pc-jack .sd { flex: 1; }
+.pc-jack.compact { height: 96px; }
+.pc-jack.compact b { font-size: 40px; }
+
+/* 中部导航：一行 10 个 */
+.pc-mid-wrap { background: var(--e-midnav-bg); padding: 20px 0; }
+.pc-mid-wrap .acct { display: flex; align-items: center; gap: 16px; height: 56px; padding: 0 24px; margin-bottom: 16px; border-radius: 12px; background: var(--o-bg_1); color: var(--o-primary); font-weight: 600; font-size: 18px; }
+.pc-mid-wrap .acct .sp { flex: 1; }
+.pc-mid-wrap .acct .a { padding: 6px 18px; border-radius: 16px; background: var(--o-primary); color: var(--o-bg_2); font-size: 14px; }
+.pc-mid { display: grid; grid-template-columns: repeat(10, 1fr); }
+.pc-mid .it { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--e-midnav-text); font-size: 15px; min-width: 0; }
+.pc-mid .nm { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-mid .ib { width: 64px; height: 56px; display: flex; align-items: center; justify-content: center; color: var(--e-midnav-icon); }
+.pc-mid .ib .ic { width: 36px; height: 36px; }
+.pc-mid .ib.ph { border: 1px dashed var(--o-neutral_3); border-radius: 10px; color: var(--o-neutral_3); }
+.pc-mid .ib img { width: 100%; height: 100%; object-fit: contain; }
+
+/* 游戏菜单：1200 宽横向全部入口，不滚动 */
+.pc-gm-wrap { background: var(--e-gamemenu-bg); padding: 12px 0; }
+.pc-gm { display: flex; gap: 8px; }
+.pc-gm span { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; padding: 0 6px; border-radius: 22px; color: var(--e-gamemenu-text); font-size: 15px; white-space: nowrap; }
+.pc-gm span em { font-style: normal; overflow: hidden; text-overflow: ellipsis; }
+.pc-gm.square span { border-radius: 8px; }
+.pc-gm span.on { background: var(--e-gamemenu-active); color: var(--e-gamemenu-activeText); font-weight: 600; }
+.pc-gm.icons span { flex-direction: column; height: 76px; gap: 4px; font-size: 13px; }
+.pc-gm.icons span .ic { width: 28px; height: 28px; flex: none; }
+.pc-gm.icons span img { width: 40px; height: 30px; object-fit: contain; flex: none; }
+
+/* 游戏卡片：6 列 */
+.pc-gc { display: grid; grid-template-columns: repeat(6, 1fr); padding: 24px 0 32px; }
+.pc-gc .c { display: flex; flex-direction: column; gap: 8px; font-size: 15px; color: var(--e-gamecards-text); min-width: 0; }
+.pc-gc .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-gc .im { position: relative; aspect-ratio: 4 / 3; background: linear-gradient(135deg, #2a2a2e, #3a3a40); overflow: hidden; }
+.pc-gc .im.fb { background: var(--e-gamecards-placeholder); display: flex; align-items: center; justify-content: center; color: var(--e-gamecards-placeholderIcon); }
+.pc-gc .im.fb > .ic { width: 28%; height: 28%; }
+.pc-gc .tg { position: absolute; left: 8px; top: 8px; padding: 0 8px; border-radius: 4px; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); font-size: 13px; line-height: 22px; }
+
+/* 页脚：通栏，链接一行 + 版权 */
+.pc-foot { background: var(--e-footer-bg); color: var(--e-footer-text); font-size: 14px; padding: 32px 0; }
+.pc-foot .ln { display: flex; flex-wrap: wrap; gap: 8px 32px; color: var(--e-footer-link); font-size: 15px; }
+.pc-foot[style*="center"] .ln { justify-content: center; }
+.pc-foot .cp { margin-top: 12px; }
+
+/* 侧边栏：PC 上为左（右）侧悬浮竖条，宽 72 */
+.pc-rail-pos { position: absolute; top: 40px; z-index: 5; }
+.pc-rail-pos.left { left: 24px; }
+.pc-rail-pos.right { right: 24px; }
+.pc-rail { width: 72px; padding: 8px 6px; box-sizing: border-box; border-radius: 16px; background: var(--e-sidebar-bg); color: var(--e-sidebar-text); box-shadow: 0 6px 20px #0000002e; display: flex; flex-direction: column; gap: 6px; }
+.pc-rail .ri { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 10px; background: var(--e-sidebar-item); font-size: 11px; line-height: 14px; text-align: center; word-break: break-all; }
+.pc-rail .ri .ic { width: 24px; height: 24px; }
+.pc-rail .ri img { width: 28px; height: 28px; object-fit: contain; }
+.pc-rail .ri.on { background: var(--e-sidebar-itemActive); color: var(--e-sidebar-textActive); }
+.pc-rail-pos .mod { border-radius: 16px; }
+.pc-rail-pos.left .seltool { left: 0; transform: none; }
+.pc-rail-pos.right .seltool { left: auto; right: 0; transform: none; }
+
+/* 未知模块：H5 渲染放大居中 */
+.pc-fb { display: flex; justify-content: center; padding: 16px 0; }
+.pc-fb > * { width: 750px; zoom: 2; max-width: 375px; }
+
+/* 底部导航提示 */
+.row .pc-st { margin-left: auto; }
+.row .pc-st + .eye { margin-left: 4px; }
+.pc-note { margin-bottom: var(--space-12); }
+.pc-note .ic { color: var(--brand); }
+/* 左栏：名称优先完整显示，caption 放不下时省略 */
+.row:has(.pc-st) .nm { flex: 0 1 auto; }
+.row .pc-st { flex: 0 1 auto; min-width: 24px; overflow: hidden; text-overflow: ellipsis; }
+/* 手机缩放条只留 适应 / 50 / 100（其余用双指缩放） */
+.pc-mfloat .iseg button[data-arg="25"], .pc-mfloat .iseg button[data-arg="75"] { display: none; }
+/* 手机面板 / 全屏预览打开时收起缩放条 */
+body:has(.med-sheet) .pc-mfloat, body:has(.preview-full) .pc-mfloat { display: none; }
+/* PC Banner 通栏 1920×564 的尺寸角标 */
+.pc-banner .pc-spec { position: absolute; right: 24px; bottom: 16px; padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: calc(12px * var(--pc-iz, 1)); line-height: 1.5; pointer-events: none; }
+/* 余额框样式：PC 画布 */
+.pc-top .bal .bi { width: 18px; height: 18px; flex: none; }
+.pc-top .bal.bal-solid { gap: 8px; padding: 0 5px 0 14px; background: var(--o-primary); border-color: transparent; color: #fff; }
+.pc-top .bal.bal-solid .bplus { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.pc-top .bal.bal-solid .bplus .bi { width: 16px; height: 16px; }
+.pc-top .bal.bal-text { gap: 6px; padding: 0 4px; background: none; border: 0; }
