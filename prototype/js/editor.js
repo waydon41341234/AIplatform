@@ -553,6 +553,14 @@
   // ---------- 顶部栏图标 AI 生成（模拟；样图由 Figma generate_image 生成，Waydon 2026-11-26） ----------
   // 两种方式：选风格 / 上传参考图 → AI 反推提示词（可改）→ 生成。目标：搜索+币种 / 只搜索 / 只币种
   const TB_AI = ['glossy', 'flat', 'blackgold', 'festive', 'neon']; const AIT = 'assets/ai-tb/';
+  const TB_AI_P = {
+    glossy: ['亮蓝色 #1678FF 渐变，圆润卡通 3D 光泽质感，带白色高光，干净明亮', 'bright blue #1678FF gradient, glossy cartoon 3D, white highlights, clean and bright'],
+    flat: ['纯色扁平风格，主色蓝 #1678FF / 橙黄 #FFAA09，线条粗细一致、圆角端点，无渐变，极简', 'flat solid color, blue #1678FF / orange #FFAA09, even rounded strokes, no gradient, minimal'],
+    blackgold: ['香槟金金属拉丝质感，深色镜片 / 浮雕符号，边缘细齿纹，奢华高级', 'brushed champagne-gold metal, dark lens / embossed symbol, milled edge, luxurious'],
+    festive: ['中国红 #E83A30 主体，金色描边，祥云点缀，喜庆节日风格，3D 卡通', 'Chinese red #E83A30 with gold outline and auspicious clouds, festive 3D cartoon'],
+    neon: ['青蓝 / 紫色霓虹发光描边，深色半透明主体，科技赛博风，不要白色外发光', 'cyan / purple neon glowing outline, dark translucent body, cyber style, no white outer glow'],
+  };
+  const tbStylePrompt = (st) => { const a = tbAi(); return (a.sp && a.sp[st] != null) ? a.sp[st] : TB_AI_P[st][/^zh/.test(S.lang) ? 0 : 1]; };
   const tbAi = () => (E.tbAi = E.tbAi || { mode: 'style', target: 'both', style: 'glossy', stage: 'setup' });
   const tbAiCost = () => (tbAi().target === 'both' ? 40 : 20);
   A.tbAiStyle = (v) => { const a = tbAi(); if (a.stage === 'busy') return false; a.style = v; a.stage = 'setup'; };
@@ -587,6 +595,7 @@
     const el = e.target; if (!el.matches) return;
     if (el.matches('[data-tbairef]') && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; if (!/^image\//.test(f.type)) { window.toast(t('ed/bal-img-bad'), { info: true }); return; } const r = new FileReader(); r.onload = () => refAnalyze(r.result); r.readAsDataURL(f); }
     else if (el.matches('[data-tbaiprompt]')) { tbAi().prompt = el.value.slice(0, 300); }
+    else if (el.matches('[data-tbaisp]')) { const a = tbAi(); a.sp = Object.assign({}, a.sp, { [a.style]: el.value.slice(0, 300) }); }
   });
   A.tbAiGen = () => {
     const a = tbAi(), n = tbAiCost();
@@ -606,7 +615,7 @@
     const target = segBtns([{ v: 'both', label: t('ed/tbai-t-both') }, { v: 'search', label: t('ed/tb-search') }, { v: 'cur', label: t('ed/tbai-t-cur') }], a.target, 'tbAiTarget');
     const mode = segBtns([{ v: 'style', label: t('ed/tbai-m-style') }, { v: 'ref', label: t('ed/tbai-m-ref') }], a.mode, 'tbAiMode');
     let body;
-    if (a.mode === 'style') body = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
+    if (a.mode === 'style') body = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div><div class="tbai-pbox"><div class="lab2">${ic('pencil-simple', 'ic-16')}${t('ed/tbai-sprompt')}</div><textarea class="input" rows="3" maxlength="300" data-tbaisp placeholder="${esc(t('ed/tbai-sprompt-ph'))}" ${busy ? 'disabled' : ''}>${esc(tbStylePrompt(a.style))}</textarea><small class="faint">${t('ed/tbai-sprompt-tip')}</small></div>`;
     else body = !a.ref ? `<label class="tbai-drop">${ic('image-fill', 'ic-24')}<b>${t('ed/tbai-ref-up')}</b><small>${t('ed/tbai-ref-tip')}</small><input type="file" accept="image/*" data-tbairef hidden></label>`
       : `<div class="tbai-ref"><span class="th"><img src="${a.ref}" alt=""><button class="ib-s" data-act="tbAiRefDel" title="${esc(t('menu/delete'))}" ${busy ? 'disabled' : ''}>${ic('x', 'ic-16')}</button></span><div class="pp">${a.analyzing ? `<div class="tbai-an">${ic('spinner-gap', 'ic-16 spin')}${t('ed/tbai-analyzing')}</div>` : `<div class="lab2">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt')}${a.refHex ? `<i class="sw" style="background:${a.refHex}"></i>` : ''}</div><textarea class="input" rows="4" maxlength="300" data-tbaiprompt ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea><small class="faint">${t('ed/tbai-prompt-tip')}</small>`}</div></div>`;
     const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n })}</button></div></div>` : '';
