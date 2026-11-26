@@ -936,3 +936,14 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 /* 一屏高度：内容在页面内滚动 */
 .h5-body { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; margin-right: -72px; padding-right: 72px; }
 .h5-body::-webkit-scrollbar { display: none; }
+
+/* 公告栏图标可点替换 */
+.cl-notice .spk { position: relative; flex: none; display: flex; cursor: pointer; }
+.cl-notice .spk img { width: 18px; height: auto; max-height: 20px; object-fit: contain; display: block; }
+.cl-notice .mail { cursor: pointer; }
+.cl-notice .mail img { height: 26px; object-fit: contain; }
+.cl-notice .is-focus { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
+.nt-ic-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.nt-ic-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nt-ic-row .tx b { font-weight: 500; font-size: 13px; }
+.nt-ic-row .tx small { font-size: 11px; color: var(--text-2); }

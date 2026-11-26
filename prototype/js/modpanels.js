@@ -28,7 +28,7 @@
     bn[0].onBuiltin = true; bn[0].defOn = CL + 'bi0.png'; // 首页选中态图标内置
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
-      notice: { text: NOTICE, mail: true, speed: 'normal' },
+      notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png' }] },
       midnav: { mode: 'conf', items: MID.map(([n, i, def, badge]) => ({ n, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 96 },
       gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill' },
       gamecards: { name: true, tag: true, fav: true, fallback: null, cols: 3, corner: 16, gap: 16 },
@@ -39,7 +39,7 @@
   };
   const nm = (it) => it.n || (it.k ? t(it.k) : '');
   // 入口图标规格（逻辑尺寸，PNG 交付 @2x）
-  const ICON_SPEC = { midnav: [80, 70], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
+  const ICON_SPEC = { notice: [52, 52], midnav: [80, 70], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
 
   // 元素颜色：[元素 ID, 默认取的基础色 Key]
   const EL = {
@@ -60,6 +60,8 @@
     return s;
   }
   const M = (b) => X().E.D.m[b];
+  // 公告栏图标（喇叭 / 信箱）可替换或 AI 生成（Waydon 2026-11-26）；旧存档没有 items 时补上
+  const ntItems = () => { const m = M('notice'); if (!m.items) m.items = defaults().notice.items; return m.items; };
   const set = (b, k, v) => { const x = X(); x.commit(() => { x.E.D.m[b][k] = v; }); };
 
   // ---------- 面板零件 ----------
@@ -113,7 +115,8 @@
     },
     notice: {
       content: () => sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;resize:vertical" data-input="mpNtText" maxlength="80">${esc(M('notice').text)}</textarea>`) + note('mp/nt-hl')
-        + sec(t('mp/nt-show'), toggle(M('notice').mail, 'mpFlag', 'notice|mail', t('mp/nt-mail'))),
+        + sec(t('mp/nt-show'), toggle(M('notice').mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')))
+        + sec(t('mp/nt-icons'), ntItems().map((it, i) => `<div class="nt-ic-row">${upThumb('notice', i, 'img', it.i)}<span class="tx"><b>${esc(nm(it))}</b><small>52×52 · PNG / SVG</small></span>${resetBtn('notice', i)}</div>`).join('') + note('mp/icon-hint') + iconBtns('notice')),
       layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-size'),
     },
     midnav: {
@@ -165,9 +168,10 @@
       return `<div class="h5-jack ${m.layout}" style="margin:${m.margin / 2}px 12px;border-radius:${m.corner / 2}px;${bg}"><span class="tt">${esc(m.title)}</span>${amt}</div>`;
     }
     if (b === 'notice') {
+      const its = ntItems(), gi = (i, cls) => { const it = its[i], src = it.img || it.def, on = S().menu === 'icon:notice|' + i; return `<span class="${cls} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'notice'}|notice|${i}|img" data-stop><img src="${src}" alt="">${cls === 'mail' ? '<i>99</i>' : ''}</span>${on ? iconMenu('notice', i, 'img') : ''}`; };
       // 公告栏：喇叭 + 跑马灯文字（“引号内”用强调色 1、数字用强调色 2）+ 信箱
       const tx = esc(m.text || '').replace(/“([^”]*)”/g, '<em class="hl">“$1”</em>').replace(/(\d[\d,.]*)/g, '<em class="num">$1</em>');
-      return `<div class="cl-notice sp-${m.speed || 'normal'}"><img class="spk" src="${CL}speaker.png" alt=""><div class="mq"><span>${tx}</span></div>${m.mail ? `<span class="mail"><img src="${CL}mail.png" alt=""><i>99</i></span>` : ''}</div>`;
+      return `<div class="cl-notice sp-${m.speed || 'normal'}">${gi(0, 'spk')}<div class="mq"><span>${tx}</span></div>${m.mail ? gi(1, 'mail') : ''}</div>`;
     }
     if (b === 'midnav') {
       // 帐户栏（经典蓝白）：左边 未登录=登录/注册，已登录=VIP·用户名·余额；右边 4 个入口
@@ -338,9 +342,9 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">${bg}<g transform="translate(24 22) scale(.1875)" fill="${fg}">${path}</g></svg>`);
   }
   const perEntry = (b) => (b === 'bottomnav' || b === 'gamemenu' ? ['img', 'imgOn'] : ['img']).slice(0, b === 'bottomnav' ? 2 : 1);
-  const isReq = (b, it) => (b === 'midnav' ? M(b).mode === 'conf' || it.req : b === 'bottomnav' ? it.req : false);
+  const isReq = (b, it) => (b === 'notice' ? true : b === 'midnav' ? M(b).mode === 'conf' || it.req : b === 'bottomnav' ? it.req : false);
   const jobs = (ia) => { const out = []; M(ia.b).items.forEach((it, i) => { if (ia.picks[i]) perEntry(ia.b).forEach((f) => out.push(i + '|' + f)); }); return out; };
-  const modTitle = (b) => t({ midnav: 'mod/midnav', bottomnav: 'mod/bottomnav', gamemenu: 'mod/gamemenu' }[b]);
+  const modTitle = (b) => t({ notice: 'mod/notice', midnav: 'mod/midnav', bottomnav: 'mod/bottomnav', gamemenu: 'mod/gamemenu' }[b]);
   function candColor(ia, f) { const th = X().E.D.theme; const pal = [th.primary, th.accent_3, th.accent_1, th.accent_2, '#7b4dff']; return f === 'img' && ia.b === 'bottomnav' ? th.neutral_2 : pal[ia.attempt % pal.length]; }
   function candSrc(ia, key) { const c = ia.cands[key]; if (!c) return ''; const [i] = key.split('|'); return aiSvg(M(ia.b).items[+i].i || 'sparkle-fill', c.style, c.color); }
   A.iaOpen = (b) => {
