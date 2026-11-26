@@ -129,6 +129,7 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .cand { position: relative; aspect-ratio: 1020 / 300; border-radius: 6px; background: center / cover url(../assets/hero-1440x480.jpg); border: 2px solid transparent; }
 .cand.is-on { border-color: var(--brand); }
 .cand .ck { position: absolute; right: 4px; top: 4px; width: 18px; height: 18px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; }
+.cand .best { position: absolute; left: 4px; top: 4px; padding: 0 6px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 11px; line-height: 18px; }
 .cand.skeleton { background: none; }
 .chk-grp { margin: 16px 0 8px; font-size: var(--fs-caption); font-weight: 600; }
 .chk-grp.err { color: var(--error); } .chk-grp.warn { color: var(--warning); } .chk-grp.ok { color: var(--success); }
@@ -411,6 +412,11 @@ button.ed-name:hover { background: var(--bg-hover); }
 .warn-link:hover { text-decoration: underline; }
 .warn-link .ic { flex: none; }
 .slide-list .asset-row .asset .sp { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* 轮播图行：名称不换行（「预览中」做成小标签），尺寸不符提醒占整行 */
+.slide-list .slide-nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slide-list .asset .thumb:not(.sq) { width: 72px; height: 28px; }
+@media (max-width: 1199px) and (min-width: 840px) { .ed-right .slide-list .slide-edit { display: none; } .ed-right .slide-list .asset .thumb:not(.sq) { width: 56px; height: 22px; } }
+.slide-list .slide-warn { display: flex; width: 100%; margin-top: 8px; line-height: 1.4; }
 .am-menu { top: calc(100% + 4px); right: 0; left: auto; width: 220px; }
 .am-menu .menu-item .tx { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
 .am-menu .menu-item .sub, .am-sheet .menu-item .sub { font-size: var(--fs-caption); color: var(--text-3); }

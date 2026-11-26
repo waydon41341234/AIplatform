@@ -77,7 +77,7 @@
     const x = X(); const slides = v.map((i) => `<div class="slide" style="${x.slideStyle ? x.slideStyle(i) : window.fxStyle(slideF(i), 'assets/classic/banner.webp')}"></div>`).join('');
     const indC = { s1: 'dots', s2: 'dots', s3: 'dots', s4: 'bars' }[B.ind] || B.ind;
     const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${indC}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
-    return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span></div>${ind}</div>`;
+    return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span>${ind}</div></div>`; // 指示器叠在图片底部（跟 H5 一致），颜色走模块色变量
   }
   function jackpot() {
     const m = M('jackpot');

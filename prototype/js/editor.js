@@ -44,7 +44,22 @@
   // Banner AI 候选 = Figma generate image 生成的 4 种默认风格（2026-11-26，assets/ai-banner/）
   const CAND_W = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
   // AI 候选也按当前样式出对应比例的图（大 1500×680、小 320×202，其它 1020×300）
-  const candList = () => (E.D.banner.size === 'large' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/large-' + n + '.webp') : E.D.banner.size === 'small' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/small-' + n + '.webp') : CAND_W);
+  // 每张候选图的风格标签（按图片内容标：大 = 真人蓝 / 黑金 / 体育霓虹，小 = 蓝光泽 / 黑金 / 红包喜庆）
+  const CAND_TAG = { large: [['glossy'], ['blackgold'], ['sport', 'neon']], small: [['glossy'], ['blackgold'], ['festive']], def: [['glossy'], ['blackgold'], ['festive'], ['neon']] };
+  const candBase = () => (E.D.banner.size === 'large' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/large-' + n + '.webp') : E.D.banner.size === 'small' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/small-' + n + '.webp') : CAND_W);
+  const candTags = () => CAND_TAG[E.D.banner.size] || CAND_TAG.def;
+  // 生成时按关键词 / 提示词 / 参考图给候选排序（最贴合的排第一），候选显示期间顺序固定
+  const candList = () => { const b = candBase(); const o = E.ai && E.ai.order; return o && o.length === b.length ? o.map((k) => b[k]) : b; };
+  const KW_ST = { 1: 'neon', 2: 'blackgold', 3: 'festive', 4: 'sport', 5: 'glossy', 6: 'neon', 7: 'glossy', 8: 'festive' };
+  const PROMPT_ST = [['festive', /春节|新年|喜庆|喜慶|节日|節日|红包|紅包|中秋|圣诞|聖誕|红色|紅色|festive|holiday|new year|red\b|lễ hội|tết/i], ['blackgold', /黑金|金色|奢华|奢華|尊享|vip|gold|luxur|sang trọng|vàng/i], ['neon', /霓虹|赛博|賽博|科技|neon|cyber|tech|công nghệ/i], ['sport', /体育|體育|足球|球员|球員|赛事|賽事|sport|football|thể thao/i], ['glossy', /3d|立体|立體|光泽|光澤|卡通|glossy|cartoon|nổi khối/i]];
+  function candScore(a) {
+    const w = {}; const add = (st, n) => { w[st] = (w[st] || 0) + n; };
+    a.kw.forEach((k) => add(KW_ST[k], 3));
+    PROMPT_ST.forEach(([st, re]) => { if (re.test(a.prompt || '')) add(st, 2); });
+    if (a.refStyle) add(a.refStyle === 'flat' ? 'glossy' : a.refStyle, 4);
+    const sc = candTags().map((tg) => tg.reduce((n, st) => n + (w[st] || 0), 0));
+    return { order: sc.map((v, i) => i).sort((x, y) => sc[y] - sc[x] || x - y), best: Math.max(...sc) > 0 };
+  }
   const BNAV_PX = { 98: 49, 110: 55, 120: 60, 140: 70 };
   const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
@@ -592,7 +607,10 @@
   }
   function bannerContent() {
     const B = E.D.banner, sz = BANNER[B.size];
-    const spLine = (s0, i) => { const s = slideDim(s0, sz); return (s.w !== sz.w || s.h !== sz.h ? `<button class="warn-link" data-act="openResize" data-arg="slide${i}" data-stop>${ic('warning-circle-fill', 'ic-16')}${t('ed/slide-bad', { w: s.w, h: s.h })}</button>` : `${s.w}×${s.h}`); };
+    // 尺寸不符的提醒单独占整行（放在缩略图那一行下面），不挤在名称列里换成好几行（QA 2026-11-26）
+    const isBad = (s0) => { const s = slideDim(s0, sz); return s.w !== sz.w || s.h !== sz.h; };
+    const spLine = (s0) => { const s = slideDim(s0, sz); return isBad(s0) ? '' : `${s.w}×${s.h}`; };
+    const warnLine = (s0, i) => { if (!isBad(s0)) return ''; const s = slideDim(s0, sz); return `<button class="warn-link slide-warn" data-act="openResize" data-arg="slide${i}" data-stop>${ic('warning-circle-fill', 'ic-16')}${t('ed/slide-bad', { w: s.w, h: s.h })}</button>`; };
     const hidTag = (s) => (s.hid ? `<span class="pill-tag is-gray">${t('ed/slide-hidden')}</span>` : '');
     // 行内眼睛（跟其它列表模块一致）；最后一张可见的不能隐藏
     const vis = visIdx();
@@ -600,9 +618,9 @@
     const thumb = (i) => `<span class="thumb" style="${slideBg(B.slides[i], null, defImg(i))}"></span>`;
     const slides = B.slides.map((s, i) => {
       const grip = `<span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>`;
-      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })} · ${t('ed/previewing-slide')}</div><div class="sp">${spLine(s, i)}${hidTag(s)}</div></span>${eye(s, i)}${moreBtn('slide' + i)}</div>
+      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}<span class="pill-tag">${t('ed/previewing-slide')}</span>${hidTag(s)}</div></span>${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}
         <div class="acts"><button class="btn btn-primary btn-sm" data-act="openAi">${ic('magic-wand', 'ic-16')}${t('ed/ai')}</button><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="slide${i}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="slide${i}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div></div>${uploadUI('slide' + i)}`;
-      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })}</div><div class="sp">${spLine(s, i)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${eye(s, i)}${moreBtn('slide' + i)}</div></div></div>${uploadUI('slide' + i)}`;
+      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}</div></div>${uploadUI('slide' + i)}`;
     }).join('');
     const bad = checks().req.filter((x) => x.mod === 'banner');
     return `${bad.length ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${esc(bad[0].text)}<div class="caption faint">Banner</div></div></div>` : ''}
@@ -663,15 +681,15 @@
     let cands = '';
     if (a.stage === 'generating') cands = `<div class="cands">${[0, 1, 2, 3].map(() => '<div class="cand skeleton"></div>').join('')}</div><div class="rec-note">${ic('clock', 'ic-16')}${t('rec/generating')}</div>`;
     else if (a.stage === 'failed') cands = `<div class="cands">${[0, 1, 2, 3].map(() => `<div class="cand is-fail">${ic('x-circle-fill')}</div>`).join('')}</div><div class="ia-msg is-err">${ic('warning-circle-fill', 'ic-16')}${t('ed/ai-failed')}</div><div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm" data-act="aiGen">${t('rec/retry', { c: 20 })}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button></div>`;
-    else if (a.stage === 'cands') cands = `<div class="cands">${candList().map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="${window.fxStyle(f)}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}</button>`).join('')}</div>
+    else if (a.stage === 'cands') cands = `<div class="cands">${candList().map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="${window.fxStyle(f)};aspect-ratio:${sz.w} / ${sz.h}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}${i === 0 && a.best ? `<span class="best">${t('ed/ai-best')}</span>` : ''}</button>`).join('')}</div>
         <div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm ${a.cand == null ? 'is-disabled' : ''}" data-act="adoptCand">${t('ed/adopt')}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button><button class="btn btn-outline btn-sm" data-act="aiGen">${ic('clock-counter-clockwise', 'ic-16')}${t('rec/regenerate-cost', { c: 20 })}</button></div><div class="p-note">${t('ed/ai-note')}</div>`;
     const ref = window.refSlot ? window.refSlot(a.refSt, 'edRef') : '';
     return `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="closeAi" title="${esc(t('ed/keep-current'))}">${ic('caret-left')}</button>${t('ed/ai-title')}</h2>
       <div class="p-note" style="margin:0 0 8px">${ic('magic-wand', 'ic-16')}${t('ed/ai-auto-hint')}</div>
       <div class="ai-box"><div class="in">${ref}
-        <div style="flex:1;min-width:0"><textarea data-input="aiPrompt">${esc(a.prompt)}</textarea>${a.kw.length ? `<div class="tagrow">${a.kw.map((k) => `<button class="chip is-on" data-act="aiKw" data-arg="${k}">${t('ed/ai-kw-' + k)}${ic('x', 'ic-16')}</button>`).join('')}</div>` : ''}</div></div>
+        <div style="flex:1;min-width:0"><textarea data-input="aiPrompt" ${a.analyzing ? `disabled placeholder="${esc(t('ed/tbai-analyzing'))}"` : ''}>${esc(a.analyzing ? '' : a.prompt)}</textarea>${a.kw.length ? `<div class="tagrow">${a.kw.map((k) => `<button class="chip is-on" data-act="aiKw" data-arg="${k}">${t('ed/ai-kw-' + k)}${ic('x', 'ic-16')}</button>`).join('')}</div>` : ''}</div></div>
         <div class="ft"><span class="rel"><button class="c-opt" data-act="menu:toggle" data-arg="aiModel">${window.MODEL_LOGO[a.model]}${a.model === 'gpt' ? 'GPT Image' : 'Gemini'}${ic('caret-down', 'chev')}</button>${S.menu === 'aiModel' ? `<div class="menu c-menu">${['gpt', 'gemini'].map((m) => `<button class="menu-item model-item ${a.model === m ? 'is-on' : ''}" data-act="aiModel" data-arg="${m}">${window.MODEL_LOGO[m]}<span><div class="nm">${m === 'gpt' ? 'GPT Image' : 'Gemini'}</div><div class="ds">${t('model/' + m + '-desc')}</div></span></button>`).join('')}</div>` : ''}</span>
-          <button class="send ${can && a.stage !== 'generating' ? '' : 'is-disabled'}" data-act="aiGen">${ic('sparkle-fill')}20${ic('arrow-up')}</button></div></div>
+          <button class="send ${can && a.stage !== 'generating' && !a.analyzing ? '' : 'is-disabled'}" data-act="aiGen">${ic('sparkle-fill')}20${ic('arrow-up')}</button></div></div>
       ${can ? '' : `<div class="ai-low">${t('ed/ai-low')} · <button data-act="edTopup">${t('confirm/topup')}</button></div>`}
       <div class="p-sec"><div class="lab">${t('ed/ai-style-title')}</div><div class="kw">${kws.map((k) => `<button class="chip ${a.kw.includes(k) ? 'is-on' : ''}" data-act="aiKw" data-arg="${k}">${t('ed/ai-kw-' + k)}</button>`).join('')}</div>
         <div class="p-note">${t('ed/cost-ai')}</div><div class="p-note" style="margin-top:2px">${t('ed/spec-line', sz)}</div></div>
@@ -1511,19 +1529,35 @@
   A.closeAi = () => { if (E.ai) E.ai.tok = null; E.ai = null; };
   I.aiPrompt = (v) => { E.ai.prompt = v; };
   A.aiKw = (k) => { const a = E.ai.kw; const n = +k; const i = a.indexOf(n); if (i >= 0) a.splice(i, 1); else a.push(n); };
-  A.edRefPick = () => { if (window.refPick) window.refPick(E.ai.refSt); return false; };
-  A.edRefView = () => { if (window.refPick) window.refPick(E.ai.refSt); return false; };
-  A.edRefRm = () => { E.ai.refSt = {}; };
-  A.edRefCancel = () => { if (window.refCancel) window.refCancel(E.ai.refSt); };
+  // 参考图（跟图标 / 顶部栏 AI 一致）：只收 IMG_ACCEPT 格式，上传后识别主色 / 风格，反推一段 Banner 提示词填进输入框
+  const edRefPick = () => {
+    const a = E.ai; if (!a || a.stage === 'generating') return false;
+    window.pickImage({ accept: window.IMG_ACCEPT, maxMB: 10 }, (src, file) => window.refUpload(a.refSt, src, file ? file.name : '', () => {
+      if (E.ai !== a) return;
+      a.analyzing = true; window.render();
+      window.aiRefRead(src, ['', ''], (res) => {
+        if (E.ai !== a) return; a.analyzing = false;
+        if (!res) { a.refSt = {}; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); return; }
+        const sz = BANNER[E.D.banner.size];
+        a.refStyle = res.style; a.prompt = t('ed/ai-ref-prompt', { w: sz.w, h: sz.h, hex: res.hex, style: t('ed/ai-st-' + (res.style === 'flat' ? 'glossy' : res.style)) });
+        if (a.stage === 'cands') a.stage = 'idle'; window.render();
+      });
+    }));
+    return false;
+  };
+  A.edRefPick = edRefPick;
+  A.edRefView = edRefPick;
+  A.edRefRm = () => { E.ai.refSt = {}; E.ai.refStyle = null; E.ai.analyzing = false; };
+  A.edRefCancel = () => { if (window.refCancel) window.refCancel(E.ai.refSt); E.ai.analyzing = false; };
   A.aiModel = (m) => { E.ai.model = m; S.menu = null; };
   A.aiGen = () => {
-    const a = E.ai; if (!a || a.stage === 'generating') return false;
+    const a = E.ai; if (!a || a.stage === 'generating' || a.analyzing) return false;
     if (!afford(20)) { if (window.lowBalance) window.lowBalance(20); else topup(); return false; }
     a.stage = 'generating'; a.cand = null; const tok = (a.tok = {});
     setTimeout(() => {
       if (E.ai !== a || a.tok !== tok) return;
       if (fail(a.prompt)) { a.stage = 'failed'; notice({ kind: 'failed', cat: 'gen', title: t('ed/ai-title'), body: t('ed/ai-failed') }); }
-      else { pay(20, 'banner'); a.stage = 'cands'; }
+      else { pay(20, 'banner'); const r = candScore(a); a.order = r.order; a.best = r.best; a.stage = 'cands'; }
       window.render();
     }, 1500);
   };
