@@ -1253,3 +1253,5 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .ind-opt .ind-prev.on-ind .h5-ind.s3 { transform: scale(1.4); }
 .ind-opt .ind-prev.on-ind .h5-ind.s4 { transform: none; }
 @media (max-width: 1199px) and (min-width: 800px) { .ind-opt .ind-prev.on-ind .h5-ind.s4 { transform: scale(.85); } .ind-opt .ind-prev.on-ind .h5-ind { transform: scale(1.3); } }
+/* 画布锚定菜单移到 body 后的样式（不超出手机画布） */
+body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--font); font-size: var(--fs-body-sm); line-height: normal; text-align: left; }

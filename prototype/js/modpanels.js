@@ -767,14 +767,32 @@
   }
   // 画布里的图标菜单：fixed 定位到图标正下方（放不下就往上）
   window.AFTER_RENDER.push(() => {
-    document.querySelectorAll('body > .icon-menu').forEach((n) => n.remove());
+    document.querySelectorAll('body > .icon-menu, body > .tb-ic-menu').forEach((n) => n.remove());
     const m = document.querySelector('#app .icon-menu'); if (!m) return;
     const f = m.parentElement.querySelector('.is-focus'); if (!f) return;
     // 画布有缩放（transform），fixed 会相对画布定位，所以把菜单移到 body 下
     const r = f.getBoundingClientRect();
     document.body.appendChild(m);
-    m.style.position = 'fixed'; m.style.left = Math.max(8, Math.min(r.left - 4, window.innerWidth - 248)) + 'px';
-    const h = m.offsetHeight; m.style.top = (r.bottom + 6 + h > window.innerHeight - 8 ? r.top - 6 - h : r.bottom + 6) + 'px';
+    // 菜单不超出手机画布边框（Waydon 2026-11-26 19:13）：左右、上下都限制在 .h5 范围内；画布比菜单窄时靠画布左边
+    const fr = (f.closest('.h5') || document.querySelector('.ed-canvas .h5') || document.body).getBoundingClientRect();
+    m.style.position = 'fixed'; m.style.width = Math.min(240, Math.floor(fr.width - 8)) + 'px';
+    const mw = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = Math.max(fr.left + 4, Math.min(r.left - 4, fr.right - 4 - mw)) + 'px';
+    const below = r.bottom + 6, above = r.top - 6 - h;
+    m.style.top = (below + h <= fr.bottom - 4 ? below : Math.max(fr.top + 4, above)) + 'px';
+  });
+
+  // 画布里其它锚定菜单（游戏卡片封面、顶部栏图标）：同样移到 body、限制在手机画布边框内
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('#app .ed-canvas .gc-cv-menu, #app .ed-canvas .tb-ic-menu').forEach((m) => {
+      const anc = m.parentElement; const fr = (anc.closest('.h5') || document.body).getBoundingClientRect(); const r = anc.getBoundingClientRect();
+      document.body.appendChild(m); m.classList.remove('r');
+      m.style.position = 'fixed'; m.style.right = 'auto'; m.style.margin = '0'; m.style.zIndex = '60'; m.style.width = Math.min(240, Math.floor(fr.width - 8)) + 'px';
+      const mw = m.offsetWidth, h = m.offsetHeight;
+      m.style.left = Math.max(fr.left + 4, Math.min(r.left, fr.right - 4 - mw)) + 'px';
+      const below = r.bottom + 4, above = r.top - 4 - h;
+      m.style.top = (below + h <= fr.bottom - 4 ? below : Math.max(fr.top + 4, above)) + 'px';
+    });
   });
 
   // ---------- AI 生成一套图标（ED-04） ----------
