@@ -709,7 +709,7 @@
       const bg = pick([th.primary, th.accent_3, th.lead, mix(th.primary, th.lead, 0.4)], D.ec['jackpot.bg'] || th.primary);
       setEc('jackpot.bg', bg); const k = best(bg, [th.bg_2, th.lead, '#ffffff', '#111111']); setEc('jackpot.title', k); setEc('jackpot.amount', k);
     } else if (b === 'midnav') {
-      m.midnav.per = pick([4, 5], m.midnav.per); m.midnav.size = pick([80, 96, 112], m.midnav.size);
+      m.midnav.per = pick([4, 5], m.midnav.per); m.midnav.size = pick([48, 57, 68], m.midnav.size);
       setEc('midnav.icon', pick([th.primary, th.accent_3, th.lead], D.ec['midnav.icon'] || th.primary));
     } else if (b === 'gamemenu') {
       m.gamemenu.style = pick(['tabs', 'icons'], m.gamemenu.style); m.gamemenu.shape = pick(['pill', 'square'], m.gamemenu.shape);

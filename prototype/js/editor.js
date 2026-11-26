@@ -214,7 +214,7 @@
     if (!D.m || !D.m.midnav) return { req, sug, ok };
     const nm = window.MP.nm;
     if (inPage('midnav')) {
-      const m = D.m.midnav; const miss = m.items.filter((it) => (m.mode === 'conf' || it.req) && !(it.img || it.i));
+      const m = D.m.midnav; const miss = m.items.filter((it) => (m.mode === 'conf' || it.req) && !(it.img || it.def));
       (miss.length ? req : ok).push({ id: 'midnav', mod: 'midnav', name: t('mod/midnav'), text: miss.length ? t('ed/chk-midnav', { n: miss.length, names: miss.map(nm).join('、') }) : t('mod/midnav') });
     }
     if (inPage('banner')) {
@@ -262,21 +262,27 @@
   // 模式 = 通用组件的「功能」变体：默认（国旗）/ 无币种 / 币种切换 / 特小 / 特小无底
   const BAL_MODES = ['default', 'nocur', 'switch', 'small', 'bare'];
   const CLA = 'assets/classic/';
-  const BAL_DEF = { mode: 'default', head: 'vip', greet: 'Olá', act: 'copy', curImg: null, refImg: null, c: {} };
+  // 图片字段：curImg 币种 / refImg 刷新 / vipImg VIP 徽章 / caretImg 下拉箭头 / copyImg 复制 / swImg 切换账号（null = 默认图）
+  const BAL_DEF = { mode: 'default', head: 'vip', greet: 'Olá', act: 'copy', curImg: null, refImg: null, vipImg: null, caretImg: null, copyImg: null, swImg: null, c: {} };
   const balCfg = (D) => { D = D || E.D; const b = Object.assign({}, BAL_DEF, (D && D.bal) || {}); b.c = Object.assign({}, (D && D.bal && D.bal.c) || {}); return b; };
   const BAL_C = [['amt', 'ed/bal-c-amt', 'accent_3'], ['bd', 'ed/bal-c-bd', 'border'], ['bg', 'ed/bal-c-bg', 'bg_2'], ['ic', 'ed/bal-c-ic', 'primary']];
   function balBox(cfg, amt = '1,232,345,678.90') {
     cfg = cfg || balCfg(); const m = BAL_MODES.includes(cfg.mode) ? cfg.mode : 'default', c = cfg.c || {};
     const st = `${c.amt ? `--bx-amt:${c.amt};` : ''}${c.bd ? `--bx-bd:${c.bd};` : ''}${c.bg ? `--bx-bg:${c.bg};` : ''}${c.ic ? `--bx-ic:${c.ic};` : ''}`;
-    const cur = m === 'nocur' ? '' : m === 'switch' ? `<img class="cur" src="${cfg.curImg || CLA + 'bal-sym.png'}" alt=""><i class="xch">⇆</i>` : `<img class="cur" src="${cfg.curImg || CLA + 'bal-flag.png'}" alt="">`;
+    // 币种切换的默认币种符号用遮罩跟 accent_3（Figma comm_icon_sqb）；国旗是彩色位图，按原图显示
+    const cur = m === 'nocur' ? '' : m === 'switch' ? `${cfg.curImg ? `<img class="cur" src="${cfg.curImg}" alt="">` : balMask('cur cur-k', 'bal-sym.png')}<i class="xch">⇆</i>` : `<img class="cur" src="${cfg.curImg || CLA + 'bal-flag.png'}" alt="">`;
     const rf = cfg.refImg ? `<img class="rf" src="${cfg.refImg}" alt="">` : `<i class="rf" style="-webkit-mask-image:url(${CLA}bal-refresh.png);mask-image:url(${CLA}bal-refresh.png)"></i>`;
     return `<span class="bx m-${m}" style="${st}">${cur}<b>${amt}</b>${rf}</span>`;
   }
+  // 单色小图标用遮罩着色，颜色绑 68 Key（Figma 317:55712）：下拉箭头 neutral_2、复制 / 切换账号 primary；上传的图按原图显示
+  const balMask = (cls, f) => `<i class="${cls} bmask" style="-webkit-mask-image:url(${CLA}${f});mask-image:url(${CLA}${f})"></i>`;
   function balUser(cfg, name = 'huiyuan123456') {
     cfg = cfg || balCfg();
-    const head = cfg.head === 'vip' ? `<img class="vip" src="${CLA}bal-vip2.png" alt="VIP">` : cfg.head === 'greet' ? `<span class="greet">${esc(cfg.greet || '')}</span>` : '';
-    const act = cfg.act === 'copy' ? `<img class="act" src="${CLA}bal-copy.png" alt="">` : cfg.act === 'switch' ? `<img class="act" src="${CLA}bal-switch.png" alt="">` : '';
-    return `<span class="bxu">${head}<img class="cv" src="${CLA}bal-caret.png" alt=""><b>${esc(name)}</b>${act}</span>`;
+    const head = cfg.head === 'vip' ? `<img class="vip" src="${cfg.vipImg || CLA + 'bal-vip2.png'}" alt="VIP">` : cfg.head === 'greet' ? `<span class="greet">${esc(cfg.greet || '')}</span>` : '';
+    const ak = cfg.act === 'copy' ? 'copyImg' : 'swImg', af = cfg.act === 'copy' ? 'bal-copy.png' : 'bal-switch.png';
+    const act = cfg.act === 'none' ? '' : cfg[ak] ? `<img class="act" src="${cfg[ak]}" alt="">` : balMask('act', af);
+    const cv = cfg.caretImg ? `<img class="cv" src="${cfg.caretImg}" alt="">` : balMask('cv', 'bal-caret.png');
+    return `<span class="bxu">${head}${cv}<b>${esc(name)}</b>${act}</span>`;
   }
   window.balBox = (amt) => balBox(balCfg(), amt);
   window.balUser = () => balUser(balCfg());
@@ -288,6 +294,9 @@
   A.balAct = (v) => { if (balCfg().act === v) return false; balSet((b) => { b.act = v; }); };
   A.balColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), v = arg.slice(i + 1); balSet((b) => { if (v) b.c[k] = v; else delete b.c[k]; }); };
   A.balImgReset = (k) => { balSet((b) => { b[k] = null; }); };
+  // 币种图标 AI：用顶部栏 AI 同一组默认风格图（assets/ai-tb/cur-<风格>.png），点候选直接用上
+  A.balCurAi = () => { E.balAi = !E.balAi; };
+  A.balCurAiUse = (st) => { if (!TB_AI.includes(st)) return false; balSet((b) => { b.curImg = AIT + 'cur-' + st + '.png'; }); window.toast(t('ed/bal-ai-used'), undoOpt()); };
   A.balAll = () => { commit(() => { delete E.D.bal; }); window.toast(t('ed/bal-reset-done'), undoOpt()); };
   document.addEventListener('change', (e) => {
     const el = e.target; if (!el.matches) return;
@@ -299,21 +308,32 @@
       const r = new FileReader(); r.onload = () => { balSet((b) => { b[k] = r.result; }); window.render(); }; r.readAsDataURL(f);
     }
   });
-  function balSec() {
+  // inMid：帐户栏里调用（颜色挪到「颜色」页签、不再提示切登录态，帐户栏内容页签顶部已有登录态切换）
+  function balSec(inMid) {
     const cfg = balCfg(), th = liveTheme().th;
     const modes = `<div class="bx-opts">${BAL_MODES.map((m) => `<button class="bx-opt ${cfg.mode === m ? 'is-on' : ''}" data-act="balMode" data-arg="${m}"><span class="bx-prev">${balBox(Object.assign({}, cfg, { mode: m }), '1,232.90')}</span><small>${t('ed/bal-m-' + m)}</small></button>`).join('')}</div>`;
     const seg3 = (opts, cur, act) => segBtns(opts.map((v) => ({ v, label: t('ed/bal-' + act.slice(3).toLowerCase() + '-' + v) })), cur, act);
-    const imgRow = (k, def, lab, spec) => `<div class="bx-img"><span class="thumb sq"><img src="${cfg[k] || def}" alt=""></span><span class="tx"><b>${t(lab)}</b><small>${spec}</small></span><label class="btn btn-secondary btn-sm">${ic('upload-simple', 'ic-16')}${t('ed/upload')}<input type="file" accept="${window.IMG_ACCEPT}" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
-    const sw = (k, base) => { const cur = (cfg.c[k] || '').toLowerCase(); const list = [th[base], th.primary, th.accent_3, th.accent_2, th.lead, th.bg_2, th.border].map((x) => x.toLowerCase()).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6); return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${list.map((x) => `<button class="sw-btn ${cur === x ? 'is-on' : ''}" style="background:${x}" data-act="balColor" data-arg="${k}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${cur && !list.includes(cur) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${cur || th[base]}"></label></div>`; };
+    // 默认是遮罩着色的单色图标时，缩略图也按 Key 颜色画（mk = 颜色 Key）
+    const imgRow = (k, def, lab, spec, mk, ai) => `<div class="bx-img"><span class="thumb sq">${cfg[k] || !mk ? `<img src="${cfg[k] || def}" alt="">` : `<i class="bx-mk" style="background:${keyVal(mk, th)};-webkit-mask-image:url(${def});mask-image:url(${def})"></i>`}</span><span class="tx"><b>${t(lab)}</b><small>${spec}${cfg[k] ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? `<button class="ib-s tb-ai ${E.balAi ? 'is-on' : ''}" data-act="balCurAi" title="${esc(t('mp/ai-one'))}" aria-label="${esc(t('mp/ai-one'))}">${ic('sparkle-fill', 'ic-16')}</button>` : ''}<label class="ib-s bx-up" title="${esc(t('ed/upload'))}" aria-label="${esc(t('ed/upload'))}">${ic('upload-simple', 'ic-16')}<input type="file" accept="${window.IMG_ACCEPT}" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}" aria-label="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
+    const curAi = E.balAi && cfg.mode !== 'nocur' ? `<div class="bx-ai"><div class="p-note">${t('ed/bal-ai-note')}</div><div class="bx-ai-opts">${TB_AI.map((st) => `<button class="${cfg.curImg === AIT + 'cur-' + st + '.png' ? 'is-on' : ''}" data-act="balCurAiUse" data-arg="${st}" title="${esc(t('ed/tbai-' + st))}"><img src="${AIT}cur-${st}.png" alt=""><small class="ellipsis">${t('ed/tbai-' + st)}</small></button>`).join('')}</div></div>` : '';
+    const actK = cfg.act === 'copy' ? 'copyImg' : 'swImg';
     const dirty = !!E.D.bal;
     return `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}${dirty ? `<button class="tx-reset" style="margin-left:auto" data-act="balAll">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
-      ${E.D.login ? '' : `<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/bal-login-hint')} <button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button></div>`}
+      ${E.D.login || inMid ? '' : `<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/bal-login-hint')} <button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button></div>`}
       <div class="bx-lab">${t('ed/bal-mode')}</div>${modes}
       <div class="bx-lab">${t('ed/bal-head')}</div>${seg3(['vip', 'greet', 'none'], cfg.head, 'balHead')}${cfg.head === 'greet' ? `<input class="input" style="margin-top:8px" maxlength="12" value="${esc(cfg.greet)}" data-balgreet placeholder="${esc(t('ed/bal-greet-ph'))}">` : ''}
       <div class="bx-lab">${t('ed/bal-act')}</div>${seg3(['copy', 'switch', 'none'], cfg.act, 'balAct')}
-      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'ed/bal-i-cur', '52×52 · PNG')}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30 · PNG')}
-      <div class="bx-lab">${t('ed/bal-colors')}</div>${BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('')}
+      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'ed/bal-i-cur', '52×52', cfg.mode === 'switch' ? 'accent_3' : null, true) + curAi}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30', 'primary')}
+      ${cfg.head === 'vip' ? imgRow('vipImg', CLA + 'bal-vip2.png', 'ed/bal-i-vip', '60×28') : ''}${imgRow('caretImg', CLA + 'bal-caret.png', 'ed/bal-i-caret', '20×20', 'neutral_2')}${cfg.act === 'none' ? '' : imgRow(actK, CLA + (cfg.act === 'copy' ? 'bal-copy.png' : 'bal-switch.png'), 'ed/bal-act-' + cfg.act, '26×26', 'primary')}
+      <div class="p-note">${t('ed/bal-ic-note')}</div>
+      ${inMid ? `<div class="p-note">${t('ed/bal-c-moved')} <button class="warn-link" data-act="setTab" data-arg="color">${t('ed/tab-color')}</button></div>` : `<div class="bx-lab">${t('ed/bal-colors')}</div>${balColorRows()}`}
       <div class="p-note">${t('ed/bal-note')}</div></div>`;
+  }
+  // 余额框颜色（顶部栏内容页签 / 帐户栏颜色页签共用）
+  function balColorRows() {
+    const cfg = balCfg(), th = liveTheme().th;
+    const sw = (k, base) => { const cur = (cfg.c[k] || '').toLowerCase(); const list = [th[base], th.primary, th.accent_3, th.accent_2, th.lead, th.bg_2, th.border].map((x) => x.toLowerCase()).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6); return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${list.map((x) => `<button class="sw-btn ${cur === x ? 'is-on' : ''}" style="background:${x}" data-act="balColor" data-arg="${k}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${cur && !list.includes(cur) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${cur || th[base]}"></label></div>`; };
+    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('');
   }
   // 侧边栏入口图标：有图片（上传 / AI）用图片，否则用线性图标（滤镜模拟值叠在线性图标上）
   function sideIcHtml(v, cls) { const x = tbImg(v, ''); return x.src ? `<img class="${cls} ico-img" src="${x.src}" alt="">` : x.f !== 'none' ? `<span style="display:inline-flex;filter:${x.f}">${ic('list', cls)}</span>` : ic('list', cls); }
@@ -766,7 +786,10 @@
     topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 13, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 11, 400], ['tb.bal', 'tx/tb-bal', '.h5-top .bx b', '.h5-top .bx b', 13, 400]],
     // 公告栏：正文 26/750=13（Figma 317:55675）；已登录信箱未读数 18/750=9，固定白字
     notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 13, 400], ['notice.badgeTx', 'tx/notice-badge', '.cl-notice .mail .bd', '.cl-notice .mail .bd', 9, 700]],
-    midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.bx b', '.bx b', 12, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
+    // 帐户栏（Figma 317:55705）：入口名 22/750=11 neutral_1；登录 / 注册 24=12（颜色 primary / text_primary）；用户名 22=11 lead；
+    // 问候语 11 neutral_2；余额金额 26=13 Bold（只改帐户栏里的余额框，顶部栏余额在顶部栏里改）；入口角标 18=9 白字
+    midnav: [['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400], ['midnav.btn', 'tx/midnav-login', '.cl-user.out .lg', '.cl-user.out .lg', 12, 400], ['midnav.reg', 'tx/midnav-reg', '.cl-user.out .rg', '.cl-user.out .rg', 12, 400],
+      ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.greet', 'tx/midnav-greet', '.bxu .greet', '.bxu .greet', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bx b', '.cl-user .bx b', 13, 700], ['midnav.badge', 'tx/midnav-badge', '.cl-ent .ib .bd', '.cl-ent .ib .bd', 9, 400]],
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],
     gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm, .h5-gc .c', '.cl-gc .nm, .h5-gc .c', 11.5, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 12, 400]],
     bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it', '.h5-bnav .it:not(.on)', 10, 400]],
@@ -774,11 +797,12 @@
   const TX_ALL = Object.values(TXT).flat();
   const TX_W = [400, 500, 700];
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
-  const TX_EC = { 'notice.text': 1 };
+  // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
+  const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText' };
   const txOf = (id) => {
     const o = ((E.D.txt || {})[id]) || {};
     if (!TX_EC[id]) return o;
-    const v = (E.D.ec || {})[id]; if (!v) return o;
+    const v = (E.D.ec || {})[TX_EC[id]]; if (!v) return o;
     const c = v.startsWith('key:') ? (keyVal(v.slice(4), liveTheme().th) || '') : v;
     return Object.assign({}, o, c ? { c } : {});
   };
@@ -793,7 +817,11 @@
     return css ? `<style>${css}</style>` : '';
   }
   // 只在对应状态下出现的文字（顶部栏：未登录才有币种，已登录且显示余额框才有金额）
-  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth, 'notice.badgeTx': () => E.D.login && E.D.m.notice && E.D.m.notice.mail };
+  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth, 'notice.badgeTx': () => E.D.login && E.D.m.notice && E.D.m.notice.mail,
+    // 帐户栏：未登录只有登录 / 注册按钮，已登录才有用户名、余额、角标；单行（无帐户区）两边都没有
+    'midnav.btn': () => mnAcct() && !E.D.login, 'midnav.reg': () => mnAcct() && !E.D.login, 'midnav.user': () => mnAcct() && E.D.login, 'midnav.bal': () => mnAcct() && E.D.login,
+    'midnav.greet': () => mnAcct() && E.D.login && balCfg().head === 'greet', 'midnav.badge': () => E.D.login && E.D.m.midnav.items.some((x) => x.on && x.badge) };
+  const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
   const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
   // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）
   function txColors(id) {
@@ -816,16 +844,16 @@
     if (TX_EC[id] && k === 'c') {
       // 选到的色块正好是某个基础 Key 就存 Key 引用（颜色页签能对上同一个色块）；等于默认 Key 就回到「默认」
       const th = liveTheme().th, key = v && KEYS.find((x) => String(th[x]).toLowerCase() === v.toLowerCase());
-      const def = ((window.MP.EL[id.split('.')[0]] || []).find((r) => r[0] === id) || [])[1];
+      const eid = TX_EC[id], def = ((window.MP.EL[eid.split('.')[0]] || []).find((r) => r[0] === eid) || [])[1];
       const val = !v || key === def ? null : key ? 'key:' + key : v;
-      commit(() => { E.D.ec = E.D.ec || {}; if (val) E.D.ec[id] = val; else delete E.D.ec[id]; }); return;
+      commit(() => { E.D.ec = E.D.ec || {}; if (val) E.D.ec[eid] = val; else delete E.D.ec[eid]; }); return;
     }
     commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
   const txDef = (id) => TX_ALL.find((x) => x[0] === id);
   A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const cur = txOf(id).s || df[4]; const n = Math.max(8, Math.min(24, cur + (+d))); txSet(id, 's', n === df[4] ? null : n); };
   A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
   A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
-  A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[id]; }); };
+  A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[TX_EC[id]]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
   // 布局「恢复默认」（Waydon 2026-11-26）：只恢复布局页签里的参数，内容和颜色不动
   const LAYOUT_KEYS = { banner: ['size', 'margin', 'corner'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
@@ -856,7 +884,7 @@
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'midnav' ? balSec() : '') + (b === 'notice' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -1661,7 +1689,7 @@
     if (E.palOpen) { E.palOpen = false; }
   }
 
-  window.EDX = { E, txtSec: (b) => txtSec(b), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
+  window.EDX = { E, txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };

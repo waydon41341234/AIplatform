@@ -29,7 +29,7 @@
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
       notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] },
-      midnav: { mode: 'conf', items: MID.map(([n, i, def, badge]) => ({ n, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 96 },
+      midnav: { mode: 'conf', items: MID.map(([n, i, def, badge]) => ({ n, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 57 },
       gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill' },
       gamecards: { name: true, tag: true, fav: true, fallback: null, cols: 3, corner: 16, gap: 16 },
       footer: { items: items(FOOT.map((n) => [n])), copy: '© 2026 星河体育 版权所有', align: 'center' },
@@ -39,7 +39,8 @@
   };
   const nm = (it) => it.n || (it.k ? t(it.k) : '');
   // 入口图标规格（逻辑尺寸，PNG 交付 @2x）
-  const ICON_SPEC = { notice: [57, 50], midnav: [80, 70], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
+  // 帐户栏入口图标 Figma 317:55709：57×50（750 稿）
+  const ICON_SPEC = { notice: [57, 50], midnav: [57, 50], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
   // 公告栏两个图标尺寸不同（Figma 317:55673）：喇叭 36×32、信箱 57×50
   const NT_SPEC = { 'mp/nt-i-spk': [36, 32], 'mp/nt-i-mail': [57, 50] };
   const specOf = (b, i) => (b === 'notice' && M(b).items[i] && NT_SPEC[M(b).items[i].k]) || ICON_SPEC[b] || [96, 96];
@@ -52,7 +53,9 @@
     // 公告栏（Figma 317:55673）：自身无填充 = 透出首页底 home_bg；喇叭和正文 neutral_1；“引号”accent_2、【中级场】accent_1、数字 accent_3；
     // 已登录信箱未读数底 accent_2（数字固定白，在「文字样式」里改）
     notice: [['notice.bg', 'home_bg'], ['notice.icon', 'neutral_1'], ['notice.text', 'neutral_1'], ['notice.hl', 'accent_2'], ['notice.g', 'accent_1'], ['notice.num', 'accent_3'], ['notice.badge', 'accent_2']],
-    midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary'], ['midnav.btn', 'primary']],
+    // 帐户栏（Figma 317:55705）：自身无填充 = 透出首页底 home_bg；入口名 neutral_1、用户名 lead；登录框 / 注册底 primary、注册字 text_primary；
+    // 入口图标是位图（颜色在图里），midnav.icon 只给没有图片的入口兜底线性图标用
+    midnav: [['midnav.bg', 'home_bg'], ['midnav.text', 'neutral_1'], ['midnav.user', 'lead'], ['midnav.btn', 'primary'], ['midnav.btnText', 'text_primary'], ['midnav.icon', 'primary']],
     gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'neutral_2'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'bg_2']],
     gamecards: [['gamecards.placeholder', 'border'], ['gamecards.placeholderIcon', 'neutral_3'], ['gamecards.text', 'lead'], ['gamecards.label', 'accent_3'], ['gamecards.labelText', 'bg_2']],
     footer: [['footer.bg', 'bg_1'], ['footer.text', 'neutral_2'], ['footer.link', 'neutral_1']],
@@ -79,7 +82,7 @@
   const sec = (lab, body, v) => `<div class="p-sec"><div class="lab">${lab}${v != null ? `<span class="v">${v}</span>` : ''}</div>${body}</div>`;
   const note = (k, p) => `<div class="p-note">${t(k, p)}</div>`;
   // 每个档位参数都带「自定义」输入（范围按参数）
-  const PX_RNG = { margin: [0, 64], corner: [0, 60], per: [3, 6], size: [48, 160], gap: [0, 64], width: [40, 90], h: [80, 160], cols: [2, 5] };
+  const PX_RNG = { margin: [0, 64], corner: [0, 60], per: [3, 6], size: [40, 80], gap: [0, 64], width: [40, 90], h: [80, 160], cols: [2, 5] };
   const px = (b, k, vals, labels) => { const u = labels.unit == null ? 'px' : labels.unit.trim(); const r = PX_RNG[k] || [0, 200]; return sec(labels.title, seg(vals.map((v, i) => ({ v: String(v), label: labels.opts ? labels.opts[i] : v + (labels.unit || ' px') })), M(b)[k], `mpSet_${b}_${k}`) + X().pxCustom(vals, M(b)[k], `mpSet_${b}_${k}`, [r[0], r[1], u]), M(b)[k] + (labels.unit || ' px')); };
   const toggle = (on, act, arg, label) => `<button class="tg-row" data-act="${act}" data-arg="${arg}"><span>${label}</span><span class="switch ${on ? 'is-on' : ''}"><i></i></span></button>`;
   function list(b, render) {
@@ -139,9 +142,24 @@
       color: () => ntColor(),
     },
     midnav: {
-      content: () => modeSeg('midnav') + sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/icon-hint') + iconBtns('midnav')),
-      layout: () => sec(t('mp/style'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], M('midnav').layout, 'mpSet_midnav_layout'))
-        + px('midnav', 'per', [4, 5], { title: t('mp/per-row'), unit: '' }) + px('midnav', 'size', [80, 96, 112], { title: t('mp/icon-size') }) + note('ed/unit-750'),
+      // 顺序（2026-11-26 整理）：登录态 → 入口（图标上传 / AI）→ 入口角标 → 帐户区（登录注册 / 余额框）→ 文字样式 → 入口模式（后台概念，放最后）
+      content: () => {
+        const x = X(), D = x.E.D, m = M('midnav'), acct = m.layout === 'account';
+        const state = sec(t('ed/tb-state2'), seg([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin') + note(D.login ? 'mp/mn-note-in' : 'mp/mn-note-out'));
+        const ents = sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/mn-icon-spec', { s: specOf('midnav').join('×') }) + note('mp/icon-hint') + iconBtns('midnav'));
+        const bds = sec(t('mp/mn-badges'), `<div class="mn-bds">${m.items.map((it, i) => `<label class="mn-bd ${it.on ? '' : 'is-hidden'}"><span class="ellipsis">${esc(nm(it))}</span><input class="input" data-input="mpMidBadge" data-i="${i}" value="${esc(it.badge || '')}" maxlength="9" placeholder="${esc(t('mp/mn-badge-ph'))}"></label>`).join('')}</div>` + note('mp/mn-badge-note'));
+        const area = !acct ? sec(t('mp/mn-acct'), note('mp/mn-acct-row') + `<button class="btn btn-secondary btn-sm" data-act="mpSet_midnav_layout" data-arg="account">${t('mp/mn-acct-on')}</button>`)
+          : D.login ? (x.balSec ? x.balSec(true) : '') : sec(t('mp/mn-acct'), note('mp/mn-btn-note'));
+        return state + ents + bds + area + (x.txtSec ? x.txtSec('midnav') : '') + modeSeg('midnav');
+      },
+      // 每行个数只在「单行」样式生效（带账户区时入口全部排在右侧一行）；图标大小 = 图标宽度（750 稿，Figma 57）
+      layout: () => {
+        const m = M('midnav');
+        return sec(t('mp/style'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], m.layout, 'mpSet_midnav_layout'))
+          + (m.layout === 'row' ? px('midnav', 'per', [4, 5], { title: t('mp/per-row'), unit: '' }) : note('mp/mn-per-acct'))
+          + px('midnav', 'size', [48, 57, 68], { title: t('mp/mn-icon-w') }) + note('ed/unit-750');
+      },
+      color: () => mnColor(),
     },
     gamemenu: {
       content: () => sec(t('mp/gm-cats'), list('gamemenu', (it, i) => `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on', t('mp/state-act'))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}`)
@@ -192,6 +210,39 @@
       <div class="p-note">${t('mp/nt-c-note')}</div>
       <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
   }
+  // 帐户栏颜色：同公告栏做法（'key:<名>' 引用 68 Key）；余额框颜色（顶部栏共用）和固定跟 Key 的小图标也放这里
+  const MN_SW = { 'midnav.bg': ['bg_1', 'bg_2', 'border', 'primary'], 'midnav.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'midnav.user': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'midnav.btn': ['primary', 'lead', 'accent_3', 'accent_1'], 'midnav.btnText': ['text_primary', 'bg_2', 'lead', 'primary'], 'midnav.icon': ['primary', 'lead', 'neutral_1', 'accent_3'] };
+  const BD_SW = ['accent_2', 'accent_1', 'accent_3', 'primary'];
+  const bdId = (it, i) => 'midnav.bd-' + (baseOf(it.def) || 'mid' + i);
+  const bdKey = (it) => ({ mid2: 'accent_1' })[baseOf(it.def)] || 'accent_2'; // Figma：VIP 角标 accent_2、分享赚钱角标 accent_1
+  function mnColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('midnav'), acct = m.layout === 'account';
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const row = (id, key, sws, lab) => {
+      const v = D.ec[id] || null, pk = E.picker && E.picker.elRow === id;
+      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
+      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${kv(key)}"></i>${t('mp/c-default')}</button>${sws.filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const elRow = (id) => row(id, EL.midnav.find((r) => r[0] === id)[1], MN_SW[id], t('mp/c-' + id.replace('.', '-')));
+    // 跟 Key 走、不单独设置的颜色：点「去改」打开整页配色
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}${E.adv ? `<small class="kk">${key}</small>` : ''}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span><button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const toIn = `<button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button>`;
+    const vis0 = m.items.filter((it) => it.on), fallback = vis0.some((it) => !it.img && !it.def);
+    const bdItems = vis0.filter((it) => it.badge);
+    const cfg = x.balCfg ? x.balCfg() : {};
+    let h = `<div class="p-sec">${elRow('midnav.bg')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/mn-c-text')}</div>${elRow('midnav.text')}${acct && D.login ? elRow('midnav.user') : ''}</div>`;
+    if (acct && !D.login) h += `<div class="p-sec"><div class="lab">${t('mp/mn-c-btns')}</div>${elRow('midnav.btn')}${elRow('midnav.btnText')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/mn-badges')}</div>${D.login ? (bdItems.length ? bdItems.map((it) => { const i = m.items.indexOf(it); return row(bdId(it, i), bdKey(it), BD_SW, t('mp/mn-c-bd', { n: esc(nm(it)) })); }).join('') : note('mp/mn-c-bd-none')) : `<div class="p-note">${t('mp/mn-c-out')} ${toIn}</div>`}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/entries')}</div>${fallback ? elRow('midnav.icon') : ''}${note('mp/mn-c-icons')}</div>`;
+    if (acct && D.login) {
+      h += `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}</div>${x.balColorRows ? x.balColorRows() : ''}
+        ${cfg.caretImg ? '' : link(t('ed/bal-i-caret'), 'neutral_2')}${cfg.act !== 'none' && !cfg[cfg.act === 'copy' ? 'copyImg' : 'swImg'] ? link(t('ed/bal-act-' + cfg.act), 'primary') : ''}${cfg.mode === 'switch' && !cfg.curImg ? link(t('ed/bal-i-cur'), 'accent_3') : ''}
+        <div class="p-note">${t('ed/bal-note')}</div></div>`;
+    } else if (acct) h += `<div class="p-note">${t('mp/mn-c-bal-out')} ${toIn}</div>`;
+    return h + `<div class="p-note">${t('mp/mn-c-note')}</div>
+      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+  }
   function panel(b, tab) { if (tab === 'color') return P[b].color ? P[b].color() : colors(b); return (P[b][tab] || P[b].content)(); }
 
   // ---------- 画布 ----------
@@ -225,7 +276,12 @@
       const acct = m.layout === 'account' ? (login
         ? `<div class="cl-user">${window.balUser ? window.balUser() : ''}${window.balBox ? window.balBox() : ''}</div>`
         : `<div class="cl-user out"><span class="lg">${t('mp/acct-login')}</span><span class="rg">${t('mp/acct-reg')}</span></div>`) : '';
-      return `<div class="cl-acct ${acct ? '' : 'no-acct'}">${acct}<div class="cl-ent" style="grid-template-columns:repeat(${acct ? v.length : m.per},1fr)">${v.map((it) => { const i = m.items.indexOf(it); const src = it.img || it.def; const focus = S().menu === 'icon:midnav|' + i; return `<div class="it"><span class="ib ${src ? 'cu' : it.i ? '' : 'ph'} ${focus ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${src ? img(src) : ic(it.i || 'plus')}${login && it.badge ? `<i class="bd">${esc(it.badge)}</i>` : ''}</span><span class="nm">${esc(nm(it))}</span>${focus ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
+      // 图标宽 = size（750 稿）÷ 2，高按 57:50；旧存档的 80/96/112 档位回到 57
+      const sz = m.size >= 40 && m.size <= 80 ? m.size : 57, ibs = `width:${sz / 2}px;height:${(sz / 2 * 50 / 57).toFixed(1)}px`;
+      // 角标底色按入口存（'midnav.bd-<默认图名>'，可是 'key:<名>' 或十六进制），不再按位置写死
+      const { th, ec } = X().liveTheme();
+      const bdc = (it, i) => { const v = ec[bdId(it, i)]; const k = v && v.startsWith('key:') ? v.slice(4) : v ? null : bdKey(it); return k ? (th[k] != null ? th[k] : resolveKey(k, th, ec)) : v; };
+      return `<div class="cl-acct ${acct ? '' : 'no-acct'}">${acct}<div class="cl-ent" style="grid-template-columns:repeat(${acct ? v.length : m.per},1fr)">${v.map((it) => { const i = m.items.indexOf(it); const src = it.img || it.def; const focus = S().menu === 'icon:midnav|' + i; return `<div class="it"><span class="ib ${src ? 'cu' : it.i ? '' : 'ph'} ${focus ? 'is-focus' : ''}" style="${ibs}" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${src ? img(src) : ic(it.i || 'plus')}${login && it.badge ? `<i class="bd" style="background:${bdc(it, i)}">${esc(it.badge)}</i>` : ''}</span><span class="nm">${esc(nm(it))}</span>${focus ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
     }
     if (b === 'gamemenu') {
       const v = vis('gamemenu');
@@ -281,6 +337,8 @@
   I.mpJpTitle = typeText('jackpot', 'title');
   I.mpFtCopy = typeText('footer', 'copy');
   I.mpNtText = typeText('notice', 'text');
+  // 帐户栏入口角标文字（空 = 不显示角标）
+  I.mpMidBadge = (v, el) => { const x = X(), i = +el.dataset.i; if (typing !== 'midbd' + i) { x.commit(() => {}); typing = 'midbd' + i; } x.E.D.m.midnav.items[i].badge = v.trim() ? v.slice(0, 9) : null; x.save(); return true; };
   document.addEventListener('click', () => { typing = null; }, true);
 
   // ---------- 改名（ED-19）：上限中文 6 字 / 12 个字符 ----------
