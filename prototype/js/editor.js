@@ -25,9 +25,11 @@
   };
   // Banner 规格（照真实组件「H5 / Banner 画布（750）」317:55632）：dw/dh = 750 稿显示尺寸，cw/ch = 画布 CSS 尺寸；w/h = 交付图尺寸
   // Waydon 2026-11-26：规格只是前端显示尺寸不同，后台上传统一 1020×300
-  const BANNER = { large: { w: 1020, h: 300, dw: 750, dh: 220, cw: 375, ch: 110, ib: 6 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, small: { w: 320, h: 202, dw: 160, dh: 101, cw: 80, ch: 50.5, ib: 2.5 } };
-  // Waydon 2026-11-26 15:05：大 Banner 原 750×340 会裁掉 1020×300 的图，改为按 750 宽等比缩小（750×220）；
+  const BANNER = { large: { w: 1500, h: 680, dw: 750, dh: 340, cw: 375, ch: 170, ib: 7.5 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 750, dh: 221, cw: 375, ch: 110.3, ib: 5, sq: true }, small: { w: 320, h: 202, dw: 160, dh: 101, cw: 80, ch: 50.5, ib: 2.5 } };
+  // Waydon 2026-11-26 15:17：大 Banner 首页显示 750×340、通用 708×208。大 Banner 的图按 750 宽等比出一套（1500×680 @2x，不再用 1020×300 裁切）；
+  // 15:21：中 Banner 按 Figma 317:55637 = 750×220.6 通栏直角（1020×300 等比缩到 750 宽）
   // 小 Banner 一排默认展示 3 张（160×101 的小卡，图另出一套 320×202 @2x）
+  const LARGE_DEF = ['assets/ai-banner/large-1.webp', 'assets/ai-banner/large-2.webp', 'assets/ai-banner/large-3.webp'];
   const SMALL_DEF = ['assets/ai-banner/small-1.webp', 'assets/ai-banner/small-2.webp', 'assets/ai-banner/small-3.webp'];
   const SIZES = ['large', 'general', 'medium', 'small'];
   // 指示器 4 种样式（真实组件「H5 / Banner 指示器」317:55641），旧数据 dots/bars 映射过来
@@ -387,7 +389,7 @@
     else if (f === s.f && s.fit === 'crop' && s.x != null) css += `;background-position:${Math.round(s.x * 100)}% ${Math.round(s.y * 100)}%`;
     return css;
   }
-  const slideStyle = (i) => slideBg(E.D.banner.slides[i], slideF(i), E.D.banner.size === 'small' ? SMALL_DEF[i % 3] : null);
+  const slideStyle = (i) => slideBg(E.D.banner.slides[i], slideF(i), E.D.banner.size === 'small' ? SMALL_DEF[i % 3] : E.D.banner.size === 'large' ? LARGE_DEF[i % 3] : null);
   function h5Banner() {
     const B = E.D.banner, sz = BANNER[B.size];
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
@@ -397,7 +399,9 @@
     // 小 Banner：一排并列（默认 3 张，多了横向滑动），不轮播、无指示器
     if (B.size === 'small') return `<div class="h5-banner sz-small" style="padding:${B.margin / 2}px 0"><div class="sm-row">${v.map((i) => `<div class="sm-it" style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 4}px;${slideStyle(i)}"></div>`).join('')}</div></div>`;
     // 指示器叠在图片底部（真实组件）
-    return `<div class="h5-banner sz-${B.size}" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div>${ind}</div></div>`;
+    // Waydon 2026-11-26 15:20：大 / 中 Banner 顶部贴住顶部栏，不留间距（只留下间距）
+    const padTop = B.size === 'large' || B.size === 'medium' ? 0 : B.margin / 2;
+    return `<div class="h5-banner sz-${B.size}" style="padding:${padTop}px 0 ${B.margin / 2}px"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${sz.sq ? 0 : B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div>${ind}</div></div>`;
   }
   function modHtml(id) {
     switch (baseName(id)) {
@@ -563,7 +567,7 @@
   // Banner 样式（Waydon 2026-11-26：大/通用/中/小 作为样式给业主切换，只是前端显示尺寸不同，上传统一 1020×300）
   function bannerStyles(cur) {
     const i0 = visIdx()[0] ?? 0;
-    return `<div class="bs-opts">${SIZES.map((k) => { const b = BANNER[k]; const prev = slideBg(E.D.banner.slides[i0], slideF(i0), k === 'small' ? SMALL_DEF[i0 % 3] : null); const w = Math.round(b.dw / 750 * 64), h = Math.round(b.dh / 750 * 64); return `<button class="bs-opt ${cur === k ? 'is-on' : ''}" data-act="bannerSize" data-arg="${k}" title="${esc(t('ed/banner-' + k) + ' · ' + b.dw + '×' + b.dh)}"><span class="bs-prev"><i style="width:${w}px;height:${h}px;${prev}"></i></span><b>${t('ed/banner-' + k)}</b><small>${b.dw}×${b.dh}</small></button>`; }).join('')}</div>`;
+    return `<div class="bs-opts">${SIZES.map((k) => { const b = BANNER[k]; const prev = slideBg(E.D.banner.slides[i0], slideF(i0), k === 'small' ? SMALL_DEF[i0 % 3] : k === 'large' ? LARGE_DEF[i0 % 3] : null); const w = Math.round(b.dw / 750 * 64), h = Math.round(b.dh / 750 * 64); return `<button class="bs-opt ${cur === k ? 'is-on' : ''}" data-act="bannerSize" data-arg="${k}" title="${esc(t('ed/banner-' + k) + ' · ' + b.dw + '×' + b.dh)}"><span class="bs-prev"><i style="width:${w}px;height:${h}px;${prev}"></i></span><b>${t('ed/banner-' + k)}</b><small>${b.dw}×${b.dh}</small></button>`; }).join('')}</div>`;
   }
   function bannerContent() {
     const B = E.D.banner, sz = BANNER[B.size];
@@ -604,10 +608,9 @@
   function bannerLayout() {
     const B = E.D.banner;
     const mk = [8, 16, 24], ck = [0, 8, 16];
-    const same = B.size === 'general' || B.size === 'medium';
-    return `<div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${bannerStyles(B.size)}<div class="p-note">${t('ed/spec-line2', BANNER[B.size])}</div>${same ? `<div class="p-note">${t('ed/banner-gm-same')}</div>` : ''}</div>
+    return `<div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${bannerStyles(B.size)}<div class="p-note">${t('ed/spec-line2', BANNER[B.size])}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/margin')}<span class="v">${B.margin} px</span></div>${pxSeg(mk, B.margin, 'bannerMargin', [t('ed/s-small'), t('ed/s-medium'), t('ed/s-large')], [0, 64, 'px'])}<div class="seg-sub">${mk.map((v) => `<span class="${v === B.margin ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/corner')}<span class="v">${B.corner} px</span></div>${pxSeg(ck, B.corner, 'bannerCorner', [t('ed/c-none'), t('ed/s-small'), t('ed/s-large')], [0, 60, 'px'])}<div class="seg-sub">${ck.map((v) => `<span class="${v === B.corner ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
+      ${BANNER[B.size].sq ? '' : `<div class="p-sec"><div class="lab">${t('ed/corner')}<span class="v">${B.corner} px</span></div>${pxSeg(ck, B.corner, 'bannerCorner', [t('ed/c-none'), t('ed/s-small'), t('ed/s-large')], [0, 60, 'px'])}<div class="seg-sub">${ck.map((v) => `<span class="${v === B.corner ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>`}
       <div class="p-note">${ic('lock-fill', 'ic-16')}${t('ed/layout-note')}</div>`;
   }
   // Banner 颜色（Figma 317:55531）：占位底 = ddt_bg，指示器选中 / 未选中 = text_primary（固定白，未选中 50% 透明）

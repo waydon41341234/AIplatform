@@ -211,7 +211,7 @@ window.I18N = {
   'tx/gamecards-more': ['另有 N 款游戏 / 展开', '另有 N 款遊戲 / 展開', 'N more games / Expand', 'Còn N trò chơi / Mở rộng'],
   'tx/bottomnav-name': ['导航文字（未选中）', '導航文字（未選中）', 'Nav labels', 'Chữ điều hướng'],
   'ed/banner-style': ['Banner 样式', 'Banner 樣式', 'Banner style', 'Kiểu banner'],
-  'ed/spec-line2': ['上传统一 {w}×{h} · 页面显示 {dw}×{dh}（750 稿）', '上傳統一 {w}×{h} · 頁面顯示 {dw}×{dh}（750 稿）', 'Upload {w}×{h} for all styles · shown at {dw}×{dh} (750 design)', 'Tải lên {w}×{h} · hiển thị {dw}×{dh} (bản 750)'],
+  'ed/spec-line2': ['上传 {w}×{h} · 首页显示 {dw}×{dh}（750 稿）', '上傳 {w}×{h} · 首頁顯示 {dw}×{dh}（750 稿）', 'Upload {w}×{h} · shown at {dw}×{dh} (750 design)', 'Tải lên {w}×{h} · hiển thị {dw}×{dh} (bản 750)'],
   'ed/spec-line': ['规范 {w}×{h} · 页面显示 {dw}×{dh}', '規範 {w}×{h} · 頁面顯示 {dw}×{dh}', 'Spec {w}×{h} · shown at {dw}×{dh}', 'Chuẩn {w}×{h} · hiển thị {dw}×{dh}'],
   'ed/banner-images': ['轮播图片（{n} 张）', '輪播圖片（{n} 張）', 'Carousel images ({n})', 'Ảnh trình chiếu ({n})'],
   'ed/slide-n': ['第 {n} 张', '第 {n} 張', 'Slide {n}', 'Ảnh {n}'],
