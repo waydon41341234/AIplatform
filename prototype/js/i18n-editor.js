@@ -22,6 +22,9 @@ Object.assign(window.I18N, {
   'ed/keys-none': ['没有找到“{q}”', '沒有找到「{q}」', 'No results for “{q}”', 'Không tìm thấy “{q}”'],
   'ed/changed-undo': ['已修改', '已修改', 'Changed', 'Đã sửa'],
   // ED-03 素材库
+  'ed/tb-logo-spec': ['上传 宽 330–600 × 高 100 · 显示 230×76', '上傳 寬 330–600 × 高 100 · 顯示 230×76', 'Upload W 330–600 × H 100 · shown 230×76', 'Tải lên R 330–600 × C 100 · hiển thị 230×76'],
+  'tx/key-tip': ['绑定的色值 Key（选「自动」时跟这个 Key）', '綁定的色值 Key（選「自動」時跟這個 Key）', 'Bound color Key (used when set to Auto)', 'Key màu được gán (dùng khi chọn Tự động)'],
+  'tx/key-custom': ['自定义', '自訂', 'Custom', 'Tùy chỉnh'],
   'ed/lib-title': ['从素材库选择 · {name} {w}×{h}', '從素材庫選擇 · {name} {w}×{h}', 'Choose from library · {name} {w}×{h}', 'Chọn từ thư viện · {name} {w}×{h}'],
   'ed/lib-tab-shared': ['集成库素材', '整合庫素材', 'Shared library', 'Thư viện chung'],
   'ed/lib-tab-project': ['本项目素材', '本專案素材', 'This project', 'Dự án này'],

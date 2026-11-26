@@ -1201,6 +1201,7 @@
   window.MP = {
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aiPanel, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
     resolveKey, EL, aiSvg, // AD：导出结构预览 / AI 首页设计用
+    elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },
     // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）

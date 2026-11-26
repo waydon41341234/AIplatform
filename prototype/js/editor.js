@@ -25,7 +25,8 @@
   };
   // Banner 规格（照真实组件「H5 / Banner 画布（750）」317:55632）：dw/dh = 750 稿显示尺寸，cw/ch = 画布 CSS 尺寸；w/h = 交付图尺寸
   // Waydon 2026-11-26：规格只是前端显示尺寸不同，后台上传统一 1020×300
-  const BANNER = { large: { w: 1500, h: 680, dw: 750, dh: 340, cw: 375, ch: 170, ib: 7.5 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 750, dh: 221, cw: 375, ch: 110.3, ib: 5, sq: true }, small: { w: 320, h: 202, dw: 160, dh: 101, cw: 80, ch: 50.5, ib: 2.5 } };
+  const BANNER = { large: { w: 1500, h: 680, dw: 750, dh: 340, cw: 375, ch: 170, ib: 7.5 }, general: { w: 1020, h: 300, dw: 708, dh: 208, cw: 354, ch: 104, ib: 5 }, medium: { w: 1020, h: 300, dw: 750, dh: 221, cw: 375, ch: 110.3, ib: 5, sq: true }, small: { w: 320, h: 202, dw: 230, dh: 146, cw: 115, ch: 73, ib: 5 } };
+  // 17:22 Waydon：小 Banner 上传 320×202 不变，前端照 Figma 362:85520「Banner多样式」= 230×146 三张一排、间距 10、圆角 16，指示器叠在底部
   // Waydon 2026-11-26 15:17：大 Banner 首页显示 750×340、通用 708×208。大 Banner 的图按 750 宽等比出一套（1500×680 @2x，不再用 1020×300 裁切）；
   // 15:21：中 Banner 按 Figma 317:55637 = 750×220.6 通栏直角（1020×300 等比缩到 750 宽）
   // 小 Banner 一排默认展示 3 张（160×101 的小卡，图另出一套 320×202 @2x）
@@ -441,7 +442,7 @@
     const st = indOf(B.ind);
     const ind = st === 'none' ? '' : `<div class="h5-ind ${st}" style="bottom:${sz.ib}px">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     // 小 Banner：一排并列（默认 3 张，多了横向滑动），不轮播、无指示器
-    if (B.size === 'small') return `<div class="h5-banner sz-small" style="padding:${B.margin / 2}px 0"><div class="sm-row">${v.map((i) => `<div class="sm-it" style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 4}px;${slideStyle(i)}"></div>`).join('')}</div></div>`;
+    if (B.size === 'small') return `<div class="h5-banner sz-small" style="padding:${B.margin / 2}px 0"><div class="sm-row">${v.map((i) => `<div class="sm-it" style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px;${slideStyle(i)}"></div>`).join('')}${ind}</div></div>`;
     // 指示器叠在图片底部（真实组件）
     // Waydon 2026-11-26 15:20：大 / 中 Banner 顶部贴住顶部栏，不留间距（只留下间距）
     const padTop = B.size === 'large' || B.size === 'medium' ? 0 : B.margin / 2;
@@ -859,7 +860,7 @@
     const ib = (act, k, icn, tip, cls = '') => `<button class="ib-s ${cls}" data-act="${act}" data-arg="${k}" title="${esc(tip)}" aria-label="${esc(tip)}">${ic(icn, 'ic-16')}</button>`;
     const row = (k, th0, name, spec, own, ai) => `<div class="tb-item tb-row ${it[k] ? '' : 'is-hidden'}">${th0}<span class="tx"><b class="ellipsis">${name}</b><small class="ellipsis">${spec}${own ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? ib(ai, k, 'sparkle-fill', t(k === 'logo' ? 'ed/tblogo-title' : 'mp/ai-one'), 'tb-ai') : ''}${own ? ib('amReset', 'tb-' + k, 'arrow-counter-clockwise', t('ed/am-reset')) : ''}${moreBtn('tb-' + k)}${eye(k)}</div>`;
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
-    const logoRow = row('logo', thumb('logo', tbImgTag(D.tb.logoF, 'assets/classic/logo.png', '', '', 'logo'), 'logo'), 'Logo', '230×76', tbImg(D.tb.logoF, '').own, 'tbLogoAiOpen');
+    const logoRow = row('logo', thumb('logo', tbImgTag(D.tb.logoF, 'assets/classic/logo.png', '', '', 'logo'), 'logo'), 'Logo', t('ed/tb-logo-spec'), tbImg(D.tb.logoF, '').own, 'tbLogoAiOpen');
     const curDef = `<span class="cur-ic" style="background:${th.accent_3};-webkit-mask-image:url(${CLA}bal-sym.png);mask-image:url(${CLA}bal-sym.png)"></span>`;
     const curRow = row('cur', thumb('cur', tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png', '', '', 'cur') : curDef), t('ed/tb-cur'), '36×36', !!tic.cur, 'tbAiJump');
     const searchRow = row('search', thumb('search', tbImgTag(tic.search, 'assets/classic/search.png', '', '', 'search')), t('ed/tb-search'), '56×49', !!tic.search, 'tbAiJump');
@@ -963,9 +964,18 @@
   const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
   const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
   // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）
+  // 文字颜色绑定的 Key（Waydon 2026-11-26 17:23：色盘右边显示绑定的 Key）
+  const TX_KEY = { 'tb.cur': 'neutral_2', 'tb.search': 'lead', 'notice.badgeTx': 'text_primary', 'midnav.btn': 'primary', 'midnav.greet': 'neutral_2', 'midnav.badge': 'text_primary', 'gamecards.more': 'neutral_2', 'gamecards.title': 'lead', 'gamecards.all': 'neutral_2' };
+  function txKeyName(id) {
+    if (TX_EC[id]) { const v = (E.D.ec || {})[TX_EC[id]]; if (v && v.startsWith('key:')) return v.slice(4); if (v) return null; return window.MP && window.MP.elKey ? window.MP.elKey(TX_EC[id]) : null; }
+    if ((E.D.txt || {})[id] && E.D.txt[id].c) return null;
+    return TX_KEY[id] || 'lead';
+  }
   function txColors(id) {
     const sw = txSw(), c = (txOf(id).c || '').toLowerCase();
-    return `<div class="tx-colors"><button class="tx-auto ${c ? '' : 'is-on'}" data-act="txColor" data-arg="${id}|" title="${esc(t('tx/c-auto'))}">${t('tx/c-auto')}</button>${sw.map((x) => `<button class="sw-btn ${c === x ? 'is-on' : ''}" style="background:${x}" data-act="txColor" data-arg="${id}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${c && !sw.includes(c) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-txcolor="${id}" value="${c || '#333333'}"></label></div>`;
+    const kn = txKeyName(id);
+    const keyTag = `<span class="tx-key ${kn ? '' : 'is-custom'}" title="${esc(kn ? t('tx/key-tip') : t('tx/c-custom'))}">${kn ? esc(kn) : t('tx/key-custom')}</span>`;
+    return `<div class="tx-colors"><button class="tx-auto ${c ? '' : 'is-on'}" data-act="txColor" data-arg="${id}|" title="${esc(t('tx/c-auto'))}">${t('tx/c-auto')}</button>${sw.map((x) => `<button class="sw-btn ${c === x ? 'is-on' : ''}" style="background:${x}" data-act="txColor" data-arg="${id}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${c && !sw.includes(c) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-txcolor="${id}" value="${c || '#333333'}"></label>${keyTag}</div>`;
   }
   function txtSec(b) {
     const els = (TXT[b] || []).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
@@ -1412,10 +1422,12 @@
   }
 
   // ---------- 素材：上传 / 素材库 / 调整尺寸 ----------
-  const SLOT_SPEC = { 'mp-gamemenu-btnOff': [150, 70, 'mp/gm-btn-off'], 'mp-gamemenu-btnSel': [150, 70, 'mp/gm-btn-on'], 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [260, 260, 'mp/gc-fallback'], 'mp-gamecards-starOff': [36, 36, 'mp/gc-star-off'], 'mp-gamecards-starSel': [36, 36, 'mp/gc-star-on'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
+  const SLOT_SPEC = { 'mp-gamemenu-btnOff': [150, 70, 'mp/gm-btn-off'], 'mp-gamemenu-btnSel': [150, 70, 'mp/gm-btn-on'], 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [260, 260, 'mp/gc-fallback'], 'mp-gamecards-starOff': [36, 36, 'mp/gc-star-off'], 'mp-gamecards-starSel': [36, 36, 'mp/gc-star-on'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [600, 100, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
   // 顶部栏图标槽：tb-cur / tb-search / tb-side 存在 E.D.tb.icons[k]（AI 图路径 / 'img:' 上传图 / 滤镜模拟值）
   const TB_ICON = /^tb-(cur|search|side)$/;
   function tbIconSet(k, v) { tbFitSet(k, null); const o = Object.assign({}, E.D.tb.icons); if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) E.D.tb.icons = o; else delete E.D.tb.icons; }
+  // Logo（方案 §顶部栏）：上传 宽 330–600 × 高 100，前端显示 230×76；其它槽位按固定尺寸
+  const specOk = (slot, w, h) => (slot === 'tb-logo' ? +h === 100 && +w >= 330 && +w <= 600 : (() => { const sp = slotSpec(slot); return +w === sp.w && +h === sp.h; })());
   function slotSpec(slot) { if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; } const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' }; }
   function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); if (TB_ICON.test(slot)) return (E.D.tb.icons || {})[slot.slice(3)] || null; return E.D.tb.logoF; }
   function setAsset(slot, v) {
@@ -1473,15 +1485,15 @@
   A.fpLocal = () => {
     const slot = E.fpSlot; const sp = slotSpec(slot);
     window.pickImage({ accept: window.IMG_ACCEPT, maxMB: 5 }, (src) => {
-      const im = new Image(); im.onload = () => { const w = im.naturalWidth || sp.w, h = im.naturalHeight || sp.h; const f = 'img:' + src; if (w !== sp.w || h !== sp.h) { openResize(slot, f, w, h); window.render(); } else uploadTo(slot, f, sp.w, sp.h); };
+      const im = new Image(); im.onload = () => { const w = im.naturalWidth || sp.w, h = im.naturalHeight || sp.h; const f = 'img:' + src; if (!specOk(slot, w, h)) { openResize(slot, f, w, h); window.render(); } else uploadTo(slot, f, w, h); };
       im.onerror = () => window.toast(t('mp/icon-bad'), { info: true }); im.src = src;
     });
     return false;
   };
   A.fpPick = (arg) => {
     const [f, w, h] = arg.split('|'); const slot = E.fpSlot; const sp = slotSpec(slot);
-    if (+w !== sp.w || +h !== sp.h) { openResize(slot, f, +w, +h); return; }
-    uploadTo(slot, f, sp.w, sp.h);
+    if (!specOk(slot, w, h)) { openResize(slot, f, +w, +h); return; }
+    uploadTo(slot, f, +w, +h);
   };
   A.cancelUpload = () => { if (E.upload) clearInterval(E.upload.timer); E.upload = null; };
   A.undoReplace = () => { const r = E.replaced; if (!r) return; commit(() => { setAsset(r.slot, r.prev); }); E.replaced = null; };
@@ -1499,7 +1511,7 @@
   A.libChip = (v) => { E.lib.chip = v; libLoad(); };
   A.libSel = (i) => {
     const L = E.lib; const it = libList()[+i]; if (!it) return false; const sp = slotSpec(L.slot);
-    if (it.w !== sp.w || it.h !== sp.h) { openResize(L.slot, it.f, it.w, it.h); return; }
+    if (!specOk(L.slot, it.w, it.h)) { openResize(L.slot, it.f, it.w, it.h); return; }
     L.sel = +i;
   };
   A.libUse = () => { const L = E.lib; const it = libList()[L.sel]; if (!it) return false; E.lib = null; uploadTo(L.slot, it.f, it.w, it.h); };
@@ -1517,7 +1529,7 @@
     const ratio = `aspect-ratio:${sp.w} / ${sp.h}`;
     const list = libList();
     const grid = L.loading ? `<div class="lib-grid">${[0, 1, 2, 3, 4, 5].map(() => `<div class="lib-it"><span class="im skeleton" style="${ratio}"></span><span class="skeleton sk-line"></span></div>`).join('')}</div>`
-      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = it.w !== sp.w || it.h !== sp.h; return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};${window.fxStyle(it.f, L.slot.startsWith('slide') ? BANNER_DEF : '')}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
+      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = !specOk(L.slot, it.w, it.h); return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};${window.fxStyle(it.f, L.slot.startsWith('slide') ? BANNER_DEF : '')}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
         : window.empty('stack-fill', t('ed/lib-empty'), t('ed/lib-empty-d'));
     return `<div class="dialog-head"><h3>${t('ed/lib-title', { name: sp.name, w: sp.w, h: sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>${tabs}${chips}<div class="lib-body" data-sk="lib">${grid}</div>
       <div class="dialog-foot lib-foot"><span class="caption faint">${t('ed/lib-free')}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary ${L.sel == null ? 'is-disabled' : ''}" data-act="libUse">${t('ed/lib-use')}</button></div>`;
