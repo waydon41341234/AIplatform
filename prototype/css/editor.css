@@ -276,11 +276,15 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .h5-foot { padding: 12px; text-align: center; background: var(--e-footer-bg); color: var(--e-footer-text); font-size: 10px; }
 .h5-foot .ln { color: var(--e-footer-link); }
 .h5-foot div + div { margin-top: 4px; }
-.h5-bnav { position: sticky; bottom: 0; display: flex; align-items: flex-end; background: var(--e-bottomnav-bg); border-top: 1px solid var(--o-border); padding: 6px 0 8px; z-index: 2; height: 55px; box-sizing: border-box; }
-.h5-bnav.h-98 { height: 49px; padding: 4px 0 6px; }
-.h5-bnav.h-120 { height: 60px; }
+/* 底部导航（Figma 317:55538，750×140）：上边缘是投影（黑 6%），没有描边；图标顶对齐（图标 8px 起、文字 36px 起），文字最多两行（越南语长） */
+.h5-bnav { position: sticky; bottom: 0; display: flex; align-items: flex-start; background: var(--e-bottomnav-bg); box-shadow: 0 -1px 4px rgba(0, 0, 0, .06); padding: 8px 0 0; z-index: 2; height: 70px; box-sizing: border-box; }
+.h5-bnav.h-98 { height: 49px; padding-top: 4px; }
+.h5-bnav.h-98 .lb { -webkit-line-clamp: 1; }
+.h5-bnav.h-120 { height: 60px; padding-top: 5px; }
+.h5-bnav.h-140 { height: 70px; }
+.h5-bnav .lb { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: calc(100% - 4px); text-align: center; line-height: 1.1; overflow-wrap: anywhere; cursor: pointer; }
 .h5-bnav .it.raised .ic { width: 34px; height: 34px; padding: 7px; margin-top: -18px; border-radius: 50%; background: var(--e-bottomnav-active); color: var(--e-bottomnav-bg); box-shadow: 0 2px 6px #0003; box-sizing: border-box; }
-.h5-bnav .it { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--e-bottomnav-def); font-size: 10px; }
+.h5-bnav .it { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--e-bottomnav-def); font-size: 12px; }
 .h5-bnav .it .ic { width: 20px; height: 20px; }
 .h5-bnav .it.on { color: var(--e-bottomnav-active); }
 .h5-side { position: absolute; inset: 0; z-index: 8; background: #0006; display: flex; }
@@ -826,9 +830,9 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .gcai-pv i.fb { width: 72px; height: 72px; border-radius: 10px; }
 .gcai-pv i.st { width: 40px; height: 40px; border-radius: 50%; background-color: #7a8290; }
 .h5-bnav .it .bi img, .h5-bnav .it .bi img.cu { width: 25px; height: 25px; object-fit: contain; display: block; border-radius: 0; }
-.h5-bnav .it .bi.big img, .h5-bnav .it .bi.big img.cu { width: 44px; height: 44px; margin: -12px -10px -7px; }
+.h5-bnav .it .bi.big img, .h5-bnav .it .bi.big img.cu { width: 50px; height: 50px; margin: -15px -12px -10px; } /* 未登录动效礼盒 100×100 */
 .h5-bnav .it.raised { position: relative; }
-.h5-bnav .it.raised .bi img, .h5-bnav .it.raised .bi img.cu { width: 60px; height: 45px; margin: -26px 0 -2px; border-radius: 0; }
+.h5-bnav .it.raised .bi img, .h5-bnav .it.raised .bi img.cu { width: 60px; height: 60px; margin: -35px 0 0; border-radius: 0; } /* 120×120，顶出导航栏 27px */
 .h5-bnav .it.raised .bi .ic { width: 34px; height: 34px; padding: 7px; margin-top: -18px; border-radius: 50%; background: var(--e-bottomnav-active); color: var(--e-bottomnav-bg); box-shadow: 0 2px 6px #0003; box-sizing: border-box; }
 .tb-item .thumb.cur { display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .tb-item .thumb.cur img { width: 100%; height: auto; max-height: 100%; object-fit: contain; }
@@ -1151,3 +1155,11 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .slide-list .slide-edit { display: inline-flex; align-items: center; justify-content: center; width: 20px; flex: none; color: var(--icon-3); }
 .slide-list .asset.compact:hover .slide-edit { color: var(--link); }
 .tx-auto .sw-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; border: var(--stroke-thin) solid var(--border); }
+
+/* 底部导航面板：两张缩略图（未选中 / 选中）右上角 ↺ 单独恢复 */
+.bn-hd { padding-right: 66px; }
+.bn-th { position: relative; display: inline-flex; flex: none; }
+.bn-th .rb { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); color: var(--icon-2); box-shadow: 0 0 0 1px var(--border); z-index: 1; }
+.bn-th .rb .ic { width: 10px; height: 10px; }
+.bn-th .rb:hover { color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+.lrow .tb-ai { color: var(--brand); }

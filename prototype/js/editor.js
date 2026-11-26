@@ -38,7 +38,7 @@
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
   // Banner AI 候选 = Figma generate image 生成的 4 种默认风格（2026-11-26，assets/ai-banner/）
   const CAND_F = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
-  const BNAV_PX = { 98: 49, 110: 55, 120: 60 };
+  const BNAV_PX = { 98: 49, 110: 55, 120: 60, 140: 70 };
   const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
   const modName = (id) => { const b = baseName(id); const n = id.includes('~') ? ' ' + (+id.split('~')[1] + 1) : ''; return t((MODS[b] || MODS.banner).key) + n; };
@@ -337,6 +337,8 @@
   }
   // 侧边栏入口图标：有图片（上传 / AI）用图片，否则用线性图标（滤镜模拟值叠在线性图标上）
   function sideIcHtml(v, cls) { const x = tbImg(v, ''); return x.src ? `<img class="${cls} ico-img" src="${x.src}" alt="">` : x.f !== 'none' ? `<span style="display:inline-flex;filter:${x.f}">${ic('list', cls)}</span>` : ic('list', cls); }
+  const PH_OK = (n) => (window.PH && window.PH[n] ? n : 'sparkle-fill');
+  const tbOrder = () => { const o = E.D.tb.order; return Array.isArray(o) && o.length === 3 ? o : E.D.tb.searchFirst ? ['search', 'logo', 'cur'] : ['logo', 'cur', 'search']; };
   function h5Topbar() {
     const D = E.D, tb = D.tb, it = tb.items;
     const tic = tb.icons || {};
@@ -352,9 +354,11 @@
     const auth = it.auth && D.login ? balHtml() : ''; // 头像不放顶部栏（Waydon 2026-11-26）
     const left = D.side === 'left' ? side : '';
     const right = D.side === 'right' ? side : '';
-    const pre = tb.searchFirst ? search : '';
-    const post = tb.searchFirst ? '' : search;
-    return `<div class="h5-top" style="height:${tb.h / 2}px;padding:0 ${tb.pad / 2}px;gap:${tb.gap / 2}px">${left}${pre}${logo}<span class="sp"></span>${cur}${post}${auth}${right}</div>`;
+    // 功能排列（Waydon 2026-11-26）：Logo / 币种切换（登录后是余额框）/ 搜索 按 tb.order 从左到右排；Logo 后面留空把其余推到右边（Logo 在最后则空白在它前面）
+    const part = { logo, cur: cur + auth, search };
+    const ord = tbOrder(); const li = ord.indexOf('logo');
+    const mid = ord.map((k, i) => (k === 'logo' && i === ord.length - 1 && i > 0 ? '<span class="sp"></span>' + part[k] : part[k] + (k === 'logo' && i < ord.length - 1 ? '<span class="sp"></span>' : ''))).join('') + (li < 0 ? '<span class="sp"></span>' : '');
+    return `<div class="h5-top" style="height:${tb.h / 2}px;padding:0 ${tb.pad / 2}px;gap:${tb.gap / 2}px">${left}${mid}${right}</div>`;
   }
   // 轮播只播放未隐藏的图（ED-06）
   const visIdx = () => E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
@@ -714,7 +718,7 @@
     const note = a.fromRef && !a.analyzing ? `<div class="p-note">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt-tip2')}</div>` : `<div class="p-note">${t('ed/tbai-box-tip')}</div>`;
     const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n })}</button></div></div>` : '';
     return `<div class="p-sec tbai"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('ed/tbai-title2')}<span class="tbai-hd">${o.cur || o.search ? `<button class="tx-reset" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}<button class="ib-s" data-act="tbAiToggle" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>
-      <div class="tbai-row"><span>${t('ed/tbai-target')}</span>${target}</div>${tiles}${box}${note}${res}</div>`;
+      <div class="tbai-row">${target}</div>${tiles}${box}${note}${res}</div>`;
   }
   // ---------- Logo AI 生成（原型：用调色滤镜模拟 4 个候选；正式版按提示词出图，品牌名 / 网址文字保持不变） ----------
   const LOGO_AI_F = ['saturate(1.3) contrast(1.05)', 'hue-rotate(-150deg) saturate(1.4)', 'sepia(.7) saturate(1.8) hue-rotate(-12deg) brightness(.95)', 'hue-rotate(95deg) saturate(1.3)', 'hue-rotate(160deg) saturate(1.2)', 'grayscale(1) contrast(1.4) brightness(.7)'];
@@ -757,10 +761,15 @@
     const seg = (lab, opts, cur, act) => `<div class="tb-item tb-pos"><span class="tx"><b class="ellipsis">${t(lab)}</b></span><div class="iseg">${opts.map(([v, l]) => `<button class="${cur === v ? 'is-on' : ''}" data-act="${act}" data-arg="${v}">${t(l)}</button>`).join('')}</div></div>`;
     const searchPos = it.search ? seg('ed/tb-search-pos', [['left', 'ed/side-left'], ['right', 'ed/side-right']], D.tb.searchFirst ? 'left' : 'right', 'tbSearchPos') : '';
     const sidePos = it.side ? seg('ed/tb-side-pos', [['left', 'ed/side-left'], ['right', 'ed/side-right']], D.side, 'setSide') : '';
+    // 功能排列：拖动调整 Logo / 币种切换 / 搜索 在顶部栏里的左右顺序（入口图标本身不能拖）
+    const arrName = { logo: 'Logo', cur: t(D.login ? 'ed/tb-balance' : 'ed/tb-cur'), search: t('ed/tb-search') };
+    const arrIc = { logo: 'image-fill', cur: 'wallet-fill', search: 'magnifying-glass' };
+    const arrange = `<div class="p-sec"><div class="lab">${t('ed/tb-arrange')}</div><div class="tb-group tb-arr" data-drag-list="tborder">${tbOrder().map((k, i) => `<div class="tb-item tb-arr-it ${it[k === 'cur' ? (D.login ? 'auth' : 'cur') : k] ? '' : 'is-hidden'}" data-row="${i}"><span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span><span class="n">${i + 1}</span>${ic(PH_OK(arrIc[k]), 'ic-16')}<span class="tx"><b class="ellipsis">${arrName[k]}</b></span></div>`).join('')}</div><div class="p-note">${t('ed/tb-arrange-note')}</div></div>`;
     const aiEntry = E.tbAiOpen ? '' : `<button class="btn btn-secondary btn-sm tbai-open" data-act="tbAiToggle">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-open')}</button>`;
     return `<div class="p-sec"><div class="lab">${t('ed/tb-state2')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}<div class="p-note">${ic('info-fill', 'ic-16')}${t(D.login ? 'ed/tb-note-in' : 'ed/tb-note-out')}</div></div>
+      ${arrange}
       <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${logoRow}</div>${ups(['logo'])}${E.tbLogoOpen ? tbLogoSec() : ''}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${D.login ? balRow : curRow}${searchRow}${sideRow}${searchPos}${sidePos}</div>${ups(['cur', 'search', 'side'])}${aiEntry}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${D.login ? balRow : curRow}${searchRow}${it.side ? sideRow + sidePos : ''}</div>${ups(it.side ? ['cur', 'search', 'side'] : ['cur', 'search'])}${aiEntry}</div>
       ${E.tbAiOpen ? tbAiSec() : ''}${D.login && it.auth ? balSec() : ''}`;
   }
   function tbLayout() {
@@ -802,7 +811,8 @@
     // 分类标题 30=15 lead、「全部」24=12 neutral_2
     gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm', '.cl-gc .nm', 11, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 13, 400],
       ['gamecards.title', 'tx/gamecards-title', '.cl-gc .hd b', '.cl-gc .hd b', 15, 400], ['gamecards.all', 'tx/gamecards-all', '.cl-gc .hd small', '.cl-gc .hd small', 12, 400]],
-    bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it', '.h5-bnav .it:not(.on)', 10, 400]],
+    // 底部导航（Figma 317:55538）：导航文字 h5/body2/regular 24/750=12，未选中 btmnav_def、选中 btmnav_active（颜色跟颜色页签同源）
+    bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it:not(.on) .lb', '.h5-bnav .it:not(.on) .lb', 12, 400], ['bottomnav.nameOn', 'tx/bottomnav-on', '.h5-bnav .it.on .lb', '.h5-bnav .it.on .lb', 12, 400]],
   };
   const TX_ALL = Object.values(TXT).flat();
   const TX_W = [400, 500, 700];
@@ -810,7 +820,7 @@
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
   const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText',
     'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.activeText',
-    'gamecards.tab': 'gamecards.tab', 'gamecards.name': 'gamecards.text' };
+    'gamecards.tab': 'gamecards.tab', 'gamecards.name': 'gamecards.text', 'bottomnav.name': 'bottomnav.def', 'bottomnav.nameOn': 'bottomnav.active' };
   const txOf = (id) => {
     const o = ((E.D.txt || {})[id]) || {};
     if (!TX_EC[id]) return o;
@@ -901,7 +911,7 @@
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || b === 'gamemenu' || b === 'gamecards' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || b === 'gamemenu' || b === 'gamecards' || b === 'bottomnav' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -1007,7 +1017,8 @@
       if (target && key) {
         const curIdx = E.slide; let newCur = curIdx;
         commit(() => {
-          const arr = key === 'banner' ? E.D.banner.slides : E.D.m[key].items; const from = +id; const it = arr.splice(from, 1)[0]; let i = +target.id; if (i > from) i--; if (!target.before) i++; arr.splice(i, 0, it);
+          if (key === 'tborder') E.D.tb.order = tbOrder().slice();
+          const arr = key === 'banner' ? E.D.banner.slides : key === 'tborder' ? E.D.tb.order : E.D.m[key].items; const from = +id; const it = arr.splice(from, 1)[0]; let i = +target.id; if (i > from) i--; if (!target.before) i++; arr.splice(i, 0, it);
           if (key === 'banner') { const order = arr.map((_, k) => k); const map = []; order.forEach(() => {}); if (from === curIdx) newCur = i; else { let c = curIdx; if (from < c) c--; if (i <= c) c++; newCur = c; } void map; }
         });
         if (key === 'banner') E.slide = Math.max(0, Math.min(newCur, E.D.banner.slides.length - 1));
@@ -1073,12 +1084,19 @@
   // 删除：页面里的流式模块真正移除（可撤销、可从「添加模块」加回来）；顶部栏 / 底部导航 / 侧边栏是固定模块，只能隐藏
   A.modDel = (id) => {
     const inFlow = E.D.order.includes(id);
-    commit(() => { if (inFlow) E.D.order = E.D.order.filter((x) => x !== id); else E.D.hidden[id] = true; });
+    // 侧边栏删掉 = 顶部栏一起去掉侧边栏入口（之后可在「添加模块」里再加回来）
+    commit(() => { if (inFlow) E.D.order = E.D.order.filter((x) => x !== id); else if (id === 'sidebar') { E.D.tb.items.side = false; E.D.hidden.sidebar = false; E.h5side = false; } else E.D.hidden[id] = true; });
     if (E.sel === id) E.sel = null; S.menu = null; if (E.mpanel === 'module') E.mpanel = null;
-    window.toast(t(inFlow ? 'ed/deleted-toast' : 'ed/hidden-toast', { m: modName(id), name: modName(id) }), undoOpt());
+    window.toast(t(inFlow || id === 'sidebar' ? 'ed/deleted-toast' : 'ed/hidden-toast', { m: modName(id), name: modName(id) }), undoOpt());
   };
   const ADDABLE = ['banner', 'notice', 'midnav', 'gamemenu', 'gamecards']; // 经典蓝白没有彩金池 / 页脚
   A.addMod = (b) => {
+    if (b === 'sidebar') {
+      commit(() => { E.D.tb.items.side = true; E.D.hidden.sidebar = false; });
+      S.menu = null; E.tab = 'content'; E.ai = null; E.picker = null; E.keys = null;
+      if (mobileEd()) { E.mpanel = 'modules'; E.sel = null; } else { E.sel = 'sidebar'; E.h5side = true; }
+      window.toast(t('ed/added-toast', { m: modName('sidebar') }), undoOpt()); return;
+    }
     let id = b; let n = 1; while (E.D.order.includes(id)) id = b + '~' + n++;
     commit(() => { const i = E.D.order.indexOf(E.sel); if (i >= 0) E.D.order.splice(i + 1, 0, id); else E.D.order.push(id); E.D.hidden[id] = false; });
     S.menu = null; E.tab = 'content'; E.ai = null; E.picker = null; E.keys = null;
@@ -1095,8 +1113,10 @@
   });
   A.addMenu = () => { if (mobileEd()) { E.mpanel = 'addmod'; S.menu = null; } else S.menu = window.__prevMenu === 'addmod' ? null : 'addmod'; };
   function addList() {
-    return `<div class="add-hd"><div class="t">${t('ed/add-title')}</div><div class="caption faint">${t('ed/add-hint')}</div></div><div class="add-grid">${ADDABLE.map((b) => {
-      const ico = { notice: 'bell-fill', banner: 'image-fill', jackpot: 'sparkle-fill', midnav: 'list', gamemenu: 'squares-four', gamecards: 'squares-four-fill', footer: 'file-image' }[b];
+    // 侧边栏（Waydon 2026-11-26）：版式没有侧边栏入口时，要先在这里添加，顶部栏才出现侧边栏入口
+    const list = ADDABLE.concat(E.D.tb.items.side ? [] : ['sidebar']);
+    return `<div class="add-hd"><div class="t">${t('ed/add-title')}</div><div class="caption faint">${t('ed/add-hint')}</div></div><div class="add-grid">${list.map((b) => {
+      const ico = { notice: 'bell-fill', banner: 'image-fill', jackpot: 'sparkle-fill', midnav: 'list', gamemenu: 'squares-four', gamecards: 'squares-four-fill', footer: 'file-image', sidebar: 'sidebar-simple-fill' }[b];
       const inPg = E.D.order.some((x) => baseName(x) === b);
       return `<button class="add-it" data-act="addMod" data-arg="${b}"><span class="tile">${ic(ico)}</span><span class="tx"><span class="nm">${t(MODS[b].key)}</span><span class="ds">${t('ed/desc-' + b)}</span></span>${inPg ? `<span class="tag">${t('ed/add-in-page')}</span>` : ''}</button>`;
     }).join('')}</div>`;
@@ -1139,7 +1159,7 @@
     if (D.tb.logoF !== 'none') assets++;
     // 换过的入口图标 + 改过的入口名 / 页脚链接名（名字不在默认名单里即算改过）
     const d0 = window.MP ? window.MP.defaults() : null;
-    let icons = 0; ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => { const dn = d0 && d0[b] ? d0[b].items.map((x) => x.n) : []; D.m[b].items.forEach((it) => { if (it.img || it.imgOn || (it.n && (it.k || (d0 && !dn.includes(it.n))))) icons++; }); });
+    let icons = 0; ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => { const dn = d0 && d0[b] ? d0[b].items.map((x) => x.n) : []; D.m[b].items.forEach((it) => { if (it.img || it.imgOn || it.imgOut || (it.n && (it.k || (d0 && !dn.includes(it.n))))) icons++; }); });
     return { colors, assets, icons, n: colors + assets + icons };
   }
   function tplDesign(k, keep) {
@@ -1152,7 +1172,7 @@
       const tp0 = tplOf(D0.template);
       D0.banner.slides.forEach((s, i) => { if (nd.banner.slides[i] && (s.f !== (tp0.slides[i] || 'none'))) nd.banner.slides[i] = Object.assign({}, s, { w: BANNER[nd.banner.size].w, h: BANNER[nd.banner.size].h }); });
       ['jackpot.bg', 'gamecards.fallback', 'gamecards.starOff', 'gamecards.starSel', 'sidebar.head'].forEach((p) => { const [b, f] = p.split('.'); if (D0.m[b][f]) nd.m[b][f] = D0.m[b][f]; });
-      ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => D0.m[b].items.forEach((it, i) => { const t2 = nd.m[b].items[i]; if (!t2) return; ['img', 'imgOn'].forEach((f) => { if (it[f]) t2[f] = it[f]; }); if (it.n && (it.k || it.n !== t2.n)) t2.n = it.n; }));
+      ['midnav', 'bottomnav', 'gamemenu', 'sidebar', 'footer'].forEach((b) => D0.m[b].items.forEach((it, i) => { const t2 = nd.m[b].items[i]; if (!t2) return; ['img', 'imgOn', 'imgOut', 'nOut'].forEach((f) => { if (it[f]) t2[f] = it[f]; }); if (it.n && (it.k || it.n !== t2.n)) t2.n = it.n; }));
     }
     return nd;
   }

@@ -724,7 +724,7 @@
       m.sidebar.style = pick(['list', 'grid'], m.sidebar.style); m.sidebar.width = pick([62, 75], m.sidebar.width);
       const a = pick([th.primary, th.accent_3, th.lead], D.ec['sidebar.itemActive'] || th.primary); setEc('sidebar.itemActive', a); setEc('sidebar.textActive', best(a, [th.bg_2, th.lead]));
     } else if (b === 'bottomnav') {
-      m.bottomnav.style = pick(['regular', 'raised'], m.bottomnav.style); m.bottomnav.h = pick([98, 110, 120], m.bottomnav.h);
+      m.bottomnav.style = pick(['regular', 'raised'], m.bottomnav.style); m.bottomnav.h = pick([98, 120, 140], m.bottomnav.h);
       setEc('bottomnav.active', pick([th.primary, th.accent_3, th.lead], D.ec['bottomnav.active'] || th.primary));
     } else if (b === 'topbar') {
       D.tb.h = pick([80, 90, 100], D.tb.h); // 顶部栏高度规范 70–100
