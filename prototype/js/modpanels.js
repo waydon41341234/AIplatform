@@ -413,6 +413,13 @@
   // 收藏星：上传 / AI 图（'img:'）> 效果图默认 PNG
   const gcStarSrc = (m, f) => { const v = m[f]; return v && v.startsWith('img:') ? v.slice(4) : GC_STAR[f]; };
   const gcStarImg = (m, f, cls = '') => { const v = m[f]; return `<img class="${cls}" src="${gcStarSrc(m, f)}" style="${v && !v.startsWith('img:') ? 'filter:' + v : ''}" alt="">`; }; // 素材库模拟值 = 滤镜
+  A.gcCvMenu = (arg) => {
+    const [id, f, j] = arg.split('|'), x = X(), E = x.E, key = 'gccv:' + id + '|' + f + '|' + j;
+    if (E.sel !== id) { E.ai = null; E.picker = null; E.iconAi = null; }
+    E.sel = id; E.tab = 'content';
+    if (x.mobileEd()) { S().menu = 'am:mp-gamecards-' + f; return; } // 手机：底部菜单（amSheet）
+    S().menu = S().menu === key ? null : key;
+  };
   A.gcFlag = (k) => { const x = X(); x.commit(() => { const m = x.E.D.m.gamecards; m[k] = m[k] === false; }); };
   A.gcStarReset = () => { const x = X(), m = M('gamecards'); if (!m.starOff && !m.starSel) return false; x.commit(() => { const g = x.E.D.m.gamecards; g.starOff = null; g.starSel = null; }); window.toast(t('ed/reset-toast'), x.undoOpt()); };
   // AI 生成（原型：按款式画 SVG；正式版按提示词出图）。target = fallback（兜底封面 260×260）| star（收藏星两张 36×36）
@@ -428,12 +435,26 @@
     const c = on ? onc : off;
     return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="72" height="72"><circle cx="18" cy="18" r="17" fill="${bg}"/><g transform="translate(7 6.5) scale(.0859)" fill="${c}" ${on && edge ? `stroke="${edge}" stroke-width="14"` : ''}>${window.PH['star-fill']}</g></svg>`);
   }
-  const gcAi = () => { const E = X().E; return (E.gcAi = E.gcAi || { target: 'fallback', style: 'flat', prompt: '', stage: 'setup' }); };
-  const gcAiPrompt = (a) => t('mp/gc-ai-p-' + (a.target === 'star' ? 'star' : 'fb'), { s: t('ed/tbai-' + a.style) });
+  const gcAi = () => { const E = X().E; return (E.gcAi = E.gcAi || { target: 'fallback', style: 'flat', prompt: '', stage: 'setup', model: 'gpt', refSt: null }); };
+  const gcAiPrompt = (a) => t('mp/gc-ai-p-' + (a.target === 'star' ? 'star' : 'fb'), { s: t('ed/tbai-' + a.style) }) + (a.fromRef && a.refHex ? t('mp/gm-bai-ref-c', { hex: a.refHex }) : '');
+  // 参考图 + 模型（跟按钮底图 AI / 图标 AI 同一套输入框）：上传参考图后反推款式，主色写进提示词
+  A.gcAiModel = (v) => { gcAi().model = v; S().menu = null; };
+  A.gcAiRefPick = () => { const a = gcAi(); if (a.stage === 'busy') return false; window.pickImage({ accept: window.IMG_ACCEPT, maxMB: 10 }, (src, file) => {
+    if (file && !window.imgOk(file)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
+    a.refSt = { uploading: true, pct: 60 }; a.analyzing = true; window.render();
+    window.aiRefRead(src, ['', ''], (res) => {
+      if (X().E.gcAi !== a) return; a.analyzing = false;
+      if (!res) { a.refSt = null; window.toast(t('mp/icon-bad'), { info: true }); window.render(); return; }
+      a.refSt = { src, name: file ? file.name : '' }; a.style = GC_ST.includes(res.style) ? res.style : 'glossy'; a.refHex = res.hex; a.fromRef = true; a.prompt = gcAiPrompt(a); a.stage = 'setup'; window.render();
+    });
+  }); return false; };
+  A.gcAiRefRm = () => { const a = gcAi(); a.refSt = null; a.analyzing = false; a.fromRef = false; a.refHex = null; a.prompt = gcAiPrompt(a); };
+  A.gcAiRefCancel = () => A.gcAiRefRm();
+  A.gcAiRefView = () => false;
   A.gcAiOpen = (target) => { const E = X().E, a = gcAi(); S().menu = null; E.tab = 'content'; E.gcAiOpen = true; E.tbAiFocus = '.gcai'; if (a.stage === 'busy') return; if (target && target !== a.target) { a.target = target; a.prompt = gcAiPrompt(a); a.stage = 'setup'; a.res = null; } if (!a.prompt) a.prompt = gcAiPrompt(a); };
   A.gcAiClose = () => { X().E.gcAiOpen = false; };
   A.gcAiTarget = (v) => { const a = gcAi(); if (a.stage === 'busy' || a.target === v) return false; a.target = v; a.prompt = gcAiPrompt(a); a.stage = 'setup'; a.res = null; };
-  A.gcAiStyle = (v) => { const a = gcAi(); if (a.stage === 'busy') return false; a.style = v; a.prompt = gcAiPrompt(a); a.stage = 'setup'; };
+  A.gcAiStyle = (v) => { const a = gcAi(); if (a.stage === 'busy') return false; a.style = v; a.fromRef = false; a.prompt = gcAiPrompt(a); a.stage = 'setup'; };
   A.gcAiGen = () => {
     const x = X(), a = gcAi(); if (a.stage === 'busy' || !(a.prompt || '').trim()) return false;
     if (!x.afford(10)) { x.topup(); return false; }
@@ -451,10 +472,12 @@
     const pv = (st) => (star ? `<i class="st" style="${window.fxStyle(gcStarSvg(st, false, pc))}"></i><i class="st" style="${window.fxStyle(gcStarSvg(st, true, pc))}"></i>` : `<i class="fb" style="${window.fxStyle(gcFbSvg(st, pc))}"></i>`);
     const tgt = seg([{ v: 'fallback', label: t('mp/gc-fallback') }, { v: 'star', label: t('mp/gc-fav') }], a.target, 'gcAiTarget');
     const tiles = `<div class="tbai-opts gcai-opts">${GC_ST.map((v) => `<button class="tbai-opt ${a.style === v ? 'is-on' : ''}" data-act="gcAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pv(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
-    const box = `<div class="c-box tbai-box"><div class="c-input"><textarea rows="3" maxlength="300" data-gcaiprompt placeholder="${esc(t('mp/gc-ai-ph'))}" ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea></div>
-      <div class="c-tools"><div class="c-opts"></div>${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="gcAiGen" title="${esc(t('ed/tbai-gen', { n: 10 }))}">${ic('sparkle-fill')}10${ic('arrow-up')}</button>`}</div></div>`;
+    const model = a.model || 'gpt', mname = model === 'gemini' ? 'Gemini' : 'GPT Image';
+    const mMenu = S().menu === 'gcai-model' ? `<div class="menu c-menu tbai-mmenu">${['gpt', 'gemini'].map((v) => `<button class="menu-item model-item ${model === v ? 'is-on' : ''}" data-act="gcAiModel" data-arg="${v}">${(window.MODEL_LOGO || {})[v] || ''}<span><div class="nm">${v === 'gemini' ? 'Gemini' : 'GPT Image'}</div><div class="ds">${v === 'gpt' ? 'Sunburst Flare' : 'Nano Banana Pro'}</div></span></button>`).join('')}</div>` : '';
+    const box = `<div class="c-box tbai-box"><div class="c-input">${window.refSlot(a.refSt, 'gcAiRef')}<textarea rows="3" maxlength="300" data-gcaiprompt placeholder="${esc(a.analyzing ? t('ed/tbai-analyzing') : t('mp/gc-ai-ph'))}" ${busy || a.analyzing ? 'disabled' : ''}>${esc(a.analyzing ? '' : a.prompt || '')}</textarea></div>
+      <div class="c-tools"><div class="c-opts"><div class="rel"><button class="c-opt ${S().menu === 'gcai-model' ? 'is-open' : ''}" data-act="menu:toggle" data-arg="gcai-model" ${busy ? 'disabled' : ''}>${(window.MODEL_LOGO || {})[model] || ''}<span class="ellipsis">${mname}</span>${ic('caret-down', 'chev')}</button>${mMenu}</div></div>${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="gcAiGen" title="${esc(t('ed/tbai-gen', { n: 10 }))}">${ic('sparkle-fill')}10${ic('arrow-up')}</button>`}</div></div>`;
     const r = a.res, res = a.stage === 'done' && r ? `<div class="tbai-res"><span class="pv gcai-pv">${r.target === 'star' ? `<i class="st" style="${window.fxStyle(gcStarSvg(r.style, false, pc))}"></i><i class="st" style="${window.fxStyle(gcStarSvg(r.style, true, pc))}"></i>` : `<i class="fb" style="${window.fxStyle(gcFbSvg(r.style, pc))}"></i>`}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="gcAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="gcAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n: 10 })}</button></div></div>` : '';
-    return `<div class="gcai tblogo"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('mp/gc-ai-title')}<span class="tbai-hd"><button class="ib-s" data-act="gcAiClose" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>${tgt}${tiles}${box}${res}<div class="p-note">${t(star ? 'mp/gc-ai-note-star' : 'mp/gc-ai-note-fb')}</div></div>`;
+    return `<div class="gcai tblogo"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('mp/gc-ai-title')}<span class="tbai-hd"><button class="ib-s" data-act="gcAiClose" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>${tgt}${tiles}${box}${a.fromRef ? `<div class="p-note">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt-tip2')}</div>` : ''}${res}<div class="p-note">${t(star ? 'mp/gc-ai-note-star' : 'mp/gc-ai-note-fb')}</div></div>`;
   }
   // 卡片图片两行：兜底封面（上传 · 素材库 · AI · 恢复 · 隐藏）、收藏星（未收藏 / 已收藏两张：上传 · AI · 恢复）
   function gcImgSec() {
@@ -547,9 +570,14 @@
       // 底部「另有 N 款游戏 展开」+ 分隔线 + 下一个分类的标题行（图标 · 名称 · 全部）
       const side = gcSide(id), cols = gcCols(m, side);
       const tabs = [1, 11, 12].map((k, j) => `<span class="${j ? '' : 'on'}">${t('mp/gm-n-' + k)}</span>`).join('');
-      const cards = GAMES.map(([n, g], j) => {
-        const fb = j === GC_FB, cover = fb ? gcFbInner(m) : `<img src="${CL}game${g}.webp" alt="">`;
-        return `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px">${cover}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${m.fav !== false ? gcStarImg(m, j ? 'starOff' : 'starSel', 'star') : ''}${m.tag && !fb ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`;
+      // 只显示整行（2 / 4 列显示 8 张、3 列 9 张），最后一行不会剩一张孤零零的卡；剩下的算进「另有 N 款」
+      const shown = Math.max(cols, Math.floor(GAMES.length / cols) * cols), mid = id || b;
+      // 画布上点兜底封面 / 收藏星：出 上传 / AI / 恢复 菜单（同面板「⋯」）
+      const cvm = (f, j) => (S().menu === 'gccv:' + mid + '|' + f + '|' + j && !X().mobileEd() && X().assetMenuItems ? `<div class="menu icon-menu am-menu gc-cv-menu ${j % cols >= cols / 2 ? 'r' : ''}" data-stop>${X().assetMenuItems('mp-gamecards-' + f)}</div>` : '');
+      const cards = GAMES.slice(0, shown).map(([n, g], j) => {
+        const fb = j === GC_FB, cover = fb ? gcFbInner(m) : `<img src="${CL}game${g}.webp" alt="">`, sf = j ? 'starOff' : 'starSel';
+        const star = m.fav !== false ? `<span class="star" data-act="gcCvMenu" data-arg="${mid}|${sf}|${j}" data-stop>${gcStarImg(m, sf)}</span>` : '';
+        return `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px" ${fb ? `data-act="gcCvMenu" data-arg="${mid}|fallback|${j}" data-stop` : ''}>${cover}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${star}${m.tag && !fb ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}${cvm('fallback', j)}${cvm(sf, j)}</div>`;
       }).join('');
       // 标题行 = 当前选中分类的下一个分类（Figma「棋牌游戏」），图标跟游戏菜单的未选中图
       let hd = '';
@@ -557,7 +585,7 @@
         const gv = vis('gamemenu'), ai = gmAct(), cur = gv.indexOf(M('gamemenu').items[ai]), nx = gv[(cur + 1) % Math.max(gv.length, 1)];
         if (nx) { const src = nx.img || nx.def; hd = `<div class="hd"><span class="hi">${src ? img(src) : ic(nx.i)}</span><b>${esc(t('mp/gc-cat-title', { n: nm(nx) }))}</b><small>${t('mp/gc-all')}</small></div>`; }
       }
-      return `<div class="cl-gc"><div class="tabs">${tabs}</div><div class="grid" style="grid-template-columns:repeat(${cols},1fr);gap:${m.gap / 2}px">${cards}</div><div class="more">${t('mp/gc-more-n', { n: '<em>14</em>' })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
+      return `<div class="cl-gc"><div class="tabs">${tabs}</div><div class="grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr));gap:${m.gap / 2}px">${cards}</div><div class="more">${t('mp/gc-more-n', { n: `<em>${14 + GAMES.length - shown}</em>` })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
     }
     if (b === 'footer') return `<div class="h5-foot" style="text-align:${m.align}"><div class="ln">${vis('footer').map((x) => esc(nm(x))).join(' · ')}</div><div>${esc(m.copy)}</div></div>`;
     return '';
@@ -1148,6 +1176,7 @@
     // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); const D = X().E.D; D.m[b][f] = v; if (b === 'gamemenu' && v && GM_BTN_EC[f] && D.ec) delete D.ec[GM_BTN_EC[f]]; },
     gcFbInner: (m) => gcFbInner(m),
+    gcStarImg: (m, f, cls) => gcStarImg(m, f, cls), // PC 卡片也显示收藏星（含上传 / AI 图）
     // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
     migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); },
     toggleAsset: (slot) => { const [b, f] = slotOf(slot); set(b, f + 'On', M(b)[f + 'On'] === false); },

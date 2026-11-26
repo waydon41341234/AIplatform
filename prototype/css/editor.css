@@ -804,10 +804,15 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .cl-gc .tabs span.on { color: var(--o-primary); }
 .cl-gc .tabs span.on::after { content: ''; position: absolute; left: 50%; bottom: -1px; width: 26px; height: 2px; margin-left: -13px; background: var(--o-primary); border-radius: 1px; }
 .cl-gc .grid { display: grid; }
-.cl-gc .c { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; color: var(--e-gamecards-text); }
-.cl-gc .im { position: relative; width: 100%; max-width: 66px; aspect-ratio: 1; overflow: hidden; background: var(--e-gamecards-placeholder); }
+.cl-gc .c { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; color: var(--e-gamecards-text); }
+/* 封面铺满列宽（正方形，最大 180）：列数 / 卡片间距 改了能直接看出来 */
+.cl-gc .im { position: relative; width: 100%; max-width: 180px; aspect-ratio: 1; overflow: hidden; background: var(--e-gamecards-placeholder); }
 .cl-gc .im > img:first-child { width: 100%; height: 100%; display: block; object-fit: cover; }
-.cl-gc .im .star { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; object-fit: contain; }
+.cl-gc .im .star { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; display: flex; cursor: pointer; }
+.cl-gc .im .star img { width: 100%; height: 100%; object-fit: contain; }
+.cl-gc .im.fb { cursor: pointer; }
+.cl-gc .gc-cv-menu { position: absolute; top: 100%; left: 0; margin-top: 4px; color: var(--text); font-family: var(--font); font-size: var(--fs-body-sm); text-align: left; }
+.cl-gc .gc-cv-menu.r { left: auto; right: 0; }
 .cl-gc .im .wg { position: absolute; right: 1px; bottom: 1px; width: 28px; }
 /* 兜底封面：底板 ddt_bg + 手柄图形 ddt_icon；上传 / AI 图铺满 */
 .cl-gc .im.fb { display: flex; align-items: center; justify-content: center; }

@@ -121,6 +121,7 @@
 .pc-gc .im .fbimg { position: absolute; inset: 0; background-size: cover; background-position: center; }
 .pc-gc .im .rec { position: absolute; left: 0; top: 0; width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); border-radius: 0 0 14px 0; }
 .pc-gc .im .rec .ic { width: 18px; height: 18px; }
+.pc-gc .im .star { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; object-fit: contain; }
 .pc-gc .tg { position: absolute; left: 8px; top: 8px; padding: 0 8px; border-radius: 4px; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); font-size: 13px; line-height: 22px; }
 
 /* 页脚：通栏，链接一行 + 版权 */

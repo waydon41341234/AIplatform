@@ -106,7 +106,7 @@
   function gamecards() {
     const m = M('gamecards');
     // 与 H5 一致：第 1 张推荐角标、第 8 张示意兜底封面（MP.gcFbInner）
-    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, g], j) => { const fb = j === 7 && window.MP.gcFbInner; return `<div class="c"><div class="im cl ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px">${fb ? window.MP.gcFbInner(m) : `<img src="assets/classic/game${g}.webp" alt="">`}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${m.tag && !fb ? '<img class="wg" src="assets/classic/wg.png" alt="">' : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`; }).join('')}</div></div>`;
+    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, g], j) => { const fb = j === 7 && window.MP.gcFbInner; return `<div class="c"><div class="im cl ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px">${fb ? window.MP.gcFbInner(m) : `<img src="assets/classic/game${g}.webp" alt="">`}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${m.fav !== false && window.MP.gcStarImg ? window.MP.gcStarImg(m, j ? 'starOff' : 'starSel', 'star') : ''}${m.tag && !fb ? '<img class="wg" src="assets/classic/wg.png" alt="">' : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`; }).join('')}</div></div>`;
   }
   function footer() {
     const m = M('footer');

@@ -611,7 +611,9 @@
     if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gmBaiOpen">${ic('sparkle-fill')}${t('mp/gm-bai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
     // 游戏卡片收藏星：上传 / AI / 恢复（两张一起恢复）
     if (/^mp-gamecards-star/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gcAiOpen" data-arg="star">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
-    const gcAi = id === 'mp-gamecards-fallback' ? `<button class="menu-item" data-act="gcAiOpen" data-arg="fallback">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button>` : ''; // 兜底封面也能 AI 生成
+    // 游戏卡片兜底封面：上传 / 素材库 / AI / 恢复（没改过时置灰）/ 显示隐藏（按当前状态）
+    if (id === 'mp-gamecards-fallback') { const m = E.D.m.gamecards, own = !!m.fallback, on = m.fallbackOn !== false; return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="gcAiOpen" data-arg="fallback">${ic('sparkle-fill')}${t('mp/gc-ai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(on ? 'eye-slash-fill' : 'eye-fill')}${t(on ? 'ed/am-hide' : 'ed/am-show')}</button>`; }
+    const gcAi = '';
     const lib = /^mp-(jackpot-bg|gamecards-fallback|sidebar-head)$/.test(id) ? `<button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button>` : '';
     return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}${gcAi}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
   }
@@ -1214,7 +1216,7 @@
   A.move = (d) => { const id = E.sel; const o = E.D.order; const i = o.indexOf(id), j = i + +d; if (i < 0 || j < 0 || j >= o.length) return false; commit(() => { E.D.order.splice(i, 1); E.D.order.splice(j, 0, id); }); window.toast(t(+d < 0 ? 'ed/moved-up' : 'ed/moved-down')); };
   A.modDup = (id) => { commit(() => { const b = baseName(id); let n = 1, nid = b + '~' + n; while (E.D.order.includes(nid)) nid = b + '~' + ++n; E.D.order.splice(E.D.order.indexOf(id) + 1, 0, nid); E.sel = nid; }); S.menu = null; window.toast(t('ed/dup-toast'), undoOpt()); };
   A.modReset = (id) => {
-    commit(() => { const d = defaultDesign(E.D.template); const b = baseName(id); if (b === 'topbar') E.D.tb = d.tb; if (b === 'banner') E.D.banner = d.banner; if (d.m[b]) E.D.m[b] = d.m[b]; window.MP.resetColors(b); E.D.hidden[id] = false; });
+    commit(() => { const d = defaultDesign(E.D.template); const b = baseName(id); if (b === 'topbar') E.D.tb = d.tb; if (b === 'banner') E.D.banner = d.banner; if (d.m[b]) E.D.m[b] = d.m[b]; window.MP.resetColors(b); if (E.D.txt) (TXT[b] || []).forEach(([tid]) => { delete E.D.txt[tid]; }); E.D.hidden[id] = false; }); // 文字样式一起恢复
     fixSlide(); S.menu = null; window.toast(t('ed/reset-toast'), undoOpt());
   };
   // 删除：页面里的流式模块真正移除（可撤销、可从「添加模块」加回来）；顶部栏 / 底部导航 / 侧边栏是固定模块，只能隐藏
@@ -1426,6 +1428,7 @@
   A.amUpload = (slot) => { S.menu = null; E.fpSlot = slot; E.dlg = 'fp'; };
   A.amReset = (slot) => {
     S.menu = null;
+    if (slot.startsWith('mp-') && !window.MP.getAsset(slot)) return; // 没改过：不加空的撤销步骤
     commit(() => { if (slot.startsWith('slide')) { const i = +slot.slice(5); const sz = BANNER[E.D.banner.size]; E.D.banner.slides[i] = { f: tplOf(E.D.template).slides[i] || 'none', w: sz.w, h: sz.h, hid: E.D.banner.slides[i].hid }; } if (slot === 'tb-logo') { E.D.tb.logoF = 'none'; tbFitSet('logo', null); } if (TB_ICON.test(slot)) tbIconSet(slot.slice(3), null); if (slot.startsWith('mp-')) window.MP.setAsset(slot, null); });
     window.toast(t('ed/reset-toast'), undoOpt());
   };
@@ -1878,7 +1881,7 @@
     if (E.palOpen) { E.palOpen = false; }
   }
 
-  window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
+  window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), assetMenuItems: (id) => assetMenuItems(id), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
