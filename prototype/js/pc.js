@@ -9,7 +9,6 @@
   const PAGE_W = 1920, CONTENT_W = 1200;
   const LEVELS = [25, 50, 75, 100];
   // 与 editor.js 的 AI 候选滤镜一致（候选预览时画布实时显示）
-  const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
   // PC Banner：通栏 1920×564（Waydon 2026-11-25 定），不随 H5 的大 / 一般 / 小规格变化
   const BAN_PC = { w: PAGE_W, h: 564 };
   const SMALL_GAP = (CONTENT_W - 3 * 386) / 2;
@@ -59,11 +58,8 @@
     const auth = D.login ? (window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>') : `<span class="login">${t('auth/login')}</span><span class="reg">${t('auth/register')}</span>`;
     return `<div class="pc-top"><div class="in">${logo}<nav class="nv">${nav}</nav><span class="sp"></span>${search}${auth}</div></div>`;
   }
-  function slideF(i) {
-    const E = X().E;
-    if (E.ai && E.ai.cand != null && i === E.slide) return CAND_F[E.ai.cand] || 'none';
-    return (E.D.banner.slides[i] || {}).f || 'none';
-  }
+  // 编辑器没导出 slideStyle 时的退路（AI 候选预览走 EDX.slideStyle，跟 H5 同一张候选图）
+  const slideF = (i) => (X().E.D.banner.slides[i] || {}).f || 'none';
   const visIdx = () => X().E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
   function bannerShift(n, size, i) {
     if (size !== 'small') return `translateX(${-i * 100}%)`;

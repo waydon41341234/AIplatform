@@ -847,7 +847,7 @@
   A.iaOpen = (b) => {
     const x = X(); const its = M(b).items;
     x.E.iconAi = { b, style: 'r-glossy', extra: window.aiPreset ? window.aiPreset('glossy') : '', model: 'gpt', refSt: null, picks: its.map((it) => isReq(b, it) || (b === 'gamemenu' && !!it.on) || (b === 'midnav' && M(b).mode === 'conf')), stage: 'setup', pct: 0, cands: {}, failed: {}, busy: {}, done: 0, attempt: 0 };
-    x.E.picker = null; S().menu = null; if (x.mobileEd()) x.E.mpanel = 'module';
+    x.E.picker = null; x.E.ai = null; S().menu = null; if (x.mobileEd()) x.E.mpanel = 'module'; // 统一 AI 面板（帐户栏余额框币种）开着时先关掉
   };
   const iaStop = () => { const ia = X().E.iconAi; if (ia && ia.timer) { clearInterval(ia.timer); clearTimeout(ia.timer); ia.timer = null; } };
   A.iaClose = () => { iaStop(); X().E.iconAi = null; };

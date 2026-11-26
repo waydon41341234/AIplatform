@@ -49,15 +49,12 @@
   const CAND_TAG = { large: [['glossy'], ['blackgold'], ['sport', 'neon']], small: [['glossy'], ['blackgold'], ['festive']], def: [['glossy'], ['blackgold'], ['festive'], ['neon']] };
   const candBase = () => (E.D.banner.size === 'large' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/large-' + n + '.webp') : E.D.banner.size === 'small' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/small-' + n + '.webp') : CAND_W);
   const candTags = () => CAND_TAG[E.D.banner.size] || CAND_TAG.def;
-  // 生成时按关键词 / 提示词 / 参考图给候选排序（最贴合的排第一），候选显示期间顺序固定
-  const candList = () => { const b = candBase(); const o = E.ai && E.ai.order; return o && o.length === b.length ? o.map((k) => b[k]) : b; };
-  const KW_ST = { 1: 'neon', 2: 'blackgold', 3: 'festive', 4: 'sport', 5: 'glossy', 6: 'neon', 7: 'glossy', 8: 'festive' };
+  // 生成时按款式 / 提示词 / 参考图给候选排序（最贴合的排第一）
   const PROMPT_ST = [['festive', /春节|新年|喜庆|喜慶|节日|節日|红包|紅包|中秋|圣诞|聖誕|红色|紅色|festive|holiday|new year|red\b|lễ hội|tết/i], ['blackgold', /黑金|金色|奢华|奢華|尊享|vip|gold|luxur|sang trọng|vàng/i], ['neon', /霓虹|赛博|賽博|科技|neon|cyber|tech|công nghệ/i], ['sport', /体育|體育|足球|球员|球員|赛事|賽事|sport|football|thể thao/i], ['glossy', /3d|立体|立體|光泽|光澤|卡通|glossy|cartoon|nổi khối/i]];
   function candScore(a) {
     const w = {}; const add = (st, n) => { w[st] = (w[st] || 0) + n; };
-    a.kw.forEach((k) => add(KW_ST[k], 3));
+    add(a.style === 'flat' ? 'glossy' : a.style, a.fromRef ? 4 : 3);
     PROMPT_ST.forEach(([st, re]) => { if (re.test(a.prompt || '')) add(st, 2); });
-    if (a.refStyle) add(a.refStyle === 'flat' ? 'glossy' : a.refStyle, 4);
     const sc = candTags().map((tg) => tg.reduce((n, st) => n + (w[st] || 0), 0));
     return { order: sc.map((v, i) => i).sort((x, y) => sc[y] - sc[x] || x - y), best: Math.max(...sc) > 0 };
   }
@@ -275,7 +272,7 @@
   function modWrap(id, inner, opts = {}) {
     const sel = E.sel === id;
     let extra = '';
-    if (sel && !mobileEd()) extra = `<span class="sel-label ${opts.top ? 'inside' : ''}">${esc(E.ai && E.ai.cand != null && baseName(id) === 'banner' ? t('ed/previewing', { n: E.ai.cand + 1 }) : modName(id))}</span>${selToolbar(id, opts.top)}`;
+    if (sel && !mobileEd()) extra = `<span class="sel-label ${opts.top ? 'inside' : ''}">${esc(bnPv() && baseName(id) === 'banner' ? t('ed/previewing', { n: bnPv().n + 1 }) : modName(id))}</span>${selToolbar(id, opts.top)}`;
     return `<div class="mod ${sel ? 'is-sel' : ''}" data-mod="${id}" data-act="selMod" data-arg="${id}">${inner}${extra}${window.AD ? window.AD.modMask(id) : ''}</div>`;
   }
   function selToolbar(id, below) {
@@ -285,9 +282,11 @@
     const idx = E.D.order.indexOf(id);
     const btn = (act, icon, label, arg = '', on = false) => `<button class="${on ? 'is-on' : ''}" data-act="${act}" data-arg="${arg}" data-stop>${ic(icon)}${label}</button>`;
     const tabBtn = (v, icon) => btn('tbTab', icon, t('ed/tab-' + v), v, E.sel === id && E.tab === v && !E.ai && !E.iconAi);
+    // ✦ AI = 统一的 AI 生成图片面板（docs/ai-unified.md）；「换样式」是整模块重新配样式（aidesign），两个分开
+    const aiBtn = window.AIG && window.AIG.has(b) ? btn('aigOpen', 'sparkle-fill', t('aig/tool'), id, E.sel === id && window.AIG.isOpen(b)) : '';
     let main = '';
-    if (b === 'banner') main = btn('toolReplace', 'image', t('ed/replace-image')) + btn('openAi', 'magic-wand', t('ed/ai'), '', !!E.ai);
-    else main = tabBtn('content', 'pencil-simple');
+    if (b === 'banner') main = btn('toolReplace', 'image', t('ed/replace-image')) + aiBtn;
+    else main = tabBtn('content', 'pencil-simple') + aiBtn;
     main += tabBtn('layout', 'sliders-horizontal') + tabBtn('color', 'paint-brush-fill');
     const tip = (k) => `title="${esc(t(k))}" aria-label="${esc(t(k))}"`;
     const move = fixed || b === 'sidebar' ? '' : `<button class="ib" data-act="move" data-arg="-1" data-stop ${idx <= 0 ? 'disabled' : ''} ${tip('ed/move-up')}>${ic('arrow-up')}</button><button class="ib" data-act="move" data-arg="1" data-stop ${idx >= E.D.order.length - 1 ? 'disabled' : ''} ${tip('ed/move-down')}>${ic('arrow-down')}</button>`;
@@ -339,9 +338,6 @@
   A.balAct = (v) => { if (balCfg().act === v) return false; balSet((b) => { b.act = v; }); };
   A.balColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), v = arg.slice(i + 1); balSet((b) => { if (v) b.c[k] = v; else delete b.c[k]; }); };
   A.balImgReset = (k) => { balSet((b) => { b[k] = null; }); };
-  // 币种图标 AI：用顶部栏 AI 同一组默认风格图（assets/ai-tb/cur-<风格>.png），点候选直接用上
-  A.balCurAi = () => { E.balAi = !E.balAi; };
-  A.balCurAiUse = (st) => { if (!TB_AI.includes(st)) return false; balSet((b) => { b.curImg = AIT + 'cur-' + st + '.png'; }); window.toast(t('ed/bal-ai-used'), undoOpt()); };
   A.balAll = () => { commit(() => { delete E.D.bal; }); window.toast(t('ed/bal-reset-done'), undoOpt()); };
   document.addEventListener('change', (e) => {
     const el = e.target; if (!el.matches) return;
@@ -359,8 +355,7 @@
     const modes = `<div class="bx-opts">${BAL_MODES.map((m) => `<button class="bx-opt ${cfg.mode === m ? 'is-on' : ''}" data-act="balMode" data-arg="${m}"><span class="bx-prev">${balBox(Object.assign({}, cfg, { mode: m }), '1,232.90')}</span><small>${t('ed/bal-m-' + m)}</small></button>`).join('')}</div>`;
     const seg3 = (opts, cur, act) => segBtns(opts.map((v) => ({ v, label: t('ed/bal-' + act.slice(3).toLowerCase() + '-' + v) })), cur, act);
     // 默认是遮罩着色的单色图标时，缩略图也按 Key 颜色画（mk = 颜色 Key）
-    const imgRow = (k, def, lab, spec, mk, ai) => `<div class="bx-img"><span class="thumb sq">${cfg[k] || !mk ? `<img src="${cfg[k] || def}" alt="">` : `<i class="bx-mk" style="background:${keyVal(mk, th)};-webkit-mask-image:url(${def});mask-image:url(${def})"></i>`}</span><span class="tx"><b>${t(lab)}</b><small>${spec}${cfg[k] ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? `<button class="ib-s tb-ai ${E.balAi ? 'is-on' : ''}" data-act="balCurAi" title="${esc(t('mp/ai-one'))}" aria-label="${esc(t('mp/ai-one'))}">${ic('sparkle-fill', 'ic-16')}</button>` : ''}<label class="ib-s bx-up" title="${esc(t('ed/upload'))}" aria-label="${esc(t('ed/upload'))}">${ic('upload-simple', 'ic-16')}<input type="file" accept="${window.IMG_ACCEPT}" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}" aria-label="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
-    const curAi = E.balAi && cfg.mode !== 'nocur' ? `<div class="bx-ai"><div class="p-note">${t('ed/bal-ai-note')}</div><div class="bx-ai-opts">${TB_AI.map((st) => `<button class="${cfg.curImg === AIT + 'cur-' + st + '.png' ? 'is-on' : ''}" data-act="balCurAiUse" data-arg="${st}" title="${esc(t('ed/tbai-' + st))}"><img src="${AIT}cur-${st}.png" alt=""><small class="ellipsis">${t('ed/tbai-' + st)}</small></button>`).join('')}</div></div>` : '';
+    const imgRow = (k, def, lab, spec, mk, ai) => `<div class="bx-img"><span class="thumb sq">${cfg[k] || !mk ? `<img src="${cfg[k] || def}" alt="">` : `<i class="bx-mk" style="background:${keyVal(mk, th)};-webkit-mask-image:url(${def});mask-image:url(${def})"></i>`}</span><span class="tx"><b>${t(lab)}</b><small>${spec}${cfg[k] ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? `<button class="ib-s tb-ai" data-act="aigOpen" data-arg="${inMid ? 'midnav' : 'topbar'}|bal" title="${esc(t('aig/entry-tip'))}" aria-label="${esc(t('aig/entry-tip'))}">${ic('sparkle-fill', 'ic-16')}</button>` : ''}<label class="ib-s bx-up" title="${esc(t('ed/upload'))}" aria-label="${esc(t('ed/upload'))}">${ic('upload-simple', 'ic-16')}<input type="file" accept="${window.IMG_ACCEPT}" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}" aria-label="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
     const actK = cfg.act === 'copy' ? 'copyImg' : 'swImg';
     const dirty = !!E.D.bal;
     return `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}${dirty ? `<button class="tx-reset" style="margin-left:auto" data-act="balAll">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
@@ -368,7 +363,7 @@
       <div class="bx-lab">${t('ed/bal-mode')}</div>${modes}
       <div class="bx-lab">${t('ed/bal-head')}</div>${seg3(['vip', 'greet', 'none'], cfg.head, 'balHead')}${cfg.head === 'greet' ? `<input class="input" style="margin-top:8px" maxlength="12" value="${esc(cfg.greet)}" data-balgreet placeholder="${esc(t('ed/bal-greet-ph'))}">` : ''}
       <div class="bx-lab">${t('ed/bal-act')}</div>${seg3(['copy', 'switch', 'none'], cfg.act, 'balAct')}
-      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'ed/bal-i-cur', '52×52', cfg.mode === 'switch' ? 'accent_3' : null, true) + curAi}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30', 'primary')}
+      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'ed/bal-i-cur', '52×52', cfg.mode === 'switch' ? 'accent_3' : null, true)}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30', 'primary')}
       ${cfg.head === 'vip' ? imgRow('vipImg', CLA + 'bal-vip2.png', 'ed/bal-i-vip', '60×28') : ''}${imgRow('caretImg', CLA + 'bal-caret.png', 'ed/bal-i-caret', '20×20', 'neutral_2')}${cfg.act === 'none' ? '' : imgRow(actK, CLA + (cfg.act === 'copy' ? 'bal-copy.png' : 'bal-switch.png'), 'ed/bal-act-' + cfg.act, '26×26', 'primary')}
       <div class="p-note">${t('ed/bal-ic-note')}</div>
       ${inMid ? `<div class="p-note">${t('ed/bal-c-moved')} <button class="warn-link" data-act="setTab" data-arg="color">${t('ed/tab-color')}</button></div>` : `<div class="bx-lab">${t('ed/bal-colors')}</div>${balColorRows()}`}
@@ -403,7 +398,8 @@
     // 币种框：外框 border、文案 neutral_2、默认币种图标 accent_3（Figma 25517:2140 comm_icon_sqb，用遮罩跟色）（Waydon 2026-11-26）
     const curIc = tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png', '', '', 'cur') : `<span class="cur-ic" style="-webkit-mask-image:url(${CLA}bal-sym.png);mask-image:url(${CLA}bal-sym.png)"></span>`;
     const cur = it.cur && !D.login ? tw('cur', 'cur-cl', `${curIc}<b>CNY</b><i></i>`) : '';
-    const logo = it.logo ? tw('logo', 'lg lg-cl', tbImgTag(tb.logoF, 'assets/classic/logo.png', 'GAMING', '', 'logo')) : '';
+    const lpv = window.AIG && window.AIG.previewCand('topbar'); // AI 候选选中时画布实时预览 Logo
+    const logo = it.logo ? tw('logo', 'lg lg-cl', tbImgTag(lpv && lpv.tg === 'logo' ? lpv.c : tb.logoF, 'assets/classic/logo.png', 'GAMING', '', 'logo')) : '';
     // 未登录：顶部栏只留币种切换，不显示余额框 / 登录注册 / 头像（Waydon 2026-11-26，登录入口在帐户栏）
     const auth = it.auth && D.login ? balHtml() : ''; // 头像不放顶部栏（Waydon 2026-11-26）
     const left = D.side === 'left' ? side : '';
@@ -417,8 +413,9 @@
   // 轮播只播放未隐藏的图（ED-06）
   const visIdx = () => E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
   function fixSlide() { const v = visIdx(); if (!v.includes(E.slide)) E.slide = v.find((i) => i > E.slide) ?? v[0] ?? 0; }
+  const bnPv = () => (window.AIG ? window.AIG.previewCand('banner') : null);
   function slideF(i) {
-    if (E.ai && E.ai.cand != null && i === E.slide) return candList()[E.ai.cand];
+    const pv = bnPv(); if (pv && pv.tg === 'slide' + i) return pv.c;
     return (E.D.banner.slides[i] || {}).f || 'none';
   }
   // 轮播图背景（画布 / PC / 面板缩略图共用）：真实图 'img:' 或滤镜模拟；调整尺寸选「留边」时整图放进去、空白用底色，「裁切」按框的位置
@@ -593,20 +590,20 @@
   document.addEventListener('change', (e) => { if (e.target.matches && e.target.matches('[data-input="pageHeight"]')) heightApply(e.target.value); });
   function tabs3(cur) { return `<div class="tabs3">${segBtns([{ v: 'content', label: t('ed/tab-content') }, { v: 'layout', label: t('ed/tab-layout') }, { v: 'color', label: t('ed/tab-color') }], cur, 'setTab')}</div>`; }
 
-  // 素材「⋯」菜单（电脑往下弹；手机底部面板）
+  // 素材「⋯」菜单（电脑往下弹；手机底部面板）；「✦ AI 生成」打开统一 AI 面板（docs/ai-unified.md）
+  const aiItem = (arg) => `<button class="menu-item" data-act="aigOpen" data-arg="${arg}">${ic('sparkle-fill')}${t('aig/menu')}</button>`;
   function assetMenuItems(id) {
     if (id.startsWith('slide')) {
       const i = +id.slice(5); const s = E.D.banner.slides[i]; if (!s) return '';
       const v = visIdx(); const lastVis = !s.hid && v.length <= 1; const one = E.D.banner.slides.length <= 1;
-      return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>
+      return `${aiItem('banner|' + id)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>
         <button class="menu-item" data-act="amToggle" data-arg="${id}" ${lastVis ? 'disabled' : ''}>${ic(s.hid ? 'eye-fill' : 'eye-slash-fill')}<span class="tx"><span>${t(s.hid ? 'ed/am-show' : 'ed/am-hide')}</span>${lastVis ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>
         <div class="menu-sep"></div><button class="menu-item is-danger" data-act="amDelete" data-arg="${id}" ${one ? 'disabled' : ''}>${ic('trash')}<span class="tx"><span>${t('ed/am-delete')}</span>${one ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>`;
     }
     if (id.startsWith('tb-')) {
       // 顶部栏：上传 / AI 生成 / 恢复默认 / 显示隐藏（Waydon 2026-11-26）
       const k = id.slice(3), own = k === 'logo' ? tbImg(E.D.tb.logoF, '').own : !!(E.D.tb.icons || {})[k];
-      const aiAct = k === 'logo' ? 'tbLogoAiOpen' : 'tbAiJump';
-      return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${aiAct ? `<button class="menu-item" data-act="${aiAct}" data-arg="${k}">${ic('sparkle-fill')}${t(k === 'logo' ? 'ed/tblogo-title' : 'mp/ai-one')}</button>` : ''}<button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
+      return `${aiItem('topbar|' + k)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
     }
     // 游戏菜单按钮底图：上传 / AI / 恢复（没有显示隐藏，按钮本身一直在）
     if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gmBaiOpen">${ic('sparkle-fill')}${t('mp/gm-bai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
@@ -650,11 +647,13 @@
     const vis = visIdx();
     const eye = (s, i) => { const lastVis = !s.hid && vis.length <= 1; return `<button class="eye ${lastVis ? 'is-off' : ''}" data-act="amToggle" data-arg="slide${i}" data-stop ${lastVis ? 'disabled' : ''} title="${esc(t(lastVis ? 'ed/slide-keep-one' : s.hid ? 'ed/am-show' : 'ed/am-hide'))}" aria-label="${esc(t(s.hid ? 'ed/am-show' : 'ed/am-hide'))}">${ic(s.hid ? 'eye-slash-fill' : 'eye-fill', 'ic-16')}</button>`; };
     const thumb = (i) => `<span class="thumb" style="${slideBg(B.slides[i], null, defImg(i))}"></span>`;
+    // 行尾 ✦（Figma AIG/EntryButton Row）：每张轮播图一个，打开统一 AI 面板并选中这一张；首张展开卡片不再放整宽「AI 生成」按钮
+    const aiBtn = (i) => `<button class="ib-s tb-ai" data-act="aigOpen" data-arg="banner|slide${i}" data-stop title="${esc(t('aig/entry-tip'))}" aria-label="${esc(t('aig/entry-tip'))}">${ic('sparkle-fill', 'ic-16')}</button>`;
     const slides = B.slides.map((s, i) => {
       const grip = `<span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>`;
-      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}<span class="pill-tag">${t('ed/previewing-slide')}</span>${hidTag(s)}</div></span>${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}
-        <div class="acts"><button class="btn btn-primary btn-sm" data-act="openAi">${ic('magic-wand', 'ic-16')}${t('ed/ai')}</button><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="slide${i}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="slide${i}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div></div>${uploadUI('slide' + i)}`;
-      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}</div></div>${uploadUI('slide' + i)}`;
+      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}<span class="pill-tag">${t('ed/previewing-slide')}</span>${hidTag(s)}</div></span>${aiBtn(i)}${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}
+        <div class="acts"><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="slide${i}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="slide${i}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div></div>${uploadUI('slide' + i)}`;
+      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${aiBtn(i)}${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}</div></div>${uploadUI('slide' + i)}`;
     }).join('');
     const bad = checks().req.filter((x) => x.mod === 'banner');
     return `${bad.length ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${esc(bad[0].text)}<div class="caption faint">Banner</div></div></div>` : ''}
@@ -707,28 +706,6 @@
     const { th, ec } = liveTheme(); const v = E.D.ec[id]; const cur = (v && !v.startsWith('key:') ? v : keyVal(v ? v.slice(4) : key, th, ec) || '#ffffff').slice(0, 7);
     E.picker = { key: 'primary', elRow: id, label: t('mp/c-' + id.replace('.', '-')), orig: cur, value: cur, where: 'el' };
   };
-  // Banner AI（ED-09）：成功才扣 20；余额不足、失败都有出口
-  function aiPanel() {
-    const a = E.ai, sz = BANNER[E.D.banner.size];
-    const kws = [1, 2, 3, 4, 5, 6, 7, 8];
-    const can = afford(20);
-    let cands = '';
-    if (a.stage === 'generating') cands = `<div class="cands">${[0, 1, 2, 3].map(() => '<div class="cand skeleton"></div>').join('')}</div><div class="rec-note">${ic('clock', 'ic-16')}${t('rec/generating')}</div>`;
-    else if (a.stage === 'failed') cands = `<div class="cands">${[0, 1, 2, 3].map(() => `<div class="cand is-fail">${ic('x-circle-fill')}</div>`).join('')}</div><div class="ia-msg is-err">${ic('warning-circle-fill', 'ic-16')}${t('ed/ai-failed')}</div><div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm" data-act="aiGen">${t('rec/retry', { c: 20 })}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button></div>`;
-    else if (a.stage === 'cands') cands = `<div class="cands">${candList().map((f, i) => `<button class="cand ${a.cand === i ? 'is-on' : ''}" style="${window.fxStyle(f)};aspect-ratio:${sz.w} / ${sz.h}" data-act="pickCand" data-arg="${i}">${a.cand === i ? `<span class="ck">${ic('check', 'ic-16')}</span>` : ''}${i === 0 && a.best ? `<span class="best">${t('ed/ai-best')}</span>` : ''}</button>`).join('')}</div>
-        <div class="rec-actions" style="margin-top:12px"><button class="btn btn-primary btn-sm ${a.cand == null ? 'is-disabled' : ''}" data-act="adoptCand">${t('ed/adopt')}</button><button class="btn btn-secondary btn-sm" data-act="closeAi">${t('ed/keep-current')}</button><button class="btn btn-outline btn-sm" data-act="aiGen">${ic('clock-counter-clockwise', 'ic-16')}${t('rec/regenerate-cost', { c: 20 })}</button></div><div class="p-note">${t('ed/ai-note')}</div>`;
-    const ref = window.refSlot ? window.refSlot(a.refSt, 'edRef') : '';
-    return `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="closeAi" title="${esc(t('ed/keep-current'))}">${ic('caret-left')}</button>${t('ed/ai-title')}</h2>
-      <div class="p-note" style="margin:0 0 8px">${ic('magic-wand', 'ic-16')}${t('ed/ai-auto-hint')}</div>
-      <div class="ai-box"><div class="in">${ref}
-        <div style="flex:1;min-width:0"><textarea data-input="aiPrompt" ${a.analyzing ? `disabled placeholder="${esc(t('ed/tbai-analyzing'))}"` : ''}>${esc(a.analyzing ? '' : a.prompt)}</textarea>${a.kw.length ? `<div class="tagrow">${a.kw.map((k) => `<button class="chip is-on" data-act="aiKw" data-arg="${k}">${t('ed/ai-kw-' + k)}${ic('x', 'ic-16')}</button>`).join('')}</div>` : ''}</div></div>
-        <div class="ft"><span class="rel"><button class="c-opt" data-act="menu:toggle" data-arg="aiModel">${window.MODEL_LOGO[a.model]}${a.model === 'gpt' ? 'GPT Image' : 'Gemini'}${ic('caret-down', 'chev')}</button>${S.menu === 'aiModel' ? `<div class="menu c-menu">${['gpt', 'gemini'].map((m) => `<button class="menu-item model-item ${a.model === m ? 'is-on' : ''}" data-act="aiModel" data-arg="${m}">${window.MODEL_LOGO[m]}<span><div class="nm">${m === 'gpt' ? 'GPT Image' : 'Gemini'}</div><div class="ds">${t('model/' + m + '-desc')}</div></span></button>`).join('')}</div>` : ''}</span>
-          <button class="send ${can && a.stage !== 'generating' && !a.analyzing ? '' : 'is-disabled'}" data-act="aiGen">${ic('sparkle-fill')}20${ic('arrow-up')}</button></div></div>
-      ${can ? '' : `<div class="ai-low">${t('ed/ai-low')} · <button data-act="edTopup">${t('confirm/topup')}</button></div>`}
-      <div class="p-sec"><div class="lab">${t('ed/ai-style-title')}</div><div class="kw">${kws.map((k) => `<button class="chip ${a.kw.includes(k) ? 'is-on' : ''}" data-act="aiKw" data-arg="${k}">${t('ed/ai-kw-' + k)}</button>`).join('')}</div>
-        <div class="p-note">${t('ed/cost-ai')}</div><div class="p-note" style="margin-top:2px">${t('ed/spec-line', sz)}</div></div>
-      ${a.stage !== 'idle' ? `<div class="p-sec"><div class="lab">${t('ed/ai-candidates')}</div>${cands}</div>` : ''}`;
-  }
   // ---------- 顶部栏图标 AI 生成（模拟；样图由 Figma generate_image 生成，Waydon 2026-11-26） ----------
   // 跟首页创作框一样：参考图格 + 提示词输入框 + 模型下拉 + 发送键。上方风格卡点一下就把该风格的提示词填进框里；
   // 上传参考图后 AI 反推提示词填进框里（可改）。目标：搜索+币种 / 只搜索 / 只币种
@@ -741,18 +718,7 @@
     neon: ['青蓝 / 紫色霓虹发光描边，深色半透明主体，科技赛博风，不要白色外发光', 'cyan / purple neon glowing outline, dark translucent body, cyber style, no white outer glow'],
   };
   const presetOf = (st) => TB_AI_P[st][/^zh/.test(S.lang) ? 0 : 1];
-  const tbAi = () => (E.tbAi = E.tbAi || { target: 'both', style: 'glossy', model: 'gpt', prompt: presetOf('glossy'), stage: 'setup' });
-  // 目标：两个一起（搜索 + 币种）/ 搜索 / 币种 / 侧边栏入口（加了侧边栏才有）；侧边栏入口 AI 图 = 菜单宫格图标（assets/ai-acct/more-<风格>）
-  const tbAiTgt = () => { const a = tbAi(); if (a.target === 'side' && !E.D.tb.items.side) a.target = 'both'; return a.target; };
-  const SIDE_AI = (st) => 'assets/ai-acct/more-' + st + '.webp';
-  const tbAiCost = () => (tbAiTgt() === 'both' ? 40 : 20);
-  A.tbAiStyle = (v) => { const a = tbAi(); if (a.stage === 'busy') return false; a.style = v; a.prompt = presetOf(v); a.fromRef = false; a.stage = 'setup'; };
-  A.tbAiTarget = (v) => { const a = tbAi(); if (a.stage === 'busy' || a.target === v) return false; a.target = v; if (a.stage === 'done') a.stage = 'setup'; };
-  A.tbAiModel = (v) => { tbAi().model = v; S.menu = null; };
-  A.tbAiRefPick = () => { const a = tbAi(); if (a.stage === 'busy') return false; const inp = document.createElement('input'); inp.type = 'file'; inp.accept = window.IMG_ACCEPT; inp.setAttribute('data-tbairef', ''); inp.style.display = 'none'; document.body.appendChild(inp); inp.click(); setTimeout(() => inp.remove(), 60000); return false; };
-  A.tbAiRefRm = () => { const a = tbAi(); a.ref = null; a.refSt = null; a.analyzing = false; a.fromRef = false; a.prompt = presetOf(a.style); a.stage = 'setup'; };
-  A.tbAiRefView = () => false;
-  A.tbAiRefCancel = () => A.tbAiRefRm();
+  const SIDE_AI = (st) => 'assets/ai-acct/more-' + st + '.webp'; // 侧边栏入口 AI 图 = 菜单宫格图标
   // 参考图反推提示词（通用）：读图取平均色 / 色相 / 饱和度 → 推荐款式 + 中英文提示词。where = [中文用途, 英文用途]
   function refRead(src, where, cb) {
     const im = new Image(); im.onload = () => {
@@ -778,71 +744,9 @@
   }
   window.aiRefRead = refRead;
   window.aiPreset = presetOf;
-  function refAnalyze(src) {
-    const a = tbAi(); a.ref = src; a.analyzing = true; a.refSt = { uploading: true, pct: 60 }; a.stage = 'setup'; window.render();
-    refRead(src, ['适合手机顶部栏小尺寸显示', 'readable at small size in a mobile top bar'], (res) => {
-      if (!res) { a.analyzing = false; a.ref = null; a.refSt = null; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); return; }
-      a.prompt = res.prompt; a.refHex = res.hex; a.refStyle = res.style; a.analyzing = false; a.refSt = { src, name: a.refName || '' }; a.fromRef = true; window.render();
-    });
-  }
-  document.addEventListener('change', (e) => {
-    const el = e.target; if (!el.matches) return;
-    if (el.matches('[data-tbairef]') && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; if (!window.imgOk(f)) { window.toast(t('mp/icon-bad'), { info: true }); return; } tbAi().refName = f.name; const r = new FileReader(); r.onload = () => refAnalyze(r.result); r.readAsDataURL(f); }
-  });
-  document.addEventListener('input', (e) => { const el = e.target; if (el.matches && el.matches('[data-tbaiprompt]')) { tbAi().prompt = el.value.slice(0, 300); const b = document.querySelector('.tbai .send'); if (b) b.classList.toggle('is-disabled', !el.value.trim()); } });
-  A.tbAiGen = () => {
-    const a = tbAi(), n = tbAiCost();
-    if (a.analyzing || !(a.prompt || '').trim()) return false;
-    if (!afford(n)) { topup(); return false; }
-    a.stage = 'busy'; const st = a.fromRef ? a.refStyle || 'glossy' : a.style;
-    setTimeout(() => { if (E.tbAi !== a || a.stage !== 'busy') return; if (fail()) { a.stage = 'setup'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(n, 'iconset', { type: t('mod/topbar') }); a.stage = 'done'; a.res = st; } window.render(); }, 1400);
-  };
-  A.tbAiUse = () => { const a = tbAi(), r = a.res, tg = tbAiTgt(); if (!r) return false; commit(() => { if (tg === 'side') { tbIconSet('side', 'img:' + SIDE_AI(r)); return; } if (tg !== 'cur') tbIconSet('search', AIT + 'search-' + r + '.png'); if (tg !== 'search') tbIconSet('cur', AIT + 'cur-' + r + '.png'); }); a.stage = 'setup'; window.toast(t('ed/tbai-used'), undoOpt()); };
-  // 一键恢复搜索 + 币种默认图标（侧边栏入口图标单独在行里恢复）
-  A.tbAiReset = () => { const o = E.D.tb.icons || {}; if (!o.cur && !o.search) return false; commit(() => { tbIconSet('cur', null); tbIconSet('search', null); }); window.toast(t('ed/tbai-reset'), undoOpt()); };
-  // 入口图标行的 ✦ 按钮：在入口图标下方展开 AI 生成并选好目标（Waydon 2026-11-26）
-  A.tbAiJump = (k) => { S.menu = null; const a = tbAi(); E.tab = 'content'; E.tbAiOpen = true; E.tbAiFocus = '.tbai'; if (a.stage === 'busy') return; if (k === 'cur' || k === 'search' || k === 'side') a.target = k; if (a.stage === 'done') a.stage = 'setup'; };
-  A.tbAiToggle = () => { E.tbAiOpen = !E.tbAiOpen; if (E.tbAiOpen) E.tbAiFocus = '.tbai'; };
-  window.AFTER_RENDER.push(() => { const sel = E.tbAiFocus; if (!sel) return; E.tbAiFocus = false; const go = () => { const m = document.querySelector(typeof sel === 'string' ? sel : '.tbai'); if (!m) return; let c = m.parentElement; while (c && !(c.scrollHeight > c.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(c).overflowY))) c = c.parentElement; if (c) c.scrollTop += m.getBoundingClientRect().top - c.getBoundingClientRect().top - 8; m.classList.add('is-flash'); const ta = m.querySelector('textarea'); if (ta) ta.focus({ preventScroll: true }); }; setTimeout(go, 30); setTimeout(go, 320); });
-  function tbAiSec() {
-    const a = tbAi(), busy = a.stage === 'busy', n = tbAiCost(), o = E.D.tb.icons || {};
-    const tg = tbAiTgt();
-    const pair = (st) => (tg === 'side' ? `<img src="${SIDE_AI(st)}" alt="">` : `${tg !== 'cur' ? `<img src="${AIT}search-${st}.png" alt="">` : ''}${tg !== 'search' ? `<img src="${AIT}cur-${st}.png" alt="">` : ''}`);
-    const target = segBtns([{ v: 'both', label: t('ed/tbai-t-both') }, { v: 'search', label: t('ed/tb-search') }, { v: 'cur', label: t('ed/tbai-t-cur') }].concat(E.D.tb.items.side ? [{ v: 'side', label: t('ed/tbai-t-side') }] : []), tg, 'tbAiTarget');
-    const tiles = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${!a.fromRef && a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
-    const logo = (window.MODEL_LOGO || {})[a.model] || '', mname = a.model === 'gemini' ? 'Gemini' : 'GPT Image';
-    const mMenu = S.menu === 'tbai-model' ? `<div class="menu c-menu tbai-mmenu">${['gpt', 'gemini'].map((m) => `<button class="menu-item model-item ${a.model === m ? 'is-on' : ''}" data-act="tbAiModel" data-arg="${m}">${(window.MODEL_LOGO || {})[m] || ''}<span><div class="nm">${m === 'gemini' ? 'Gemini' : 'GPT Image'}</div><div class="ds">${m === 'gpt' ? 'Sunburst Flare' : 'Nano Banana Pro'}</div></span></button>`).join('')}</div>` : '';
-    const empty = !(a.prompt || '').trim() || a.analyzing;
-    const box = `<div class="c-box tbai-box"><div class="c-input">${window.refSlot(a.refSt, 'tbAiRef')}<textarea rows="4" maxlength="300" data-tbaiprompt placeholder="${esc(a.analyzing ? t('ed/tbai-analyzing') : t('ed/tbai-sprompt-ph'))}" ${busy || a.analyzing ? 'disabled' : ''}>${esc(a.analyzing ? '' : a.prompt || '')}</textarea></div>
-      <div class="c-tools"><div class="c-opts"><div class="rel"><button class="c-opt ${S.menu === 'tbai-model' ? 'is-open' : ''}" data-act="menu:toggle" data-arg="tbai-model">${logo}<span class="ellipsis">${mname}</span>${ic('caret-down', 'chev')}</button>${mMenu}</div></div>
-      ${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="tbAiGen" title="${esc(t('ed/tbai-gen', { n }))}">${ic('sparkle-fill')}${n}${ic('arrow-up')}</button>`}</div></div>`;
-    const note = a.fromRef && !a.analyzing ? `<div class="p-note">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt-tip2')}</div>` : `<div class="p-note">${t('ed/tbai-box-tip')}</div>`;
-    const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n })}</button></div></div>` : '';
-    return `<div class="p-sec tbai"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('ed/tbai-title2')}<span class="tbai-hd">${o.cur || o.search ? `<button class="tx-reset" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}<button class="ib-s" data-act="tbAiToggle" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>
-      <div class="tbai-row">${target}</div>${tiles}${box}${note}${res}</div>`;
-  }
-  // ---------- Logo AI 生成（原型：用调色滤镜模拟 4 个候选；正式版按提示词出图，品牌名 / 网址文字保持不变） ----------
   const LOGO_AI_F = ['saturate(1.3) contrast(1.05)', 'hue-rotate(-150deg) saturate(1.4)', 'sepia(.7) saturate(1.8) hue-rotate(-12deg) brightness(.95)', 'hue-rotate(95deg) saturate(1.3)', 'hue-rotate(160deg) saturate(1.2)', 'grayscale(1) contrast(1.4) brightness(.7)'];
-  const tbLogoAi = () => (E.tbLogo = E.tbLogo || { prompt: t('ed/tblogo-def'), stage: 'setup', pick: 0, round: 0 });
-  A.tbLogoAiOpen = () => { S.menu = null; E.tab = 'content'; tbLogoAi(); E.tbLogoOpen = true; E.tbAiFocus = '.tblogo'; };
-  A.tbLogoAiClose = () => { E.tbLogoOpen = false; };
-  A.tbLogoGen = () => {
-    const a = tbLogoAi(); if (a.stage === 'busy' || !(a.prompt || '').trim()) return false;
-    if (!afford(20)) { topup(); return false; }
-    a.stage = 'busy';
-    setTimeout(() => { if (E.tbLogo !== a || a.stage !== 'busy') return; if (fail(a.prompt)) { a.stage = a.cands ? 'done' : 'setup'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(20, 'iconset', { type: 'Logo' }); a.cands = [0, 1, 2, 3].map((i) => LOGO_AI_F[(a.round * 2 + i) % LOGO_AI_F.length]); a.round++; a.pick = 0; a.stage = 'done'; } window.render(); }, 1400);
-  };
-  A.tbLogoPick = (i) => { tbLogoAi().pick = +i; };
-  A.tbLogoUse = () => { const a = tbLogoAi(); const f = a.cands && a.cands[a.pick]; if (!f) return false; commit(() => { E.D.tb.logoF = f; tbFitSet('logo', null); }); a.stage = 'setup'; a.cands = null; window.toast(t('ed/tblogo-used'), undoOpt()); };
-  document.addEventListener('input', (e) => { const el = e.target; if (el.matches && el.matches('[data-tblogoprompt]')) { tbLogoAi().prompt = el.value.slice(0, 300); const b = document.querySelector('.tblogo .send'); if (b) b.classList.toggle('is-disabled', !el.value.trim()); } });
-  function tbLogoSec() {
-    const a = tbLogoAi(), busy = a.stage === 'busy', empty = !(a.prompt || '').trim();
-    const box = `<div class="c-box tbai-box"><div class="c-input"><textarea rows="3" maxlength="300" data-tblogoprompt placeholder="${esc(t('ed/tblogo-ph'))}" ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea></div>
-      <div class="c-tools"><div class="c-opts"></div>${busy ? `<button class="send is-disabled" disabled>${ic('spinner-gap', 'spin')}</button>` : `<button class="send ${empty ? 'is-disabled' : ''}" data-act="tbLogoGen" title="${esc(t('ed/tbai-gen', { n: 20 }))}">${ic('sparkle-fill')}20${ic('arrow-up')}</button>`}</div></div>`;
-    const res = a.stage === 'done' && a.cands ? `<div class="tblogo-cands">${a.cands.map((f, i) => `<button class="tblogo-c ${a.pick === i ? 'is-on' : ''}" data-act="tbLogoPick" data-arg="${i}"><img src="assets/classic/logo.png" alt="" style="filter:${f}"></button>`).join('')}</div>
-      <div class="tbai-res"><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbLogoUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbLogoGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n: 20 })}</button></div></div>` : '';
-    return `<div class="tblogo"><div class="lab">${ic('sparkle-fill', 'ic-16 tbai-ic')}${t('ed/tblogo-title')}<span class="tbai-hd"><button class="ib-s" data-act="tbLogoAiClose" title="${esc(t('ed/tbai-close'))}" aria-label="${esc(t('ed/tbai-close'))}">${ic('x', 'ic-16')}</button></span></div>${box}${res}<div class="p-note">${t('ed/tblogo-note')}</div></div>`;
-  }
+  // 款式 → Logo 候选的调色（原型用滤镜模拟；正式版按提示词出图，品牌名 / 网址文字保持不变）
+  const LOGO_ST = { glossy: LOGO_AI_F[0], flat: 'grayscale(.15) saturate(.85) contrast(1.1)', blackgold: LOGO_AI_F[2], festive: LOGO_AI_F[1], neon: LOGO_AI_F[4] };
   // 画布上点顶部栏图标：选中顶部栏 + 内容页签，电脑弹出菜单、手机出底部菜单（复用 assetMenuItems）
   A.tbIconMenu = (k) => {
     const prev = window.__prevMenu;
@@ -858,13 +762,13 @@
     const eye = (k) => `<button class="eye" data-act="tbItem" data-arg="${k}" title="${esc(t('ed/am-toggle'))}" aria-label="${esc(t('ed/am-toggle'))}">${ic(it[k] ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`;
     const thumb = (k, inner, cls = 'sq') => `<button class="thumb ${cls}" data-act="amUpload" data-arg="tb-${k}" title="${esc(t('ed/am-upload'))}" aria-label="${esc(t('ed/am-upload'))}">${inner}</button>`;
     const ib = (act, k, icn, tip, cls = '') => `<button class="ib-s ${cls}" data-act="${act}" data-arg="${k}" title="${esc(tip)}" aria-label="${esc(tip)}">${ic(icn, 'ic-16')}</button>`;
-    const row = (k, th0, name, spec, own, ai) => `<div class="tb-item tb-row ${it[k] ? '' : 'is-hidden'}">${th0}<span class="tx"><b class="ellipsis">${name}</b><small class="ellipsis">${spec}${own ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? ib(ai, k, 'sparkle-fill', t(k === 'logo' ? 'ed/tblogo-title' : 'mp/ai-one'), 'tb-ai') : ''}${own ? ib('amReset', 'tb-' + k, 'arrow-counter-clockwise', t('ed/am-reset')) : ''}${moreBtn('tb-' + k)}${eye(k)}</div>`;
+    const row = (k, th0, name, spec, own, ai) => `<div class="tb-item tb-row ${it[k] ? '' : 'is-hidden'}">${th0}<span class="tx"><b class="ellipsis">${name}</b><small class="ellipsis">${spec}${own ? ' · ' + t('ed/tb-own') : ''}</small></span>${ai ? ib('aigOpen', ai, 'sparkle-fill', t('aig/entry-tip'), 'tb-ai') : ''}${own ? ib('amReset', 'tb-' + k, 'arrow-counter-clockwise', t('ed/am-reset')) : ''}${moreBtn('tb-' + k)}${eye(k)}</div>`;
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
-    const logoRow = row('logo', thumb('logo', tbImgTag(D.tb.logoF, 'assets/classic/logo.png', '', '', 'logo'), 'logo'), 'Logo', t('ed/tb-logo-spec'), tbImg(D.tb.logoF, '').own, 'tbLogoAiOpen');
+    const logoRow = row('logo', thumb('logo', tbImgTag(D.tb.logoF, 'assets/classic/logo.png', '', '', 'logo'), 'logo'), 'Logo', t('ed/tb-logo-spec'), tbImg(D.tb.logoF, '').own, 'topbar|logo');
     const curDef = `<span class="cur-ic" style="background:${th.accent_3};-webkit-mask-image:url(${CLA}bal-sym.png);mask-image:url(${CLA}bal-sym.png)"></span>`;
-    const curRow = row('cur', thumb('cur', tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png', '', '', 'cur') : curDef), t('ed/tb-cur'), '36×36', !!tic.cur, 'tbAiJump');
-    const searchRow = row('search', thumb('search', tbImgTag(tic.search, 'assets/classic/search.png', '', '', 'search')), t('ed/tb-search'), '56×49', !!tic.search, 'tbAiJump');
-    const sideRow = row('side', thumb('side', sideIcHtml(tic.side, '')), t('ed/tb-sideicon'), '48×48', !!tic.side, 'tbAiJump');
+    const curRow = row('cur', thumb('cur', tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png', '', '', 'cur') : curDef), t('ed/tb-cur'), '36×36', !!tic.cur, 'topbar|cur');
+    const searchRow = row('search', thumb('search', tbImgTag(tic.search, 'assets/classic/search.png', '', '', 'search')), t('ed/tb-search'), '56×49', !!tic.search, 'topbar|search');
+    const sideRow = row('side', thumb('side', sideIcHtml(tic.side, '')), t('ed/tb-sideicon'), '48×48', !!tic.side, 'topbar|side');
     // 侧边栏入口的眼睛 = 隐藏侧边栏模块（与左栏同步）；整个去掉要用左栏 / 画布的删除
     const sideRowX = D.hidden.sidebar ? sideRow.replace('<div class="tb-item tb-row ', '<div class="tb-item tb-row is-hidden ').replace('eye-fill', 'eye-slash-fill') : sideRow;
     const balRow = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic('wallet-fill')}</span><span class="tx"><b class="ellipsis">${t('ed/tb-balance')}</b><small class="ellipsis">${t('ed/tb-bal-sub')}</small></span>${eye('auth')}</div>`;
@@ -875,12 +779,11 @@
     const arrName = { logo: 'Logo', cur: t(D.login ? 'ed/tb-balance' : 'ed/tb-cur'), search: t('ed/tb-search') };
     const arrIc = { logo: 'image-fill', cur: 'wallet-fill', search: 'magnifying-glass' };
     const arrange = `<div class="p-sec"><div class="lab">${t('ed/tb-arrange')}</div><div class="tb-group tb-arr" data-drag-list="tborder">${tbOrder().map((k, i) => `<div class="tb-item tb-arr-it ${it[k === 'cur' ? (D.login ? 'auth' : 'cur') : k] ? '' : 'is-hidden'}" data-row="${i}"><span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span><span class="n">${i + 1}</span>${ic(PH_OK(arrIc[k]), 'ic-16')}<span class="tx"><b class="ellipsis">${arrName[k]}</b></span></div>`).join('')}</div><div class="p-note">${t('ed/tb-arrange-note')}</div></div>`;
-    const aiEntry = E.tbAiOpen ? '' : `<button class="btn btn-secondary btn-sm tbai-open" data-act="tbAiToggle">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-open')}</button>`;
     return `<div class="p-sec"><div class="lab">${t('ed/tb-state2')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}<div class="p-note">${ic('info-fill', 'ic-16')}${t(D.login ? 'ed/tb-note-in' : 'ed/tb-note-out')}</div></div>
       ${arrange}
-      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${logoRow}</div>${ups(['logo'])}${E.tbLogoOpen ? tbLogoSec() : ''}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${D.login ? balRow : curRow}${searchRow}${it.side ? sideRowX.replace('data-act="tbItem" data-arg="side"', 'data-act="toggleHide" data-arg="sidebar"') + sidePos : ''}</div>${ups(it.side ? ['cur', 'search', 'side'] : ['cur', 'search'])}${aiEntry}</div>
-      ${E.tbAiOpen ? tbAiSec() : ''}${D.login && it.auth ? balSec() : ''}`;
+      <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${logoRow}</div>${ups(['logo'])}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${D.login ? balRow : curRow}${searchRow}${it.side ? sideRowX.replace('data-act="tbItem" data-arg="side"', 'data-act="toggleHide" data-arg="sidebar"') + sidePos : ''}</div>${ups(it.side ? ['cur', 'search', 'side'] : ['cur', 'search'])}</div>
+      ${D.login && it.auth ? balSec() : ''}`;
   }
   function tbLayout() {
     const tb = E.D.tb;
@@ -1047,8 +950,8 @@
   };
   function modulePanel(id) {
     const b = baseName(id);
-    if (b === 'banner' && E.ai) return aiPanel();
-    if (E.iconAi && E.iconAi.b === b) return window.MP.aiPanel();
+    if (window.AIG && window.AIG.isOpen(b)) return window.AIG.panel(); // 统一 AI 生成面板（docs/ai-unified.md）
+    if (E.iconAi && E.iconAi.b === b) return window.MP.aiPanel(); // 其余模块的图标 AI（还没迁到统一面板）
     // AD-04：侧边栏在电脑画布上没有浮动工具条，「AI 重新生成」放在面板标题右侧（测试修复）
     const adBtn = b === 'sidebar' && window.AD && !mobileEd() ?`<span style="flex:1"></span>${window.AD.toolBtn(id, true)}` : '';
     // 电脑：标题左边「‹」回到整页设置，标题下一行说明这个模块是什么（手机底部面板用右上角关闭返回，不加）
@@ -1574,52 +1477,8 @@
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
   }
 
-  // AI 生成（Banner）
-  A.openAi = () => { E.sel = 'banner'; E.picker = null; S.menu = null; E.keys = null; E.iconAi = null; const sz = BANNER[E.D.banner.size]; E.ai = { prompt: t('ed/ai-auto-prompt', { w: sz.w, h: sz.h }), kw: [], refSt: {}, model: 'gpt', stage: 'idle', cand: null }; if (mobileEd()) E.mpanel = 'module'; };
-  A.closeAi = () => { if (E.ai) E.ai.tok = null; E.ai = null; };
-  I.aiPrompt = (v) => { E.ai.prompt = v; };
-  A.aiKw = (k) => { const a = E.ai.kw; const n = +k; const i = a.indexOf(n); if (i >= 0) a.splice(i, 1); else a.push(n); };
-  // 参考图（跟图标 / 顶部栏 AI 一致）：只收 IMG_ACCEPT 格式，上传后识别主色 / 风格，反推一段 Banner 提示词填进输入框
-  const edRefPick = () => {
-    const a = E.ai; if (!a || a.stage === 'generating') return false;
-    window.pickImage({ accept: window.IMG_ACCEPT, maxMB: 10 }, (src, file) => window.refUpload(a.refSt, src, file ? file.name : '', () => {
-      if (E.ai !== a) return;
-      a.analyzing = true; window.render();
-      window.aiRefRead(src, ['', ''], (res) => {
-        if (E.ai !== a) return; a.analyzing = false;
-        if (!res) { a.refSt = {}; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); return; }
-        const sz = BANNER[E.D.banner.size];
-        a.refStyle = res.style; a.prompt = t('ed/ai-ref-prompt', { w: sz.w, h: sz.h, hex: res.hex, style: t('ed/ai-st-' + (res.style === 'flat' ? 'glossy' : res.style)) });
-        if (a.stage === 'cands') a.stage = 'idle'; window.render();
-      });
-    }));
-    return false;
-  };
-  A.edRefPick = edRefPick;
-  A.edRefView = edRefPick;
-  A.edRefRm = () => { E.ai.refSt = {}; E.ai.refStyle = null; E.ai.analyzing = false; };
-  A.edRefCancel = () => { if (window.refCancel) window.refCancel(E.ai.refSt); E.ai.analyzing = false; };
-  A.aiModel = (m) => { E.ai.model = m; S.menu = null; };
-  A.aiGen = () => {
-    const a = E.ai; if (!a || a.stage === 'generating' || a.analyzing) return false;
-    if (!afford(20)) { if (window.lowBalance) window.lowBalance(20); else topup(); return false; }
-    a.stage = 'generating'; a.cand = null; const tok = (a.tok = {});
-    setTimeout(() => {
-      if (E.ai !== a || a.tok !== tok) return;
-      if (fail(a.prompt)) { a.stage = 'failed'; notice({ kind: 'failed', cat: 'gen', title: t('ed/ai-title'), body: t('ed/ai-failed') }); }
-      else { pay(20, 'banner'); const r = candScore(a); a.order = r.order; a.best = r.best; a.stage = 'cands'; }
-      window.render();
-    }, 1500);
-  };
-  A.pickCand = (i) => { E.ai.cand = +i; };
-  A.adoptCand = () => {
-    const a = E.ai; if (a.cand == null) return false;
-    const slot = 'slide' + E.slide; const prev = getAsset(slot); const f = candList()[a.cand];
-    const sz = BANNER[E.D.banner.size]; commit(() => { setAsset(slot, { f, w: sz.w, h: sz.h }); }); // AI 图按规格出，尺寸提醒随之消失
-    E.ai = null; E.replaced = { slot, prev };
-    if (!E.projAssets.some((x) => x.f === f)) E.projAssets.push({ f, name: 'AI · ' + (E.projAssets.length + 1) });
-    window.toast(t('ed/am-replaced'), undoOpt());
-  };
+  // AI 生成（Banner）：统一面板，见下面的适配器
+  A.openAi = () => A.aigOpen('banner|slide' + E.slide);
 
   // ---------- 检查 / 导出（ED-12 / ED-16） ----------
   A.openChecks = () => { E.dlg = 'checks'; S.menu = null; };
@@ -1823,7 +1682,7 @@
         ${E.mpanel || pc ? '' : `<div class="med-login"><div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>`}
         ${E.mpanel || pc ? '' : `<button class="fab" data-act="mPanel" data-arg="colors" aria-label="${esc(t('ed/m-colors'))}">${ic('paint-brush-fill')}<i style="background:${E.D.theme.primary}"></i></button>`}${busyMask()}</main>
       <nav class="med-tools">${[['pages', 'squares-four-fill', 'ed/pages'], ['modules', 'layout-fill', 'ed/m-modules'], ['colors', 'palette-fill', 'ed/m-colors'], ['preview', 'eye-fill', 'ed/m-preview']].map(([id, i, k]) => `<button class="${E.mpanel === id ? 'is-on' : ''}" data-act="mPanel" data-arg="${id}">${ic(i)}${t(k)}</button>`).join('')}</nav>
-    </div>${panel}${amSheet()}${E.preview ? `<div class="preview-full"><button class="ibtn ibtn-secondary x" data-act="closePreview" aria-label="${esc(t('ed/close'))}">${ic('x')}</button>${h5({ noFold: true })}</div>` : ''}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
+    </div>${panel}${amSheet()}${E.preview ? `<div class="preview-full"><button class="ibtn ibtn-secondary x" data-act="closePreview" aria-label="${esc(t('ed/close'))}">${ic('x')}</button>${h5({ noFold: true })}</div>` : ''}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}${window.AIG ? window.AIG.layers() : ''}`;
   }
   A.mPanel = (id) => {
     if (id === 'preview') { E.preview = true; E.sel = null; E.mpanel = null; return; }
@@ -1834,11 +1693,11 @@
   A.mIconClose = () => { E.mpanel = 'module'; E.iconMenu = null; };
   A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; E.keys = null; if (E.iconAi) A.iaClose(); if (E.sel) E.sel = null; E.h5side = false; S.menu = null; E.rn = null; };
   function mModuleHead(id) {
-    const b = baseName(id); const sub = (b === 'banner' && E.ai) || (E.iconAi && E.iconAi.b === b);
-    if (sub) return '';
+    const b = baseName(id); if (E.iconAi && E.iconAi.b === b) return '';
+    const ai = window.AIG && window.AIG.has(b) ? `<button class="ibtn ibtn-sm" data-act="aigOpen" data-arg="${id}" title="${esc(t('aig/menu'))}" aria-label="${esc(t('aig/menu'))}">${ic('sparkle-fill')}</button>` : '';
     const fixed = MODS[b].fixed; const idx = E.D.order.indexOf(id); const hid = !!E.D.hidden[id];
     const mv = fixed || b === 'sidebar' ? '' : `<button class="ibtn ibtn-sm" data-act="move" data-arg="-1" ${idx <= 0 ? 'disabled' : ''} aria-label="↑">${ic('arrow-up')}</button><button class="ibtn ibtn-sm" data-act="move" data-arg="1" ${idx >= E.D.order.length - 1 ? 'disabled' : ''} aria-label="↓">${ic('arrow-down')}</button>`;
-    return `${window.AD ? window.AD.toolBtn(id, true) : ''}${mv}<button class="ibtn ibtn-sm" data-act="toggleHide" data-arg="${id}" aria-label="${esc(t('ed/am-toggle'))}">${ic(hid ? 'eye-fill' : 'eye-slash-fill')}</button><span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu">${ic('dots-three')}</button>${S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu"', 'class="menu" style="top:calc(100% + 4px);right:0;left:auto"') : ''}</span>`;
+    return `${ai}${window.AD ? window.AD.toolBtn(id, true) : ''}${mv}<button class="ibtn ibtn-sm" data-act="toggleHide" data-arg="${id}" aria-label="${esc(t('ed/am-toggle'))}">${ic(hid ? 'eye-fill' : 'eye-slash-fill')}</button><span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu">${ic('dots-three')}</button>${S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu"', 'class="menu" style="top:calc(100% + 4px);right:0;left:auto"') : ''}</span>`;
   }
   function mobilePanel() {
     if (!E.mpanel) return '';
@@ -1855,7 +1714,10 @@
     else if (E.mpanel === 'iconmenu') { return `<div class="scrim" data-act="mIconClose"></div><div class="sheet med-sheet icon-sheet" data-sk="msheet"><div class="sheet-grab"></div>${window.MP.iconSheet()}</div>`; }
     else if (E.mpanel === 'addmod') { return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet add-sheet" data-sk="msheet"><div class="sheet-grab"></div>${addList()}</div>`; }
     else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim" data-act="pkCancel"></div><div class="sheet med-sheet"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
-    else if (E.mpanel === 'module' && E.sel) {
+    else if (E.mpanel === 'module' && E.sel && window.AIG && window.AIG.isOpen(baseName(E.sel))) {
+      // AI 生成面板：替换模块弹层内容，标题栏只有面板自己的 ✕（不再叠一个弹层关闭）；整套结果列表时才撑高
+      return `<div class="sheet med-sheet m-mod m-aig ${window.AIG.tall() ? 'is-tall' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${window.AIG.panel()}</div>`;
+    } else if (E.mpanel === 'module' && E.sel) {
       const inner = modulePanel(E.sel);
       body = inner.replace('<h2 class="p-title">', `<div class="sheet-head"><h2 class="p-title" style="margin:0;min-width:0">`).replace('</h2>', `</h2><span class="sb-spacer"></span>${mModuleHead(E.sel)}<button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>`);
       return `<div class="sheet med-sheet m-mod ${E.iconAi ? 'is-tall' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${body}</div>`;
@@ -1883,14 +1745,106 @@
     if (E.picker) { A.pkCancel(); return; }
     if (E.dlg) { A.closeDlg(); return; }
     if (E.preview) { E.preview = false; return; }
+    if (E.ai) { E.ai = null; return; } // AI 面板先关，回到模块面板
     if (E.mpanel) { if (E.mpanel === 'iconmenu') A.mIconClose(); else if (E.mpanel === 'keys') A.keysBack(); else A.mClose(); return; }
     if (E.adMod) { A.adModCancel(); return; }
     if (E.adp) { A.adEClose(); return; }
     if (E.keys) { E.keys = null; return; }
     if (E.iconAi) { A.iaClose(); return; }
-    if (E.ai) { E.ai = null; return; }
     if (E.h5side) { E.h5side = false; if (E.sel === 'sidebar') E.sel = null; return; }
     if (E.palOpen) { E.palOpen = false; }
+  }
+
+  // ---------- AI 生成统一面板：Banner / 顶部栏适配器（docs/ai-unified.md 第 6 节；Figma 04-AI 统一生成 G1 / G2） ----------
+  // 适配器只管「这个模块有哪些图、怎么出候选、怎么写进 E.D」；面板、扣点、状态机都在 aigen.js
+  if (window.AIG) {
+    const AIG = window.AIG, rot = AIG.rot, ST5 = AIG.STYLES5, VS = AIG.VSTYLES;
+    const stName = (st) => t('aig/st-' + st);
+    const bnSpec = () => (E.device === 'pc' ? { w: 1920, h: 564 } : BANNER[E.D.banner.size]); // PC 画布按 1920×564 显示规格
+    // Banner 款式卡：光泽 / 黑金 / 喜庆 / 霓虹用样图，扁平用光泽样图去饱和
+    const BN_PV = { glossy: 'glossy', flat: 'glossy', blackgold: 'blackgold', festive: 'festive', neon: 'neon' };
+    const BANNER_AI = {
+      styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<i class="aig-pvimg" style="background-image:url(assets/ai-banner/${BN_PV[st]}.webp)${st === 'flat' ? ';filter:saturate(.45) brightness(1.18)' : ''}"></i>` })),
+      preset: (tg, st) => t('aig/bn-p-' + st),
+      refPrompt: (tg, res) => { const sz = bnSpec(); return { style: res.style, prompt: t('ed/ai-ref-prompt', { w: sz.w, h: sz.h, hex: res.hex, style: t('ed/ai-st-' + res.style) }) }; },
+      // 候选张数 / 比例跟当前 Banner 规格走（大 Banner、小 Banner 各 3 张专用图）
+      gen: (a) => { const b = candBase(); return candScore(a).order.map((k) => b[k]); },
+      tile: (a, tg, i, f) => `<i class="aig-img" style="${window.fxStyle(f)}"></i>`,
+      lib: (a, tg, i, f) => f,
+      name: (a, tg) => t('aig/n-slide', { n: +tg.id.slice(5) + 1 }),
+      apply: (a, tg, i, f) => { const sz = BANNER[E.D.banner.size]; setAsset(tg.id, { f, w: sz.w, h: sz.h }); E.replaced = null; }, // AI 图按规格出，尺寸提醒随之消失
+      pay: () => ['banner', {}],
+      onTarget: (tg) => { const i = +tg.id.slice(5); if (E.D.banner.slides[i]) E.slide = i; },
+    };
+    AIG.reg('banner', {
+      // 小 Banner 3 列（98×62 格）；大 / 一般 / 中 2 列宽格
+      targets: () => { const sz = bnSpec(), small = E.device !== 'pc' && E.D.banner.size === 'small'; return E.D.banner.slides.map((s, i) => ({ id: 'slide' + i, label: t('aig/t-slide', { n: i + 1 }), kind: 'image', spec: [sz.w, sz.h], count: candBase().length, cost: 20, ratio: sz.w / sz.h, cols: small ? 3 : 2 })); },
+      defaultTarget: () => 'slide' + E.slide,
+      impl: () => BANNER_AI,
+    });
+
+    // 顶部栏：目标 [Logo][币种][搜索]（+侧边栏入口：加了侧边栏才有；+余额框币种：已登录且余额框开启才有）
+    // 币种 / 搜索 / 侧边栏入口是一组图标：范围可切「只这一个 / 整套」，整套 = 组里勾选的入口，先出样板再按款式出其余
+    const tbSrc = (k, st) => (k === 'side' ? SIDE_AI(st) : AIT + k + '-' + st + '.png');
+    const TB_SPEC = { cur: [36, 36], search: [56, 49], side: [48, 48] };
+    const TB_IC = { cur: 'currency-cny-fill', search: 'magnifying-glass', side: 'list' };
+    const vecSrc = (k, st) => window.MP.aiSvg(TB_IC[k], st, E.D.theme.primary);
+    const icSrc = (k, st) => (VS.includes(st) ? vecSrc(k, st) : tbSrc(k, st));
+    // 入口顺序跟 Figma G2-07 一致：搜索（必交）、币种、侧边栏入口；未登录才有币种切换
+    const tbEnts = () => { const it = E.D.tb.items, o = []; if (it.search) o.push('search'); if (it.cur && !E.D.login) o.push('cur'); if (it.side && !E.D.hidden.sidebar) o.push('side'); return o; };
+    const tbLabel = (k) => ({ cur: t('aig/t-cur'), search: t('ed/tb-search'), side: t('ed/tb-sideicon') })[k];
+    const tbOld = (k) => { const v = (E.D.tb.icons || {})[k]; if (k === 'side') return sideIcHtml(v, ''); return tbImgTag(v, k === 'cur' ? CLA + 'bal-sym.png' : 'assets/classic/search.png'); };
+    const icStyles = (pv) => ST5.concat(VS).map((st) => ({ id: st, label: stName(st), html: pv(st) }));
+    const icPreset = (k, st) => t('aig/ic-p', { adj: t('aig/adj-' + st), name: t('aig/n-' + k), sub: t('aig/sub-' + k), look: t('aig/look-' + st) });
+    const ICONS = {
+      entries: () => tbEnts().map((k) => ({ i: k, name: tbLabel(k), thumb: tbOld(k), def: true, req: k === 'search', pics: 1 })),
+      styles: (tg) => icStyles((st) => `<img src="${icSrc(tg.entry, st)}" alt="">`),
+      preset: (tg, st) => icPreset(tg.entry, st),
+      refPrompt: (tg, res) => ({ style: res.style, prompt: icPreset(tg.entry, res.style) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
+      where: () => ['适合手机顶部栏小尺寸显示', 'readable at small size in a mobile top bar'],
+      // 只这一个：同一款式的 4 个变体（选中的款式排第一）；整套其余入口沿用样板款式
+      gen: (a, tg, i, n, base) => (base ? [{ st: base.st }] : rot(ST5.concat(VS), a.style, n).map((st) => ({ st }))),
+      tile: (a, tg, i, c) => `<img src="${icSrc(i, c.st)}" alt="">`,
+      old: (a, tg, i) => tbOld(i),
+      lib: (a, tg, i, c) => (VS.includes(c.st) ? null : 'img:' + tbSrc(i, c.st)),
+      name: (a, tg) => t('aig/n-' + tg.entry),
+      apply: (a, tg, i, c) => { const src = icSrc(i, c.st); if (i === 'side') tbIconSet('side', 'img:' + src); else tbIconSet(i, src); },
+      pay: () => ['iconset', { type: t('mod/topbar') }],
+    };
+    const LOGO_AI = {
+      styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<img class="aig-logo" src="assets/classic/logo.png" alt="" style="filter:${LOGO_ST[st]}">` })),
+      preset: (tg, st) => t('aig/logo-p', { s: stName(st) }),
+      refPrompt: (tg, res) => ({ style: res.style, prompt: t('aig/logo-p', { s: stName(res.style) }) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
+      gen: (a, tg, i, n) => { const o = [LOGO_ST[a.style]]; for (let k = 0; o.length < n; k++) { const f = LOGO_AI_F[(a.round * 2 + k) % LOGO_AI_F.length]; if (!o.includes(f)) o.push(f); } return o; },
+      tile: (a, tg, i, f) => `<img class="aig-logo" src="assets/classic/logo.png" alt="" style="filter:${f}">`,
+      name: () => 'Logo',
+      apply: (a, tg, i, f) => { E.D.tb.logoF = f; tbFitSet('logo', null); },
+      pay: () => ['iconset', { type: 'Logo' }],
+    };
+    // 余额框币种（统一后跟其他目标一样收 ✦20、出 4 张候选；ai-unified §9 业主已确认）
+    const BAL_AI = {
+      styles: () => icStyles((st) => `<img src="${VS.includes(st) ? window.MP.aiSvg('currency-cny-fill', st, E.D.theme.primary) : AIT + 'cur-' + st + '.png'}" alt="">`),
+      preset: (tg, st) => icPreset('bal', st),
+      refPrompt: (tg, res) => ({ style: res.style, prompt: icPreset('bal', res.style) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
+      where: () => ['适合余额框里的币种小图标', 'readable at small size as a balance currency icon'],
+      gen: (a, tg, i, n) => rot(ST5.concat(VS), a.style, n).map((st) => ({ st })),
+      tile: (a, tg, i, c) => `<img src="${VS.includes(c.st) ? window.MP.aiSvg('currency-cny-fill', c.st, E.D.theme.primary) : AIT + 'cur-' + c.st + '.png'}" alt="">`,
+      lib: (a, tg, i, c) => (VS.includes(c.st) ? null : 'img:' + AIT + 'cur-' + c.st + '.png'),
+      name: () => t('aig/t-bal'),
+      apply: (a, tg, i, c) => { E.D.bal = Object.assign({}, BAL_DEF, E.D.bal || {}); E.D.bal.c = Object.assign({}, E.D.bal.c || {}); E.D.bal.curImg = VS.includes(c.st) ? window.MP.aiSvg('currency-cny-fill', c.st, E.D.theme.primary) : AIT + 'cur-' + c.st + '.png'; },
+      pay: () => ['iconset', { type: t('ed/bal-i-cur') }],
+    };
+    const balTarget = () => (E.D.login && balCfg().mode !== 'nocur' ? { id: 'bal', label: t('aig/t-bal'), kind: 'icon', spec: [52, 52], count: 4, cost: 20, ratio: 1, cols: 4 } : null);
+    const icTarget = (k) => ({ id: k, label: tbLabel(k), kind: 'icon', group: 'icons', entry: k, spec: (e) => TB_SPEC[e] || TB_SPEC[k], count: 4, cost: 20, ratio: 1, cols: 4, setName: t('aig/n-tb-set') });
+    AIG.reg('topbar', {
+      targets: () => [E.D.tb.items.logo ? { id: 'logo', label: 'Logo', kind: 'image', spec: [t('aig/w-range'), 100], count: 4, cost: 20, ratio: 230 / 76, cols: 2 } : null]
+        .concat(['cur', 'search', 'side'].filter((k) => tbEnts().includes(k)).map(icTarget))
+        .concat(E.D.tb.items.auth ? [balTarget()] : []),
+      defaultTarget: () => 'logo',
+      impl: (tg) => (tg.id === 'logo' ? LOGO_AI : tg.id === 'bal' ? BAL_AI : ICONS),
+    });
+    // 帐户栏（带帐户区）的余额框币种：同一个目标；帐户栏入口图标还在旧面板，所以工具条上先不放 ✦ AI
+    AIG.reg('midnav', { tool: false, targets: () => [window.MP && E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account' ? balTarget() : null], defaultTarget: () => 'bal', impl: () => BAL_AI });
   }
 
   window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), assetMenuItems: (id) => assetMenuItems(id), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,

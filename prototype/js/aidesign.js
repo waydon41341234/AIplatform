@@ -666,17 +666,23 @@
   function toolBtn(id, mobile) {
     const x = X(); const b = x.baseName(id); if (!SUP.includes(b)) return '';
     const busy = x.E.adMod && x.E.adMod.id === id;
+    // 「换样式」= 整模块重新配样式 / 配色，不是生成图片（生成图片走 ✦ AI 统一面板），图标用 shuffle 区分（docs/ai-unified.md 第 7 节）
     const label = t('ad/mod-regen', { c: AD_MOD_COST });
-    if (mobile) return `<button class="ibtn ibtn-sm ad-mbtn ${busy ? 'is-busy' : ''}" data-act="adMod" data-arg="${id}" title="${esc(label)}" aria-label="${esc(label)}">${ic('sparkle-fill')}</button>`;
-    return `<button class="ad-tool" data-act="adMod" data-arg="${id}" data-stop title="${esc(label)}">${ic('sparkle-fill')}AI · ${AD_MOD_COST}</button>`;
+    if (mobile) return `<button class="ibtn ibtn-sm ad-mbtn ${busy ? 'is-busy' : ''}" data-act="adMod" data-arg="${id}" title="${esc(label)}" aria-label="${esc(label)}">${ic('shuffle')}</button>`;
+    return `<button class="ad-tool" data-act="adMod" data-arg="${id}" data-stop title="${esc(label)}">${ic('shuffle')}${t('aig/restyle', { c: AD_MOD_COST })}</button>`;
   }
   function modMask(id) {
     const E = X().E; if (!E.adMod || E.adMod.id !== id) return '';
     return `<div class="ad-mask" data-act="adNoop" data-stop><i class="wb-spin"></i><span>${t('ad/mod-ing')}</span><button data-act="adModCancel" data-stop>${t('confirm/cancel')}</button></div>`;
   }
   A.adNoop = () => false;
+  // 花点数先说价钱：确认框（余额不足时确认框自己变「去充值」）
   A.adMod = (id) => {
     const x = X(), E = x.E; if (E.adMod) return false;
+    window.costConfirm({ title: t('aig/restyle-title', { m: x.modName(id) }), body: t('aig/restyle-body'), cost: AD_MOD_COST, okLabel: t('aig/restyle-ok', { c: AD_MOD_COST }), onOk: () => adModRun(id) });
+  };
+  function adModRun(id) {
+    const x = X(), E = x.E; if (E.adMod) return;
     if (!window.canAfford(AD_MOD_COST)) { window.lowBalance(AD_MOD_COST); return; }
     S.menu = null; if (edMob() && E.mpanel === 'module') E.mpanel = null; // 手机：收起模块面板，画布上能看到生成中和取消
     const tok = {}; E.adMod = { id, tok };
@@ -689,10 +695,10 @@
       x.commit(() => { modVariant(id, E.D); });
       x.fixSlide();
       x.pay(AD_MOD_COST, 'design-mod', { mod: name });
-      window.toast(t('ad/mod-done', { m: name }), x.undoOpt());
+      window.toast(t('ad/mod-done', { m: name, c: AD_MOD_COST }), x.undoOpt());
       window.render();
     }, 1600);
-  };
+  }
   A.adModCancel = () => { const E = X().E; if (!E.adMod) return false; E.adMod = null; window.toast(t('ad/mod-cancelled'), { info: true }); };
   // 沿用当前设计的风格 / 主色，只改该模块已有的样式 / 颜色参数（保证和原来不同）
   function modVariant(id, D) {
