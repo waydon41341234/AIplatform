@@ -29,7 +29,7 @@
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
   const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
   const BNAV_PX = { 98: 49, 110: 55, 120: 60 };
-  const DV = 6; // 设计数据版本（LS 里旧数据不兼容时丢弃）
+  const DV = 7; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
   const modName = (id) => { const b = baseName(id); const n = id.includes('~') ? ' ' + (+id.split('~')[1] + 1) : ''; return t((MODS[b] || MODS.banner).key) + n; };
 
@@ -38,7 +38,7 @@
   // 经典蓝白 = 真实 UI 结构（Waydon 2026-11-26 选「改成真实结构」）：没有彩金池 / 页脚 / 侧边栏
   const ORDER_CL = ['banner', 'notice', 'midnav', 'gamemenu', 'gamecards'];
   const TPL = {
-    'classic-blue': { preset: 'blue', order: ORDER_CL, size: 'general', slides: SLIDE_F },
+    'classic-blue': { preset: 'blue', order: ORDER_CL, size: 'general', slides: ['none', 'none', 'none'], ind: 'dots' }, // 真实 Banner 原图，不再调色
     'midnight-gold': { preset: 'gold', order: ORDER9, size: 'large', slides: ['sepia(.6) saturate(1.3)', 'sepia(.4) hue-rotate(-15deg)', 'sepia(.8) brightness(.9)'] },
     'fresh-green': { preset: 'green', order: ['banner', 'midnav', 'gamemenu', 'gamecards', 'jackpot', 'footer'], size: 'general', slides: ['hue-rotate(60deg)', 'hue-rotate(80deg) saturate(.9)', 'hue-rotate(40deg) brightness(1.05)'] },
     'western-white': { preset: 'platinum', order: ['banner', 'gamemenu', 'gamecards', 'midnav', 'footer', 'jackpot'], size: 'small', slides: ['hue-rotate(220deg)', 'hue-rotate(250deg) saturate(.8)', 'grayscale(.3) hue-rotate(200deg)'] },
@@ -51,7 +51,7 @@
     return {
       v: DV, order: tp.order.slice(), hidden: {}, side: 'left', login: false,
       theme: preset(p), palette: p, basePreset: p, template: key, height: 1600,
-      banner: { size: tp.size, ind: 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
+      banner: { size: tp.size, ind: tp.ind || 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
       tb: { h: 88, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: false }, searchFirst: false, balStyle: 'pill', colors: { bg: null, text: null, search: null, reg: null }, logoF: 'none' },
     };
@@ -266,7 +266,9 @@
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
     const slides = v.map((i) => `<div class="slide" style="background-image:url(assets/classic/banner.webp);filter:${slideF(i)}"></div>`).join('');
     const ind = B.ind === 'none' ? '' : `<div class="h5-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
-    return `<div class="h5-banner" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div></div>${ind}</div>`;
+    // 圆点样式叠在图片底部（经典蓝白原稿：白点 + 选中长条）；短线样式放图片下方
+    const inside = B.ind === 'dots';
+    return `<div class="h5-banner" style="padding:${B.margin / 2}px 0"><div class="vp" data-swipe style="width:${sz.cw}px;height:${sz.ch}px;border-radius:${B.corner / 2}px"><div class="track" style="transform:translateX(${-pos * 100}%)">${slides}</div>${inside ? ind : ''}</div>${inside ? '' : ind}</div>`;
   }
   function modHtml(id) {
     switch (baseName(id)) {

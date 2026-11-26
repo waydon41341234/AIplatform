@@ -822,3 +822,7 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .tb-item .thumb.cur { width: 36px; height: 36px; background: var(--bg-surface); padding: 4px; box-sizing: border-box; }
 .tb-item .thumb.logo img { width: 32px; height: auto; border-radius: 0; }
 .tb-item .thumb.sq img { padding: 6px; box-sizing: border-box; }
+/* Banner 圆点指示器（经典蓝白原稿）：叠在图片底部，白色半透明点，选中为长条 */
+.h5-banner .vp .h5-ind.dots { position: absolute; left: 0; right: 0; bottom: 5px; padding: 0; gap: 4px; }
+.h5-banner .vp .h5-ind.dots i { width: 4px; height: 4px; border: 0; background: #ffffff80; }
+.h5-banner .vp .h5-ind.dots i.on { width: 10px; border-radius: 2px; background: #ffffff; }
