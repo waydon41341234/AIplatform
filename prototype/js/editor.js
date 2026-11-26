@@ -227,7 +227,7 @@
       (miss.length ? req : ok).push({ id: 'bottomnav', mod: 'bottomnav', name: t('mod/bottomnav'), text: miss.length ? t('ed/chk-bnav', { names: miss.map(nm).join('、') }) : t('mod/bottomnav') });
     }
     if (inPage('gamemenu')) {
-      const miss = D.m.gamemenu.items.filter((it) => it.on && !(it.img || it.i));
+      const miss = D.m.gamemenu.items.filter((it) => it.on && !(it.img || it.def)); // 内置线性图标只是占位，没有默认图 / 上传图才算缺
       (miss.length ? req : ok).push({ id: 'gamemenu', mod: 'gamemenu', name: t('mod/gamemenu'), text: miss.length ? t('ed/chk-gamemenu', { n: miss.length, names: miss.map(nm).join('、') }) : t('mod/gamemenu') });
     }
     if (inPage('jackpot')) (D.chkOk.jackpot ? ok : sug).push({ id: 'jackpot', mod: 'jackpot', name: t('cat/jackpot'), text: D.chkOk.jackpot ? t('cat/jackpot') : t('ed/chk-4'), confirm: true });
@@ -511,6 +511,8 @@
       const aiAct = k === 'logo' ? 'tbLogoAiOpen' : k === 'side' ? '' : 'tbAiJump';
       return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${aiAct ? `<button class="menu-item" data-act="${aiAct}" data-arg="${k}">${ic('sparkle-fill')}${t(k === 'logo' ? 'ed/tblogo-title' : 'mp/ai-one')}</button>` : ''}<button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
     }
+    // 游戏菜单按钮底图：上传 / AI / 恢复（没有显示隐藏，按钮本身一直在）
+    if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="gmBaiOpen">${ic('sparkle-fill')}${t('mp/gm-bai-title')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
     const lib = /^mp-(jackpot-bg|gamecards-fallback|sidebar-head)$/.test(id) ? `<button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button>` : '';
     return `<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${lib}<button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic('eye-fill')}${t('ed/am-toggle')}</button>`;
   }
@@ -790,7 +792,9 @@
     // 问候语 11 neutral_2；余额金额 26=13 Bold（只改帐户栏里的余额框，顶部栏余额在顶部栏里改）；入口角标 18=9 白字
     midnav: [['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400], ['midnav.btn', 'tx/midnav-login', '.cl-user.out .lg', '.cl-user.out .lg', 12, 400], ['midnav.reg', 'tx/midnav-reg', '.cl-user.out .rg', '.cl-user.out .rg', 12, 400],
       ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.greet', 'tx/midnav-greet', '.bxu .greet', '.bxu .greet', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bx b', '.cl-user .bx b', 13, 700], ['midnav.badge', 'tx/midnav-badge', '.cl-ent .ib .bd', '.cl-ent .ib .bd', 9, 400]],
-    gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],
+    // 游戏菜单（Figma 317:55796）：竖排分类名 26/750=13 Regular，未选中 leftnav_def、选中 leftnav_active；横向标签 / 图标分类 11
+    gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span:not(.on) b', '.cl-gm > span:not(.on) b', 13, 400], ['gamemenu.nameOn', 'tx/gamemenu-on', '.cl-gm > span.on b', '.cl-gm > span.on b', 13, 400],
+      ['gamemenu.tab', 'tx/gamemenu-name', '.h5-gm > span:not(.on)', '.h5-gm > span:not(.on)', 11, 400], ['gamemenu.tabOn', 'tx/gamemenu-on', '.h5-gm > span.on', '.h5-gm > span.on', 11, 400]],
     gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm, .h5-gc .c', '.cl-gc .nm, .h5-gc .c', 11.5, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 12, 400]],
     bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it', '.h5-bnav .it:not(.on)', 10, 400]],
   };
@@ -798,7 +802,8 @@
   const TX_W = [400, 500, 700];
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
-  const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText' };
+  const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText',
+    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.activeText' };
   const txOf = (id) => {
     const o = ((E.D.txt || {})[id]) || {};
     if (!TX_EC[id]) return o;
@@ -820,7 +825,10 @@
   const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth, 'notice.badgeTx': () => E.D.login && E.D.m.notice && E.D.m.notice.mail,
     // 帐户栏：未登录只有登录 / 注册按钮，已登录才有用户名、余额、角标；单行（无帐户区）两边都没有
     'midnav.btn': () => mnAcct() && !E.D.login, 'midnav.reg': () => mnAcct() && !E.D.login, 'midnav.user': () => mnAcct() && E.D.login, 'midnav.bal': () => mnAcct() && E.D.login,
-    'midnav.greet': () => mnAcct() && E.D.login && balCfg().head === 'greet', 'midnav.badge': () => E.D.login && E.D.m.midnav.items.some((x) => x.on && x.badge) };
+    'midnav.greet': () => mnAcct() && E.D.login && balCfg().head === 'greet', 'midnav.badge': () => E.D.login && E.D.m.midnav.items.some((x) => x.on && x.badge),
+    // 游戏菜单：竖排和横向两套字号，只显示当前样式那一套
+    'gamemenu.name': () => gmSide(), 'gamemenu.nameOn': () => gmSide(), 'gamemenu.tab': () => !gmSide(), 'gamemenu.tabOn': () => !gmSide() };
+  const gmSide = () => !!(E.D.m && E.D.m.gamemenu && E.D.m.gamemenu.style === 'side');
   const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
   const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
   // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）
@@ -884,7 +892,7 @@
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || b === 'gamemenu' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -1237,7 +1245,7 @@
   }
 
   // ---------- 素材：上传 / 素材库 / 调整尺寸 ----------
-  const SLOT_SPEC = { 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
+  const SLOT_SPEC = { 'mp-gamemenu-btnOff': [150, 70, 'mp/gm-btn-off'], 'mp-gamemenu-btnSel': [150, 70, 'mp/gm-btn-on'], 'mp-jackpot-bg': [702, 160, 'mp/jp-bg'], 'mp-gamecards-fallback': [300, 225, 'mp/gc-fallback'], 'mp-sidebar-head': [540, 200, 'mp/sd-head'], 'tb-logo': [230, 76, null], 'tb-cur': [36, 36, 'ed/tb-cur'], 'tb-search': [56, 49, 'ed/tb-search'], 'tb-side': [48, 48, 'ed/tb-sideicon'] };
   // 顶部栏图标槽：tb-cur / tb-search / tb-side 存在 E.D.tb.icons[k]（AI 图路径 / 'img:' 上传图 / 滤镜模拟值）
   const TB_ICON = /^tb-(cur|search|side)$/;
   function tbIconSet(k, v) { const o = Object.assign({}, E.D.tb.icons); if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) E.D.tb.icons = o; else delete E.D.tb.icons; }

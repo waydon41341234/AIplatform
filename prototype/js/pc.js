@@ -91,7 +91,9 @@
   function gamemenu() {
     const m = M('gamemenu');
     const icons = m.style === 'icons';
-    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${vis('gamemenu').map((it, i) => { const src = (i ? it.img : it.imgOn || it.img) || it.def; return `<span class="${i ? '' : 'on'}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
+    // 选中的分类跟 H5 一样按 m.active（被隐藏了退回第一个显示的）
+    const v = vis('gamemenu'), a = (m.items || [])[m.active | 0], act = a && a.on ? a : v[0];
+    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${v.map((it) => { const on = it === act; const src = on ? it.imgOn || it.defOn || it.img || it.def : it.img || it.def; return `<span class="${on ? 'on' : ''}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
   }
   function gamecards() {
     const m = M('gamecards');
