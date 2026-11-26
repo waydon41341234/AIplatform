@@ -961,3 +961,33 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .tbai-res .pv img { width: 48px; height: 48px; object-fit: contain; }
 .tbai .spin { animation: tbspin 1s linear infinite; }
 @keyframes tbspin { to { transform: rotate(360deg); } }
+
+.tbai-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.tbai-row > span { flex: none; width: 36px; font-size: 12px; color: var(--text-2); }
+.tbai-row > .seg, .tbai-row > div { flex: 1; min-width: 0; }
+.tbai-opt span { flex-direction: row !important; justify-content: center; }
+.tbai-opts .tbai-opt span { flex-direction: column !important; }
+.tbai-drop { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 10px; margin: 8px 0 10px; border-radius: 12px; border: 1.5px dashed var(--border); background: var(--bg-surface); cursor: pointer; text-align: center; color: var(--text-2); }
+.tbai-drop b { color: var(--text); font-weight: 500; font-size: 13px; }
+.tbai-drop small { font-size: 11px; }
+.tbai-drop:hover { border-color: var(--brand); }
+.tbai-ref { display: flex; gap: 10px; margin: 8px 0 10px; align-items: flex-start; }
+.tbai-ref .th { position: relative; flex: none; width: 64px; height: 64px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; }
+.tbai-ref .th img { max-width: 56px; max-height: 56px; object-fit: contain; }
+.tbai-ref .th .ib-s { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-raised); box-shadow: var(--shadow-md, 0 1px 3px #0004); display: flex; align-items: center; justify-content: center; }
+.tbai-ref .pp { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.tbai-ref .lab2 { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--brand); }
+.tbai-ref .lab2 .sw { width: 12px; height: 12px; border-radius: 3px; margin-left: auto; }
+.tbai-ref textarea { width: 100%; resize: vertical; font-size: 12px; line-height: 1.5; }
+.tbai-ref small { font-size: 11px; }
+.tbai-an { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); padding: 20px 0; }
+
+/* 编辑器顶栏在窄屏不挤：恢复默认只留图标，项目名保底宽度 */
+.ed-top .ed-reset { flex: none; }
+.ed-top > :not(.spacer) { flex-shrink: 0; }
+.ed-top .spacer { flex: 1 1 0; min-width: 0; }
+@media (max-width: 1439px) { .ed-top .ed-reset .lb { display: none; } .ed-top .ed-reset { padding: 0 8px; } }
+.ed-top .ed-name { flex-shrink: 1; min-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-check .cn { display: none; font-weight: 600; }
+@media (max-width: 1099px) { .ed-top .btn-check .ellipsis { display: none; } .ed-top .btn-check .cn { display: inline; } }
+@media (max-width: 959px) { .ed-top { gap: 6px; padding: 0 10px; } .ed-top .ed-name { min-width: 40px; } .ed-top .iseg button { padding-left: 8px; padding-right: 8px; } }

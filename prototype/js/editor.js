@@ -551,23 +551,67 @@
       ${a.stage !== 'idle' ? `<div class="p-sec"><div class="lab">${t('ed/ai-candidates')}</div>${cands}</div>` : ''}`;
   }
   // ---------- 顶部栏图标 AI 生成（模拟；样图由 Figma generate_image 生成，Waydon 2026-11-26） ----------
-  const TB_AI = ['glossy', 'flat', 'blackgold', 'festive', 'neon']; const TB_AI_COST = 40; const AIT = 'assets/ai-tb/';
-  A.tbAiStyle = (v) => { E.tbAi = Object.assign({}, E.tbAi, { style: v, stage: (E.tbAi || {}).stage === 'busy' ? 'busy' : 'setup' }); };
+  // 两种方式：选风格 / 上传参考图 → AI 反推提示词（可改）→ 生成。目标：搜索+币种 / 只搜索 / 只币种
+  const TB_AI = ['glossy', 'flat', 'blackgold', 'festive', 'neon']; const AIT = 'assets/ai-tb/';
+  const tbAi = () => (E.tbAi = E.tbAi || { mode: 'style', target: 'both', style: 'glossy', stage: 'setup' });
+  const tbAiCost = () => (tbAi().target === 'both' ? 40 : 20);
+  A.tbAiStyle = (v) => { const a = tbAi(); if (a.stage === 'busy') return false; a.style = v; a.stage = 'setup'; };
+  A.tbAiMode = (v) => { const a = tbAi(); if (a.stage === 'busy' || a.mode === v) return false; a.mode = v; a.stage = 'setup'; };
+  A.tbAiTarget = (v) => { const a = tbAi(); if (a.stage === 'busy' || a.target === v) return false; a.target = v; if (a.stage === 'done') a.stage = 'setup'; };
+  A.tbAiRefDel = () => { const a = tbAi(); a.ref = null; a.prompt = ''; a.analyzing = false; a.stage = 'setup'; };
+  // 模拟「图生提示词」：读参考图的主色 / 明暗 / 饱和度，拼一段可编辑的提示词，并记下最接近的风格
+  function refAnalyze(src) {
+    const a = tbAi(); a.ref = src; a.prompt = ''; a.analyzing = true; a.stage = 'setup'; window.render();
+    const im = new Image(); im.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 32, 32);
+      const d = g.getImageData(0, 0, 32, 32).data; let r = 0, gg = 0, b = 0, n = 0, dark = 0, white = 0;
+      for (let k = 0; k < d.length; k += 4) { if (d[k + 3] < 128) continue; const R = d[k], G = d[k + 1], B = d[k + 2]; if (R > 235 && G > 235 && B > 235) { white++; continue; } if (R + G + B < 120) dark++; r += R; gg += G; b += B; n++; }
+      n = n || 1; r /= n; gg /= n; b /= n;
+      const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), l = (mx + mn) / 510, sat = mx === mn ? 0 : (mx - mn) / (255 - Math.abs(mx + mn - 255));
+      let h = 0; if (mx !== mn) { h = mx === r ? (gg - b) / (mx - mn) : mx === gg ? 2 + (b - r) / (mx - mn) : 4 + (r - gg) / (mx - mn); h = (h * 60 + 360) % 360; }
+      const hex = '#' + [r, gg, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('').toUpperCase();
+      const darkBg = dark / n > 0.35, zh = /^zh/.test(S.lang);
+      const style = darkBg && (h > 170 && h < 300) ? 'neon' : (h < 25 || h > 340) && sat > 0.45 ? 'festive' : (h >= 25 && h < 55 && sat < 0.55) || darkBg ? 'blackgold' : sat > 0.75 && l > 0.45 && (h >= 15 && h < 60) ? 'flat' : 'glossy';
+      const colorZh = (h < 25 || h > 340) ? '红色' : h < 45 ? '橙金色' : h < 70 ? '黄色' : h < 160 ? '绿色' : h < 200 ? '青色' : h < 260 ? '蓝色' : '紫色';
+      const colorEn = (h < 25 || h > 340) ? 'red' : h < 45 ? 'orange-gold' : h < 70 ? 'yellow' : h < 160 ? 'green' : h < 200 ? 'cyan' : h < 260 ? 'blue' : 'purple';
+      const finZh = { glossy: '圆润卡通 3D 光泽质感，带白色高光', flat: '纯色扁平风格，无渐变，线条圆角', blackgold: '金属拉丝质感，香槟金，奢华高级', festive: '喜庆节日风格，金色描边，祥云点缀', neon: '霓虹发光描边，深色半透明，科技感' }[style];
+      const finEn = { glossy: 'glossy cartoon 3D with white highlights', flat: 'flat solid color, no gradient, rounded strokes', blackgold: 'brushed champagne-gold metal, luxurious', festive: 'festive style with gold outline and auspicious clouds', neon: 'neon glowing outline, dark translucent, futuristic' }[style];
+      a.prompt = zh ? `主色${colorZh}（约 ${hex}），${sat > 0.5 ? '高饱和' : '低饱和'}${l > 0.6 ? '、明亮' : l < 0.35 ? '、偏暗' : ''}，${finZh}${white / (n + white) > 0.2 ? '，带白色高光/描边' : ''}；透明背景，单个图标居中，适合手机顶部栏小尺寸显示`
+        : `Main color ${colorEn} (about ${hex}), ${sat > 0.5 ? 'high' : 'low'} saturation${l > 0.6 ? ', bright' : l < 0.35 ? ', dark' : ''}, ${finEn}; transparent background, single centered icon, readable at small size in a mobile top bar`;
+      a.refHex = hex; a.refStyle = style; a.analyzing = false; window.render();
+    };
+    im.onerror = () => { a.analyzing = false; a.ref = null; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); };
+    setTimeout(() => { im.src = src; }, 900); // 模拟识别耗时
+  }
+  document.addEventListener('change', (e) => {
+    const el = e.target; if (!el.matches) return;
+    if (el.matches('[data-tbairef]') && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; if (!/^image\//.test(f.type)) { window.toast(t('ed/bal-img-bad'), { info: true }); return; } const r = new FileReader(); r.onload = () => refAnalyze(r.result); r.readAsDataURL(f); }
+    else if (el.matches('[data-tbaiprompt]')) { tbAi().prompt = el.value.slice(0, 300); }
+  });
   A.tbAiGen = () => {
-    const st = (E.tbAi || {}).style || 'glossy';
-    if (!afford(TB_AI_COST)) { topup(); return false; }
-    E.tbAi = { style: st, stage: 'busy' };
-    setTimeout(() => { if (!E.tbAi || E.tbAi.stage !== 'busy') return; if (fail()) { E.tbAi.stage = 'failed'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(TB_AI_COST, 'iconset', { type: t('mod/topbar') }); E.tbAi = { style: st, stage: 'done', res: st }; } window.render(); }, 1400);
+    const a = tbAi(), n = tbAiCost();
+    if (a.mode === 'ref' && (!a.ref || a.analyzing || !(a.prompt || '').trim())) return false;
+    if (!afford(n)) { topup(); return false; }
+    a.stage = 'busy'; const st = a.mode === 'ref' ? a.refStyle || 'glossy' : a.style;
+    setTimeout(() => { if (E.tbAi !== a || a.stage !== 'busy') return; if (fail()) { a.stage = 'setup'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(n, 'iconset', { type: t('mod/topbar') }); a.stage = 'done'; a.res = st; } window.render(); }, 1400);
   };
-  A.tbAiUse = () => { const r = (E.tbAi || {}).res; if (!r) return false; commit(() => { E.D.tb.icons = { search: AIT + 'search-' + r + '.png', cur: AIT + 'cur-' + r + '.png' }; }); E.tbAi = { style: r, stage: 'setup' }; window.toast(t('ed/tbai-used'), undoOpt()); };
+  A.tbAiUse = () => { const a = tbAi(), r = a.res; if (!r) return false; commit(() => { const ic0 = Object.assign({}, E.D.tb.icons); if (a.target !== 'cur') ic0.search = AIT + 'search-' + r + '.png'; if (a.target !== 'search') ic0.cur = AIT + 'cur-' + r + '.png'; E.D.tb.icons = ic0; }); a.stage = 'setup'; window.toast(t('ed/tbai-used'), undoOpt()); };
   A.tbAiReset = () => { if (!E.D.tb.icons) return false; commit(() => { delete E.D.tb.icons; }); window.toast(t('ed/tbai-reset'), undoOpt()); };
   function tbAiSec() {
-    const a = E.tbAi || {}, st = a.style || 'glossy', busy = a.stage === 'busy';
-    const tiles = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${st === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span><img src="${AIT}search-${v}.png" alt=""><img src="${AIT}cur-${v}.png" alt=""></span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
-    const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv"><img src="${AIT}search-${a.res}.png" alt=""><img src="${AIT}cur-${a.res}.png" alt=""></span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n: TB_AI_COST })}</button></div></div>` : '';
+    const a = tbAi(), busy = a.stage === 'busy', n = tbAiCost();
+    const pair = (st) => `${a.target !== 'cur' ? `<img src="${AIT}search-${st}.png" alt="">` : ''}${a.target !== 'search' ? `<img src="${AIT}cur-${st}.png" alt="">` : ''}`;
+    const target = segBtns([{ v: 'both', label: t('ed/tbai-t-both') }, { v: 'search', label: t('ed/tb-search') }, { v: 'cur', label: t('ed/tbai-t-cur') }], a.target, 'tbAiTarget');
+    const mode = segBtns([{ v: 'style', label: t('ed/tbai-m-style') }, { v: 'ref', label: t('ed/tbai-m-ref') }], a.mode, 'tbAiMode');
+    let body;
+    if (a.mode === 'style') body = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${a.style === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span>${pair(v)}</span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
+    else body = !a.ref ? `<label class="tbai-drop">${ic('image-fill', 'ic-24')}<b>${t('ed/tbai-ref-up')}</b><small>${t('ed/tbai-ref-tip')}</small><input type="file" accept="image/*" data-tbairef hidden></label>`
+      : `<div class="tbai-ref"><span class="th"><img src="${a.ref}" alt=""><button class="ib-s" data-act="tbAiRefDel" title="${esc(t('menu/delete'))}" ${busy ? 'disabled' : ''}>${ic('x', 'ic-16')}</button></span><div class="pp">${a.analyzing ? `<div class="tbai-an">${ic('spinner-gap', 'ic-16 spin')}${t('ed/tbai-analyzing')}</div>` : `<div class="lab2">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-prompt')}${a.refHex ? `<i class="sw" style="background:${a.refHex}"></i>` : ''}</div><textarea class="input" rows="4" maxlength="300" data-tbaiprompt ${busy ? 'disabled' : ''}>${esc(a.prompt || '')}</textarea><small class="faint">${t('ed/tbai-prompt-tip')}</small>`}</div></div>`;
+    const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv">${pair(a.res)}</span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n })}</button></div></div>` : '';
+    const ready = a.mode === 'style' || (a.ref && !a.analyzing && (a.prompt || '').trim());
     const btn = busy ? `<button class="btn btn-primary btn-block is-loading" disabled>${ic('spinner-gap', 'ic-16 spin')}${t('ed/tbai-busy')}</button>`
-      : a.stage === 'done' ? '' : `<button class="btn btn-primary btn-block" data-act="tbAiGen">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-gen', { n: TB_AI_COST })}</button>`;
-    return `<div class="p-sec tbai"><div class="lab">${t('ed/tbai-title')}${E.D.tb.icons ? `<button class="tx-reset" style="margin-left:auto" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div><div class="p-note">${t('ed/tbai-note')}</div>${tiles}${res}${btn}</div>`;
+      : a.stage === 'done' ? '' : `<button class="btn btn-primary btn-block" data-act="tbAiGen" ${ready ? '' : 'disabled'}>${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-gen', { n })}</button>`;
+    return `<div class="p-sec tbai"><div class="lab">${t('ed/tbai-title')}${E.D.tb.icons ? `<button class="tx-reset" style="margin-left:auto" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
+      <div class="tbai-row"><span>${t('ed/tbai-target')}</span>${target}</div><div class="tbai-row"><span>${t('ed/tbai-mode')}</span>${mode}</div>${body}${res}${btn}</div>`;
   }
   function tbContent() {
     // 顶部栏内容（Waydon 2026-11-26 排版优化）：分组列表，每行 拖动 · 缩略图 · 名称/规格 · ⋯ · 眼睛 都在同一张卡内
@@ -1304,7 +1348,7 @@
   }
   function checkBtn(cls = '') {
     const n = checks().req.length;
-    return `<button class="btn btn-sm btn-check ${n ? '' : 'is-ok'} ${cls}" data-act="openChecks">${ic(n ? 'warning-circle-fill' : 'check-circle-fill', 'ic-16')}<span class="ellipsis">${n ? t('ed/check-n', { n }) : t('ed/check-passed')}</span></button>`;
+    return `<button class="btn btn-sm btn-check ${n ? '' : 'is-ok'} ${cls}" data-act="openChecks">${ic(n ? 'warning-circle-fill' : 'check-circle-fill', 'ic-16')}<span class="ellipsis">${n ? t('ed/check-n', { n }) : t('ed/check-passed')}</span>${n ? `<b class="cn">${n}</b>` : ''}</button>`;
   }
   const busyMask = () => (E.tpl && E.tpl.busy ? '<div class="canvas-busy skeleton"></div>' : '');
   function nameHtml() {
@@ -1323,7 +1367,7 @@
         <div class="iseg" style="margin-left:12px">${[['h5', 'device-mobile', 'ed/device-h5'], ['pc', 'desktop', 'ed/device-pc']].map(([v, i, k]) => `<button class="${E.device === v ? 'is-on' : ''}" data-act="setDevice" data-arg="${v}" title="${esc(t(k))}">${ic(i)}</button>`).join('')}</div>
         <div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div>
         <span class="spacer"></span>
-        <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button><button class="btn btn-secondary btn-sm ed-reset" data-act="pageReset" ${pageDirty() ? '' : 'disabled'} title="${esc(t(pageDirty() ? 'ed/page-reset-tip' : 'ed/page-is-default'))}">${ic('arrow-counter-clockwise', 'ic-16')}${t('ed/page-reset')}</button>
+        <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button><button class="btn btn-secondary btn-sm ed-reset" data-act="pageReset" ${pageDirty() ? '' : 'disabled'} title="${esc(t(pageDirty() ? 'ed/page-reset-tip' : 'ed/page-is-default'))}">${ic('arrow-counter-clockwise', 'ic-16')}<span class="lb">${t('ed/page-reset')}</span></button>
         ${checkBtn()}<button class="btn btn-primary btn-sm" data-act="openExport">${ic('download-simple', 'ic-16')}${t('ed/export')}</button></header>
       <div class="ed-body"><nav class="ed-left" data-sk="ed-left">${tree()}</nav>
         <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
