@@ -61,7 +61,7 @@
     return {
       v: DV, order: tp.order.slice(), hidden: {}, side: 'left', login: false,
       theme: preset(p), palette: p, basePreset: p, template: key, height: 1334,
-      banner: { size: tp.size, ind: tp.ind || 'bars', margin: 16, corner: 8, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
+      banner: { size: tp.size, ind: tp.ind || 'bars', margin: 16, corner: 16, slides: mkSlides(tp.size, tp.slides, key === 'classic-blue') },
       m: window.MP ? window.MP.defaults() : {}, ec: {}, chkOk: {},
       tb: { h: 90, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: true }, searchFirst: false, colors: { bg: null, side: null }, logoF: 'none' }, // 已登录默认显示余额框（Waydon 2026-11-26）
     };
@@ -343,10 +343,20 @@
     if (E.ai && E.ai.cand != null && i === E.slide) return CAND_F[E.ai.cand];
     return (E.D.banner.slides[i] || {}).f || 'none';
   }
+  // 轮播图背景（画布 / PC / 面板缩略图共用）：真实图 'img:' 或滤镜模拟；调整尺寸选「留边」时整图放进去、空白用底色，「裁切」按框的位置
+  const BANNER_DEF = 'assets/classic/banner.webp';
+  function slideBg(s, f) {
+    s = s || {}; f = f == null ? s.f || 'none' : f;
+    let css = window.fxStyle(f, BANNER_DEF);
+    if (f === s.f && s.fit === 'pad') css += `;background-size:contain;background-repeat:no-repeat;background-color:${E.D.theme[s.fill] || E.D.theme.bg_1}`;
+    else if (f === s.f && s.fit === 'crop' && s.x != null) css += `;background-position:${Math.round(s.x * 100)}% ${Math.round(s.y * 100)}%`;
+    return css;
+  }
+  const slideStyle = (i) => slideBg(E.D.banner.slides[i], slideF(i));
   function h5Banner() {
     const B = E.D.banner, sz = BANNER[B.size];
     const v = visIdx(); const pos = Math.max(0, v.indexOf(E.slide));
-    const slides = v.map((i) => `<div class="slide" style="${window.fxStyle(slideF(i), 'assets/classic/banner.webp')}"></div>`).join('');
+    const slides = v.map((i) => `<div class="slide" style="${slideStyle(i)}"></div>`).join('');
     const st = indOf(B.ind);
     const ind = st === 'none' ? '' : `<div class="h5-ind ${st}" style="bottom:${sz.ib}px">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
     // 指示器叠在图片底部（真实组件）
@@ -502,25 +512,28 @@
   }
   // Banner 样式（Waydon 2026-11-26：大/通用/中/小 作为样式给业主切换，只是前端显示尺寸不同，上传统一 1020×300）
   function bannerStyles(cur) {
-    return `<div class="bs-opts">${SIZES.map((k) => { const b = BANNER[k]; const w = Math.round(b.dw / 750 * 64), h = Math.round(b.dh / 750 * 64); return `<button class="bs-opt ${cur === k ? 'is-on' : ''}" data-act="bannerSize" data-arg="${k}"><span class="bs-prev"><i style="width:${w}px;height:${h}px;background-image:url(assets/classic/banner.webp)"></i></span><b>${t('ed/banner-' + k)}</b><small>${b.dw}×${b.dh}</small></button>`; }).join('')}</div>`;
+    const prev = slideStyle(visIdx()[0] ?? 0);
+    return `<div class="bs-opts">${SIZES.map((k) => { const b = BANNER[k]; const w = Math.round(b.dw / 750 * 64), h = Math.round(b.dh / 750 * 64); return `<button class="bs-opt ${cur === k ? 'is-on' : ''}" data-act="bannerSize" data-arg="${k}" title="${esc(t('ed/banner-' + k) + ' · ' + b.dw + '×' + b.dh)}"><span class="bs-prev"><i style="width:${w}px;height:${h}px;${prev}"></i></span><b>${t('ed/banner-' + k)}</b><small>${b.dw}×${b.dh}</small></button>`; }).join('')}</div>`;
   }
   function bannerContent() {
     const B = E.D.banner, sz = BANNER[B.size];
-    const sizeSeg = bannerStyles(B.size);
     const spLine = (s, i) => (s.w !== sz.w || s.h !== sz.h ? `<button class="warn-link" data-act="openResize" data-arg="slide${i}" data-stop>${ic('warning-circle-fill', 'ic-16')}${t('ed/slide-bad', { w: s.w, h: s.h })}</button>` : `${s.w}×${s.h}`);
     const hidTag = (s) => (s.hid ? `<span class="pill-tag is-gray">${t('ed/slide-hidden')}</span>` : '');
+    // 行内眼睛（跟其它列表模块一致）；最后一张可见的不能隐藏
+    const vis = visIdx();
+    const eye = (s, i) => { const lastVis = !s.hid && vis.length <= 1; return `<button class="eye ${lastVis ? 'is-off' : ''}" data-act="amToggle" data-arg="slide${i}" data-stop ${lastVis ? 'disabled' : ''} title="${esc(t(lastVis ? 'ed/slide-keep-one' : s.hid ? 'ed/am-show' : 'ed/am-hide'))}" aria-label="${esc(t(s.hid ? 'ed/am-show' : 'ed/am-hide'))}">${ic(s.hid ? 'eye-slash-fill' : 'eye-fill', 'ic-16')}</button>`; };
+    const thumb = (i) => `<span class="thumb" style="${slideBg(B.slides[i])}"></span>`;
     const slides = B.slides.map((s, i) => {
       const grip = `<span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>`;
-      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top"><span class="thumb" style="${window.fxStyle(s.f)}"></span><span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })} · ${t('ed/previewing-slide')}</div><div class="sp">${spLine(s, i)}</div></span>${hidTag(s)}${moreBtn('slide' + i)}</div>
+      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })} · ${t('ed/previewing-slide')}</div><div class="sp">${spLine(s, i)}${hidTag(s)}</div></span>${eye(s, i)}${moreBtn('slide' + i)}</div>
         <div class="acts"><button class="btn btn-primary btn-sm" data-act="openAi">${ic('magic-wand', 'ic-16')}${t('ed/ai')}</button><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="slide${i}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="slide${i}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div></div>${uploadUI('slide' + i)}`;
-      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}"><div class="top"><span class="thumb" style="${window.fxStyle(s.f)}"></span><span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })}</div><div class="sp">${spLine(s, i)}</div></span>${hidTag(s)}${moreBtn('slide' + i)}</div></div></div>${uploadUI('slide' + i)}`;
+      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm">${t('ed/slide-n', { n: i + 1 })}</div><div class="sp">${spLine(s, i)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${eye(s, i)}${moreBtn('slide' + i)}</div></div></div>${uploadUI('slide' + i)}`;
     }).join('');
     const bad = checks().req.filter((x) => x.mod === 'banner');
     return `${bad.length ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${esc(bad[0].text)}<div class="caption faint">Banner</div></div></div>` : ''}
-      <div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${sizeSeg}<div class="p-note">${t('ed/spec-line2', sz)}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/banner-images', { n: B.slides.length })}</div><div data-drag-list="banner" class="slide-list">${slides}</div>
-        ${B.slides.length < 5 ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" data-act="addSlide">${ic('plus', 'ic-16')}${t('ed/add-slide')}</button>` : ''}<div class="p-note">${t('mp/drag-hint')}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/indicator')}</div><div class="ind-opts">${IND.map((v) => `<button class="ind-opt ${indOf(B.ind) === v ? 'is-on' : ''}" data-act="bannerInd" data-arg="${v}"><span class="ind-prev">${v === 'none' ? `<small>${t('ed/ind-none')}</small>` : `<span class="h5-ind ${v}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k === 2 ? 'on' : ''}"></i>`).join('')}</span>`}</span></button>`).join('')}</div><div class="p-note">${t('ed/ind-note')}</div></div>`;
+      <div class="p-sec"><div class="lab">${t('ed/banner-images', { n: B.slides.length })}<span class="v">${sz.w}×${sz.h}</span></div><div data-drag-list="banner" class="slide-list">${slides}</div>
+        ${B.slides.length < 5 ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" data-act="addSlide">${ic('plus', 'ic-16')}${t('ed/add-slide')}</button>` : ''}<div class="p-note">${t('ed/slide-hint')}</div><div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/slide-text-note')}</div><div class="p-note">${t('ed/slide-style-at')}<button class="tb-goto" data-act="setTab" data-arg="layout">${t('ed/tab-layout')}</button></div></div>
+      <div class="p-sec"><div class="lab">${t('ed/indicator')}</div><div class="ind-opts">${IND.map((v) => `<button class="ind-opt ${indOf(B.ind) === v ? 'is-on' : ''}" data-act="bannerInd" data-arg="${v}"><span class="ind-prev ${v === 'none' ? '' : 'on-img'}" ${v === 'none' ? '' : `style="${slideStyle(visIdx()[0] ?? 0)}"`}>${v === 'none' ? `<small>${t('ed/ind-none')}</small>` : `<span class="h5-ind ${v}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k === 2 ? 'on' : ''}"></i>`).join('')}</span>`}</span></button>`).join('')}</div><div class="p-note">${t('ed/ind-note')}</div></div>`;
   }
   function pxSeg(vals, cur, act, labels, rng) {
     return `${segBtns(vals.map((v, i) => ({ v: String(v), label: labels ? labels[i] : v + ' px' })), String(cur), act)}${pxCustom(vals, cur, act, rng)}`;
@@ -541,19 +554,33 @@
   function bannerLayout() {
     const B = E.D.banner;
     const mk = [8, 16, 24], ck = [0, 8, 16];
-    return `<div class="p-sec"><div class="lab">${t('ed/margin')}<span class="v">${B.margin} px</span></div>${pxSeg(mk, B.margin, 'bannerMargin', [t('ed/s-small'), t('ed/s-medium'), t('ed/s-large')], [0, 64, 'px'])}<div class="seg-sub">${mk.map((v) => `<span class="${v === B.margin ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
+    const same = B.size === 'general' || B.size === 'medium';
+    return `<div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${bannerStyles(B.size)}<div class="p-note">${t('ed/spec-line2', BANNER[B.size])}</div>${same ? `<div class="p-note">${t('ed/banner-gm-same')}</div>` : ''}</div>
+      <div class="p-sec"><div class="lab">${t('ed/margin')}<span class="v">${B.margin} px</span></div>${pxSeg(mk, B.margin, 'bannerMargin', [t('ed/s-small'), t('ed/s-medium'), t('ed/s-large')], [0, 64, 'px'])}<div class="seg-sub">${mk.map((v) => `<span class="${v === B.margin ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/corner')}<span class="v">${B.corner} px</span></div>${pxSeg(ck, B.corner, 'bannerCorner', [t('ed/c-none'), t('ed/s-small'), t('ed/s-large')], [0, 60, 'px'])}<div class="seg-sub">${ck.map((v) => `<span class="${v === B.corner ? 'is-on' : ''}">${v} px</span>`).join('')}</div></div>
-      <div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${bannerStyles(B.size)}<div class="p-note">${t('ed/spec-line2', BANNER[B.size])}</div></div>
       <div class="p-note">${ic('lock-fill', 'ic-16')}${t('ed/layout-note')}</div><div class="p-note">${t('ed/unit-750')}</div>`;
   }
+  // Banner 颜色（Figma 317:55531）：占位底 = ddt_bg，指示器选中 / 未选中 = text_primary（固定白，未选中 50% 透明）
+  // 存在 E.D.ec['banner.*']：空 = 跟默认 Key；'key:<名>' = 改绑另一个 Key；十六进制 = 自定义
+  const BN_SW = { 'banner.placeholder': ['bg_1', 'border', 'neutral_3', 'primary'], 'banner.indActive': ['primary', 'accent_3', 'lead', 'bg_2'], 'banner.indDef': ['bg_2', 'neutral_3', 'lead', 'primary'] };
   function bannerColor() {
-    const th = liveTheme().th;
-    const els = [['ed/el-placeholder', 'border', 'ed/use-ddt', 'ext/ddt_bg → base/border'], ['ed/el-ind-active', 'primary', 'ed/use-primary', 'base/primary'], ['ed/el-ind-def', 'neutral_3', 'ed/use-n3', 'base/neutral_3']];
-    return `<div class="p-sec">${els.map(([n, k, u, adv]) => `<button class="elrow" data-act="pick" data-arg="${k}|panel"><span class="sw" style="background:${th[k]}"></span><span><div class="body-sm" style="font-weight:500">${t(n)}</div><div class="caption faint">${t(u)}${E.adv ? ' · ' + adv : ''}</div></span>${ic('lock-fill')}</button>`).join('')}
-      ${E.picker && E.picker.where === 'panel' ? pickerHtml('in-panel') : ''}</div>
-      <div class="p-note">${t('ed/color-note')}</div>
+    const { th, ec } = liveTheme();
+    const rows = window.MP.EL.banner.map(([id, key]) => {
+      const v = E.D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
+      const defC = keyVal(key, th, ec);
+      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${defC}"></i>${t('mp/c-default')}</button>${BN_SW[id].map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? pickerHtml('in-panel', lab) : ''}</div>`;
+    }).join('');
+    return `<div class="p-sec">${rows}</div>
+      <div class="p-note">${t('ed/bn-c-note')}</div>
       <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
   }
+  A.bnColor = (arg) => { const i = arg.indexOf('|'); const id = arg.slice(0, i), v = arg.slice(i + 1) || null; if ((E.D.ec[id] || null) === v) return false; E.picker = null; commit(() => { if (v) E.D.ec[id] = v; else delete E.D.ec[id]; }); };
+  A.bnPick = (arg) => {
+    const [id, key] = arg.split('|'); if (E.picker && E.picker.elRow === id) { E.picker = null; return; }
+    const { th, ec } = liveTheme(); const v = E.D.ec[id]; const cur = (v && !v.startsWith('key:') ? v : keyVal(v ? v.slice(4) : key, th, ec) || '#ffffff').slice(0, 7);
+    E.picker = { key: 'primary', elRow: id, label: t('mp/c-' + id.replace('.', '-')), orig: cur, value: cur, where: 'el' };
+  };
   // Banner AI（ED-09）：成功才扣 20；余额不足、失败都有出口
   function aiPanel() {
     const a = E.ai, sz = BANNER[E.D.banner.size];
@@ -784,7 +811,7 @@
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
   // 布局「恢复默认」（Waydon 2026-11-26）：只恢复布局页签里的参数，内容和颜色不动
-  const LAYOUT_KEYS = { banner: ['margin', 'corner', 'size', 'ind'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
+  const LAYOUT_KEYS = { banner: ['size', 'margin', 'corner'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
   const layoutObj = (D, b) => (b === 'banner' ? D.banner : b === 'topbar' ? D.tb : (D.m || {})[b]);
   function layoutDirty(b) {
     const ks = LAYOUT_KEYS[b]; if (!ks) return false;
@@ -831,7 +858,7 @@
       <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"></label>
       <div class="caption muted" style="margin-top:8px">${t('ed/pick-suggest')}</div>
       <div class="pk-sug">${SUGGEST.map((c) => `<button style="background:${c}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
-      <div class="caption faint" style="margin-bottom:10px">${t(p.tbRow ? 'ed/pick-sync-tb' : 'ed/pick-sync')}</div>
+      <div class="caption faint" style="margin-bottom:10px">${t(p.tbRow ? 'ed/pick-sync-tb' : p.elRow && !p.elRow.startsWith('key:') ? 'ed/pick-sync-el' : 'ed/pick-sync')}</div>
       <div class="pk-foot"><button class="btn btn-secondary btn-sm" data-act="pkCancel">${t('confirm/cancel')}</button><button class="btn btn-primary btn-sm" data-act="pkApply">${t('ed/pick-apply')}</button></div></div>`;
   }
   A.pick = (arg) => { const [k, where] = arg.split('|'); const v = E.D.theme[k]; E.picker = { key: k, orig: v, value: v, where: mobileEd() ? 'sheet' : where }; S.menu = null; if (mobileEd()) { E.picker.back = ['colors', 'module'].includes(E.mpanel) ? E.mpanel : null; E.mpanel = 'picker'; } };
@@ -1120,7 +1147,8 @@
   A.bannerInd = (v) => { if (E.D.banner.ind === v) return false; commit(() => { E.D.banner.ind = v; }); };
   A.bannerMargin = (v) => { commit(() => { E.D.banner.margin = +v; }); };
   A.bannerCorner = (v) => { commit(() => { E.D.banner.corner = +v; }); };
-  A.addSlide = () => { const sz = BANNER[E.D.banner.size]; commit(() => { E.D.banner.slides.push({ f: 'hue-rotate(90deg) saturate(.8)', w: sz.w, h: sz.h }); }); setSlide(E.D.banner.slides.length - 1); };
+  // 新加的图先用模板默认图（不再偏色）
+  A.addSlide = () => { const sz = BANNER[E.D.banner.size]; commit(() => { E.D.banner.slides.push({ f: tplOf(E.D.template).slides[0] || 'none', w: sz.w, h: sz.h }); }); setSlide(E.D.banner.slides.length - 1); };
   A.tbItem = (k) => { commit(() => { E.D.tb.items[k] = !E.D.tb.items[k]; }); };
   // 顶部栏颜色：c 为空 = 恢复默认（跟绑定的 Key）；'key:<名>' = 跟整页配色的某个 Key
   A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); }); };
@@ -1268,7 +1296,7 @@
     const ratio = `aspect-ratio:${sp.w} / ${sp.h}`;
     const list = libList();
     const grid = L.loading ? `<div class="lib-grid">${[0, 1, 2, 3, 4, 5].map(() => `<div class="lib-it"><span class="im skeleton" style="${ratio}"></span><span class="skeleton sk-line"></span></div>`).join('')}</div>`
-      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = it.w !== sp.w || it.h !== sp.h; return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};${window.fxStyle(it.f)}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
+      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = it.w !== sp.w || it.h !== sp.h; return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};${window.fxStyle(it.f, L.slot.startsWith('slide') ? BANNER_DEF : '')}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
         : window.empty('stack-fill', t('ed/lib-empty'), t('ed/lib-empty-d'));
     return `<div class="dialog-head"><h3>${t('ed/lib-title', { name: sp.name, w: sp.w, h: sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>${tabs}${chips}<div class="lib-body" data-sk="lib">${grid}</div>
       <div class="dialog-foot lib-foot"><span class="caption faint">${t('ed/lib-free')}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary ${L.sel == null ? 'is-disabled' : ''}" data-act="libUse">${t('ed/lib-use')}</button></div>`;
@@ -1282,7 +1310,7 @@
   A.rsReupload = () => { E.fpSlot = E.rs.slot; E.rs = null; E.lib = null; E.dlg = 'fp'; };
   A.rsApply = () => {
     const r = E.rs; const sp = slotSpec(r.slot);
-    commit(() => { setAsset(r.slot, { f: r.f, w: sp.w, h: sp.h, fit: r.mode }); });
+    commit(() => { setAsset(r.slot, Object.assign({ f: r.f, w: sp.w, h: sp.h, fit: r.mode }, r.mode === 'pad' ? { fill: r.fill } : { x: r.x, y: r.y })); });
     E.rs = null; E.dlg = null; E.lib = null;
     window.toast(t('ed/rs-done', { w: sp.w, h: sp.h }), undoOpt());
   };
@@ -1295,8 +1323,8 @@
   function resizeBody(mobile) {
     const r = E.rs; const g = rsGeom(mobile); const th = E.D.theme;
     let stage;
-    if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;${window.fxStyle(r.f)}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px"></div></div>`;
-    else { const ratio = g.sp.w / g.sp.h; let tw = g.BW, thh = g.BW / ratio; if (thh > g.BH) { thh = g.BH; tw = g.BH * ratio; } const s = Math.min(tw / r.w, thh / r.h); stage = `<div class="rs-pad" style="width:${tw}px;height:${thh}px;background:${th[r.fill]}"><span class="rs-img in" style="width:${r.w * s}px;height:${r.h * s}px;${window.fxStyle(r.f)}"></span></div>`; }
+    if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px"></div></div>`;
+    else { const ratio = g.sp.w / g.sp.h; let tw = g.BW, thh = g.BW / ratio; if (thh > g.BH) { thh = g.BH; tw = g.BH * ratio; } const s = Math.min(tw / r.w, thh / r.h); stage = `<div class="rs-pad" style="width:${tw}px;height:${thh}px;background:${th[r.fill]}"><span class="rs-img in" style="width:${r.w * s}px;height:${r.h * s}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"></span></div>`; }
     const card = (m, icn, k) => `<button class="rcard ${r.mode === m ? 'is-on' : ''}" data-act="rsMode" data-arg="${m}">${ic(icn)}<span><b>${t(k)}</b></span></button>`;
     return `<div class="dialog-head"><h3>${t('ed/rs-title', { w: g.sp.w, h: g.sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>
       <div class="rs ${mobile ? 'is-m' : ''}"><div class="rs-stage">${stage}</div><div class="rs-opts">${card('crop', 'crop', 'ed/rs-crop')}${card('pad', 'frame-corners', 'ed/rs-pad')}
@@ -1338,7 +1366,7 @@
   A.adoptCand = () => {
     const a = E.ai; if (a.cand == null) return false;
     const slot = 'slide' + E.slide; const prev = getAsset(slot); const f = CAND_F[a.cand];
-    commit(() => { setAsset(slot, f); });
+    const sz = BANNER[E.D.banner.size]; commit(() => { setAsset(slot, { f, w: sz.w, h: sz.h }); }); // AI 图按规格出，尺寸提醒随之消失
     E.ai = null; E.replaced = { slot, prev };
     if (!E.projAssets.some((x) => x.f === f)) E.projAssets.push({ f, name: 'AI · ' + (E.projAssets.length + 1) });
     window.toast(t('ed/am-replaced'), undoOpt());
@@ -1431,7 +1459,7 @@
     const files = [['banner-spring.png', sp.w, sp.h, '820 KB', 'hue-rotate(170deg) saturate(1.3)'], ['banner-match.png', sp.w, sp.h, '1.1 MB', 'hue-rotate(-90deg)'], ['banner-old.jpg', 800, 600, '640 KB', 'grayscale(.6)']];
     return `<div class="dialog-head"><h3>${t('ed/fp-title')}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div><p class="caption muted" style="margin:0 0 12px">${t('ed/fp-note')}</p>
       <button class="btn btn-primary btn-block fp-local" data-act="fpLocal">${ic('upload-simple', 'ic-16')}${t('ed/fp-local', { w: sp.w, h: sp.h })}</button><div class="caption faint fp-or">${t('ed/fp-recent')}</div>
-      <div class="fp-grid">${files.map(([n, w, h, kb, f]) => { const ok = w === sp.w && h === sp.h; return `<button class="fp" data-act="fpPick" data-arg="${f}|${w}|${h}"><span class="im" style="${window.fxStyle(f)};aspect-ratio:${sp.w} / ${sp.h}"></span><span class="n ellipsis">${n}</span><span class="s ${ok ? '' : 'bad'}">${w}×${h} · ${kb}${ok ? '' : ' · ' + t('ed/lib-bad')}</span></button>`; }).join('')}</div>`;
+      <div class="fp-grid">${files.map(([n, w, h, kb, f]) => { const ok = w === sp.w && h === sp.h; return `<button class="fp" data-act="fpPick" data-arg="${f}|${w}|${h}"><span class="im" style="${window.fxStyle(f, (E.fpSlot || 'slide0').startsWith('slide') ? BANNER_DEF : '')};aspect-ratio:${sp.w} / ${sp.h}"></span><span class="n ellipsis">${n}</span><span class="s ${ok ? '' : 'bad'}">${w}×${h} · ${kb}${ok ? '' : ' · ' + t('ed/lib-bad')}</span></button>`; }).join('')}</div>`;
   }
   function dialogs() {
     if (!E.dlg) return '';
@@ -1616,7 +1644,7 @@
     if (E.palOpen) { E.palOpen = false; }
   }
 
-  window.EDX = { E, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
+  window.EDX = { E, slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };

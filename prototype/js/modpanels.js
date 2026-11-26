@@ -43,6 +43,8 @@
 
   // 元素颜色：[元素 ID, 默认取的基础色 Key]
   const EL = {
+    // Banner（Figma 317:55531）：占位底 = ddt_bg（兜底图底板），指示器选中 / 未选中 = text_primary（Figma 固定 #FFFFFF，未选中叠 50% 透明度）
+    banner: [['banner.placeholder', 'ddt_bg'], ['banner.indActive', 'text_primary'], ['banner.indDef', 'text_primary']],
     jackpot: [['jackpot.bg', 'primary'], ['jackpot.title', 'bg_2'], ['jackpot.amount', 'bg_2']],
     notice: [['notice.bg', 'bg_2'], ['notice.text', 'lead'], ['notice.hl', 'accent_2'], ['notice.num', 'accent_3']],
     midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary'], ['midnav.btn', 'primary']],
@@ -56,7 +58,9 @@
   const cssVar = (id) => '--e-' + id.replace('.', '-');
   function vars(th, ec) {
     let s = '';
-    for (const b in EL) for (const [id, k] of EL[b]) s += `;${cssVar(id)}:${ec[id] || th[k]}`;
+    // 元素色可存十六进制，或 'key:<名>' 引用 68 Key（换整页配色时跟着变）；默认 Key 也可以是扩展 Key（如 ddt_bg）
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    for (const b in EL) for (const [id, k] of EL[b]) { const v = ec[id]; s += `;${cssVar(id)}:${v && v.startsWith('key:') ? kv(v.slice(4)) : v || kv(k)}`; }
     return s;
   }
   const M = (b) => X().E.D.m[b];

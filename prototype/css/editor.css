@@ -238,10 +238,11 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .h5-top .sp { flex: 1; }
 .h5-top .ico { width: 20px; height: 20px; color: var(--tb-side, var(--o-lead)); }
 .h5-top .ico-img { width: 24px; height: 24px; object-fit: contain; display: block; }
-.h5-banner { background: var(--o-bg_1); }
-.h5-banner .vp { position: relative; overflow: hidden; margin: 0 auto; background: var(--o-ext_ddt_bg, var(--o-border)); touch-action: pan-y; }
+/* Banner 外层透明（Figma 317:55530 无填充，透出页面底色）；占位底 = ddt_bg（EL banner.placeholder） */
+.h5-banner { background: transparent; }
+.h5-banner .vp { position: relative; overflow: hidden; margin: 0 auto; background: var(--e-banner-placeholder, var(--o-border)); touch-action: pan-y; }
 .h5-banner .track { display: flex; height: 100%; transition: transform .4s ease; }
-.h5-banner .slide { flex: 0 0 100%; height: 100%; background: center / cover url(../assets/hero-1440x480.jpg); }
+.h5-banner .slide { flex: 0 0 100%; height: 100%; background: center / cover url(../assets/classic/banner.webp); }
 .h5-ind { display: flex; justify-content: center; gap: 4px; padding: 6px 0 2px; }
 .h5-ind i { width: 5px; height: 5px; border-radius: 50%; background: var(--o-neutral_3); cursor: pointer; }
 .h5-ind.bars i { width: 8px; height: 3px; border-radius: 2px; }
@@ -809,21 +810,24 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .tb-item .thumb.sq img { padding: 6px; box-sizing: border-box; }
 /* Banner 指示器 4 种样式（真实组件 317:55641，750 稿 ÷2）：叠在图片底部 */
 .h5-banner .vp .h5-ind { position: absolute; left: 0; right: 0; bottom: 5px; padding: 0; gap: 6px; align-items: center; }
-.h5-ind.s1 i, .h5-ind.s2 i, .h5-ind.s3 i, .h5-ind.s4 i { border: 0; box-sizing: border-box; }
-.h5-ind.s1 { gap: 6px; } .h5-ind.s1 i { width: 4px; height: 4px; border-radius: 2px; background: #ffffff80; } .h5-ind.s1 i.on { width: 12px; background: #fff; }
-.h5-ind.s2 { gap: 5px; } .h5-ind.s2 i { width: 5px; height: 5px; border-radius: 50%; background: #ffffff80; } .h5-ind.s2 i.on { background: #fff; }
-.h5-ind.s3 { gap: 5px; } .h5-ind.s3 i { width: 6px; height: 6px; border-radius: 50%; background: none; border: 1px solid #fff; } .h5-ind.s3 i.on { background: #fff; }
-.h5-ind.s4 { gap: 4px; } .h5-ind.s4 i { width: 13.5px; height: 3px; border-radius: 1.5px; background: #ffffff80; } .h5-ind.s4 i.on { background: #fff; width: 13.5px; }
+/* 指示器（Figma 317:55641）：选中 / 未选中都绑 text_primary（固定白），未选中 50% 透明；外描边 #000 25% / 选中 50%，浅色图上也看得见 */
+.h5-ind.s1 i, .h5-ind.s2 i, .h5-ind.s3 i, .h5-ind.s4 i { --ind-d: var(--e-banner-indDef, #fff); --ind-a: var(--e-banner-indActive, #fff); border: 0; box-sizing: border-box; background: color-mix(in srgb, var(--ind-d) 50%, transparent); box-shadow: 0 0 0 .5px #00000040; }
+.h5-ind.s1 i.on, .h5-ind.s2 i.on, .h5-ind.s4 i.on { background: var(--ind-a); box-shadow: 0 0 0 .5px #00000080; }
+.h5-ind.s1 { gap: 3.5px; } .h5-ind.s1 i { width: 3.5px; height: 3.5px; border-radius: 2px; } .h5-ind.s1 i.on { width: 8.5px; }
+.h5-ind.s2 { gap: 4px; } .h5-ind.s2 i { width: 4.5px; height: 4.5px; border-radius: 50%; }
+.h5-ind.s3 { gap: 4px; } .h5-ind.s3 i { width: 5.5px; height: 5.5px; border-radius: 50%; background: none; border: 1px solid color-mix(in srgb, var(--ind-d) 70%, transparent); } .h5-ind.s3 i.on { background: var(--ind-a); border-color: var(--ind-a); box-shadow: 0 0 0 .5px #00000080; }
+.h5-ind.s4 { gap: 4px; } .h5-ind.s4 i { width: 13.5px; height: 3px; border-radius: 1.5px; }
 .h5-banner.sz-small .vp .h5-ind { gap: 3px; transform: scale(.7); }
 .ind-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.ind-opt { height: 40px; border-radius: 10px; background: var(--fill-3); display: flex; align-items: center; justify-content: center; border: 1.5px solid transparent; }
+.ind-opt { height: 40px; border-radius: 10px; background: var(--fill-3); display: flex; align-items: center; justify-content: center; border: 1.5px solid transparent; overflow: hidden; padding: 2px; }
 .ind-opt.is-on { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
 .ind-opt .ind-prev { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .ind-opt .ind-prev .h5-ind { display: flex; padding: 0; transform: scale(.85); }
 .ind-opt .ind-prev .h5-ind i { cursor: default; }
-.ind-opt:not(.is-on) .ind-prev .h5-ind i { filter: brightness(.7); }
 .ind-opt small { font-size: 11px; color: var(--text-2); }
-:root[data-theme="light"] .ind-opt .ind-prev .h5-ind, .ind-opt .ind-prev .h5-ind { background: #1678ff; border-radius: 6px; padding: 5px 6px; }
+/* 指示器预览叠在当前 Banner 图上（跟画布一致） */
+.ind-opt .ind-prev.on-img { background: center / cover no-repeat; border-radius: 8px; align-items: flex-end; padding-bottom: 6px; }
+.ind-opt .ind-prev .h5-ind { transform: scale(1.25); }
 /* 悬浮编辑工具（Waydon 2026-11-26）：放到选中模块右侧，竖排 */
 .seltool { left: calc(100% + 12px); right: auto; top: 0; bottom: auto; transform: none; flex-direction: column; align-items: stretch; gap: 2px; padding: 4px; }
 .seltool.below { top: 0; }
@@ -1059,3 +1063,15 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .tb-goto:hover { text-decoration: underline; }
 .tb-item .ib-s.tb-ai { color: var(--brand); }
 .tb-item .ib-s.tb-ai:hover { background: var(--brand-subtle); color: var(--brand); }
+
+/* Banner 轮播图行：行内眼睛、未展开行的「编辑」提示 */
+.slide-list .asset .top .eye { height: 28px; border-radius: 6px; align-items: center; }
+.slide-list .asset .top .eye:hover:not(:disabled) { background: var(--bg-hover); }
+.slide-list .asset .top .eye:disabled { color: var(--icon-3); cursor: not-allowed; }
+.slide-list .asset.compact { cursor: pointer; }
+.slide-list .asset .top { gap: 8px; }
+.slide-list .asset .top > .thumb + span { flex: 1; }
+.slide-list .asset .top .more-btn { margin-left: 0; }
+.slide-list .slide-edit { display: inline-flex; align-items: center; justify-content: center; width: 20px; flex: none; color: var(--icon-3); }
+.slide-list .asset.compact:hover .slide-edit { color: var(--link); }
+.tx-auto .sw-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; border: var(--stroke-thin) solid var(--border); }

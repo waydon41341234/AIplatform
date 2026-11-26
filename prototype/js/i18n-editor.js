@@ -228,4 +228,16 @@ Object.assign(window.I18N, {
   'ed/tb-c-bal': ['余额框的颜色在「内容 › 余额框」里修改。', '餘額框的顏色在「內容 › 餘額框」裡修改。', 'Balance box colors are in Content › Balance box.', 'Màu ô số dư ở Nội dung › Ô số dư.'],
   'ed/pick-sync-tb': ['画布已实时预览，只改顶部栏', '畫布已即時預覽，只改頂部欄', 'Previewing live. Applies to the top bar only.', 'Đang xem trước, chỉ áp dụng cho thanh trên cùng'],
   'tx/tb-bal': ['余额金额', '餘額金額', 'Balance amount', 'Số dư'],
+  // Banner（2026-11-26 整理）
+  'ed/pick-sync-el': ['画布已实时预览，只改这个模块', '畫布已即時預覽，只改這個模組', 'Previewing live. Applies to this module only.', 'Đang xem trước, chỉ áp dụng cho mô-đun này.'],
+  'ed/slide-edit': ['编辑', '編輯', 'Edit', 'Sửa'],
+  'ed/slide-hint': ['拖动排序；眼睛控制是否显示，至少保留 1 张', '拖動排序；眼睛控制是否顯示，至少保留 1 張', 'Drag to reorder. The eye shows or hides a slide; keep at least 1.', 'Kéo để sắp xếp. Biểu tượng mắt ẩn/hiện ảnh; giữ ít nhất 1 ảnh.'],
+  'ed/slide-text-note': ['Banner 上的标题文字是图片的一部分，改文字请重新上传或用 AI 生成', 'Banner 上的標題文字是圖片的一部分，改文字請重新上傳或用 AI 生成', 'Text on a banner is part of the image. To change it, upload a new image or generate one with AI.', 'Chữ trên banner là một phần của ảnh. Muốn đổi chữ, hãy tải ảnh mới hoặc tạo bằng AI.'],
+  'ed/slide-style-at': ['Banner 样式（大 / 通用 / 中 / 小）在', 'Banner 樣式（大 / 通用 / 中 / 小）在', 'Banner style (large / standard / medium / small) is under', 'Kiểu banner (lớn / chuẩn / vừa / nhỏ) nằm ở'],
+  'ed/banner-gm-same': ['「通用」和「中」在设计规范里显示尺寸相同（708×208），可任选其一', '「通用」和「中」在設計規範裡顯示尺寸相同（708×208），可任選其一', 'Standard and Medium have the same display size in the spec (708×208). Either one works.', 'Chuẩn và Vừa có cùng cỡ hiển thị trong chuẩn (708×208). Chọn cái nào cũng được.'],
+  'ed/bn-c-def': ['跟随默认颜色用途', '跟隨預設顏色用途', 'Follow the default color use', 'Theo công dụng màu mặc định'],
+  'ed/bn-c-note': ['色块是整页配色里的颜色，换配色会跟着变；指示器未选中的点自动半透明', '色塊是整頁配色裡的顏色，換配色會跟著變；指示器未選中的點自動半透明', 'Swatches come from the page palette and follow palette changes. Inactive indicator dots are drawn at 50% opacity.', 'Các ô màu lấy từ bảng màu trang và đổi theo bảng màu. Chấm chỉ báo chưa chọn tự mờ 50%.'],
+  'mp/c-banner-placeholder': ['图片加载前的底色', '圖片載入前的底色', 'Fill before the image loads', 'Nền trước khi ảnh tải'],
+  'mp/c-banner-indActive': ['指示器 · 当前', '指示器 · 目前', 'Indicator · current', 'Chỉ báo · hiện tại'],
+  'mp/c-banner-indDef': ['指示器 · 其它', '指示器 · 其他', 'Indicator · others', 'Chỉ báo · còn lại'],
 });
