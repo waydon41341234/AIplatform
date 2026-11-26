@@ -303,9 +303,10 @@
     const D = E.D, tb = D.tb, it = tb.items;
     const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
     // 经典蓝白：Logo 图 + 币种切换 + 带文字的搜索
-    const search = it.search ? `<span class="srch-cl"><img src="assets/classic/search.png" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
+    const tic = tb.icons || {};
+    const search = it.search ? `<span class="srch-cl"><img src="${tic.search || 'assets/classic/search.png'}" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
     // 币种框：外框 border、文案 neutral_2（Waydon 2026-11-26）
-    const cur = it.cur && !D.login ? `<span class="cur-cl"><img src="assets/classic/bal-sym.png" alt=""><b>CNY</b><i></i></span>` : '';
+    const cur = it.cur && !D.login ? `<span class="cur-cl"><img src="${tic.cur || 'assets/classic/bal-sym.png'}" alt=""><b>CNY</b><i></i></span>` : '';
     const logo = it.logo ? `<span class="lg lg-cl" style="filter:${tb.logoF}"><img src="assets/classic/logo.png" alt="GAMING"></span>` : '';
     // 未登录：顶部栏只留币种切换，不显示余额框 / 登录注册 / 头像（Waydon 2026-11-26，登录入口在帐户栏）
     const auth = it.auth && D.login ? balHtml() : ''; // 头像不放顶部栏（Waydon 2026-11-26）
@@ -549,6 +550,25 @@
         <div class="p-note">${t('ed/cost-ai')}</div><div class="p-note" style="margin-top:2px">${t('ed/spec-line', sz)}</div></div>
       ${a.stage !== 'idle' ? `<div class="p-sec"><div class="lab">${t('ed/ai-candidates')}</div>${cands}</div>` : ''}`;
   }
+  // ---------- 顶部栏图标 AI 生成（模拟；样图由 Figma generate_image 生成，Waydon 2026-11-26） ----------
+  const TB_AI = ['glossy', 'flat', 'blackgold', 'festive', 'neon']; const TB_AI_COST = 40; const AIT = 'assets/ai-tb/';
+  A.tbAiStyle = (v) => { E.tbAi = Object.assign({}, E.tbAi, { style: v, stage: (E.tbAi || {}).stage === 'busy' ? 'busy' : 'setup' }); };
+  A.tbAiGen = () => {
+    const st = (E.tbAi || {}).style || 'glossy';
+    if (!afford(TB_AI_COST)) { topup(); return false; }
+    E.tbAi = { style: st, stage: 'busy' };
+    setTimeout(() => { if (!E.tbAi || E.tbAi.stage !== 'busy') return; if (fail()) { E.tbAi.stage = 'failed'; window.toast(t('mp/ai-failed'), { info: true }); } else { pay(TB_AI_COST, 'iconset', { type: t('mod/topbar') }); E.tbAi = { style: st, stage: 'done', res: st }; } window.render(); }, 1400);
+  };
+  A.tbAiUse = () => { const r = (E.tbAi || {}).res; if (!r) return false; commit(() => { E.D.tb.icons = { search: AIT + 'search-' + r + '.png', cur: AIT + 'cur-' + r + '.png' }; }); E.tbAi = { style: r, stage: 'setup' }; window.toast(t('ed/tbai-used'), undoOpt()); };
+  A.tbAiReset = () => { if (!E.D.tb.icons) return false; commit(() => { delete E.D.tb.icons; }); window.toast(t('ed/tbai-reset'), undoOpt()); };
+  function tbAiSec() {
+    const a = E.tbAi || {}, st = a.style || 'glossy', busy = a.stage === 'busy';
+    const tiles = `<div class="tbai-opts">${TB_AI.map((v) => `<button class="tbai-opt ${st === v ? 'is-on' : ''}" data-act="tbAiStyle" data-arg="${v}" ${busy ? 'disabled' : ''}><span><img src="${AIT}search-${v}.png" alt=""><img src="${AIT}cur-${v}.png" alt=""></span><small>${t('ed/tbai-' + v)}</small></button>`).join('')}</div>`;
+    const res = a.stage === 'done' ? `<div class="tbai-res"><span class="pv"><img src="${AIT}search-${a.res}.png" alt=""><img src="${AIT}cur-${a.res}.png" alt=""></span><div class="r2"><button class="btn btn-primary btn-sm" data-act="tbAiUse">${ic('check', 'ic-16')}${t('ed/tbai-use')}</button><button class="btn btn-secondary btn-sm" data-act="tbAiGen">${ic('arrow-clockwise', 'ic-16')}${t('ed/tbai-again', { n: TB_AI_COST })}</button></div></div>` : '';
+    const btn = busy ? `<button class="btn btn-primary btn-block is-loading" disabled>${ic('spinner-gap', 'ic-16 spin')}${t('ed/tbai-busy')}</button>`
+      : a.stage === 'done' ? '' : `<button class="btn btn-primary btn-block" data-act="tbAiGen">${ic('sparkle-fill', 'ic-16')}${t('ed/tbai-gen', { n: TB_AI_COST })}</button>`;
+    return `<div class="p-sec tbai"><div class="lab">${t('ed/tbai-title')}${E.D.tb.icons ? `<button class="tx-reset" style="margin-left:auto" data-act="tbAiReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div><div class="p-note">${t('ed/tbai-note')}</div>${tiles}${res}${btn}</div>`;
+  }
   function tbContent() {
     // 顶部栏内容（Waydon 2026-11-26 排版优化）：分组列表，每行 拖动 · 缩略图 · 名称/规格 · ⋯ · 眼睛 都在同一张卡内
     const D = E.D, it = D.tb.items;
@@ -556,8 +576,8 @@
     const row = (k, thumb, name, spec, grip = true) => `<div class="tb-item ${it[k] ? '' : 'is-hidden'}">${grip ? `<span class="grip" ${k === 'side' || k === 'search' ? 'data-act="tbSwap"' : ''}>${ic('dots-six-vertical', 'ic-16')}</span>` : ''}${thumb}<span class="tx"><b class="ellipsis">${name}</b>${spec ? `<small class="ellipsis">${spec}</small>` : ''}</span>${moreBtn('tb-' + k)}${eye(k)}</div>`;
     const ups = (ks) => ks.map((k) => uploadUI('tb-' + k)).join('');
     const sideRow = row('side', `<span class="thumb sq">${ic('list')}</span>`, t('ed/tb-sideicon'), '48×48');
-    const searchRow = row('search', `<span class="thumb sq"><img src="assets/classic/search.png" alt=""></span>`, t('ed/tb-search'), '56×49');
-    const curRow = row('cur', `<span class="thumb sq"><img src="assets/classic/bal-sym.png" alt=""></span>`, t('ed/tb-cur'), '52×52');
+    const searchRow = row('search', `<span class="thumb sq"><img src="${(D.tb.icons || {}).search || 'assets/classic/search.png'}" alt=""></span>`, t('ed/tb-search'), '56×49');
+    const curRow = row('cur', `<span class="thumb sq"><img src="${(D.tb.icons || {}).cur || 'assets/classic/bal-sym.png'}" alt=""></span>`, t('ed/tb-cur'), '52×52');
     const entries = (D.login ? '' : curRow) + (D.tb.searchFirst ? searchRow + sideRow : sideRow + searchRow);
     const pos = `<div class="tb-item tb-pos"><span class="tx"><b>${t('ed/side-pos')}</b></span><div class="iseg">${['left', 'right'].map((v) => `<button class="${D.side === v ? 'is-on' : ''}" data-act="setSide" data-arg="${v}">${t('ed/side-' + v)}</button>`).join('')}</div></div>`;
     const auth = `<div class="tb-item ${it.auth ? '' : 'is-hidden'}"><span class="thumb sq">${ic(D.login ? 'wallet-fill' : 'sign-in-fill')}</span><span class="tx"><b class="ellipsis">${t(D.login ? 'ed/tb-balance' : 'ed/tb-auth')}</b></span>${eye('auth')}</div>`;
@@ -650,7 +670,7 @@
     const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
-    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + (E.D.login && E.D.tb.items.auth ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
+    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + tbAiSec() + (E.D.login && E.D.tb.items.auth ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
     if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'midnav' ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
