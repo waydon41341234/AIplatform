@@ -236,16 +236,63 @@
     const fixed = MODS[baseName(id)].fixed;
     return `<div class="menu" data-stop>${fixed ? '' : `<button class="menu-item" data-act="modDup" data-arg="${id}" data-stop>${ic('copy')}${t('ed/menu-duplicate')}</button>`}<button class="menu-item" data-act="modReset" data-arg="${id}" data-stop>${ic('arrow-counter-clockwise')}${t('ed/menu-reset')}</button><button class="menu-item is-danger" data-act="modDel" data-arg="${id}" data-stop>${ic('trash')}${t('ed/menu-delete')}</button></div>`;
   }
-  // 余额框样式（Waydon 2026-11-26「余额框样式可选」）：pill 描边胶囊 / solid 实底+充值 / text 图标+金额
-  const BAL_STYLES = ['pill', 'solid', 'text'];
-  const balHtml = (st, amt = '¥ 1,280.00') => {
-    st = BAL_STYLES.includes(st) ? st : 'pill';
-    if (st === 'solid') return `<span class="bal bal-solid">${ic('wallet-fill', 'bi')}${amt}<i class="bplus">${ic('plus', 'bi')}</i></span>`;
-    if (st === 'text') return `<span class="bal bal-text">${ic('wallet-fill', 'bi')}${amt}</span>`;
-    return `<span class="bal">${amt}</span>`;
-  };
-  window.balHtml = (st) => balHtml(st || (E.D && E.D.tb && E.D.tb.balStyle));
-  A.tbBal = (v) => { if (!BAL_STYLES.includes(v) || E.D.tb.balStyle === v) return false; commit(() => { E.D.tb.balStyle = v; }); };
+  // ---------- 余额框（Waydon 2026-11-26：用通用组件「余额刷新 / 展示名称自行选择」334:67053，支持改图标、文字、颜色） ----------
+  // 模式 = 通用组件的「功能」变体：默认（国旗）/ 无币种 / 币种切换 / 特小 / 特小无底
+  const BAL_MODES = ['default', 'nocur', 'switch', 'small', 'bare'];
+  const CLA = 'assets/classic/';
+  const BAL_DEF = { mode: 'default', head: 'vip', greet: 'Olá', act: 'copy', curImg: null, refImg: null, c: {} };
+  const balCfg = (D) => { D = D || E.D; const b = Object.assign({}, BAL_DEF, (D && D.bal) || {}); b.c = Object.assign({}, (D && D.bal && D.bal.c) || {}); return b; };
+  const BAL_C = [['amt', 'ed/bal-c-amt', 'accent_3'], ['bd', 'ed/bal-c-bd', 'border'], ['bg', 'ed/bal-c-bg', 'bg_2'], ['ic', 'ed/bal-c-ic', 'primary']];
+  function balBox(cfg, amt = '1,232,345,678.90') {
+    cfg = cfg || balCfg(); const m = BAL_MODES.includes(cfg.mode) ? cfg.mode : 'default', c = cfg.c || {};
+    const st = `${c.amt ? `--bx-amt:${c.amt};` : ''}${c.bd ? `--bx-bd:${c.bd};` : ''}${c.bg ? `--bx-bg:${c.bg};` : ''}${c.ic ? `--bx-ic:${c.ic};` : ''}`;
+    const cur = m === 'nocur' ? '' : m === 'switch' ? `<img class="cur" src="${cfg.curImg || CLA + 'bal-sym.png'}" alt=""><i class="xch">⇆</i>` : `<img class="cur" src="${cfg.curImg || CLA + 'bal-flag.png'}" alt="">`;
+    const rf = cfg.refImg ? `<img class="rf" src="${cfg.refImg}" alt="">` : `<i class="rf" style="-webkit-mask-image:url(${CLA}bal-refresh.png);mask-image:url(${CLA}bal-refresh.png)"></i>`;
+    return `<span class="bx m-${m}" style="${st}">${cur}<b>${amt}</b>${rf}</span>`;
+  }
+  function balUser(cfg, name = 'huiyuan123456') {
+    cfg = cfg || balCfg();
+    const head = cfg.head === 'vip' ? `<img class="vip" src="${CLA}bal-vip2.png" alt="VIP">` : cfg.head === 'greet' ? `<span class="greet">${esc(cfg.greet || '')}</span>` : '';
+    const act = cfg.act === 'copy' ? `<img class="act" src="${CLA}bal-copy.png" alt="">` : cfg.act === 'switch' ? `<img class="act" src="${CLA}bal-switch.png" alt="">` : '';
+    return `<span class="bxu">${head}<img class="cv" src="${CLA}bal-caret.png" alt=""><b>${esc(name)}</b>${act}</span>`;
+  }
+  window.balBox = (amt) => balBox(balCfg(), amt);
+  window.balUser = () => balUser(balCfg());
+  window.balHtml = () => balBox(balCfg(), '1,280.00'); // 顶部栏 / PC 顶部栏共用
+  const balHtml = () => window.balHtml();
+  const balSet = (fn) => commit(() => { E.D.bal = Object.assign({}, BAL_DEF, E.D.bal || {}); E.D.bal.c = Object.assign({}, E.D.bal.c || {}); fn(E.D.bal); });
+  A.balMode = (v) => { if (!BAL_MODES.includes(v) || balCfg().mode === v) return false; balSet((b) => { b.mode = v; }); };
+  A.balHead = (v) => { if (balCfg().head === v) return false; balSet((b) => { b.head = v; }); };
+  A.balAct = (v) => { if (balCfg().act === v) return false; balSet((b) => { b.act = v; }); };
+  A.balColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), v = arg.slice(i + 1); balSet((b) => { if (v) b.c[k] = v; else delete b.c[k]; }); };
+  A.balImgReset = (k) => { balSet((b) => { b[k] = null; }); };
+  A.balAll = () => { commit(() => { delete E.D.bal; }); window.toast(t('ed/bal-reset-done'), undoOpt()); };
+  document.addEventListener('change', (e) => {
+    const el = e.target; if (!el.matches) return;
+    if (el.matches('[data-balgreet]')) { const v = el.value.trim().slice(0, 12); balSet((b) => { b.greet = v; }); window.render(); }
+    else if (el.matches('[data-balcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { const k = el.dataset.balcolor; balSet((b) => { b.c[k] = el.value.toLowerCase(); }); window.render(); }
+    else if (el.matches('[data-balimg]') && el.files && el.files[0]) {
+      const k = el.dataset.balimg, f = el.files[0];
+      if (!/^image\//.test(f.type)) { window.toast(t('ed/bal-img-bad'), { info: true }); return; }
+      const r = new FileReader(); r.onload = () => { balSet((b) => { b[k] = r.result; }); window.render(); }; r.readAsDataURL(f);
+    }
+  });
+  function balSec() {
+    const cfg = balCfg(), th = liveTheme().th;
+    const modes = `<div class="bx-opts">${BAL_MODES.map((m) => `<button class="bx-opt ${cfg.mode === m ? 'is-on' : ''}" data-act="balMode" data-arg="${m}"><span class="bx-prev">${balBox(Object.assign({}, cfg, { mode: m }), '1,232.90')}</span><small>${t('ed/bal-m-' + m)}</small></button>`).join('')}</div>`;
+    const seg3 = (opts, cur, act) => segBtns(opts.map((v) => ({ v, label: t('ed/bal-' + act.slice(3).toLowerCase() + '-' + v) })), cur, act);
+    const imgRow = (k, def, lab, spec) => `<div class="bx-img"><span class="thumb sq"><img src="${cfg[k] || def}" alt=""></span><span class="tx"><b>${t(lab)}</b><small>${spec}</small></span><label class="btn btn-secondary btn-sm">${ic('upload-simple', 'ic-16')}${t('ed/upload')}<input type="file" accept="image/*" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
+    const sw = (k, base) => { const cur = (cfg.c[k] || '').toLowerCase(); const list = [th[base], th.primary, th.accent_3, th.accent_2, th.lead, th.bg_2, th.border].map((x) => x.toLowerCase()).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6); return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${list.map((x) => `<button class="sw-btn ${cur === x ? 'is-on' : ''}" style="background:${x}" data-act="balColor" data-arg="${k}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${cur && !list.includes(cur) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${cur || th[base]}"></label></div>`; };
+    const dirty = !!E.D.bal;
+    return `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}${dirty ? `<button class="tx-reset" style="margin-left:auto" data-act="balAll">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
+      ${E.D.login ? '' : `<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/bal-login-hint')} <button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button></div>`}
+      <div class="bx-lab">${t('ed/bal-mode')}</div>${modes}
+      <div class="bx-lab">${t('ed/bal-head')}</div>${seg3(['vip', 'greet', 'none'], cfg.head, 'balHead')}${cfg.head === 'greet' ? `<input class="input" style="margin-top:8px" maxlength="12" value="${esc(cfg.greet)}" data-balgreet placeholder="${esc(t('ed/bal-greet-ph'))}">` : ''}
+      <div class="bx-lab">${t('ed/bal-act')}</div>${seg3(['copy', 'switch', 'none'], cfg.act, 'balAct')}
+      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'ed/bal-i-cur', '52×52 · PNG')}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30 · PNG')}
+      <div class="bx-lab">${t('ed/bal-colors')}</div>${BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('')}
+      <div class="p-note">${t('ed/bal-note')}</div></div>`;
+  }
   function h5Topbar() {
     const D = E.D, tb = D.tb, it = tb.items;
     const side = it.side ? `<span data-act="h5Side" data-stop>${ic('list', 'ico')}</span>` : '';
@@ -253,7 +300,7 @@
     const search = it.search ? `<span class="srch-cl"><img src="assets/classic/search.png" alt=""><small>${t('ed/tb-search')}</small></span>` : '';
     const cur = it.cur ? `<img class="cur-cl" src="assets/classic/cur.png" alt="CNY">` : '';
     const logo = it.logo ? `<span class="lg lg-cl" style="filter:${tb.logoF}"><img src="assets/classic/logo.png" alt="GAMING"></span>` : '';
-    const auth = it.auth ? (D.login ? `${balHtml(tb.balStyle)}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
+    const auth = it.auth ? (D.login ? `${balHtml()}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
     const left = D.side === 'left' ? side : '';
     const right = D.side === 'right' ? side : '';
     const pre = tb.searchFirst ? search : '';
@@ -501,7 +548,7 @@
     return `<div class="p-sec"><div class="lab">${t('ed/tb-state')}</div>${segBtns([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin')}</div>
       <div class="p-sec"><div class="lab">${t('ed/tb-logo')}</div><div class="tb-group">${row('logo', `<span class="thumb logo" style="filter:${D.tb.logoF}"><img src="assets/classic/logo.png" alt=""></span>`, 'Logo', '230×76 · PNG / SVG', false)}</div>${ups(['logo'])}</div>
       <div class="p-sec"><div class="lab">${t('ed/tb-entries')}</div><div class="tb-group">${entries}${pos}</div>${ups(['cur', 'side', 'search'])}</div>
-      <div class="p-sec"><div class="tb-group">${auth}${D.login && it.auth ? `<div class="tb-item tb-balst"><span class="tx"><b>${t('ed/bal-style')}</b></span></div><div class="bal-opts">${BAL_STYLES.map((v) => `<button class="bal-opt ${(D.tb.balStyle || 'pill') === v ? 'is-on' : ''}" data-act="tbBal" data-arg="${v}"><span class="bal-prev">${balHtml(v, '¥ 1,280')}</span><small>${t('ed/bal-' + v)}</small></button>`).join('')}</div>` : ''}</div><div class="p-note">${t(D.login ? 'ed/tb-balance-note' : 'ed/tb-auth-note')}</div></div>
+      <div class="p-sec"><div class="tb-group">${auth}</div><div class="p-note">${t(D.login ? 'ed/tb-balance-note' : 'ed/tb-auth-note')}</div></div>
       <div class="p-note">${t('ed/tb-del-note')}</div><div class="p-note">${t('ed/tb-fixed')}</div>`;
   }
   function tbLayout() {
@@ -520,7 +567,7 @@
   const TXT = {
     topbar: [['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 10, 400]],
     notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 12, 400]],
-    midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.cl-user .u b', '.cl-user .u b', 11, 500], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bl b', '.cl-user .bl b', 11, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
+    midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.bx b', '.bx b', 12, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],
     gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm, .h5-gc .c', '.cl-gc .nm, .h5-gc .c', 11.5, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 12, 400]],
     bottomnav: [['bottomnav.name', 'tx/bottomnav-name', '.h5-bnav .it', '.h5-bnav .it:not(.on)', 10, 400]],
@@ -587,8 +634,8 @@
     const head = `<h2 class="p-title">${esc(modName(id))}${adBtn}</h2>`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
-    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? txtSec(b) : E.tab === 'layout' ? layoutResetBtn(b) : '');
+    if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + (E.D.tb.items.auth ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'midnav' ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }

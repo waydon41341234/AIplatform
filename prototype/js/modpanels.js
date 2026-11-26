@@ -173,7 +173,7 @@
       // 帐户栏（经典蓝白）：左边 未登录=登录/注册，已登录=VIP·用户名·余额；右边 4 个入口
       const login = X().E.D.login; const v = vis('midnav');
       const acct = m.layout === 'account' ? (login
-        ? `<div class="cl-user"><div class="u"><img class="vip" src="${CL}vip.png" alt="">${ic('caret-down', 'cv')}<b>huiyuan123456</b><img class="sw" src="${CL}swap.png" alt=""></div><div class="bl"><i>¥</i><b>1,234,567,890.99</b>${ic('arrow-counter-clockwise', 'rf')}</div></div>`
+        ? `<div class="cl-user">${window.balUser ? window.balUser() : ''}${window.balBox ? window.balBox() : ''}</div>`
         : `<div class="cl-user out"><span class="lg">${t('mp/acct-login')}</span><span class="rg">${t('mp/acct-reg')}</span></div>`) : '';
       return `<div class="cl-acct ${acct ? '' : 'no-acct'}">${acct}<div class="cl-ent" style="grid-template-columns:repeat(${acct ? v.length : m.per},1fr)">${v.map((it) => { const i = m.items.indexOf(it); const src = it.img || it.def; const focus = S().menu === 'icon:midnav|' + i; return `<div class="it"><span class="ib ${src ? 'cu' : it.i ? '' : 'ph'} ${focus ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${src ? img(src) : ic(it.i || 'plus')}${login && it.badge ? `<i class="bd">${esc(it.badge)}</i>` : ''}</span><span class="nm">${esc(nm(it))}</span>${focus ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
     }
