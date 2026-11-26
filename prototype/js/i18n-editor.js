@@ -240,4 +240,17 @@ Object.assign(window.I18N, {
   'mp/c-banner-placeholder': ['图片加载前的底色', '圖片載入前的底色', 'Fill before the image loads', 'Nền trước khi ảnh tải'],
   'mp/c-banner-indActive': ['指示器 · 当前', '指示器 · 目前', 'Indicator · current', 'Chỉ báo · hiện tại'],
   'mp/c-banner-indDef': ['指示器 · 其它', '指示器 · 其他', 'Indicator · others', 'Chỉ báo · còn lại'],
+  // 公告栏（2026-11-26 整理）
+  'mp/c-notice-icon': ['喇叭图标', '喇叭圖示', 'Speaker icon', 'Biểu tượng loa'],
+  'mp/c-notice-g': ['【方括号】文字（辅助绿）', '【方括號】文字（輔助綠）', '【Bracketed】 text (green accent)', 'Chữ 【ngoặc vuông】 (xanh lá nhấn)'],
+  'mp/c-notice-badge': ['未读数底色（已登录）', '未讀數底色（已登入）', 'Unread count background (signed in)', 'Nền số chưa đọc (đã đăng nhập)'],
+  'mp/nt-st-in': ['已登录', '已登入', 'Signed in', 'Đã đăng nhập'],
+  'mp/nt-two': ['左：未登录 · 右：已登录', '左：未登入 · 右：已登入', 'Left: signed out · right: signed in', 'Trái: chưa đăng nhập · phải: đã đăng nhập'],
+  'mp/nt-mail-off': ['信箱已隐藏，打开上面的开关才会显示在页面上', '信箱已隱藏，打開上面的開關才會顯示在頁面上', 'The inbox is hidden. Turn on the switch above to show it on the page.', 'Hộp thư đang ẩn. Bật công tắc phía trên để hiện trên trang.'],
+  'mp/nt-speed-note': ['文字越长滚动一圈越久，速度不受文字长短影响', '文字越長滾動一圈越久，速度不受文字長短影響', 'Longer text takes longer to scroll through; the speed stays the same.', 'Chữ càng dài chạy một vòng càng lâu; tốc độ không đổi.'],
+  'mp/nt-c-text': ['公告文字', '公告文字', 'Notice text', 'Chữ thông báo'],
+  'mp/nt-c-spk-up': ['喇叭已换成上传 / AI 的图片，按原图颜色显示；恢复默认图标后可在这里改颜色', '喇叭已換成上傳 / AI 的圖片，按原圖顏色顯示；恢復預設圖示後可在這裡改顏色', 'The speaker uses an uploaded or AI image and keeps its own colors. Reset it to the default icon to color it here.', 'Loa đang dùng ảnh tải lên / AI nên giữ màu gốc. Khôi phục biểu tượng mặc định để đổi màu tại đây.'],
+  'mp/nt-c-badge-out': ['未读数只在已登录时显示，切到「已登录」预览后可改它的颜色', '未讀數只在已登入時顯示，切到「已登入」預覽後可改它的顏色', 'The unread count only shows when signed in. Switch the preview to signed in to change its color.', 'Số chưa đọc chỉ hiện khi đã đăng nhập. Chuyển xem trước sang đã đăng nhập để đổi màu.'],
+  'mp/nt-c-note': ['选「默认」跟随整页配色；色块取自整页配色，换配色时一起变。正文颜色和「内容 › 文字样式」是同一个设置。信箱图标的颜色在图片里，换图请到「内容 › 图标」。', '選「預設」跟隨整頁配色；色塊取自整頁配色，換配色時一起變。正文顏色和「內容 › 文字樣式」是同一個設定。信箱圖示的顏色在圖片裡，換圖請到「內容 › 圖示」。', '"Default" follows the page colors, and the swatches change with them. Body text color is the same setting as Content › Text style. Inbox icon colors are part of the image; replace it in Content › Icons.', '"Mặc định" theo màu cả trang, các ô màu đổi theo. Màu chữ thường là cùng một thiết lập với Nội dung › Kiểu chữ. Màu hộp thư nằm trong ảnh; thay ở Nội dung › Biểu tượng.'],
+  'tx/notice-badge': ['未读数（已登录）', '未讀數（已登入）', 'Unread count (signed in)', 'Số chưa đọc (đã đăng nhập)'],
 });

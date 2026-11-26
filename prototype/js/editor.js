@@ -764,7 +764,8 @@
   const TXT = {
     // 顶部栏：币种文字 26/750=13（下拉箭头跟文字同色，Figma 都是 neutral_2）；搜索文字 22/750=11；余额金额只在已登录显示
     topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 13, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 11, 400], ['tb.bal', 'tx/tb-bal', '.h5-top .bx b', '.h5-top .bx b', 13, 400]],
-    notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 12, 400]],
+    // 公告栏：正文 26/750=13（Figma 317:55675）；已登录信箱未读数 18/750=9，固定白字
+    notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 13, 400], ['notice.badgeTx', 'tx/notice-badge', '.cl-notice .mail .bd', '.cl-notice .mail .bd', 9, 700]],
     midnav: [['midnav.btn', 'tx/midnav-btn', '.cl-user.out span', '.cl-user.out .lg', 12, 400], ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.bx b', '.bx b', 12, 400], ['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400]],
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span b, .h5-gm > span', '.cl-gm > span:not(.on) b, .h5-gm > span:not(.on)', 12.5, 400]],
     gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm, .h5-gc .c', '.cl-gc .nm, .h5-gc .c', 11.5, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 12, 400]],
@@ -772,19 +773,27 @@
   };
   const TX_ALL = Object.values(TXT).flat();
   const TX_W = [400, 500, 700];
-  const txOf = (id) => ((E.D.txt || {})[id]) || {};
+  // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
+  const TX_EC = { 'notice.text': 1 };
+  const txOf = (id) => {
+    const o = ((E.D.txt || {})[id]) || {};
+    if (!TX_EC[id]) return o;
+    const v = (E.D.ec || {})[id]; if (!v) return o;
+    const c = v.startsWith('key:') ? (keyVal(v.slice(4), liveTheme().th) || '') : v;
+    return Object.assign({}, o, c ? { c } : {});
+  };
   function txtCss() {
     const T = E.D.txt || {}; let css = '';
     for (const [id, , sel, csel] of TX_ALL) {
       const v = T[id]; if (!v) continue;
       const scope = (q) => q.split(',').map((x) => '.h5 ' + x.trim()).join(',');
       if (v.s || v.w) css += `${scope(sel)}{${v.s ? `font-size:${v.s}px;` : ''}${v.w ? `font-weight:${v.w};` : ''}}`;
-      if (v.c) css += `${scope(csel)}{color:${v.c}}`;
+      if (v.c && !TX_EC[id]) css += `${scope(csel)}{color:${v.c}}`;
     }
     return css ? `<style>${css}</style>` : '';
   }
   // 只在对应状态下出现的文字（顶部栏：未登录才有币种，已登录且显示余额框才有金额）
-  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth };
+  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth, 'notice.badgeTx': () => E.D.login && E.D.m.notice && E.D.m.notice.mail };
   const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
   // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）
   function txColors(id) {
@@ -803,12 +812,20 @@
     }).join('');
     return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t('tx/note')}</div></div>`;
   }
-  const txSet = (id, k, v) => { commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
+  const txSet = (id, k, v) => {
+    if (TX_EC[id] && k === 'c') {
+      // 选到的色块正好是某个基础 Key 就存 Key 引用（颜色页签能对上同一个色块）；等于默认 Key 就回到「默认」
+      const th = liveTheme().th, key = v && KEYS.find((x) => String(th[x]).toLowerCase() === v.toLowerCase());
+      const def = ((window.MP.EL[id.split('.')[0]] || []).find((r) => r[0] === id) || [])[1];
+      const val = !v || key === def ? null : key ? 'key:' + key : v;
+      commit(() => { E.D.ec = E.D.ec || {}; if (val) E.D.ec[id] = val; else delete E.D.ec[id]; }); return;
+    }
+    commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
   const txDef = (id) => TX_ALL.find((x) => x[0] === id);
   A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const cur = txOf(id).s || df[4]; const n = Math.max(8, Math.min(24, cur + (+d))); txSet(id, 's', n === df[4] ? null : n); };
   A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
   A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
-  A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; }); };
+  A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[id]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
   // 布局「恢复默认」（Waydon 2026-11-26）：只恢复布局页签里的参数，内容和颜色不动
   const LAYOUT_KEYS = { banner: ['size', 'margin', 'corner'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
@@ -839,7 +856,7 @@
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor());
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor());
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'midnav' ? balSec() : '') + txtSec(b) : E.tab === 'layout' ? layoutResetBtn(b) : '');
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'midnav' ? balSec() : '') + (b === 'notice' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : '');
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
@@ -1644,7 +1661,7 @@
     if (E.palOpen) { E.palOpen = false; }
   }
 
-  window.EDX = { E, slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
+  window.EDX = { E, txtSec: (b) => txtSec(b), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
   window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };

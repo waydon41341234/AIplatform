@@ -22,13 +22,13 @@
   const SIDE = [['首页', 'house-fill'], ['优惠活动', 'gift-fill'], ['VIP 特权', 'crown-fill'], ['在线客服', 'headset-fill'], ['个人中心', 'user-circle']];
   const FOOT = ['关于我们', '帮助中心', '隐私政策'];
   const items = (arr) => arr.map((x) => ({ n: x[0], i: x[1] || null, req: !!x[2], on: true }));
-  const NOTICE = '恭喜玩家在“龙虎斗”游戏中级场房间赢得18888元彩金，祝您好运连连！';
+  const NOTICE = '恭喜玩家在“龙虎斗”游戏【中级场】房间赢得18888元彩金，祝您好运连连！'; // Figma 317:55675：“引号”红、【中级场】绿、数字橙
   const defaults = () => {
     const bn = BN.map(([n, i, req, def, defOut, outN]) => Object.assign({ n, i, req, on: true, def: CL + def + '.png' }, defOut ? { defOut: CL + defOut + '.png' } : {}, outN ? { outN } : {}));
     bn[0].onBuiltin = true; bn[0].defOn = CL + 'bi0.png'; // 首页选中态图标内置
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
-      notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png' }] },
+      notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] },
       midnav: { mode: 'conf', items: MID.map(([n, i, def, badge]) => ({ n, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 96 },
       gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill' },
       gamecards: { name: true, tag: true, fav: true, fallback: null, cols: 3, corner: 16, gap: 16 },
@@ -39,14 +39,19 @@
   };
   const nm = (it) => it.n || (it.k ? t(it.k) : '');
   // 入口图标规格（逻辑尺寸，PNG 交付 @2x）
-  const ICON_SPEC = { notice: [52, 52], midnav: [80, 70], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
+  const ICON_SPEC = { notice: [57, 50], midnav: [80, 70], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
+  // 公告栏两个图标尺寸不同（Figma 317:55673）：喇叭 36×32、信箱 57×50
+  const NT_SPEC = { 'mp/nt-i-spk': [36, 32], 'mp/nt-i-mail': [57, 50] };
+  const specOf = (b, i) => (b === 'notice' && M(b).items[i] && NT_SPEC[M(b).items[i].k]) || ICON_SPEC[b] || [96, 96];
 
   // 元素颜色：[元素 ID, 默认取的基础色 Key]
   const EL = {
     // Banner（Figma 317:55531）：占位底 = ddt_bg（兜底图底板），指示器选中 / 未选中 = text_primary（Figma 固定 #FFFFFF，未选中叠 50% 透明度）
     banner: [['banner.placeholder', 'ddt_bg'], ['banner.indActive', 'text_primary'], ['banner.indDef', 'text_primary']],
     jackpot: [['jackpot.bg', 'primary'], ['jackpot.title', 'bg_2'], ['jackpot.amount', 'bg_2']],
-    notice: [['notice.bg', 'bg_2'], ['notice.text', 'lead'], ['notice.hl', 'accent_2'], ['notice.num', 'accent_3']],
+    // 公告栏（Figma 317:55673）：自身无填充 = 透出首页底 home_bg；喇叭和正文 neutral_1；“引号”accent_2、【中级场】accent_1、数字 accent_3；
+    // 已登录信箱未读数底 accent_2（数字固定白，在「文字样式」里改）
+    notice: [['notice.bg', 'home_bg'], ['notice.icon', 'neutral_1'], ['notice.text', 'neutral_1'], ['notice.hl', 'accent_2'], ['notice.g', 'accent_1'], ['notice.num', 'accent_3'], ['notice.badge', 'accent_2']],
     midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary'], ['midnav.btn', 'primary']],
     gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'neutral_2'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'bg_2']],
     gamecards: [['gamecards.placeholder', 'border'], ['gamecards.placeholderIcon', 'neutral_3'], ['gamecards.text', 'lead'], ['gamecards.label', 'accent_3'], ['gamecards.labelText', 'bg_2']],
@@ -65,7 +70,8 @@
   }
   const M = (b) => X().E.D.m[b];
   // 公告栏图标（喇叭 / 信箱）可替换或 AI 生成（Waydon 2026-11-26）；旧存档没有 items 时补上
-  const ntItems = () => { const m = M('notice'); if (!m.items) m.items = defaults().notice.items; return m.items; };
+  // 已登录信箱是另一张图（Figma 317:55690 主色渐变），旧存档补上默认图
+  const ntItems = () => { const m = M('notice'); if (!m.items) m.items = defaults().notice.items; const ml = m.items.find((x) => x.k === 'mp/nt-i-mail'); if (ml && !ml.defOn) ml.defOn = CL + 'mail-on.png'; return m.items; };
   const set = (b, k, v) => { const x = X(); x.commit(() => { x.E.D.m[b][k] = v; }); };
 
   // ---------- 面板零件 ----------
@@ -118,10 +124,19 @@
         + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }) + note('ed/unit-750'),
     },
     notice: {
-      content: () => sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;resize:vertical" data-input="mpNtText" maxlength="80">${esc(M('notice').text)}</textarea>`) + note('mp/nt-hl')
-        + sec(t('mp/nt-show'), toggle(M('notice').mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')))
-        + sec(t('mp/nt-icons'), ntItems().map((it, i) => `<div class="nt-ic-row">${upThumb('notice', i, 'img', it.i)}<span class="tx"><b>${esc(nm(it))}</b><small>52×52 · PNG / SVG</small></span>${resetBtn('notice', i)}</div>`).join('') + note('mp/icon-hint') + iconBtns('notice')),
-      layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-size'),
+      // 顺序：公告内容 → 文字样式（紧跟文字）→ 图标（喇叭；信箱开关紧挨信箱）→ AI 生成
+      content: () => {
+        const m = M('notice'), its = ntItems(), x = X();
+        const sp = (i) => specOf('notice', i).join('×');
+        const spk = `<div class="nt-ic-row">${upThumb('notice', 0, 'img', its[0].i)}<span class="tx"><b>${esc(nm(its[0]))}</b><small>${sp(0)}</small></span>${resetBtn('notice', 0)}</div>`;
+        const mail = `<div class="nt-ic-row ${m.mail ? '' : 'is-off'}">${upThumb('notice', 1, 'img', its[1].i, 'st2', t('ed/signed-out'))}${upThumb('notice', 1, 'imgOn', its[1].i, 'st2', t('mp/nt-st-in'))}<span class="tx"><b>${esc(nm(its[1]))}</b><small>${sp(1)} · ${t('mp/nt-two')}</small></span>${resetBtn('notice', 1)}</div>`;
+        return sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;resize:vertical" data-input="mpNtText" maxlength="80">${esc(m.text)}</textarea>`) + note('mp/nt-hl')
+          + (x.txtSec ? x.txtSec('notice') : '')
+          + sec(t('mp/nt-icons'), spk + toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')) + mail + (m.mail ? '' : note('mp/nt-mail-off')) + note('mp/icon-hint')
+            + `<div class="r2" style="margin-top:10px"><button class="btn btn-primary btn-sm" data-act="iaOpen" data-arg="notice">${ic('magic-wand', 'ic-16')}${t('mp/ai-icons')}</button></div>`);
+      },
+      layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-speed-note') + note('mp/nt-size'),
+      color: () => ntColor(),
     },
     midnav: {
       content: () => modeSeg('midnav') + sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/icon-hint') + iconBtns('midnav')),
@@ -160,7 +175,24 @@
         + px('bottomnav', 'h', [98, 110, 120], { title: t('mp/height') }) + note('ed/unit-750'),
     },
   };
-  function panel(b, tab) { if (tab === 'color') return colors(b); return (P[b][tab] || P[b].content)(); }
+  // 公告栏颜色：同 Banner 的做法，色块存 'key:<名>' 引用 68 Key（换整页配色跟着变），「默认」= Figma 绑定的 Key，彩虹 = 自定义
+  const NT_SW = { 'notice.bg': ['bg_1', 'border', 'primary', 'lead'], 'notice.icon': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.hl': ['accent_2', 'accent_3', 'accent_1', 'primary'], 'notice.g': ['accent_1', 'accent_2', 'accent_3', 'primary'], 'notice.num': ['accent_3', 'accent_2', 'accent_1', 'primary'], 'notice.badge': ['accent_2', 'accent_3', 'primary', 'lead'] };
+  function ntColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('notice'), its = ntItems();
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const row = (id) => {
+      const key = EL.notice.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
+      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${kv(key)}"></i>${t('mp/c-default')}</button>${NT_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const spkUp = !!its[0].img, badge = D.login && m.mail;
+    return `<div class="p-sec">${row('notice.bg')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/nt-c-text')}</div>${row('notice.text')}${row('notice.hl')}${row('notice.g')}${row('notice.num')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note('mp/nt-c-badge-out')}</div>
+      <div class="p-note">${t('mp/nt-c-note')}</div>
+      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+  }
+  function panel(b, tab) { if (tab === 'color') return P[b].color ? P[b].color() : colors(b); return (P[b][tab] || P[b].content)(); }
 
   // ---------- 画布 ----------
   const vis = (b) => M(b).items.filter((x) => x.on);
@@ -172,10 +204,20 @@
       return `<div class="h5-jack ${m.layout}" style="margin:${m.margin / 2}px 12px;border-radius:${m.corner / 2}px;${bg}"><span class="tt">${esc(m.title)}</span>${amt}</div>`;
     }
     if (b === 'notice') {
-      const its = ntItems(), gi = (i, cls) => { const it = its[i], src = it.img || it.def, on = S().menu === 'icon:notice|' + i; return `<span class="${cls} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'notice'}|notice|${i}|img" data-stop><img src="${src}" alt="">${cls === 'mail' ? '<i>99</i>' : ''}</span>${on ? iconMenu('notice', i, 'img') : ''}`; };
-      // 公告栏：喇叭 + 跑马灯文字（“引号内”用强调色 1、数字用强调色 2）+ 信箱
-      const tx = esc(m.text || '').replace(/“([^”]*)”/g, '<em class="hl">“$1”</em>').replace(/(\d[\d,.]*)/g, '<em class="num">$1</em>');
-      return `<div class="cl-notice sp-${m.speed || 'normal'}">${gi(0, 'spk')}<div class="mq"><span>${tx}</span></div>${m.mail ? gi(1, 'mail') : ''}</div>`;
+      // 信箱：未登录 = 位图、无未读数；已登录 = 主色渐变图标 + 红色未读数（Figma 317:55672 / 317:55684）
+      // 喇叭默认图用遮罩着色（跟 notice.icon = neutral_1）；上传 / AI 的图按原图显示
+      const its = ntItems(), login = X().E.D.login;
+      const gi = (i, cls) => {
+        const it = its[i], f = i === 1 && login ? 'imgOn' : 'img', up = it[f], src = up || (f === 'imgOn' ? it.defOn || it.def : it.def), on = S().menu === 'icon:notice|' + i;
+        const pic = i === 0 && !up ? `<i class="spk-def" style="-webkit-mask-image:url(${it.def});mask-image:url(${it.def})"></i>` : `<img src="${src}" alt="">`;
+        return `<span class="${cls} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'notice'}|notice|${i}|${f}" data-stop>${pic}${i === 1 && login ? '<i class="bd">99</i>' : ''}</span>${on ? iconMenu('notice', i, f) : ''}`;
+      };
+      // 跑马灯文字：“引号”= accent_2、【方括号】= accent_1（括号不显示）、数字 = accent_3
+      const tx = esc(m.text || '').replace(/【([^】]*)】/g, '<em class="g">$1</em>').replace(/“([^”]*)”/g, '<em class="hl">“$1”</em>').replace(/(\d[\d,.]*)/g, '<em class="num">$1</em>');
+      // 滚动一圈的时间按文字长度算（字越多越久），速度档位只改每秒移动的距离
+      const w = [...(m.text || '')].reduce((a, c) => a + (/[\u0000-ɏ]/.test(c) ? 0.55 : 1), 0) * 13 + 40;
+      const dur = Math.max(4, w / ({ slow: 28, normal: 42, fast: 64 }[m.speed] || 42)).toFixed(1);
+      return `<div class="cl-notice sp-${m.speed || 'normal'}">${gi(0, 'spk')}<div class="mq"><span style="animation-duration:${dur}s">${tx}</span></div>${m.mail ? gi(1, 'mail') : ''}</div>`;
     }
     if (b === 'midnav') {
       // 帐户栏（经典蓝白）：左边 未登录=登录/注册，已登录=VIP·用户名·余额；右边 4 个入口
@@ -269,7 +311,7 @@
   // ---------- 图标上传替换 ----------
   function iconMenu(b, i, f) {
     const has = !!M(b).items[i][f];
-    const [w, h] = ICON_SPEC[b] || [96, 96];
+    const [w, h] = specOf(b, i);
     return `<div class="menu icon-menu" data-stop><button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button>${b !== 'sidebar' && b !== 'footer' ? `<button class="menu-item" data-act="iaOpenOne" data-arg="${b}|${i}" data-stop>${ic('sparkle-fill')}${t('mp/ai-one')}</button>` : ''}<button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
   }
   let fileIn = null, target = null;
@@ -312,7 +354,8 @@
   function iconSheet() {
     const m = X().E.iconMenu; if (!m) return '';
     const it = M(m.b).items[m.i];
-    return `<div class="icon-sheet-hd">${it[m.f] ? img(it[m.f]) : ic(it.i || 'plus')}<b>${esc(nm(it))}</b></div>${iconMenu(m.b, m.i, m.f).replace('menu icon-menu', 'icon-sheet-list')}`;
+    const src = it[m.f] || defSrc(it, m.f, m.b);
+    return `<div class="icon-sheet-hd">${src ? img(src) : ic(it.i || 'plus')}<b>${esc(nm(it))}</b></div>${iconMenu(m.b, m.i, m.f).replace('menu icon-menu', 'icon-sheet-list')}`;
   }
   // 画布里的图标菜单：fixed 定位到图标正下方（放不下就往上）
   window.AFTER_RENDER.push(() => {
@@ -367,7 +410,7 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">${bg}<g transform="translate(24 22) scale(.1875)" fill="${fg}">${path}</g></svg>`);
   }
   const perEntry = (b) => (b === 'bottomnav' || b === 'gamemenu' ? ['img', 'imgOn'] : ['img']).slice(0, b === 'bottomnav' ? 2 : 1);
-  const isReq = (b, it) => (b === 'notice' ? true : b === 'midnav' ? M(b).mode === 'conf' || it.req : b === 'bottomnav' ? it.req : false);
+  const isReq = (b, it) => (b === 'notice' ? it.k !== 'mp/nt-i-mail' || M(b).mail : b === 'midnav' ? M(b).mode === 'conf' || it.req : b === 'bottomnav' ? it.req : false);
   const jobs = (ia) => { const out = []; M(ia.b).items.forEach((it, i) => { if (ia.picks[i]) perEntry(ia.b).forEach((f) => out.push(i + '|' + f)); }); return out; };
   const modTitle = (b) => t({ notice: 'mod/notice', midnav: 'mod/midnav', bottomnav: 'mod/bottomnav', gamemenu: 'mod/gamemenu' }[b]);
   function candColor(ia, f) { const th = X().E.D.theme; const pal = [th.primary, th.accent_3, th.accent_1, th.accent_2, '#7b4dff']; return f === 'img' && ia.b === 'bottomnav' ? th.neutral_2 : pal[ia.attempt % pal.length]; }
@@ -459,7 +502,8 @@
   A.iaAdopt = () => {
     const x = X(); const ia = x.E.iconAi; const keys = Object.keys(ia.cands); if (!keys.length) return false;
     const srcs = keys.map((k) => [k, candSrc(ia, k)]);
-    x.commit(() => { srcs.forEach(([k, src]) => { const [i, f] = k.split('|'); x.E.D.m[ia.b].items[+i][f] = src; }); });
+    // 公告栏信箱有未登录 / 已登录两张图，AI 生成的一张同时用于两种状态
+    x.commit(() => { srcs.forEach(([k, src]) => { const [i, f] = k.split('|'); const it = x.E.D.m[ia.b].items[+i]; it[f] = src; if (ia.b === 'notice' && it.defOn && f === 'img') it.imgOn = src; }); });
     const n = new Set(keys.map((k) => k.split('|')[0])).size;
     iaStop(); x.E.iconAi = null; x.E.tab = 'content';
     window.toast(t('mp/ai-adopted', { n }), x.undoOpt());
@@ -479,7 +523,7 @@
         <div class="p-note">${ia.fromRef ? ic('sparkle-fill', 'ic-16') + t('ed/tbai-prompt-tip2') : t('ed/tbai-box-tip')}</div>`;
       body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${styleSrc(b, pv, s, x.E.D.theme.primary, 'imgOn')}" alt=""><span>${styleName(s)}</span></button>`).join('')}</div>`)
         + sec(t('ed/tbai-sprompt'), box)
-        + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
+        + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img || it.def ? img(it.img || it.def) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
         : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;
@@ -548,7 +592,7 @@
       rd.readAsDataURL(file);
     });
   }
-  const bxPad = (b, r) => { const [tw, th] = ICON_SPEC[b]; return r.w && r.h && Math.abs(r.w / r.h - tw / th) > 0.03; };
+  const bxPad = (b, r) => { const [tw, th] = r.target >= 0 ? specOf(b, r.target) : ICON_SPEC[b]; return r.w && r.h && Math.abs(r.w / r.h - tw / th) > 0.03; };
   function bxSum(bx) { const n = bx.rows.filter((r) => !r.bad && r.target >= 0).length, u = bx.rows.filter((r) => !r.bad && r.target < 0).length, bad = bx.rows.filter((r) => r.bad).length; return { n, u, b: bad }; }
   function bxTargetLabel(bx, r) { if (r.target < 0) return t('mp/batch-skip'); const it = M(bx.b).items[r.target]; return nm(it) + (r.f === 'imgOn' ? ' · ' + t('mp/state-act') : ''); }
   function bxOptions(bx, k) {
@@ -663,7 +707,8 @@
     ],
   };
   // 「跟设计」Key 的值来自版式模板（不默认等于 primary）
-  const DESIGN_DEF = { home_bg: '#F4F6FA', home_db: '#FFFFFF', btmnav_def: '#8A8F99', btmnav_active: '#0F6FFF', bs_topnav_bg: '#FFFFFF', web_bs_yj_bg: '#1C2033', web_btmnav_db: '#FFFFFF' };
+  // home_bg：Figma 经典蓝白首页底 = #FFFFFF（317:55529，公告栏透出的就是它）
+  const DESIGN_DEF = { home_bg: '#FFFFFF', home_db: '#FFFFFF', btmnav_def: '#8A8F99', btmnav_active: '#0F6FFF', bs_topnav_bg: '#FFFFFF', web_bs_yj_bg: '#1C2033', web_btmnav_db: '#FFFFFF' };
   const EXT = Object.fromEntries(KEYS68.ext.map((e) => [e[0], e]));
   const BASE = Object.fromEntries(KEYS68.base);
   const keyLabel = (k) => (BASE[k] ? t('ed/key-' + k) : EXT[k] ? EXT[k][3] : k);
