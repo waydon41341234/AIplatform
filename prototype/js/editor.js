@@ -236,11 +236,11 @@
     else main = btn('tbTab', 'sliders-horizontal', t('ed/tool-layout'), 'layout') + btn('tbTab', 'paint-brush-fill', t('ed/recolor'), 'color');
     const move = fixed || b === 'sidebar' ? '' : `<button class="ib" data-act="move" data-arg="-1" data-stop ${idx <= 0 ? 'disabled' : ''}>${ic('arrow-up')}</button><button class="ib" data-act="move" data-arg="1" data-stop ${idx >= E.D.order.length - 1 ? 'disabled' : ''}>${ic('arrow-down')}</button>`;
     const menu = S.menu === 'modmenu' ? moduleMenu(id) : '';
-    return `<div class="seltool ${below ? 'below' : ''}" data-stop>${main}${window.AD ? window.AD.toolBtn(id) : ''}${move}<button class="ib" data-act="toggleHide" data-arg="${id}" data-stop title="${esc(t('ed/am-toggle'))}">${ic('eye-slash-fill')}</button><span class="rel"><button class="ib" data-act="menu:toggle" data-arg="modmenu" data-stop>${ic('dots-three')}</button>${menu}</span></div>`;
+    return `<div class="seltool ${below ? 'below' : ''}" data-stop><button class="ib st-grip" data-stgrip data-stop title="${esc(t('ed/tool-drag'))}" aria-label="${esc(t('ed/tool-drag'))}">${ic('dots-six-vertical')}</button>${main}${window.AD ? window.AD.toolBtn(id) : ''}${move}<button class="ib" data-act="toggleHide" data-arg="${id}" data-stop title="${esc(t('ed/am-toggle'))}">${ic('eye-slash-fill')}</button><span class="rel"><button class="ib" data-act="menu:toggle" data-arg="modmenu" data-stop>${ic('dots-three')}</button>${menu}</span></div>`;
   }
   function moduleMenu(id) {
     const fixed = MODS[baseName(id)].fixed;
-    return `<div class="menu" data-stop>${fixed ? '' : `<button class="menu-item" data-act="modDup" data-arg="${id}" data-stop>${ic('copy')}${t('ed/menu-duplicate')}</button>`}<button class="menu-item" data-act="modReset" data-arg="${id}" data-stop>${ic('arrow-counter-clockwise')}${t('ed/menu-reset')}</button><button class="menu-item is-danger" data-act="modDel" data-arg="${id}" data-stop>${ic('trash')}${t('ed/menu-delete')}</button></div>`;
+    return `<div class="menu" data-stop>${fixed ? '' : `<button class="menu-item" data-act="modDup" data-arg="${id}" data-stop>${ic('copy')}${t('ed/menu-duplicate')}</button>`}${E.toolPos ? `<button class="menu-item" data-act="toolDock" data-stop>${ic('push-pin')}${t('ed/tool-dock')}</button>` : ''}<button class="menu-item" data-act="modReset" data-arg="${id}" data-stop>${ic('arrow-counter-clockwise')}${t('ed/menu-reset')}</button><button class="menu-item is-danger" data-act="modDel" data-arg="${id}" data-stop>${ic('trash')}${t('ed/menu-delete')}</button></div>`;
   }
   // ---------- 余额框（Waydon 2026-11-26：用通用组件「余额刷新 / 展示名称自行选择」334:67053，支持改图标、文字、颜色） ----------
   // 模式 = 通用组件的「功能」变体：默认（国旗）/ 无币种 / 币种切换 / 特小 / 特小无底
@@ -279,7 +279,7 @@
     else if (el.matches('[data-balcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { const k = el.dataset.balcolor; balSet((b) => { b.c[k] = el.value.toLowerCase(); }); window.render(); }
     else if (el.matches('[data-balimg]') && el.files && el.files[0]) {
       const k = el.dataset.balimg, f = el.files[0];
-      if (!/^image\//.test(f.type)) { window.toast(t('ed/bal-img-bad'), { info: true }); return; }
+      if (!window.imgOk(f)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
       const r = new FileReader(); r.onload = () => { balSet((b) => { b[k] = r.result; }); window.render(); }; r.readAsDataURL(f);
     }
   });
@@ -287,7 +287,7 @@
     const cfg = balCfg(), th = liveTheme().th;
     const modes = `<div class="bx-opts">${BAL_MODES.map((m) => `<button class="bx-opt ${cfg.mode === m ? 'is-on' : ''}" data-act="balMode" data-arg="${m}"><span class="bx-prev">${balBox(Object.assign({}, cfg, { mode: m }), '1,232.90')}</span><small>${t('ed/bal-m-' + m)}</small></button>`).join('')}</div>`;
     const seg3 = (opts, cur, act) => segBtns(opts.map((v) => ({ v, label: t('ed/bal-' + act.slice(3).toLowerCase() + '-' + v) })), cur, act);
-    const imgRow = (k, def, lab, spec) => `<div class="bx-img"><span class="thumb sq"><img src="${cfg[k] || def}" alt=""></span><span class="tx"><b>${t(lab)}</b><small>${spec}</small></span><label class="btn btn-secondary btn-sm">${ic('upload-simple', 'ic-16')}${t('ed/upload')}<input type="file" accept="image/*" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
+    const imgRow = (k, def, lab, spec) => `<div class="bx-img"><span class="thumb sq"><img src="${cfg[k] || def}" alt=""></span><span class="tx"><b>${t(lab)}</b><small>${spec}</small></span><label class="btn btn-secondary btn-sm">${ic('upload-simple', 'ic-16')}${t('ed/upload')}<input type="file" accept="${window.IMG_ACCEPT}" data-balimg="${k}" hidden></label>${cfg[k] ? `<button class="ib-s" data-act="balImgReset" data-arg="${k}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}</div>`;
     const sw = (k, base) => { const cur = (cfg.c[k] || '').toLowerCase(); const list = [th[base], th.primary, th.accent_3, th.accent_2, th.lead, th.bg_2, th.border].map((x) => x.toLowerCase()).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6); return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${list.map((x) => `<button class="sw-btn ${cur === x ? 'is-on' : ''}" style="background:${x}" data-act="balColor" data-arg="${k}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${cur && !list.includes(cur) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${cur || th[base]}"></label></div>`; };
     const dirty = !!E.D.bal;
     return `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}${dirty ? `<button class="tx-reset" style="margin-left:auto" data-act="balAll">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
@@ -571,8 +571,8 @@
   A.tbAiRefRm = () => { const a = tbAi(); a.ref = null; a.refSt = null; a.analyzing = false; a.fromRef = false; a.prompt = presetOf(a.style); a.stage = 'setup'; };
   A.tbAiRefView = () => false;
   A.tbAiRefCancel = () => A.tbAiRefRm();
-  function refAnalyze(src) {
-    const a = tbAi(); a.ref = src; a.analyzing = true; a.refSt = { uploading: true, pct: 60 }; a.stage = 'setup'; window.render();
+  // 参考图反推提示词（通用）：读图取平均色 / 色相 / 饱和度 → 推荐款式 + 中英文提示词。where = [中文用途, 英文用途]
+  function refRead(src, where, cb) {
     const im = new Image(); im.onload = () => {
       const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 32, 32);
       const d = g.getImageData(0, 0, 32, 32).data; let r = 0, gg = 0, b = 0, n = 0, dark = 0, white = 0;
@@ -587,12 +587,21 @@
       const colorEn = (h < 25 || h > 340) ? 'red' : h < 45 ? 'orange-gold' : h < 70 ? 'yellow' : h < 160 ? 'green' : h < 200 ? 'cyan' : h < 260 ? 'blue' : 'purple';
       const finZh = { glossy: '圆润卡通 3D 光泽质感，带白色高光', flat: '纯色扁平风格，无渐变，线条圆角', blackgold: '金属拉丝质感，香槟金，奢华高级', festive: '喜庆节日风格，金色描边，祥云点缀', neon: '霓虹发光描边，深色半透明，科技感' }[style];
       const finEn = { glossy: 'glossy cartoon 3D with white highlights', flat: 'flat solid color, no gradient, rounded strokes', blackgold: 'brushed champagne-gold metal, luxurious', festive: 'festive style with gold outline and auspicious clouds', neon: 'neon glowing outline, dark translucent, futuristic' }[style];
-      a.prompt = zh ? `主色${colorZh}（约 ${hex}），${sat > 0.5 ? '高饱和' : '低饱和'}${l > 0.6 ? '、明亮' : l < 0.35 ? '、偏暗' : ''}，${finZh}${white / (n + white) > 0.2 ? '，带白色高光/描边' : ''}；透明背景，单个图标居中，适合手机顶部栏小尺寸显示`
-        : `Main color ${colorEn} (about ${hex}), ${sat > 0.5 ? 'high' : 'low'} saturation${l > 0.6 ? ', bright' : l < 0.35 ? ', dark' : ''}, ${finEn}; transparent background, single centered icon, readable at small size in a mobile top bar`;
-      a.refHex = hex; a.refStyle = style; a.analyzing = false; a.refSt = { src, name: a.refName || '' }; a.fromRef = true; window.render();
+      const prompt = zh ? `主色${colorZh}（约 ${hex}），${sat > 0.5 ? '高饱和' : '低饱和'}${l > 0.6 ? '、明亮' : l < 0.35 ? '、偏暗' : ''}，${finZh}${white / (n + white) > 0.2 ? '，带白色高光/描边' : ''}；透明背景，单个图标居中，${where[0]}`
+        : `Main color ${colorEn} (about ${hex}), ${sat > 0.5 ? 'high' : 'low'} saturation${l > 0.6 ? ', bright' : l < 0.35 ? ', dark' : ''}, ${finEn}; transparent background, single centered icon, ${where[1]}`;
+      cb({ style, hex, prompt });
     };
-    im.onerror = () => { a.analyzing = false; a.ref = null; a.refSt = null; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); };
+    im.onerror = () => cb(null);
     setTimeout(() => { im.src = src; }, 900); // 模拟识别耗时
+  }
+  window.aiRefRead = refRead;
+  window.aiPreset = presetOf;
+  function refAnalyze(src) {
+    const a = tbAi(); a.ref = src; a.analyzing = true; a.refSt = { uploading: true, pct: 60 }; a.stage = 'setup'; window.render();
+    refRead(src, ['适合手机顶部栏小尺寸显示', 'readable at small size in a mobile top bar'], (res) => {
+      if (!res) { a.analyzing = false; a.ref = null; a.refSt = null; window.toast(t('ed/bal-img-bad'), { info: true }); window.render(); return; }
+      a.prompt = res.prompt; a.refHex = res.hex; a.refStyle = res.style; a.analyzing = false; a.refSt = { src, name: a.refName || '' }; a.fromRef = true; window.render();
+    });
   }
   document.addEventListener('change', (e) => {
     const el = e.target; if (!el.matches) return;
@@ -1383,10 +1392,53 @@
         <span class="spacer"></span>
         <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button><button class="btn btn-secondary btn-sm ed-reset" data-act="pageReset" ${pageDirty() ? '' : 'disabled'} title="${esc(t(pageDirty() ? 'ed/page-reset-tip' : 'ed/page-is-default'))}">${ic('arrow-counter-clockwise', 'ic-16')}<span class="lb">${t('ed/page-reset')}</span></button>
         ${checkBtn()}<button class="btn btn-primary btn-sm" data-act="openExport">${ic('download-simple', 'ic-16')}${t('ed/export')}</button></header>
-      <div class="ed-body"><nav class="ed-left" data-sk="ed-left">${tree()}</nav>
+      <div class="ed-body"><nav class="ed-left" data-sk="ed-left" style="${paneW('l')}">${tree()}</nav><div class="ed-rz" data-rz="l" title="${esc(t('ed/rz-tip'))}"></div>
         <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
-        <aside class="ed-right" data-sk="ed-right">${rightPanel()}</aside></div></div>${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
+        <div class="ed-rz" data-rz="r" title="${esc(t('ed/rz-tip'))}"></div><aside class="ed-right" data-sk="ed-right" style="${paneW('r')}">${rightPanel()}</aside></div></div>${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
   }
+  // ---------- 左右侧栏可拖动加宽（Waydon 2026-11-26）：宽度存本机，双击把手恢复默认 ----------
+  const PANE = { l: [200, 480], r: [280, 600] };
+  const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 隐私模式 */ } };
+  E.paneW = E.paneW || lsGet('ed-pane-w') || {};
+  function paneW(side) { const w = E.paneW[side]; return w ? `width:${w}px` : ''; }
+  document.addEventListener('pointerdown', (e) => {
+    const h = e.target.closest && e.target.closest('[data-rz]'); if (!h) return;
+    e.preventDefault(); const side = h.dataset.rz; const pane = document.querySelector(side === 'l' ? '.ed-left' : '.ed-right'); if (!pane) return;
+    const x0 = e.clientX, w0 = pane.getBoundingClientRect().width; const [mn, mx] = PANE[side];
+    h.classList.add('is-drag'); document.body.classList.add('is-rz');
+    let moved = false;
+    const mv = (ev) => { const d = side === 'l' ? ev.clientX - x0 : x0 - ev.clientX; if (!moved && Math.abs(d) < 2) return; moved = true; const w = Math.round(Math.max(mn, Math.min(mx, w0 + d))); pane.style.width = w + 'px'; E.paneW[side] = w; };
+    const up = () => { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); h.classList.remove('is-drag'); document.body.classList.remove('is-rz'); if (moved) { lsSet('ed-pane-w', E.paneW); window.render(); } };
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up);
+  });
+  document.addEventListener('dblclick', (e) => { const h = e.target.closest && e.target.closest('[data-rz]'); if (!h) return; delete E.paneW[h.dataset.rz]; lsSet('ed-pane-w', E.paneW); window.render(); });
+
+  // ---------- 悬浮工具栏可拖到别处摆放（Waydon 2026-11-26）----------
+  // 默认贴在选中模块右侧；拖动把手后变成固定在屏幕上的浮动工具栏（位置存本机，切换模块也不动），双击把手贴回模块
+  E.toolPos = E.toolPos || lsGet('ed-tool-pos');
+  const clampTool = (el, x, y) => { const r = el.getBoundingClientRect(); return { x: Math.round(Math.max(8, Math.min(window.innerWidth - r.width - 8, x))), y: Math.round(Math.max(56, Math.min(window.innerHeight - Math.min(r.height, 120) - 8, y))) }; };
+  function pinTool(el) { if (el.parentElement !== document.body) document.body.appendChild(el); el.classList.add('is-pinned'); const p = clampTool(el, E.toolPos.x, E.toolPos.y); el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; }
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('body > .seltool.is-pinned').forEach((n) => n.remove());
+    if (!E.toolPos || mobileEd()) return;
+    const el = document.querySelector('#app .ed-canvas .seltool'); if (el) pinTool(el);
+  });
+  document.addEventListener('pointerdown', (e) => {
+    const g = e.target.closest && e.target.closest('[data-stgrip]'); if (!g) return;
+    e.preventDefault(); e.stopPropagation(); const el = g.closest('.seltool'); if (!el) return;
+    const r0 = el.getBoundingClientRect(); const dx = e.clientX - r0.left, dy = e.clientY - r0.top; let moved = false;
+    const mv = (ev) => {
+      if (!moved && Math.abs(ev.clientX - e.clientX) + Math.abs(ev.clientY - e.clientY) < 4) return;
+      if (!moved) { moved = true; E.toolPos = { x: r0.left, y: r0.top }; pinTool(el); el.classList.add('is-drag'); }
+      const p = clampTool(el, ev.clientX - dx, ev.clientY - dy); E.toolPos = p; el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+    };
+    const up = () => { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); el.classList.remove('is-drag'); if (moved) { lsSet('ed-tool-pos', E.toolPos); window.toast(t('ed/tool-pinned'), { info: true }); } };
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up);
+  }, true);
+  A.toolDock = () => { E.toolPos = null; lsSet('ed-tool-pos', null); S.menu = null; };
+  document.addEventListener('dblclick', (e) => { if (e.target.closest && e.target.closest('[data-stgrip]')) { A.toolDock(); window.render(); } });
+
   A.canvasBg = (a, el, e) => { if (e.target === el || e.target.classList.contains('ed-stage') || e.target.classList.contains('med-stage')) { if (E.sel || E.picker) { E.sel = null; E.ai = null; E.picker = null; E.iconAi = null; E.h5side = false; if (mobileEd()) E.mpanel = null; return; } } return false; };
 
   // ---------- 手机视图 ----------

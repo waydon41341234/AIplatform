@@ -1015,3 +1015,22 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .sw-btn.is-on { box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 4px var(--brand); }
 .pal-prev { display: flex; gap: 4px; }
 .pal-prev i { flex: none; width: 20px; height: 20px; border-radius: 50%; }
+
+/* ---------- 侧栏拖动加宽 + 悬浮工具栏可拖动（2026-11-26） ---------- */
+.ed-body { position: relative; }
+.ed-rz { flex: none; width: 6px; margin: 0 -3px; position: relative; z-index: 8; cursor: col-resize; touch-action: none; }
+.ed-rz::after { content: ''; position: absolute; top: 0; bottom: 0; left: 2px; width: 2px; border-radius: 1px; background: transparent; transition: background .15s; }
+.ed-rz:hover::after, .ed-rz.is-drag::after { background: var(--brand); }
+body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !important; }
+.seltool .st-grip { height: 18px !important; min-height: 18px !important; width: auto; cursor: grab; color: var(--text-2); touch-action: none; }
+.seltool .st-grip .ic { transform: rotate(90deg); width: 14px; height: 14px; }
+.seltool .st-grip:hover { background: var(--bg-hover); color: var(--text); }
+.seltool.is-pinned { position: fixed; z-index: 60; translate: none; transform: none; bottom: auto; right: auto; zoom: 1; }
+.seltool.is-pinned .st-grip { color: var(--brand); }
+.seltool.is-drag, .seltool.is-drag .st-grip { cursor: grabbing; box-shadow: var(--shadow-xl, var(--shadow-lg)); }
+/* AI 生成一套：款式 3 列紧凑排（2026-11-26） */
+.ia-styles { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ia-st { padding: 8px 4px; gap: 4px; }
+.ia-st img { width: 40px; height: 40px; object-fit: contain; }
+.ia-st span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ia-box { margin-top: 0; }

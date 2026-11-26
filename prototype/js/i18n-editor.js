@@ -193,4 +193,10 @@ Object.assign(window.I18N, {
   'ed/pc-bnav-note': ['底部导航只在 H5 显示', '底部導航只在 H5 顯示', 'Bottom nav only appears on H5', 'Điều hướng dưới chỉ hiện trên H5'],
   'ed/zoom-fit': ['适应', '適應', 'Fit', 'Vừa khung'],
   'ed/exp-pc-png': ['PC 首页 PNG', 'PC 首頁 PNG', 'PC home PNG', 'PNG trang chủ PC'],
+  'ed/tool-drag': ['按住拖动可把工具栏放到别处 · 双击贴回模块', '按住拖動可把工具欄放到別處 · 雙擊貼回模組', 'Drag to move the toolbar anywhere · double-click to re-attach', 'Kéo để đặt thanh công cụ ở chỗ khác · nhấp đúp để gắn lại'],
+  'ed/tool-pinned': ['工具栏已固定在这里，双击顶部把手可贴回模块', '工具欄已固定在這裡，雙擊頂部把手可貼回模組', 'Toolbar pinned here. Double-click its handle to re-attach', 'Đã ghim thanh công cụ. Nhấp đúp tay cầm để gắn lại'],
+  'ed/tool-dock': ['工具栏贴回模块', '工具欄貼回模組', 'Re-attach toolbar', 'Gắn lại thanh công cụ'],
+  'ed/rz-tip': ['拖动调整宽度 · 双击恢复默认', '拖動調整寬度 · 雙擊恢復預設', 'Drag to resize · double-click to reset', 'Kéo để đổi độ rộng · nhấp đúp để đặt lại'],
+  'mp/ai-where': ['适合{m}的图标小尺寸显示', '適合{m}的圖示小尺寸顯示', 'readable at small size as a {m} icon', 'dễ nhìn ở cỡ nhỏ cho biểu tượng {m}'],
+  'mp/ai-one': ['AI 生成这个图标', 'AI 生成這個圖示', 'Generate this icon with AI', 'Tạo biểu tượng này bằng AI'],
 });

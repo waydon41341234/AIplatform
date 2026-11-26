@@ -266,17 +266,17 @@
   function iconMenu(b, i, f) {
     const has = !!M(b).items[i][f];
     const [w, h] = ICON_SPEC[b] || [96, 96];
-    return `<div class="menu icon-menu" data-stop><button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button><button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
+    return `<div class="menu icon-menu" data-stop><button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button>${b !== 'sidebar' && b !== 'footer' ? `<button class="menu-item" data-act="iaOpenOne" data-arg="${b}|${i}" data-stop>${ic('sparkle-fill')}${t('mp/ai-one')}</button>` : ''}<button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
   }
   let fileIn = null, target = null;
   function pickIcon(b, i, f) {
     target = { b, i: +i, f };
     if (!fileIn) {
-      fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = 'image/png,image/svg+xml,image/webp,image/jpeg'; fileIn.style.display = 'none'; fileIn.setAttribute('data-icon-file', '');
+      fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = window.IMG_ACCEPT; fileIn.style.display = 'none'; fileIn.setAttribute('data-icon-file', '');
       document.body.appendChild(fileIn);
       fileIn.addEventListener('change', () => {
         const file = fileIn.files[0]; fileIn.value = ''; if (!file || !target) return;
-        if (!/^image\//.test(file.type)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
+        if (!window.imgOk(file)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
         const rd = new FileReader();
         rd.onload = () => {
           const { b: mb, i: mi, f: mf } = target; const x = X();
@@ -323,7 +323,28 @@
   });
 
   // ---------- AI 生成一套图标（ED-04） ----------
-  const STYLES = ['glass', 'flat', '3d', 'line', 'fill', 'duotone', 'metal', 'gradient']; // 后 4 种：AI 首页设计的图标风格（AD）
+  const VSTYLES = ['glass', 'flat', '3d', 'line', 'fill', 'duotone', 'metal', 'gradient']; // 矢量款式（AI 首页设计 AD 也用）
+  // 默认款式（Waydon 2026-11-26）：用 Figma generate image 生成的 5 种真实风格图，放 assets/ai-*/；面板只显示这 5 种 + 4 种矢量款式
+  const RSTY = ['glossy', 'flat', 'blackgold', 'festive', 'neon'];
+  const STYLES = RSTY.map((v) => 'r-' + v).concat(['line', 'fill', 'duotone', 'gradient']);
+  const R_FALL = { glossy: ['glass', null], flat: ['flat', null], blackgold: ['metal', '#C9A55A'], festive: ['3d', '#E83A30'], neon: ['line', '#8A5CFF'] };
+  const baseOf = (p) => (p ? String(p).split('/').pop().replace(/\.\w+$/, '') : '');
+  const RMAP = {
+    notice: (it) => ({ 'mp/nt-i-spk': 'ai-notice/spk', 'mp/nt-i-mail': 'ai-notice/mail' })[it.k],
+    midnav: (it) => ({ mid0: 'ai-acct/dep', mid1: 'ai-acct/vip', mid2: 'ai-acct/share', mid3: 'ai-acct/more' })[baseOf(it.def)],
+    bottomnav: (it) => ({ bi0: 'ai-bnav/home', bi1: 'ai-bnav/promo', bi2: 'ai-bnav/bonus', bi3: 'ai-bnav/invite', bi4: 'ai-bnav/mine' })[baseOf(it.def)],
+    gamemenu: (it) => { const m = /^mp\/gm-n-(\d+)$/.exec(it.k || ''); return m ? 'ai-gm/g' + m[1] : null; },
+  };
+  // 某个入口在某款式下的图：有真实风格图就用图（底部导航默认态用 -off 灰图），没有就用对应矢量款式画
+  function styleSrc(b, it, style, color, f) {
+    if (/^r-/.test(style)) {
+      const st = style.slice(2); const r = RMAP[b] && RMAP[b](it);
+      if (r) return 'assets/' + r + '-' + st + (b === 'bottomnav' && f === 'img' ? '-off' : '') + '.webp';
+      const [vs, c] = R_FALL[st]; return aiSvg(it.i || 'sparkle-fill', vs, c || color);
+    }
+    return aiSvg(it.i || 'sparkle-fill', style, color);
+  }
+  const styleName = (s) => (/^r-/.test(s) ? t('ed/tbai-' + s.slice(2)) : window.I18N['mp/ai-st-' + s] ? t('mp/ai-st-' + s) : t('ad/ics-' + s));
   const tType = (b) => (b === 'gamemenu' ? 'gametype' : b); // 流水里的类型名
   function lighten(hex, k) { const n = parseInt(hex.slice(1, 7), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * k)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); }
   // 模拟 AI 结果：按款式把 Phosphor 图标画成 SVG dataURL
@@ -346,15 +367,31 @@
   const jobs = (ia) => { const out = []; M(ia.b).items.forEach((it, i) => { if (ia.picks[i]) perEntry(ia.b).forEach((f) => out.push(i + '|' + f)); }); return out; };
   const modTitle = (b) => t({ notice: 'mod/notice', midnav: 'mod/midnav', bottomnav: 'mod/bottomnav', gamemenu: 'mod/gamemenu' }[b]);
   function candColor(ia, f) { const th = X().E.D.theme; const pal = [th.primary, th.accent_3, th.accent_1, th.accent_2, '#7b4dff']; return f === 'img' && ia.b === 'bottomnav' ? th.neutral_2 : pal[ia.attempt % pal.length]; }
-  function candSrc(ia, key) { const c = ia.cands[key]; if (!c) return ''; const [i] = key.split('|'); return aiSvg(M(ia.b).items[+i].i || 'sparkle-fill', c.style, c.color); }
+  function candSrc(ia, key) { const c = ia.cands[key]; if (!c) return ''; const [i, f] = key.split('|'); return styleSrc(ia.b, M(ia.b).items[+i], c.style, c.color, f); }
   A.iaOpen = (b) => {
     const x = X(); const its = M(b).items;
-    x.E.iconAi = { b, style: 'glass', extra: '', picks: its.map((it) => isReq(b, it) || b === 'gamemenu' || (b === 'midnav' && M(b).mode === 'conf')), stage: 'setup', pct: 0, cands: {}, failed: {}, busy: {}, done: 0, attempt: 0 };
+    x.E.iconAi = { b, style: 'r-glossy', extra: window.aiPreset ? window.aiPreset('glossy') : '', model: 'gpt', refSt: null, picks: its.map((it) => isReq(b, it) || b === 'gamemenu' || (b === 'midnav' && M(b).mode === 'conf')), stage: 'setup', pct: 0, cands: {}, failed: {}, busy: {}, done: 0, attempt: 0 };
     x.E.picker = null; S().menu = null; if (x.mobileEd()) x.E.mpanel = 'module';
   };
   const iaStop = () => { const ia = X().E.iconAi; if (ia && ia.timer) { clearInterval(ia.timer); clearTimeout(ia.timer); ia.timer = null; } };
   A.iaClose = () => { iaStop(); X().E.iconAi = null; };
-  A.iaStyle = (s) => { X().E.iconAi.style = s; };
+  A.iaStyle = (s) => { const ia = X().E.iconAi; ia.style = s; ia.fromRef = false; if (/^r-/.test(s) && window.aiPreset) ia.extra = window.aiPreset(s.slice(2)); };
+  // 只给某一个图标生成（画布 / 内容页签里点单个图标 → AI 生成）
+  A.iaOpenOne = (arg) => { const [b, i] = arg.split('|'); A.iaOpen(b); const ia = X().E.iconAi; M(b).items.forEach((it, j) => { ia.picks[j] = j === +i; }); ia.one = +i; S().menu = null; X().E.tab = 'content'; };
+  A.iaModel = (v) => { X().E.iconAi.model = v; S().menu = null; };
+  // 参考图：上传后自动反推款式 + 提示词
+  A.iaRefPick = () => { const ia = X().E.iconAi; if (!ia) return false; window.pickImage({ accept: window.IMG_ACCEPT + ',image/jpeg', maxMB: 10 }, (src, file) => {
+    ia.refSt = { uploading: true, pct: 60 }; ia.analyzing = true; window.render();
+    window.aiRefRead(src, [0, 1].map(() => t('mp/ai-where', { m: modTitle(ia.b) })), (res) => {
+      if (X().E.iconAi !== ia) return; ia.analyzing = false;
+      if (!res) { ia.refSt = null; window.toast(t('mp/icon-bad'), { info: true }); window.render(); return; }
+      ia.refSt = { src, name: file ? file.name : '' }; ia.extra = res.prompt; ia.style = 'r-' + res.style; ia.fromRef = true; window.render();
+    });
+  }); return false; };
+  A.iaRefRm = () => { const ia = X().E.iconAi; ia.refSt = null; ia.analyzing = false; ia.fromRef = false; if (/^r-/.test(ia.style) && window.aiPreset) ia.extra = window.aiPreset(ia.style.slice(2)); };
+  A.iaRefCancel = () => A.iaRefRm();
+  A.iaRefView = () => false;
+  document.addEventListener('input', (e) => { const el = e.target; if (el.matches && el.matches('[data-iaprompt]') && X().E.iconAi) X().E.iconAi.extra = el.value.slice(0, 300); });
   I.iaExtra = (v) => { X().E.iconAi.extra = v; };
   // 全选 / 全不选（必交项始终保留）
   A.iaAll = (v) => { const ia = X().E.iconAi; if (!ia) return false; M(ia.b).items.forEach((it, i) => { ia.picks[i] = v === '1' || isReq(ia.b, it); }); };
@@ -431,8 +468,13 @@
     let body = '', foot = '';
     if (ia.stage === 'setup') {
       const r = its.filter((it) => isReq(b, it)).length, o = its.filter((it, i) => !isReq(b, it) && ia.picks[i]).length;
-      body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${aiSvg(its[0].i || 'sparkle-fill', s, x.E.D.theme.primary)}" alt=""><span>${window.I18N['mp/ai-st-' + s] ? t('mp/ai-st-' + s) : t('ad/ics-' + s)}</span></button>`).join('')}</div>`)
-        + sec(t('mp/ai-extra'), `<input class="input" data-input="iaExtra" value="${esc(ia.extra)}" placeholder="${esc(t('mp/ai-extra-ph'))}" maxlength="60">`)
+      const pv = ia.one != null ? its[ia.one] : its[0];
+      const mMenu = S().menu === 'ia-model' ? `<div class="menu c-menu tbai-mmenu">${['gpt', 'gemini'].map((m) => `<button class="menu-item model-item ${ia.model === m ? 'is-on' : ''}" data-act="iaModel" data-arg="${m}">${(window.MODEL_LOGO || {})[m] || ''}<span><div class="nm">${m === 'gemini' ? 'Gemini' : 'GPT Image'}</div><div class="ds">${m === 'gpt' ? 'Sunburst Flare' : 'Nano Banana Pro'}</div></span></button>`).join('')}</div>` : '';
+      const box = `<div class="c-box tbai-box ia-box"><div class="c-input">${window.refSlot(ia.refSt, 'iaRef')}<textarea rows="4" maxlength="300" data-iaprompt placeholder="${esc(ia.analyzing ? t('ed/tbai-analyzing') : t('mp/ai-extra-ph'))}" ${ia.analyzing ? 'disabled' : ''}>${esc(ia.analyzing ? '' : ia.extra || '')}</textarea></div>
+        <div class="c-tools"><div class="c-opts"><div class="rel"><button class="c-opt ${S().menu === 'ia-model' ? 'is-open' : ''}" data-act="menu:toggle" data-arg="ia-model">${(window.MODEL_LOGO || {})[ia.model || 'gpt'] || ''}<span class="ellipsis">${ia.model === 'gemini' ? 'Gemini' : 'GPT Image'}</span>${ic('caret-down', 'chev')}</button>${mMenu}</div></div></div></div>
+        <div class="p-note">${ia.fromRef ? ic('sparkle-fill', 'ic-16') + t('ed/tbai-prompt-tip2') : t('ed/tbai-box-tip')}</div>`;
+      body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${styleSrc(b, pv, s, x.E.D.theme.primary, 'imgOn')}" alt=""><span>${styleName(s)}</span></button>`).join('')}</div>`)
+        + sec(t('ed/tbai-sprompt'), box)
         + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
         + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
       foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
@@ -472,7 +514,7 @@
   A.bxOpen = (b) => {
     bxB = b; S().menu = null;
     if (!bxIn) {
-      bxIn = document.createElement('input'); bxIn.type = 'file'; bxIn.multiple = true; bxIn.accept = 'image/png,image/svg+xml,image/webp'; bxIn.style.display = 'none'; bxIn.setAttribute('data-batch-file', '');
+      bxIn = document.createElement('input'); bxIn.type = 'file'; bxIn.multiple = true; bxIn.accept = window.IMG_ACCEPT; bxIn.style.display = 'none'; bxIn.setAttribute('data-batch-file', '');
       document.body.appendChild(bxIn);
       bxIn.addEventListener('change', () => { const files = [...bxIn.files]; bxIn.value = ''; if (files.length) bxRead(bxB, files); });
     }
@@ -489,7 +531,7 @@
     const rows = []; let left = files.length;
     const doneOne = () => { if (--left === 0) { X().E.bx = { b, rows, ing: null, pick: null }; X().E.dlg = 'batch'; window.render(); } };
     files.forEach((file, k) => {
-      const row = { name: file.name, src: '', w: 0, h: 0, bad: !/^image\/(png|svg\+xml|webp)$/.test(file.type), target: -1, f: 'img' };
+      const row = { name: file.name, src: '', w: 0, h: 0, bad: !window.imgOk(file), target: -1, f: 'img' };
       rows[k] = row;
       let base = file.name.replace(/\.[^.]+$/, '');
       const on = /(_选中|_active|_on)$/i.test(base); base = base.replace(/(_选中|_active|_on)$/i, '');

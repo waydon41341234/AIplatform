@@ -276,6 +276,9 @@
   A.demoToggle = (k) => { S.demo[k] = !S.demo[k]; };
 
   // ---------- 选图 ----------
+  // 模块图片（图标 / Banner / 卡片封面等）统一支持的格式（Waydon 2026-11-26）
+  window.IMG_ACCEPT = 'image/png,image/svg+xml,image/apng,image/avif,image/webp';
+  window.imgOk = (f) => !!f && /^image\/(png|svg\+xml|apng|avif|webp)$/.test(f.type);
   // pickImage({accept, maxMB, multiple}, cb)：单选 cb(dataURL, file)；多选 cb([{src, name, file}])。类型 / 大小不合规自己 toast，不回调
   window.pickImage = function (opts, cb) {
     opts = Object.assign({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10, multiple: false }, opts || {});
@@ -309,7 +312,7 @@
     return `<button class="refslot" data-act="${act}Pick" aria-label="${esc(t('composer/ref-slot'))}">${ic('plus')}<span>${t('composer/ref-slot')}</span><span class="tip">${t('composer/ref-hint')}</span></button>`;
   };
   window.refPick = function (st, done) {
-    window.pickImage({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10 }, (src, file) => window.refUpload(st, src, file ? file.name : '', done));
+    window.pickImage({ accept: 'image/png,image/jpeg,image/webp,image/avif,image/apng', maxMB: 10 }, (src, file) => window.refUpload(st, src, file ? file.name : '', done));
   };
   // 模拟上传约 1 秒
   window.refUpload = function (st, src, name, done) {
