@@ -671,7 +671,7 @@
     const busy = x.E.adMod && x.E.adMod.id === id;
     // 「换样式」= 整模块重新配样式 / 配色，不是生成图片（生成图片走 ✦ AI 统一面板），图标用 shuffle 区分（docs/ai-unified.md 第 7 节）
     const label = t('ad/mod-regen', { c: AD_MOD_COST });
-    if (mobile) return `<button class="ibtn ibtn-sm ad-mbtn ${busy ? 'is-busy' : ''}" data-act="adMod" data-arg="${id}" title="${esc(label)}" aria-label="${esc(label)}">${ic('shuffle')}</button>`;
+    if (mobile) return `<button class="m-hbtn ad-mbtn ${busy ? 'is-busy' : ''}" data-act="adMod" data-arg="${id}" title="${esc(label)}">${ic('shuffle')}<span>${t('aig/restyle', { c: AD_MOD_COST })}</span></button>`; // 手机标题栏写出价钱（Figma M-01）
     return `<button class="ad-tool" data-act="adMod" data-arg="${id}" data-stop title="${esc(label)}">${ic('shuffle')}${t('aig/restyle', { c: AD_MOD_COST })}</button>`;
   }
   function modMask(id) {
@@ -682,7 +682,7 @@
   // 花点数先说价钱：确认框（余额不足时确认框自己变「去充值」）
   A.adMod = (id) => {
     const x = X(), E = x.E; if (E.adMod) return false;
-    window.costConfirm({ title: t('aig/restyle-title', { m: x.modName(id) }), body: t('aig/restyle-body'), cost: AD_MOD_COST, okLabel: t('aig/restyle-ok', { c: AD_MOD_COST }), onOk: () => adModRun(id) });
+    window.costConfirm({ title: t('aig/restyle-title'), body: t('aig/restyle-body'), cost: AD_MOD_COST, okLabel: t('aig/restyle-ok'), star: true, icon: 'shuffle', onOk: () => adModRun(id) }); // Figma G1-15 / M-14
   };
   function adModRun(id) {
     const x = X(), E = x.E; if (E.adMod) return;

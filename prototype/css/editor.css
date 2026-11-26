@@ -1168,9 +1168,11 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 /* 款式卡（AIG/StyleTile）：52×52 预览 + 名字，一行 5 个，图标类第二行放 4 种矢量 */
 .aig-styles { display: grid; grid-template-columns: repeat(5, minmax(0, 52px)); justify-content: space-between; row-gap: var(--space-12); }
 .aig-st { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
-.aig-st .pv { width: 100%; aspect-ratio: 1; border-radius: 12px; background: var(--bg-sunken, #000); box-shadow: inset 0 0 0 1px var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
-.aig-st:hover:not(:disabled) .pv { box-shadow: inset 0 0 0 1px var(--border-strong, var(--border)); }
-.aig-st.is-on .pv { box-shadow: inset 0 0 0 2px var(--brand); }
+.aig-st .pv { width: 100%; aspect-ratio: 1; border-radius: 12px; background: var(--bg-sunken, #000); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+/* 描边画在最上层：Banner 款式卡的整张预览图（.aig-pvimg）不会把选中框 / 悬停框盖住（Figma G1-04 选中 2px 蓝框） */
+.aig-st .pv::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--border); pointer-events: none; z-index: 2; }
+.aig-st:hover:not(:disabled) .pv::after { box-shadow: inset 0 0 0 1px var(--border-strong, var(--border)); }
+.aig-st.is-on .pv::after { box-shadow: inset 0 0 0 2px var(--brand); }
 .aig-st:disabled { cursor: default; opacity: .6; }
 .aig-st .pv img { width: 84%; height: 84%; object-fit: contain; }
 .aig-st .pv img.aig-logo { width: 92%; height: 60%; }
@@ -1213,7 +1215,7 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .aig-cand .aig-img { position: absolute; inset: 0; background: center / cover no-repeat; border-radius: inherit; }
 .aig-cand.is-on .aig-img { inset: 2px; border-radius: 6px; }
 .aig-cand .best { position: absolute; left: 6px; top: 4px; padding: 0 6px; border-radius: 6px; background: var(--brand); color: #fff; font-size: 11px; line-height: 18px; z-index: 1; white-space: nowrap; max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; }
-.aig-cand.skeleton { box-shadow: none; }
+.aig-cand.skeleton, .aig-c.skeleton { box-shadow: none; background: linear-gradient(110deg, color-mix(in srgb, var(--text) 13%, var(--bg-surface)) 30%, color-mix(in srgb, var(--text) 22%, var(--bg-surface)) 50%, color-mix(in srgb, var(--text) 13%, var(--bg-surface)) 70%); background-size: 300% 100%; } /* 盖过 .aig-cand 的底色，深色下是灰色闪光而不是纯黑（Figma G1-09 / M-06） */
 .aig-cand.skeleton b { position: relative; font-size: 12px; color: var(--text-3); font-weight: 400; }
 .aig-cand.is-fail { background: color-mix(in srgb, var(--error) 16%, transparent); box-shadow: none; border: 1px dashed var(--error); color: var(--error); }
 .aig-cand.is-fail .ic { width: 18px; height: 18px; }
@@ -1264,3 +1266,64 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .aig-c .aig-two > img { width: 14px; height: 14px; flex: none; }
 .aig-row .aig-c:has(.aig-two) { width: 44px; }
 .aig-c .aig-two.is-btn > i { width: 20px; height: 10px; flex: none; }
+
+/* ---------- AIG QA 修正（Figma 04-AI 统一生成） ---------- */
+/* Banner 款式卡：迷你 Banner（标题字压在样图上，Figma G1-04） */
+.aig-st .pv .aig-bnt { position: absolute; left: 4px; right: 4px; top: 50%; transform: translateY(-50%); z-index: 1; display: flex; flex-direction: column; align-items: flex-start; color: #fff; font-weight: 700; line-height: 1.05; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); pointer-events: none; }
+.aig-st .pv .aig-bnt b { font-size: 9px; white-space: nowrap; }
+.aig-st .pv .aig-bnt i { font-style: normal; font-size: 7px; font-weight: 500; opacity: .9; white-space: nowrap; }
+/* 生成中：骨架格中间写百分比 */
+.aig-cand.skeleton b { color: var(--text-2); }
+/* 范围分段：名字长（vi）时折成两行，不截断目标名 */
+.aig-seg.is-eq .aig-sg { height: auto; min-height: 38px; padding: 4px var(--space-8); line-height: 16px; }
+.aig-seg.is-eq .aig-sg .ellipsis { white-space: normal; overflow: visible; text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-align: center; }
+/* 「最贴合」角标：小格（图标 4 列）字小一点，vi「Phù hợp nhất」不截断 */
+.aig-grid.is-c4 .aig-cand .best { left: 3px; top: 3px; padding: 0 4px; font-size: 10px; line-height: 16px; max-width: calc(100% - 6px); text-overflow: clip; }
+/* 左 / 右一组（信箱 未登录 / 已登录、按钮底图 未选 / 选中）：两张分开的格子，说明在下面（Figma G3-16C） */
+.aig-grid.is-lr { row-gap: var(--space-12); }
+.aig-pair2 { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 4px; border-radius: var(--radius-sm); }
+.aig-pair2 .aig-pp { position: relative; width: 100%; display: flex; }
+.aig-pair2 .aig-two { gap: 8px; }
+.aig-pair2 .aig-two > img, .aig-pair2 .aig-two > i { width: auto; flex: 1 1 0; max-height: none; aspect-ratio: 1; padding: 6px; border-radius: var(--radius-sm); background-color: var(--bg-sunken, var(--fill-3)); box-shadow: inset 0 0 0 1px var(--border); background-origin: content-box; }
+.aig-pair2 .aig-two.is-btn > i { aspect-ratio: 150 / 70; }
+.aig-pair2.is-on .aig-two > img, .aig-pair2.is-on .aig-two > i { box-shadow: inset 0 0 0 2px var(--brand); }
+.aig-pair2:hover:not(.is-on) .aig-two > img, .aig-pair2:hover:not(.is-on) .aig-two > i { box-shadow: inset 0 0 0 1px var(--border-strong, var(--border)); }
+.aig-pair2 .best { position: absolute; left: 4px; top: 4px; padding: 0 4px; border-radius: 6px; background: var(--brand); color: #fff; font-size: 10px; line-height: 16px; z-index: 1; white-space: nowrap; }
+.aig-pair2 .aig-cap { font-size: 11px; line-height: 14px; color: var(--text-3); white-space: normal; text-align: center; }
+/* 列表行：生成中转圈 + 百分比、等待中 ✦ 占位；失败行红底红字、红虚线空格、红「重试」（Figma G2-10G / G3-08） */
+.aig-c.is-ing { flex-direction: column; gap: 0; background: var(--fill-3); }
+.aig-c.is-ing .aig-spin { width: 12px; height: 12px; }
+.aig-c.is-ing b { font-size: 9px; line-height: 11px; font-weight: 400; color: var(--text-2); }
+.aig-c.is-wait { background: var(--fill-3); color: var(--icon-3, var(--text-3)); }
+.aig-c.is-wait .ic { width: 14px; height: 14px; }
+.aig-row.is-fail { box-shadow: none; background: color-mix(in srgb, var(--error) 10%, transparent); }
+.aig-row.is-fail .nm { color: var(--error); }
+.aig-c.is-fail { background: transparent; box-shadow: none; border: 1.5px dashed var(--error); }
+.aig-link.is-err { color: var(--error); }
+.aig-lab.is-part { color: var(--text); }
+.aig-more { align-self: stretch; text-align: left; padding: var(--space-8) var(--space-12); border-radius: var(--radius-sm); font-size: 12px; line-height: 18px; color: var(--text-2); background: var(--fill-3); }
+.aig-more:hover { color: var(--text); }
+/* 空提示词：红色警告图标 + 文案（Figma M-03E） */
+.aig .c-hint.aig-hint { display: flex; align-items: center; gap: 6px; color: var(--error); }
+.aig .c-hint.aig-hint .ic { width: 14px; height: 14px; flex: none; }
+/* 参考图悬停预览：在面板里往右下展开，不盖住标题和款式区，也不出面板左边 */
+.aig .ref-pop { left: 0; bottom: auto; top: calc(100% + 8px); transform: rotate(2deg); width: 200px; }
+.aig .ref-pop img { height: 180px; }
+/* 手机：模型名不截断 */
+@media (max-width: 599px) { .aig-box .c-opt .ellipsis { max-width: 96px; } }
+/* Banner 行尾 ✦ 的样式化提示（Figma G1-01 383:135441） */
+.has-tt { position: relative; }
+.has-tt[data-tt]:hover::after, .has-tt[data-tt]:focus-visible::after { content: attr(data-tt); position: absolute; right: 50%; bottom: calc(100% + 6px); transform: translateX(50%); padding: 4px 8px; border-radius: 6px; background: var(--text, #1c1c1e); color: var(--bg-surface, #fff); font-size: 12px; line-height: 18px; font-weight: 400; white-space: nowrap; z-index: 20; pointer-events: none; box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, .2)); }
+/* Banner 收起的行：只露出 ✦ 和 ⋯，铅笔和眼睛悬停时才出现（Figma G1-01）；隐藏的那张眼睛一直在 */
+.slide-list .asset.compact .slide-edit { display: none; }
+.slide-list .asset-row:not(.is-hidden) .asset.compact .eye { display: none; }
+.slide-list .asset-row:not(.is-hidden) .asset.compact:hover .eye, .slide-list .asset-row:not(.is-hidden) .asset.compact:focus-within .eye { display: inline-flex; }
+/* 手机：模块弹层只第一次出现时播进场动画；标题栏文字按钮（✦ AI、换样式 · ✦10） */
+.sheet.no-anim { animation: none; }
+.m-hbtn { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 var(--space-8); border-radius: var(--radius-full); font-size: 13px; font-weight: 500; color: var(--brand); white-space: nowrap; flex: none; }
+.m-hbtn:hover { background: var(--brand-subtle); }
+.m-hbtn .ic { width: 16px; height: 16px; }
+.m-hbtn.is-busy { opacity: .5; }
+/* 手机 Banner ⋯ 弹层：标题「第 2 张」，「✦ AI 生成」在最下面（Figma M-02） */
+.am-sheet .am-title { padding: var(--space-8) var(--space-12) var(--space-4); font-size: 16px; font-weight: 600; }
+.am-sheet .menu-item.is-ai { color: var(--brand); }

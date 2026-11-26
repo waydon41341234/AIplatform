@@ -773,7 +773,8 @@
   const STY = RSTY.concat(['line', 'fill', 'duotone', 'gradient']);
   const sOf = (st) => (RSTY.includes(st) ? 'r-' + st : st);
   // 一个入口的一组图（未选 / 选中一起生成；公告栏信箱 = 未登录 / 已登录）：候选 c = { st, k }，k = 换色序号
-  const perAi = (b, i) => { const it = M(b).items[+i]; return b === 'notice' && it && it.defOn ? ['img', 'imgOn'] : perEntry(b, +i); };
+  // 游戏菜单分类图标 AI 只出一张（Figma G4-02「4 张 · 58×44」「候选 · 挑一张」），选中态图在使用时按同款式一起换
+  const perAi = (b, i) => { const it = M(b).items[+i]; return b === 'notice' && it && it.defOn ? ['img', 'imgOn'] : b === 'gamemenu' ? ['img'] : perEntry(b, +i); };
   const entSrcs = (b, i, c) => { const it = M(b).items[+i]; return perAi(b, i).map((f) => [f, styleSrc(b, it, sOf(c.st), candColor(b, f, c.k), f)]); };
   const pairHtml = (srcs) => (srcs.length > 1 ? `<span class="aig-two">${srcs.map(([, src]) => `<img src="${src}" alt="">`).join('')}</span>` : `<img src="${srcs[0][1]}" alt="">`);
   // 帐户栏 / 公告栏 / 游戏菜单 / 底部导航 / 侧边栏：名字、提示词、整套名（Figma 标题「AI 生成 · 利息宝图标」「整套帐户栏图标」「分类图标 · 热门」「底部导航 · 优惠」）
@@ -786,9 +787,12 @@
     const pr = it ? perAi(b, +a.idx) : null;
     return t('aig/ic-p2', { adj: t('aig/adj-' + st), name: what, look: t('aig/look-' + st) }) + (pr && pr.length > 1 ? t('aig/p-pair', pairLab(b)) : '');
   };
-  const pairLab = (b) => (b === 'notice' ? { a: t('ed/signed-out'), b: t('ed/signed-in') } : { a: t('mp/state-def'), b: t('mp/state-act') });
+  const pairLab = (b) => (b === 'notice' ? { a: t('ed/signed-out'), b: t('ed/signed-in') } : { a: t('aig/s-off'), b: t('aig/s-on') }); // 「未选 / 选中」（Figma G4-07 / G4-09）
+  // 整套里哪些入口必交：帐户栏只有样板「利息宝」（M-11），公告栏喇叭 + 信箱都必交（G3-15a），底部导航 / 游戏菜单没有（G4-13 / G4-14）
+  const aiReq = (b, it, i) => (b === 'notice' ? isReq(b, it) : b === 'midnav' ? i === 0 : false);
   const ICON_AI = (b) => ({
-    entries: () => M(b).items.map((it, i) => ({ i, name: iaNm(b, it), thumb: thHtml(b, it), req: isReq(b, it), def: isReq(b, it) || ((b === 'gamemenu' || b === 'sidebar') && !!it.on) || (b === 'midnav' && M(b).mode === 'conf') || b === 'bottomnav', pics: perAi(b, i).length, cost: b === 'notice' && perAi(b, i).length > 1 ? 40 : 0 })).filter((e) => b !== 'notice' || e.i !== 1 || M(b).mail),
+    // 游戏菜单只算显示着的分类（Figma「整套 · 9 个」，隐藏的区块链 / 最近 / 收藏 / 试玩不在里面）
+    entries: () => M(b).items.map((it, i) => ({ i, name: iaNm(b, it), label: b === 'notice' && perAi(b, i).length > 1 ? iaNm(b, it) + t('aig/pair-note', { name: '', a: pairLab(b).a, b: pairLab(b).b }) : '', thumb: thHtml(b, it), req: aiReq(b, it, i), def: isReq(b, it) || ((b === 'gamemenu' || b === 'sidebar') && !!it.on) || (b === 'midnav' && M(b).mode === 'conf') || b === 'bottomnav', pics: perAi(b, i).length, cost: b === 'notice' && perAi(b, i).length > 1 ? 40 : 0, on: b !== 'gamemenu' || !!it.on })).filter((e) => (b !== 'notice' || e.i !== 1 || M(b).mail) && e.on),
     // 底部导航整套的样板默认「优惠」（首页是内置图标，Figma G4-14C）
     sample: () => (b === 'bottomnav' ? 1 : 0),
     styles: (tg, a) => { const its = M(b).items, pv = (a && a.scope === 'one' && its[+a.idx]) || its[0]; return STY.map((st) => ({ id: st, label: t('aig/st-' + st), html: `<img src="${styleSrc(b, pv, sOf(st), X().E.D.theme.primary, 'imgOn')}" alt="">` })); },
@@ -802,7 +806,7 @@
     lib: (a, tg, i, c) => 'img:' + entSrcs(b, i, c).slice(-1)[0][1],
     name: (a) => t(IC_NAME[b], { n: iaNm(b, M(b).items[+a.idx] || {}) }),
     usedName: (a) => t(IC_USED[b] || IC_NAME[b], { n: iaNm(b, M(b).items[+a.idx] || {}) }),
-    apply: (a, tg, i, c) => { const it = X().E.D.m[b].items[+i]; entSrcs(b, i, c).forEach(([f, src]) => { it[f] = src; }); },
+    apply: (a, tg, i, c) => { const it = X().E.D.m[b].items[+i]; entSrcs(b, i, c).forEach(([f, src]) => { it[f] = src; }); if (b === 'gamemenu' && perEntry(b, +i).includes('imgOn')) it.imgOn = styleSrc(b, it, sOf(c.st), candColor(b, 'imgOn', c.k), 'imgOn'); },
     pay: () => ['iconset', { type: tType(b) }],
   });
   const icTarget = (b) => ({
@@ -846,16 +850,18 @@
       AIG.reg(b, {
         targets: () => {
           const o = [icTarget(b)];
-          if (b === 'gamemenu' && M('gamemenu').style === 'side') o.push({ id: 'btn', label: t('mp/gm-btn'), kind: 'image', spec: [150, 70], count: 4, cost: 20, ratio: 1, cols: 4, pair: () => [t('mp/state-def'), t('mp/state-act')], lr: true });
+          if (b === 'gamemenu' && M('gamemenu').style === 'side') o.push({ id: 'btn', label: t('mp/gm-btn'), kind: 'image', spec: [150, 70], count: 4, cost: 20, ratio: 1, cols: 4, pair: () => [t('aig/s-off'), t('aig/s-on')], lr: true });
           if (b === 'midnav' && M('midnav').layout === 'account' && bal) { const bt = bal.target(); if (bt) o.push(bt); }
           return o;
         },
         defaultTarget: () => 'icons',
+        cntSample: b !== 'midnav' && b !== 'notice', // G3 只算其余（已生成 3/3 · 样板 1 + 其余 3）；G4 连样板一起算（9/9）
+        rowTags: b === 'notice', // 「喇叭（样板）」「信箱 ×2」（Figma G3-15e）
         impl: (tg) => (tg.id === 'btn' ? GM_BTN_AI : tg.id === 'bal' ? bal.impl : IC),
       });
     });
     AIG.reg('gamecards', {
-      targets: () => [{ id: 'fallback', label: t('mp/gc-fallback'), kind: 'image', spec: [260, 260], count: 4, cost: 10, ratio: 1, cols: 4 }].concat(M('gamecards').fav !== false ? [{ id: 'star', label: t('mp/gc-fav'), kind: 'image', spec: [36, 36], count: 4, cost: 10, ratio: 1, cols: 4, pair: () => [t('mp/state-def'), t('mp/state-act')] }] : []),
+      targets: () => [{ id: 'fallback', label: t('aig/t-fb'), kind: 'image', spec: [260, 260], count: 4, cost: 10, ratio: 1, cols: 4 }].concat(M('gamecards').fav !== false ? [{ id: 'star', label: t('mp/gc-fav'), kind: 'image', spec: [36, 36], count: 4, cost: 10, ratio: 1, cols: 4, pair: () => [t('aig/s-off'), t('aig/s-on')] }] : []),
       defaultTarget: () => 'fallback',
       impl: () => GC_AI,
     });

@@ -73,7 +73,7 @@ a { color: var(--link); text-decoration: none; }
 .sheet-grab { width: 36px; height: 5px; margin: 0 auto var(--space-12); border-radius: 3px; background: var(--fill-1); }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin-bottom: var(--space-12); }
 .toast-wrap { position: fixed; z-index: 120; left: 0; right: 0; top: 24px; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
-@media (max-width: 599px) { .toast-wrap { top: auto; bottom: calc(96px + env(safe-area-inset-bottom)); } }
+@media (max-width: 599px) { .toast-wrap { top: auto; bottom: var(--toast-b, calc(96px + env(safe-area-inset-bottom))); } } /* 手机编辑器有弹层时放在弹层上方（--toast-b 由编辑器写） */
 .toast { pointer-events: auto; display: inline-flex; align-items: center; gap: var(--space-12); min-height: 40px; padding: var(--space-8) var(--space-16); border-radius: var(--radius-full); background: var(--bg-raised); border: var(--stroke-thin) solid var(--border); box-shadow: var(--shadow-lg); animation: pop .2s ease; max-width: calc(100vw - 32px); }
 .toast .ic { color: var(--success); }
 .toast.is-info .ic { color: var(--icon-2); }
@@ -466,6 +466,14 @@ a { color: var(--link); text-decoration: none; }
 .cost-row { display: flex; justify-content: space-between; gap: var(--space-12); }
 .cost-row.is-err, .cost-row.is-err span { color: var(--error); }
 .cost-dialog { width: min(400px, calc(100vw - 32px)); }
+/* AIG/CostConfirm：图标块 + ✦ 金额（Figma 383:138407 / 383:138384）；手机按钮占满一行（M-10 / M-12 / M-14） */
+.cc-ic { width: 48px; height: 48px; border-radius: 12px; background: var(--brand-subtle); color: var(--brand); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.cc-ic .ic { width: 24px; height: 24px; }
+.cc-body { margin: 8px 0 16px; }
+.cc-star .cc-cost { color: var(--brand); }
+.cc-star h3 + .cost-card { margin-top: 16px; }
+.cost-sheet .cc-foot { justify-content: stretch; }
+.cost-sheet .cc-foot .btn { flex: 1 1 0; justify-content: center; }
 
 /* CP-03 空提交 */
 .c-box.is-err { box-shadow: inset 0 0 0 1.5px var(--error); }

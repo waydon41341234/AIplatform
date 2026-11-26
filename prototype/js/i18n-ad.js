@@ -116,7 +116,7 @@ Object.assign(window.I18N, {
   // 单模块（AD-04）
   'ad/mod-regen': ['换一套样式和配色（✦{c}），不改图片', '換一套樣式和配色（✦{c}），不改圖片', 'Restyle this module: new layout & colors (✦{c}), images stay', 'Đổi kiểu và màu cho mô-đun (✦{c}), giữ nguyên ảnh'],
   'ad/mod-ing': ['AI 生成中…', 'AI 生成中…', 'AI generating…', 'AI đang tạo…'],
-  'ad/mod-done': ['已给「{m}」换样式，扣 ✦{c}', '已給「{m}」換樣式，扣 ✦{c}', '"{m}" restyled, ✦{c} used', 'Đã đổi kiểu "{m}", trừ ✦{c}'],
+  'ad/mod-done': ['已换样式，扣 ✦{c}', '已換樣式，扣 ✦{c}', 'Restyled, ✦{c} used', 'Đã đổi kiểu, trừ ✦{c}'],
   'ad/mod-failed': ['重新生成失败，未扣点', '重新生成失敗，未扣點', 'Regeneration failed; not charged', 'Tạo lại lỗi, không trừ điểm'],
   'ad/mod-cancelled': ['已取消，未扣点', '已取消，未扣點', 'Cancelled; not charged', 'Đã hủy, không trừ điểm'],
 

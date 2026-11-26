@@ -77,6 +77,8 @@ window.I18N = {
   'confirm/cost-label': ['本次消耗', '本次消耗', 'This run', 'Lần này'],
   'confirm/balance-label': ['当前余额', '目前餘額', 'Balance', 'Số dư'],
   'confirm/points': ['{n} 点', '{n} 點', '{n} credits', '{n} điểm'],
+  'confirm/cost-label-s': ['本次约消耗', '本次約消耗', 'About', 'Khoảng'],
+  'confirm/short-by-s': ['还差 ✦{n}', '還差 ✦{n}', '✦{n} short', 'Còn thiếu ✦{n}'],
   'confirm/approx': ['约 {n} 点', '約 {n} 點', '≈ {n} credits', '≈ {n} điểm'],
   'confirm/title-midnav': ['确认生成一套中部导航图标？', '確認生成一套中部導航圖示？', 'Generate a full set of middle nav icons?', 'Tạo cả bộ biểu tượng điều hướng giữa?'],
   'confirm/title-bottomnav': ['确认生成一套底部导航图标？', '確認生成一套底部導航圖示？', 'Generate a full set of bottom nav icons?', 'Tạo cả bộ biểu tượng điều hướng dưới?'],

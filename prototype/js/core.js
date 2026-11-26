@@ -342,9 +342,17 @@
   };
   // 单个生成余额不足时直接弹的版本
   window.lowBalance = (n) => window.costConfirm({ title: t('confirm/low-title'), body: t('confirm/low-one', { n }), cost: n });
+  // star: true → AI 生成统一面板的写法（Figma AIG/CostConfirm）：顶部 48 图标块，金额写 ✦，「本次约消耗 / 当前余额 / 还差 ✦N」
   function costBody() {
     const o = S.cost || {};
     const ok = window.canAfford(o.cost), short = (o.cost || 0) - S.credits;
+    if (o.star) {
+      return `<div class="cc-star">${o.icon ? `<span class="cc-ic">${ic(ok ? o.icon : 'wallet-fill')}</span>` : ''}<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted cc-body">${esc(o.body)}</p>` : ''}
+      <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label-s')}</span><b class="cc-cost">✦${num(o.cost || 0)}</b></div>
+        <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>✦${num(S.credits)}</span></div></div>
+      ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by-s', { n: num(short) })}</div>`}
+      <div class="dialog-foot cc-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div></div>`;
+    }
     return `<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
       <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
         <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: num(S.credits) })}</span></div></div>

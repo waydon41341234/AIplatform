@@ -363,7 +363,7 @@
       <div class="bx-lab">${t('ed/bal-mode')}</div>${modes}
       <div class="bx-lab">${t('ed/bal-head')}</div>${seg3(['vip', 'greet', 'none'], cfg.head, 'balHead')}${cfg.head === 'greet' ? `<input class="input" style="margin-top:8px" maxlength="12" value="${esc(cfg.greet)}" data-balgreet placeholder="${esc(t('ed/bal-greet-ph'))}">` : ''}
       <div class="bx-lab">${t('ed/bal-act')}</div>${seg3(['copy', 'switch', 'none'], cfg.act, 'balAct')}
-      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'ed/bal-i-cur', '52×52', cfg.mode === 'switch' ? 'accent_3' : null, true)}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30', 'primary')}
+      <div class="bx-lab">${t('ed/bal-icons')}</div>${cfg.mode === 'nocur' ? '' : imgRow('curImg', CLA + (cfg.mode === 'switch' ? 'bal-sym.png' : 'bal-flag.png'), 'aig/t-bal', '52×52', cfg.mode === 'switch' ? 'accent_3' : null, true)}${imgRow('refImg', CLA + 'bal-refresh.png', 'ed/bal-i-ref', '30×30', 'primary')}
       ${cfg.head === 'vip' ? imgRow('vipImg', CLA + 'bal-vip2.png', 'ed/bal-i-vip', '60×28') : ''}${imgRow('caretImg', CLA + 'bal-caret.png', 'ed/bal-i-caret', '20×20', 'neutral_2')}${cfg.act === 'none' ? '' : imgRow(actK, CLA + (cfg.act === 'copy' ? 'bal-copy.png' : 'bal-switch.png'), 'ed/bal-act-' + cfg.act, '26×26', 'primary')}
       <div class="p-note">${t('ed/bal-ic-note')}</div>
       ${inMid ? `<div class="p-note">${t('ed/bal-c-moved')} <button class="warn-link" data-act="setTab" data-arg="color">${t('ed/tab-color')}</button></div>` : `<div class="bx-lab">${t('ed/bal-colors')}</div>${balColorRows()}`}
@@ -480,7 +480,14 @@
     if (mr.top < br.top || mr.bottom > br.bottom) b.scrollTop += mr.top - br.top - 8;
   });
   // 手机编辑器：底部面板（.m-mod）盖住画布下半部分；选中模块后把画布滚到模块露在面板上方（不够滚就给画布底部垫出面板高度）
-  let mLastSel = null, mWant = null;
+  let mLastSel = null, mWant = null, mShown = null;
+  // 模块弹层 / AI 弹层每次重新渲染都是新节点：只有第一次出现才播进场动画，否则每点一下都闪一下（QA：375 弹层反复从下往上滑）
+  window.AFTER_RENDER.push(() => {
+    const sh = document.querySelector('.med-sheet.m-mod'); mShown = sh ? E.sel : null;
+    // 手机 toast 放在弹层上方，不盖住弹层内容（Figma M-08 / M-13X）
+    const any = document.querySelector('.med-sheet');
+    if (any && window.innerWidth < 600) document.documentElement.style.setProperty('--toast-b', any.offsetHeight + 12 + 'px'); else document.documentElement.style.removeProperty('--toast-b');
+  });
   window.AFTER_RENDER.push(() => {
     const c = document.querySelector('.med-canvas'); if (!c) { mLastSel = null; mWant = null; return; }
     const sh = document.querySelector('.med-sheet.m-mod');
@@ -596,9 +603,10 @@
     if (id.startsWith('slide')) {
       const i = +id.slice(5); const s = E.D.banner.slides[i]; if (!s) return '';
       const v = visIdx(); const lastVis = !s.hid && v.length <= 1; const one = E.D.banner.slides.length <= 1;
-      return `${aiItem('banner|' + id)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button><button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>
+      const mob = mobileEd(); // 电脑 G1-03：AI 生成排第一；手机 M-02：标题「第 2 张」，「✦ AI 生成」放最下面
+      return `${mob ? `<div class="am-title">${t('aig/t-slide', { n: i + 1 })}</div>` : aiItem('banner|' + id)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}">${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>
         <button class="menu-item" data-act="amToggle" data-arg="${id}" ${lastVis ? 'disabled' : ''}>${ic(s.hid ? 'eye-fill' : 'eye-slash-fill')}<span class="tx"><span>${t(s.hid ? 'ed/am-show' : 'ed/am-hide')}</span>${lastVis ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>
-        <div class="menu-sep"></div><button class="menu-item is-danger" data-act="amDelete" data-arg="${id}" ${one ? 'disabled' : ''}>${ic('trash')}<span class="tx"><span>${t('ed/am-delete')}</span>${one ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>`;
+        <div class="menu-sep"></div><button class="menu-item is-danger" data-act="amDelete" data-arg="${id}" ${one ? 'disabled' : ''}>${ic('trash')}<span class="tx"><span>${t('ed/am-delete')}</span>${one ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>${mob ? `<div class="menu-sep"></div>${aiItem('banner|' + id).replace('class="menu-item', 'class="menu-item is-ai')}` : ''}`;
     }
     if (id.startsWith('tb-')) {
       // 顶部栏：上传 / AI 生成 / 恢复默认 / 显示隐藏（Waydon 2026-11-26）
@@ -647,12 +655,13 @@
     const eye = (s, i) => { const lastVis = !s.hid && vis.length <= 1; return `<button class="eye ${lastVis ? 'is-off' : ''}" data-act="amToggle" data-arg="slide${i}" data-stop ${lastVis ? 'disabled' : ''} title="${esc(t(lastVis ? 'ed/slide-keep-one' : s.hid ? 'ed/am-show' : 'ed/am-hide'))}" aria-label="${esc(t(s.hid ? 'ed/am-show' : 'ed/am-hide'))}">${ic(s.hid ? 'eye-slash-fill' : 'eye-fill', 'ic-16')}</button>`; };
     const thumb = (i) => `<span class="thumb" style="${slideBg(B.slides[i], null, defImg(i))}"></span>`;
     // 行尾 ✦（Figma AIG/EntryButton Row）：每张轮播图一个，打开统一 AI 面板并选中这一张；首张展开卡片不再放整宽「AI 生成」按钮
-    const aiBtn = (i) => `<button class="ib-s tb-ai" data-act="aigOpen" data-arg="banner|slide${i}" data-stop title="${esc(t('aig/entry-tip'))}" aria-label="${esc(t('aig/entry-tip'))}">${ic('sparkle-fill', 'ic-16')}</button>`;
+    // 悬停出样式化提示「AI 生成这张图」（Figma G1-01 383:135441），不用浏览器原生 title
+    const aiBtn = (i) => `<button class="ib-s tb-ai has-tt" data-act="aigOpen" data-arg="banner|slide${i}" data-stop data-tt="${esc(t('aig/entry-tip'))}" aria-label="${esc(t('aig/entry-tip'))}">${ic('sparkle-fill', 'ic-16')}</button>`;
     const slides = B.slides.map((s, i) => {
       const grip = `<span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>`;
-      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}<span class="pill-tag">${t('ed/previewing-slide')}</span>${hidTag(s)}</div></span>${aiBtn(i)}${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}
+      if (i === E.slide) return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset is-on"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}<span class="pill-tag">${t('ed/previewing-slide')}</span>${hidTag(s)}</div></span>${eye(s, i)}${aiBtn(i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}
         <div class="acts"><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="slide${i}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="slide${i}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div></div>${uploadUI('slide' + i)}`;
-      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${aiBtn(i)}${eye(s, i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}</div></div>${uploadUI('slide' + i)}`;
+      return `<div class="asset-row ${s.hid ? 'is-hidden' : ''}" data-row="${i}">${grip}<div class="asset compact" data-act="slideTo" data-arg="${i}" title="${esc(t('ed/slide-edit'))}"><div class="top">${thumb(i)}<span style="min-width:0"><div class="nm slide-nm"><span>${t('ed/slide-n', { n: i + 1 })}</span></div><div class="sp">${spLine(s)}${hidTag(s)}</div></span><span class="slide-edit" aria-hidden="true">${ic('pencil-simple', 'ic-16')}</span>${eye(s, i)}${aiBtn(i)}${moreBtn('slide' + i)}</div>${warnLine(s, i)}</div></div>${uploadUI('slide' + i)}`;
     }).join('');
     const bad = checks().req.filter((x) => x.mod === 'banner');
     return `${bad.length ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${esc(bad[0].text)}<div class="caption faint">Banner</div></div></div>` : ''}
@@ -717,7 +726,9 @@
     neon: ['青蓝 / 紫色霓虹发光描边，深色半透明主体，科技赛博风，不要白色外发光', 'cyan / purple neon glowing outline, dark translucent body, cyber style, no white outer glow'],
   };
   const presetOf = (st) => TB_AI_P[st][/^zh/.test(S.lang) ? 0 : 1];
-  const SIDE_AI = (st) => 'assets/ai-acct/more-' + st + '.webp'; // 侧边栏入口 AI 图 = 菜单宫格图标
+  // 侧边栏入口 AI 图：跟矢量款式同一个「侧边栏」图形（Figma G2-15 404:183809），按款式换底色 / 质感，不再用宫格图
+  const SIDE_ST = { glossy: ['glass', null], flat: ['flat', null], blackgold: ['metal', '#b8922e'], festive: ['3d', '#e0312b'], neon: ['duotone', '#a64dff'] };
+  const SIDE_AI = (st) => { const v = SIDE_ST[st] || SIDE_ST.glossy; return window.MP.aiSvg('sidebar-simple', v[0], v[1] || E.D.theme.primary); };
   // 参考图反推提示词（通用）：读图取平均色 / 色相 / 饱和度 → 推荐款式 + 中英文提示词。where = [中文用途, 英文用途]
   function refRead(src, where, cb) {
     const im = new Image(); im.onload = () => {
@@ -1691,12 +1702,15 @@
   A.closePreview = () => { E.preview = false; };
   A.mIconClose = () => { E.mpanel = 'module'; E.iconMenu = null; };
   A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; E.keys = null; if (E.sel) E.sel = null; E.h5side = false; S.menu = null; E.rn = null; };
+  // 手机模块弹层标题栏（Figma M-01 / M-S0）：名称 · 「✦ AI」·「⇄ 换样式 · ✦10」文字按钮 · ✕；上移 / 下移 / 隐藏收进 ⋯
   function mModuleHead(id) {
     const b = baseName(id);
-    const ai = window.AIG && window.AIG.has(b) ? `<button class="ibtn ibtn-sm" data-act="aigOpen" data-arg="${id}" title="${esc(t('aig/menu'))}" aria-label="${esc(t('aig/menu'))}">${ic('sparkle-fill')}</button>` : '';
+    const ai = window.AIG && window.AIG.has(b) ? `<button class="m-hbtn is-ai" data-act="aigOpen" data-arg="${id}" title="${esc(t('aig/menu'))}">${ic('sparkle-fill')}<span>${t('aig/tool')}</span></button>` : '';
     const fixed = MODS[b].fixed; const idx = E.D.order.indexOf(id); const hid = !!E.D.hidden[id];
-    const mv = fixed || b === 'sidebar' ? '' : `<button class="ibtn ibtn-sm" data-act="move" data-arg="-1" ${idx <= 0 ? 'disabled' : ''} aria-label="↑">${ic('arrow-up')}</button><button class="ibtn ibtn-sm" data-act="move" data-arg="1" ${idx >= E.D.order.length - 1 ? 'disabled' : ''} aria-label="↓">${ic('arrow-down')}</button>`;
-    return `${ai}${window.AD ? window.AD.toolBtn(id, true) : ''}${mv}<button class="ibtn ibtn-sm" data-act="toggleHide" data-arg="${id}" aria-label="${esc(t('ed/am-toggle'))}">${ic(hid ? 'eye-fill' : 'eye-slash-fill')}</button><span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu">${ic('dots-three')}</button>${S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu"', 'class="menu" style="top:calc(100% + 4px);right:0;left:auto"') : ''}</span>`;
+    const mv = fixed || b === 'sidebar' ? '' : `<button class="menu-item" data-act="move" data-arg="-1" ${idx <= 0 ? 'disabled' : ''} data-stop>${ic('arrow-up')}${t('ed/move-up')}</button><button class="menu-item" data-act="move" data-arg="1" ${idx >= E.D.order.length - 1 ? 'disabled' : ''} data-stop>${ic('arrow-down')}${t('ed/move-down')}</button>`;
+    const vis = fixed ? '' : `<button class="menu-item" data-act="toggleHide" data-arg="${id}" data-stop>${ic(hid ? 'eye-fill' : 'eye-slash-fill')}${t(hid ? 'ed/am-show' : 'ed/am-hide')}</button>`;
+    const menu = S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu" data-stop>', `class="menu" data-stop style="top:calc(100% + 4px);right:0;left:auto">${mv}${vis}${mv || vis ? '<div class="menu-sep"></div>' : ''}`) : '';
+    return `${ai}${window.AD ? window.AD.toolBtn(id, true) : ''}<span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu" aria-label="${esc(t('ed/more'))}">${ic('dots-three')}</button>${menu}</span>`;
   }
   function mobilePanel() {
     if (!E.mpanel) return '';
@@ -1715,11 +1729,11 @@
     else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim" data-act="pkCancel"></div><div class="sheet med-sheet"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
     else if (E.mpanel === 'module' && E.sel && window.AIG && window.AIG.isOpen(baseName(E.sel))) {
       // AI 生成面板：替换模块弹层内容，标题栏只有面板自己的 ✕（不再叠一个弹层关闭）；整套结果列表时才撑高
-      return `<div class="sheet med-sheet m-mod m-aig ${window.AIG.tall() ? 'is-tall' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${window.AIG.panel()}</div>`;
+      return `<div class="sheet med-sheet m-mod m-aig ${window.AIG.tall() ? 'is-tall' : ''} ${mShown === E.sel ? 'no-anim' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${window.AIG.panel()}</div>`;
     } else if (E.mpanel === 'module' && E.sel) {
       const inner = modulePanel(E.sel);
       body = inner.replace('<h2 class="p-title">', `<div class="sheet-head"><h2 class="p-title" style="margin:0;min-width:0">`).replace('</h2>', `</h2><span class="sb-spacer"></span>${mModuleHead(E.sel)}<button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>`);
-      return `<div class="sheet med-sheet m-mod" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${body}</div>`;
+      return `<div class="sheet med-sheet m-mod ${mShown === E.sel ? 'no-anim' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${body}</div>`;
     } else { E.mpanel = null; return ''; }
     return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet ${cls}" data-sk="msheet"><div class="sheet-grab"></div><div class="sheet-head"><h3>${head}</h3><button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>${body}</div>`;
   }
@@ -1758,25 +1772,30 @@
   if (window.AIG) {
     const AIG = window.AIG, rot = AIG.rot, ST5 = AIG.STYLES5, VS = AIG.VSTYLES;
     const stName = (st) => t('aig/st-' + st);
-    const bnSpec = () => (E.device === 'pc' ? { w: 1920, h: 564 } : BANNER[E.D.banner.size]); // PC 画布按 1920×564 显示规格
+    // 规格跟当前 Banner 尺寸走（候选图就是这个尺寸的专用图，使用后写进去的也是这个尺寸）；PC 预览也一样，不再写 1920×564
+    const bnSpec = () => BANNER[E.D.banner.size];
+    const bnName = (n) => (E.D.banner.size === 'general' ? t('aig/n-slide', { n }) : t('aig/n-slide-sz', { s: t('ed/banner-' + E.D.banner.size), n }));
     // Banner 款式卡：光泽 / 黑金 / 喜庆 / 霓虹用样图，扁平用光泽样图去饱和
     const BN_PV = { glossy: 'glossy', flat: 'glossy', blackgold: 'blackgold', festive: 'festive', neon: 'neon' };
     const BANNER_AI = {
-      styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<i class="aig-pvimg" style="background-image:url(assets/ai-banner/${BN_PV[st]}.webp)${st === 'flat' ? ';filter:saturate(.45) brightness(1.18)' : ''}"></i>` })),
+      // 款式卡 = 迷你 Banner：样图 + 「万人竞技 / 巅峰对决」标题（Figma G1-04）
+      styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<i class="aig-pvimg" style="background-image:url(assets/ai-banner/${BN_PV[st]}.webp)${st === 'flat' ? ';filter:saturate(.45) brightness(1.18)' : st === 'blackgold' ? ';filter:brightness(1.35)' : ''}"></i><span class="aig-bnt"><b>${t('aig/bn-t1')}</b><i>${t('aig/bn-t2')}</i></span>` })),
       preset: (tg, st) => t('aig/bn-p-' + st),
       refPrompt: (tg, res) => { const sz = bnSpec(); return { style: res.style, prompt: t('ed/ai-ref-prompt', { w: sz.w, h: sz.h, hex: res.hex, style: t('ed/ai-st-' + res.style) }) }; },
       // 候选张数 / 比例跟当前 Banner 规格走（大 Banner、小 Banner 各 3 张专用图）
       gen: (a) => { const b = candBase(); return candScore(a).order.map((k) => b[k]); },
       tile: (a, tg, i, f) => `<i class="aig-img" style="${window.fxStyle(f)}"></i>`,
       lib: (a, tg, i, f) => f,
-      name: (a, tg) => t('aig/n-slide', { n: +tg.id.slice(5) + 1 }),
+      name: (a, tg) => bnName(+tg.id.slice(5) + 1), // 「大 Banner 第 2 张」「小 Banner 第 2 张」（Figma G1-14a / 14b）
+      libName: () => 'Banner', // 素材库「AI · Banner · 1」（Figma G1-11）
+      lowWhat: () => t('aig/low-slide'),
       apply: (a, tg, i, f) => { const sz = BANNER[E.D.banner.size]; setAsset(tg.id, { f, w: sz.w, h: sz.h }); E.replaced = null; }, // AI 图按规格出，尺寸提醒随之消失
       pay: () => ['banner', {}],
       onTarget: (tg) => { const i = +tg.id.slice(5); if (E.D.banner.slides[i]) E.slide = i; },
     };
     AIG.reg('banner', {
       // 小 Banner 3 列（98×62 格）；大 / 一般 / 中 2 列宽格
-      targets: () => { const sz = bnSpec(), small = E.device !== 'pc' && E.D.banner.size === 'small'; return E.D.banner.slides.map((s, i) => ({ id: 'slide' + i, label: t('aig/t-slide', { n: i + 1 }), kind: 'image', spec: [sz.w, sz.h], count: candBase().length, cost: 20, ratio: sz.w / sz.h, cols: small ? 3 : 2 })); },
+      targets: () => { const sz = bnSpec(), small = E.D.banner.size === 'small'; return E.D.banner.slides.map((s, i) => ({ id: 'slide' + i, label: t('aig/t-slide', { n: i + 1 }), kind: 'image', spec: [sz.w, sz.h], count: candBase().length, cost: 20, ratio: sz.w / sz.h, cols: small ? 3 : 2 })); },
       defaultTarget: () => 'slide' + E.slide,
       impl: () => BANNER_AI,
     });
@@ -1785,7 +1804,9 @@
     // 币种 / 搜索 / 侧边栏入口是一组图标：范围可切「只这一个 / 整套」，整套 = 组里勾选的入口，先出样板再按款式出其余
     const tbSrc = (k, st) => (k === 'side' ? SIDE_AI(st) : AIT + k + '-' + st + '.png');
     const TB_SPEC = { cur: [36, 36], search: [56, 49], side: [48, 48] };
-    const TB_IC = { cur: 'currency-cny-fill', search: 'magnifying-glass', side: 'list' };
+    // 币种矢量款式画 ¥（跟实物款式和 Figma 一致，不用 Phosphor 的「元」）；侧边栏入口 = 侧边栏图形
+    if (window.PH && !window.PH['yen-mark']) window.PH['yen-mark'] = '<path d="M56 40h24l48 68 48-68h24l-60 84v12h44v16h-44v20h44v16h-44v44h-24v-44H72v-16h44v-20H72v-16h44v-12Z"/>';
+    const TB_IC = { cur: 'yen-mark', search: 'magnifying-glass', side: 'sidebar-simple' };
     const vecSrc = (k, st) => window.MP.aiSvg(TB_IC[k], st, E.D.theme.primary);
     const icSrc = (k, st) => (VS.includes(st) ? vecSrc(k, st) : tbSrc(k, st));
     // 入口顺序跟 Figma G2-07 一致：搜索（必交）、币种、侧边栏入口；未登录才有币种切换
@@ -1805,13 +1826,13 @@
       tile: (a, tg, i, c) => `<img src="${icSrc(i, c.st)}" alt="">`,
       old: (a, tg, i) => tbOld(i),
       lib: (a, tg, i, c) => (VS.includes(c.st) ? null : 'img:' + tbSrc(i, c.st)),
-      name: (a, tg) => t('aig/n-' + tg.entry),
+      name: (a, tg) => (tg.entry === 'side' ? t('ed/tb-sideicon') : t('aig/n-' + tg.entry)), // 「AI 生成 · 侧边栏入口」（Figma G2-15）
       apply: (a, tg, i, c) => { const src = icSrc(i, c.st); if (i === 'side') tbIconSet('side', 'img:' + src); else tbIconSet(i, src); },
       pay: () => ['iconset', { type: t('mod/topbar') }],
     };
     const LOGO_AI = {
       styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<img class="aig-logo" src="assets/classic/logo.png" alt="" style="filter:${LOGO_ST[st]}">` })),
-      preset: (tg, st) => t('aig/logo-p', { s: stName(st) }),
+      preset: (tg, st) => (st === 'glossy' ? t('aig/logo-p-glossy') : t('aig/logo-p', { s: stName(st) })),
       refPrompt: (tg, res) => ({ style: res.style, prompt: t('aig/logo-p', { s: stName(res.style) }) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
       gen: (a, tg, i, n) => { const o = [LOGO_ST[a.style]]; for (let k = 0; o.length < n; k++) { const f = LOGO_AI_F[(a.round * 2 + k) % LOGO_AI_F.length]; if (!o.includes(f)) o.push(f); } return o; },
       tile: (a, tg, i, f) => `<img class="aig-logo" src="assets/classic/logo.png" alt="" style="filter:${f}">`,
@@ -1821,22 +1842,23 @@
     };
     // 余额框币种（统一后跟其他目标一样收 ✦20、出 4 张候选；ai-unified §9 业主已确认）
     const BAL_AI = {
-      styles: () => icStyles((st) => `<img src="${VS.includes(st) ? window.MP.aiSvg('currency-cny-fill', st, E.D.theme.primary) : AIT + 'cur-' + st + '.png'}" alt="">`),
+      styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<img src="${AIT + 'cur-' + st + '.png'}" alt="">` })), // 只出 5 种实物款式（Figma G3-13）
       preset: (tg, st) => icPreset('bal', st),
       refPrompt: (tg, res) => ({ style: res.style, prompt: icPreset('bal', res.style) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
       where: () => ['适合余额框里的币种小图标', 'readable at small size as a balance currency icon'],
-      gen: (a, tg, i, n) => rot(ST5.concat(VS), a.style, n).map((st) => ({ st })),
-      tile: (a, tg, i, c) => `<img src="${VS.includes(c.st) ? window.MP.aiSvg('currency-cny-fill', c.st, E.D.theme.primary) : AIT + 'cur-' + c.st + '.png'}" alt="">`,
+      gen: (a, tg, i, n) => rot(ST5, a.style, n).map((st) => ({ st })),
+      tile: (a, tg, i, c) => `<img src="${VS.includes(c.st) ? window.MP.aiSvg('yen-mark', c.st, E.D.theme.primary) : AIT + 'cur-' + c.st + '.png'}" alt="">`,
       lib: (a, tg, i, c) => (VS.includes(c.st) ? null : 'img:' + AIT + 'cur-' + c.st + '.png'),
-      name: () => t('aig/t-bal'),
-      apply: (a, tg, i, c) => { E.D.bal = Object.assign({}, BAL_DEF, E.D.bal || {}); E.D.bal.c = Object.assign({}, E.D.bal.c || {}); E.D.bal.curImg = VS.includes(c.st) ? window.MP.aiSvg('currency-cny-fill', c.st, E.D.theme.primary) : AIT + 'cur-' + c.st + '.png'; },
+      name: () => t('aig/n-bal'), // 「AI 生成 · 余额框币种图标」「已换上 AI 余额框币种图标」（Figma G3-13 / 13U）
+      apply: (a, tg, i, c) => { E.D.bal = Object.assign({}, BAL_DEF, E.D.bal || {}); E.D.bal.c = Object.assign({}, E.D.bal.c || {}); E.D.bal.curImg = VS.includes(c.st) ? window.MP.aiSvg('yen-mark', c.st, E.D.theme.primary) : AIT + 'cur-' + c.st + '.png'; },
       pay: () => ['iconset', { type: t('ed/bal-i-cur') }],
     };
     const balTarget = () => (E.D.login && balCfg().mode !== 'nocur' ? { id: 'bal', label: t('aig/t-bal'), kind: 'icon', spec: [52, 52], count: 4, cost: 20, ratio: 1, cols: 4 } : null);
     const icTarget = (k) => ({ id: k, label: tbLabel(k), kind: 'icon', group: 'icons', entry: k, spec: (e) => TB_SPEC[e] || TB_SPEC[k], count: 4, cost: 20, ratio: 1, cols: 4, setName: t('aig/n-tb-set') });
     AIG.reg('topbar', {
+      listSuf: false, // 列表完成只写「已生成 2/2」（Figma G2-10）
       upfront: true, // G2：整套在发送键上写全价（✦40 / ✦60）并先确认，确认后先出样板再出其余
-      targets: () => [E.D.tb.items.logo ? { id: 'logo', label: 'Logo', kind: 'image', spec: [t('aig/w-range'), 100], count: 4, cost: 20, ratio: 230 / 76, cols: 2 } : null]
+      targets: () => [E.D.tb.items.logo ? { id: 'logo', label: 'Logo', kind: 'image', spec: [t('aig/w-range'), 100], count: 4, cost: 20, ratio: 150 / 44, cols: 2 } : null]
         .concat(['cur', 'search', 'side'].filter((k) => tbEnts().includes(k)).map(icTarget))
         .concat(E.D.tb.items.auth ? [balTarget()] : []),
       defaultTarget: () => 'logo',
