@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="css/pc.css"> <!-- E -->
 <link rel="stylesheet" href="css/aidesign.css"> <!-- AD：AI 首页设计 -->
 <link rel="stylesheet" href="css/auth.css"> <!-- AU：未登录与登录 / 注册 -->
+<link rel="stylesheet" href="css/customtpl.css"> <!-- CT：自定义模版 -->
 </head>
 <body>
 <div id="app"></div>
@@ -23,6 +24,7 @@
 <script src="js/i18n-ad.js"></script> <!-- AD -->
 <script src="js/ai-templates.js"></script> <!-- AD：21 套 AI 页面风格模版（build-ai-templates.py 生成） -->
 <script src="js/i18n-auth.js"></script> <!-- AU -->
+<script src="js/i18n-custom.js"></script> <!-- CT：自定义模版文案 -->
 <script src="js/core.js"></script>
 <script src="js/home.js"></script>
 <script src="js/workbench.js"></script>
@@ -32,6 +34,7 @@
 <script src="js/editor.js"></script>
 <script src="js/pc.js"></script> <!-- E -->
 <script src="js/aidesign.js"></script> <!-- AD：AI 首页设计（依赖 home / workbench / editor / pc） -->
+<script src="js/customtpl.js"></script> <!-- CT：自定义模版 #/custom（依赖 core / home / editor） -->
 <script src="js/auth.js"></script> <!-- AU：未登录与登录 / 注册（守卫各入口，必须最后加载） -->
 <script>
   /* 原型专用的快捷切换条（右下角，手机宽度隐藏），不属于平台界面。 */

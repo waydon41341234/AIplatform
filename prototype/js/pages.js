@@ -146,7 +146,7 @@
     if (!P.tplReady) body = `<div class="pg-grid">${all.map(() => `<div class="card"><div class="cover r-3x4 skeleton"></div><div class="pg-sk-line skeleton"></div><div class="pg-sk-line is-short skeleton"></div></div>`).join('')}</div>`;
     else if (!list.length) body = q ? emptyBox('magnifying-glass', t('pg/none', { q: P.tplQ.trim() }), `<button class="btn btn-secondary btn-sm" data-act="pgTplClear">${t('pg/clear-search')}</button>`) : emptyBox('squares-four-fill', t('home/tpl-empty'), viewAllBtn('pgTplAll'));
     else body = `<div class="pg-grid">${list.map(tplCardHtml).join('')}</div>`;
-    return page(`<main class="page pg">${head(t('nav/templates'), t('pg/templates-sub'), search)}${filters}${body}</main>`);
+    return page(`<main class="page pg">${head(t('nav/templates'), t('pg/templates-sub'), search)}${window.CT ? window.CT.entry() : ''}${filters}${body}</main>`);
   }
   I.pgTplQ = (v) => { S.pg.tplQ = v; return true; };
   A.pgTplClear = () => { S.pg.tplQ = ''; };
