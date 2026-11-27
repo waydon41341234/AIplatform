@@ -322,7 +322,7 @@
   A.balMode = (v) => { if (!BAL_MODES.includes(v) || balCfg().mode === v) return false; balSet((b) => { b.mode = v; }); };
   A.balHead = (v) => { if (balCfg().head === v) return false; balSet((b) => { b.head = v; }); };
   A.balAct = (v) => { if (balCfg().act === v) return false; balSet((b) => { b.act = v; }); };
-  A.balColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), v = arg.slice(i + 1); balSet((b) => { if (v) b.c[k] = v; else delete b.c[k]; }); };
+  A.balColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), v = arg.slice(i + 1); if ((balCfg().c[k] || '') === v) return false; balSet((b) => { if (v) b.c[k] = v; else delete b.c[k]; }); };
   A.balImgReset = (k) => { balSet((b) => { b[k] = null; }); };
   A.balAll = () => { commit(() => { delete E.D.bal; }); window.toast(t('ed/bal-reset-done'), undoOpt()); };
   document.addEventListener('change', (e) => {
@@ -357,13 +357,13 @@
   }
   // 余额框颜色（顶部栏内容页签 / 帐户栏颜色页签共用）
   function balColorRows() {
-    // 色块存 'key:<名>'（跟页面配色走）；「默认」是纯文字按钮，右侧 Key 标签显示当前绑定的 Key，色块列表不再重复默认色
+    // 色块存 'key:<名>'（跟页面配色走）；同各模块颜色行（Figma G6/ColorRow）：第一个色块 = 默认 Key（默认选中，再点 = 恢复默认），后面 4 个其它色块、彩虹、Key 标签
     const cfg = balCfg(), th = liveTheme().th, kv = (k) => keyVal(k, th) || '#000';
     const SW = ['primary', 'accent_3', 'accent_2', 'lead', 'bg_2', 'border'];
     const sw = (k, base) => {
       const cur = cfg.c[k] || '', hex = cur && !cur.startsWith('key:');
-      const keys = SW.filter((x) => x !== base).slice(0, 5);
-      return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${keys.map((x) => `<button class="sw-btn ${cur === 'key:' + x ? 'is-on' : ''}" style="background:${kv(x)}" title="${esc(t('ed/key-' + x))}" aria-label="${esc(t('ed/key-' + x))}" data-act="balColor" data-arg="${k}|key:${x}"></button>`).join('')}<label class="rainbow tx-custom ${hex ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}"></label>${window.MP.keyTag(cur || null, base)}</div>`;
+      const rainbow = `<label class="rainbow tx-custom ${hex ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}"></label>`;
+      return window.MP.swRow({ act: 'balColor', id: k, v: cur, key: base, sws: SW.filter((x) => x !== base).slice(0, 4), kv, rainbow });
     };
     return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('');
   }
@@ -689,7 +689,8 @@
     const { th, ec } = liveTheme();
     const rows = window.MP.EL.banner.map(([id, key]) => {
       const v = E.D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${BN_SW[id].map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${window.MP.keyTag(v, key)}</div>${pk ? pickerHtml('in-panel', lab) : ''}</div>`;
+      // 第一个色块 = 默认 Key（如占位底 ddt_bg），默认选中（Figma G6/ColorRow 424:548184）
+      return `<div class="crow"><div class="k">${lab}</div>${window.MP.swRow({ act: 'bnColor', id, v, key, sws: BN_SW[id], kv: (k) => keyVal(k, th, ec), pk, pickArg: `${id}|${key}` })}${pk ? pickerHtml('in-panel', lab) : ''}</div>`;
     }).join('');
     return `<div class="p-sec">${rows}</div>`;
   }
@@ -791,7 +792,7 @@
     const { th, tb } = liveTheme(), raw = E.D.tb.colors || {}, D = E.D;
     const row = (k, lab) => {
       const v = raw[k] || null, pk = E.picker && E.picker.tbRow === k;
-      return `<div class="crow"><div class="k">${t(lab)}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="tbColor" data-arg="${k}|">${t('tx/c-auto')}</button>${TB_SW[k].map((key) => `<button class="sw-btn ${v === 'key:' + key ? 'is-on' : ''}" style="background:${th[key]}" title="${esc(t('ed/key-' + key))}" aria-label="${esc(t('ed/key-' + key))}" data-act="tbColor" data-arg="${k}|key:${key}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${window.MP.keyTag(v, TB_KEY[k])}</div>${pk ? pickerHtml('in-panel', t(lab)) : ''}</div>`;
+      return `<div class="crow"><div class="k">${t(lab)}</div>${window.MP.swRow({ act: 'tbColor', id: k, v, key: TB_KEY[k], sws: TB_SW[k], kv: (x) => keyVal(x, th), pk, pickAct: 'pickTb', pickArg: k })}${pk ? pickerHtml('in-panel', t(lab)) : ''}</div>`;
     };
     const txRow = (id, lab) => `<div class="crow"><div class="k">${t(lab)}</div>${txColors(id)}</div>`;
     const link = (lab, key) => `<div class="crow tb-link"><div class="k">${t(lab)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${keyVal(key, th)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${window.MP.keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;

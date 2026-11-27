@@ -852,7 +852,14 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .tx-w button.is-on { background: var(--brand-subtle, #0a84ff26); color: var(--brand); }
 .tx-colors { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .tx-colors .sw-btn { width: 22px; height: 22px; }
-/* 「默认 / 自动」纯文字按钮（Figma G6/ColorDefaultBtn 424:548144）：选中 = 蓝框 + 品牌浅底 */
+/* 模块颜色行（Figma G6/ColorRow 424:548184）：没有「默认」按钮，第一个色块 = 默认 Key，默认选中；色块 24×24 间距 6。
+   选中圈 = 外圈：2px 面板底色间隙 + 2px 品牌蓝（彩虹选中同样）；面板底是 --bg-surface，不用 --bg-raised（深色下会多一圈灰） */
+.cr-sw { --cr-gap: var(--bg-surface); }
+.cr-sw .sw-btn, .cr-sw .rainbow { flex: none; width: 24px; height: 24px; }
+.cr-sw .sw-btn.is-on, .cr-sw .rainbow.is-on { box-shadow: 0 0 0 2px var(--cr-gap), 0 0 0 4px var(--brand); }
+.cr-sw .sw-img { padding: 0; overflow: hidden; }
+.cr-sw .sw-img i { display: block; width: 100%; height: 100%; border-radius: 50%; background-size: cover; background-position: center; background-repeat: no-repeat; }
+/* 「默认 / 自动」纯文字按钮：现在只有「文字样式」卡片用（模块颜色行已改成默认色块） */
 .tx-auto { flex: none; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 18px; background: transparent; border: var(--stroke-thin) solid var(--border); color: var(--text-2); white-space: nowrap; }
 .tx-auto.is-on { border-color: var(--brand); background: var(--brand-subtle); color: var(--brand); }
 .tx-custom { position: relative; width: 22px; height: 22px; border-radius: 6px; overflow: hidden; cursor: pointer; flex: none; }

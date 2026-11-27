@@ -218,7 +218,6 @@ Object.assign(window.I18N, {
   'ed/ai-st-blackgold': ['黑金奢华风格', '黑金奢華風格', 'black-gold luxury style', 'phong cách đen vàng sang trọng'],
   'ed/ai-st-festive': ['红金节日喜庆风格', '紅金節日喜慶風格', 'red-gold festive style', 'phong cách lễ hội đỏ vàng'],
   'ed/ai-st-neon': ['深色霓虹科技风格', '深色霓虹科技風格', 'dark neon tech style', 'phong cách neon công nghệ tối'],
-  'ed/bn-c-def': ['跟随默认颜色用途', '跟隨預設顏色用途', 'Follow the default color use', 'Theo công dụng màu mặc định'],
   'mp/c-banner-placeholder': ['图片加载前的底色', '圖片載入前的底色', 'Fill before the image loads', 'Nền trước khi ảnh tải'],
   'mp/c-banner-indActive': ['指示器 · 当前', '指示器 · 目前', 'Indicator · current', 'Chỉ báo · hiện tại'],
   'mp/c-banner-indDef': ['指示器 · 其它', '指示器 · 其他', 'Indicator · others', 'Chỉ báo · còn lại'],
