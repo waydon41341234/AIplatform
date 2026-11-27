@@ -812,7 +812,9 @@
     const [w, h] = specOf(b, i, f);
     // 「✦ AI 生成」排第一（跟素材 ⋯ 菜单一致），打开统一面板「只这一个」
     const ai = b !== 'footer' && window.AIG && window.AIG.can(b) ? `<button class="menu-item" data-act="aigOpen" data-arg="${b}|icons|${i}" data-stop>${ic('sparkle-fill')}${t('aig/menu')}</button>` : '';
-    return `<div class="menu icon-menu" data-stop>${ai}<button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button><button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
+    // 素材库（Waydon 11-27 第 2 条）：有昨天生成的风格图的入口才出，只列这个入口的 5 种风格
+    const lib = libIcons(b, i, f) ? `<button class="menu-item" data-act="openLib" data-arg="ic:${b}|${i}|${f}" data-stop>${ic('stack-fill')}${t('ed/library')}</button>` : '';
+    return `<div class="menu icon-menu" data-stop>${ai}<button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button>${lib}<button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
   }
   let fileIn = null, target = null;
   function pickIcon(b, i, f) {
@@ -966,6 +968,12 @@
   }
   // 底部导航：名称和缩略图跟当前登录态走（未登录第 4 个是「注册」、优惠是动效礼盒）
   const iaNm = (b, it) => (b === 'bottomnav' ? bnName(it) : nm(it));
+  // 素材库里某个入口图标槽可选的图：昨天生成的 5 种风格原图（不着色）；底部导航默认态用 -off 灰图；没有风格图的入口 = null
+  function libIcons(b, i, f) {
+    const mm = M(b), it = mm && mm.items && mm.items[+i]; const r = it && RMAP[b] && RMAP[b](it, f); if (!r) return null;
+    const off = b === 'bottomnav' && (f === 'img' || (f === 'imgOut' && !bnBig(it))) ? '-off' : '';
+    return { name: iaNm(b, it), list: RSTY.map((st) => ({ st, src: 'assets/' + r + '-' + st + off + '.webp' })) };
+  }
   const iaTh = (b, it) => (b === 'bottomnav' ? bnSrc(it, bnOffF(it)) : it.img || it.def);
   const thHtml = (b, it) => { const s0 = iaTh(b, it); return s0 ? img(s0) : ic(it.i || 'plus'); };
 
@@ -1332,7 +1340,7 @@
 
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {
-    defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
+    defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b], libIcons,
     resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
     keyTag, swRow,
     elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },

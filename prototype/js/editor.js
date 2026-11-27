@@ -602,9 +602,9 @@
         <div class="menu-sep"></div><button class="menu-item is-danger" data-act="amDelete" data-arg="${id}" ${one ? 'disabled' : ''}>${ic('trash')}<span class="tx"><span>${t('ed/am-delete')}</span>${one ? `<span class="sub">${t('ed/slide-keep-one')}</span>` : ''}</span></button>${mob ? `<div class="menu-sep"></div>${aiItem('banner|' + id).replace('class="menu-item', 'class="menu-item is-ai')}` : ''}`;
     }
     if (id.startsWith('tb-')) {
-      // 顶部栏：上传 / AI 生成 / 恢复默认 / 显示隐藏（Waydon 2026-11-26）
+      // 顶部栏：AI 生成 / 上传 / 素材库（Logo、币种、搜索：昨天生成的图）/ 恢复默认 / 显示隐藏（Waydon 2026-11-26、11-27）
       const k = id.slice(3), own = k === 'logo' ? tbImg(E.D.tb.logoF, '').own : !!(E.D.tb.icons || {})[k];
-      return `${aiItem('topbar|' + k)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
+      return `${aiItem('topbar|' + k)}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button>${k === 'side' ? '' : `<button class="menu-item" data-act="openLib" data-arg="${id}">${ic('stack-fill')}${t('ed/library')}</button>`}<button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button><button class="menu-item" data-act="amToggle" data-arg="${id}">${ic(E.D.tb.items[k] ? 'eye-slash-fill' : 'eye-fill')}${t('ed/am-toggle')}</button>`;
     }
     // 游戏菜单按钮底图：上传 / AI / 恢复（没有显示隐藏，按钮本身一直在）
     if (/^mp-gamemenu-btn/.test(id)) { const own = !!window.MP.getAsset(id); return `${aiItem('gamemenu|btn')}<button class="menu-item" data-act="amUpload" data-arg="${id}">${ic('upload-simple')}${t('ed/am-upload')}</button><button class="menu-item" data-act="amReset" data-arg="${id}" ${own ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/am-reset')}</button>`; }
@@ -1338,11 +1338,18 @@
   const TB_ICON = /^tb-(cur|search|side)$/;
   function tbIconSet(k, v) { tbFitSet(k, null); const o = Object.assign({}, E.D.tb.icons); if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) E.D.tb.icons = o; else delete E.D.tb.icons; }
   // Logo（方案 §顶部栏）：上传 宽 330–600 × 高 100，前端显示 230×76；其它槽位按固定尺寸
-  const specOk = (slot, w, h) => (slot === 'tb-logo' ? +h === 100 && +w >= 330 && +w <= 600 : (() => { const sp = slotSpec(slot); return +w === sp.w && +h === sp.h; })());
-  function slotSpec(slot) { if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; } const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' }; }
-  function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); if (TB_ICON.test(slot)) return (E.D.tb.icons || {})[slot.slice(3)] || null; return E.D.tb.logoF; }
+  // 入口图标槽 'ic:模块|序号|字段'（素材库选图用）、顶部栏图标：1:1 方图都合规（素材库图标 128×128，跟 AI 生成图标一样直接用）
+  const specOk = (slot, w, h) => (slot === 'tb-logo' ? +h === 100 && +w >= 330 && +w <= 600 : (() => { const sp = slotSpec(slot); return (+w === sp.w && +h === sp.h) || (isIconSlot(slot) && +w > 0 && +w === +h); })());
+  const icSlot = (slot) => { const [b, i, f] = slot.slice(3).split('|'); return { b, i: +i, f: f || 'img' }; };
+  function slotSpec(slot) {
+    if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; }
+    if (slot.startsWith('ic:')) { const e = libEntry(slot); return { w: 128, h: 128, name: e ? e.name : t('ed/lib-chip-icon') }; }
+    const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' };
+  }
+  function getAsset(slot) { if (slot.startsWith('mp-')) return window.MP.getAsset(slot); if (slot.startsWith('slide')) return Object.assign({}, E.D.banner.slides[+slot.slice(5)]); if (slot.startsWith('ic:')) { const c = icSlot(slot), it = E.D.m[c.b] && E.D.m[c.b].items[c.i]; return (it && it[c.f]) || null; } if (TB_ICON.test(slot)) return (E.D.tb.icons || {})[slot.slice(3)] || null; return E.D.tb.logoF; }
   function setAsset(slot, v) {
     if (slot.startsWith('mp-')) window.MP.setAsset(slot, v && typeof v === 'object' ? v.f : v);
+    else if (slot.startsWith('ic:')) { const c = icSlot(slot), it = E.D.m[c.b] && E.D.m[c.b].items[c.i]; if (!it) return; const f = (v && typeof v === 'object' ? v.f : v) || ''; const src = f.replace(/^img:/, ''); if (src && src !== 'none') it[c.f] = src; else delete it[c.f]; }
     else if (slot.startsWith('slide')) { const i = +slot.slice(5); const prev = E.D.banner.slides[i] || {}; E.D.banner.slides[i] = v && typeof v === 'object' ? Object.assign({ hid: prev.hid }, v) : { f: v, w: prev.w, h: prev.h, hid: prev.hid }; }
     else if (slot === 'tb-logo') { E.D.tb.logoF = (v && typeof v === 'object' ? v.f : v) || 'none'; tbFitSet('logo', v); }
     else if (TB_ICON.test(slot)) { tbIconSet(slot.slice(3), v && typeof v === 'object' ? v.f : v); tbFitSet(slot.slice(3), v); }
@@ -1409,40 +1416,83 @@
   A.cancelUpload = () => { if (E.upload) clearInterval(E.upload.timer); E.upload = null; };
   A.undoReplace = () => { const r = E.replaced; if (!r) return; commit(() => { setAsset(r.slot, r.prev); }); E.replaced = null; };
 
-  // 素材库（ED-03）
+  // 素材库（ED-03）：集成库 = 昨天（11-26）Figma 真实 AI 生成的图（Banner 大 / 通用 / 小、Logo、图标 5 种风格）+ 原来的节日 / 体育 / 品牌示例（滤镜模拟）
+  // 按槽位过滤（Figma AssetLibraryDialog 231:117725，Slot = Banner 大 / 通用 / 小 / Logo / 图标 / 全部）：只列适合当前槽位的分组，2 组以上才加「全部」，
+  // 默认选中对应分组；入口图标槽只列同一入口的 5 种风格；其它槽位（彩金池背景等）= 全部，尺寸不符的照旧走「调整尺寸」
   const LIB_CH = ['festive', 'sports', 'sports', 'festive', 'brand', 'brand', 'sports', 'festive'];
   const LIB_F = ['hue-rotate(-40deg) saturate(1.5)', 'hue-rotate(100deg)', 'hue-rotate(200deg) saturate(1.2)', 'sepia(.5) saturate(1.4)', 'hue-rotate(260deg)', 'hue-rotate(320deg) saturate(1.3)', 'hue-rotate(150deg) brightness(.9)', 'hue-rotate(-20deg) saturate(1.8)'];
   function libItems(slot) {
     const sp = slotSpec(slot);
     return LIB_F.map((f, i) => { let w = sp.w, h = sp.h; if (i === 6) { w = 800; h = 600; } if (i === 7) { if (sp.w === 1080 && sp.h === 490) { w = 640; h = 640; } else { w = 1080; h = 490; } } return { f, w, h, name: t('ed/lib-a' + (i + 1)), ch: LIB_CH[i] }; });
   }
-  A.openLib = (slot) => { S.menu = null; E.lib = { slot, tab: 'shared', chip: 'all', sel: null, loading: false }; E.dlg = 'lib'; libLoad(); };
+  const LIB_AI = 'assets/ai-banner/';
+  // [文件名, 宽, 高]：小 Banner 文件是 @2x（640×404），按规格 320×202 登记
+  const LIB_BN = {
+    'bn-large': [['large-1', 1500, 680], ['large-2', 1500, 680], ['large-3', 1500, 680]],
+    'bn-general': ['glossy', 'blackgold', 'festive', 'neon', 'fest-spring', 'fest-lantern', 'fest-dragonboat', 'fest-midautumn', 'fest-xmas', 'fest-newyear'].map((k) => [k, 1020, 300]),
+    'bn-small': [['small-1', 320, 202], ['small-2', 320, 202], ['small-3', 320, 202]],
+  };
+  const LIB_LOGO = [['royal88', 342], ['star-gaming', 375], ['hongyun', 330], ['neon-play', 434], ['xinghe', 344], ['lucky-gem', 375]];
+  const LIB_ST = ['glossy', 'flat', 'blackgold', 'festive', 'neon'];
+  const LIB_GM = [1, 2, 3, 6, 4, 7, 9, 8, 10, 5, 11, 12, 13];
+  // 不分入口时的全部图标：[路径前缀, 入口名, 扩展名]
+  const libIconEnts = () => [['ai-acct/dep', 'mp/mn-n-dep'], ['ai-acct/vip', 'mp/mn-n-vip'], ['ai-acct/share', 'mp/mn-n-share'], ['ai-acct/more', 'mp/mn-n-more'],
+    ['ai-bnav/home', 'mp/bn-n-home'], ['ai-bnav/promo', 'mp/bn-n-promo'], ['ai-bnav/bonus', 'mp/bn-n-share'], ['ai-bnav/invite', 'mp/bn-n-reg'], ['ai-bnav/mine', 'mp/bn-n-mine']]
+    .concat(LIB_GM.map((k) => ['ai-gm/g' + k, 'mp/gm-n-' + k]), [['ai-notice/spk', 'mp/nt-i-spk'], ['ai-notice/mail', 'mp/nt-i-mail'], ['ai-tb/cur', 'ed/tb-cur', '.png'], ['ai-tb/search', 'ed/tb-search', '.png']]);
+  const isIconSlot = (slot) => slot.startsWith('ic:') || TB_ICON.test(slot);
+  const libKind = (slot) => { if (slot.startsWith('slide')) { const s = E.D.banner.size; return s === 'large' ? 'bn-large' : s === 'small' ? 'bn-small' : 'bn-general'; } if (slot === 'tb-logo') return 'logo'; return isIconSlot(slot) ? 'icon' : 'all'; };
+  const LIB_GRP = { 'bn-large': ['bn-large'], 'bn-small': ['bn-small'], 'bn-general': ['bn-general', 'festive', 'sports', 'brand'], logo: ['logo'], icon: ['icon'], all: ['bn-large', 'bn-general', 'bn-small', 'logo', 'icon', 'festive', 'sports', 'brand'] };
+  const libChips = (slot) => { const g = LIB_GRP[libKind(slot)]; return g.length >= 2 ? ['all'].concat(g) : g; };
+  // 入口图标槽：该入口 5 种风格的图（帐户栏 / 底部导航 / 游戏菜单 / 公告栏 / 顶部栏币种、搜索）；没有真实风格图的入口 = null（列全部图标）
+  function libEntry(slot) {
+    if (TB_ICON.test(slot)) { const k = slot.slice(3); return k === 'side' ? null : { name: t(k === 'cur' ? 'ed/tb-cur' : 'ed/tb-search'), list: LIB_ST.map((st) => ({ st, src: 'assets/ai-tb/' + k + '-' + st + '.png' })) }; }
+    if (!slot.startsWith('ic:') || !window.MP.libIcons) return null;
+    const [b, i, f] = slot.slice(3).split('|'); return window.MP.libIcons(b, +i, f);
+  }
+  function libAll(slot) {
+    const out = [], kind = libKind(slot), ent = kind === 'icon' ? libEntry(slot) : null;
+    const st = (s) => t('aig/st-' + s);
+    Object.keys(LIB_BN).forEach((ch) => LIB_BN[ch].forEach(([k, w, h]) => out.push({ f: 'img:' + LIB_AI + k + '.webp', w, h, name: t('ed/lib-n/' + k), ch })));
+    LIB_LOGO.forEach(([k, w]) => out.push({ f: 'img:assets/ai-logo/' + k + '.png', w, h: 100, name: t('ed/lib-n/logo-' + k), ch: 'logo' }));
+    if (ent) ent.list.forEach((x) => out.push({ f: 'img:' + x.src, w: 128, h: 128, name: `${st(x.st)} · ${ent.name}`, ch: 'icon' }));
+    else libIconEnts().forEach(([pre, nk, ext]) => LIB_ST.forEach((s) => out.push({ f: 'img:assets/' + pre + '-' + s + (ext || '.webp'), w: 128, h: 128, name: `${st(s)} · ${t(nk)}`, ch: 'icon' })));
+    return out.concat(libItems(slot));
+  }
+  A.openLib = (slot) => { S.menu = null; if (E.mpanel === 'iconmenu') E.mpanel = 'module'; const ch = libChips(slot); E.lib = { slot, tab: 'shared', chip: libKind(slot) === 'all' ? 'all' : ch.includes('all') ? ch[1] : ch[0], sel: null, loading: false }; E.dlg = 'lib'; libLoad(); };
   function libLoad() { const L = E.lib; L.loading = true; L.sel = null; setTimeout(() => { if (E.lib === L) { L.loading = false; if (E.dlg === 'lib') window.render(); } }, 500); }
   A.libTab = (v) => { E.lib.tab = v; libLoad(); };
   A.libChip = (v) => { E.lib.chip = v; libLoad(); };
   A.libSel = (i) => {
-    const L = E.lib; const it = libList()[+i]; if (!it) return false; const sp = slotSpec(L.slot);
+    const L = E.lib; const it = libList()[+i]; if (!it) return false;
     if (!specOk(L.slot, it.w, it.h)) { openResize(L.slot, it.f, it.w, it.h); return; }
     L.sel = +i;
   };
   A.libUse = () => { const L = E.lib; const it = libList()[L.sel]; if (!it) return false; E.lib = null; uploadTo(L.slot, it.f, it.w, it.h); };
+  // 素材值统一成 'img:路径'（入口图标字段存的是裸路径 / dataURL）
+  const asF = (v) => (v && typeof v === 'string' && !/^img:/.test(v) && /^(assets\/|data:|blob:|https?:)/.test(v) ? 'img:' + v : v);
   function libList() {
     const L = E.lib; const sp = slotSpec(L.slot);
-    if (L.tab === 'shared') return libItems(L.slot).filter((x) => L.chip === 'all' || x.ch === L.chip);
+    if (L.tab === 'shared') { const g = libChips(L.slot); return libAll(L.slot).filter((x) => g.includes(x.ch) && (L.chip === 'all' || x.ch === L.chip)); }
     if (L.tab === 'project') return E.projAssets.map((a) => ({ f: a.f, w: sp.w, h: sp.h, name: a.name }));
     if (L.slot.startsWith('slide')) return E.D.banner.slides.map((s, i) => ({ f: s.f, w: s.w, h: s.h, name: t('ed/slide-n', { n: i + 1 }) }));
-    const cur = getAsset(L.slot); return cur && cur !== 'none' ? [{ f: cur, w: sp.w, h: sp.h, name: sp.name }] : [];
+    const cur = asF(getAsset(L.slot)); return cur && cur !== 'none' ? [{ f: cur, w: sp.w, h: sp.h, name: sp.name }] : [];
   }
-  function libBody() {
-    const L = E.lib; const sp = slotSpec(L.slot);
+  function libBody(mobile) {
+    const L = E.lib; const sp = slotSpec(L.slot), kind = libKind(L.slot), ent = kind === 'icon' ? libEntry(L.slot) : null;
     const tabs = segBtns([{ v: 'shared', label: t('ed/lib-tab-shared') }, { v: 'project', label: t('ed/lib-tab-project') }, { v: 'used', label: t('ed/lib-tab-used') }], L.tab, 'libTab');
-    const chips = L.tab === 'shared' ? `<div class="filters scroll-x lib-chips">${['all', 'festive', 'sports', 'brand'].map((c) => `<button class="chip ${L.chip === c ? 'is-on' : ''}" data-act="libChip" data-arg="${c}">${c === 'all' ? t('filter/all') : t('ed/lib-chip-' + c)}</button>`).join('')}</div>` : '';
-    const ratio = `aspect-ratio:${sp.w} / ${sp.h}`;
+    const chipName = (c) => (c === 'all' ? t('filter/all') : t('ed/lib-chip-' + c));
+    const chips = L.tab === 'shared' ? `<div class="filters scroll-x lib-chips">${libChips(L.slot).map((c) => `<button class="chip ${L.chip === c ? 'is-on' : ''}" data-act="libChip" data-arg="${c}">${chipName(c)}</button>`).join('')}</div>${ent ? `<div class="lib-hint">${t('ed/lib-icon-only', { name: ent.name, n: ent.list.length })}</div>` : ''}` : '';
+    // 缩略：比例跟槽位（Banner 大 1500:680、小 320:202、Logo 浅灰底留边 Figma 200×58、图标正方形）；「全部」= 固定高度按原图比例
+    const kar = kind === 'icon' ? '1 / 1' : kind === 'logo' ? '345 / 100' : `${sp.w} / ${sp.h}`;
+    const thumb = (it) => { const ic0 = it.ch === 'icon' || it.ch === 'logo'; const box = kind === 'all' ? `height:${mobile ? 45 : 59}px;aspect-ratio:${it.w} / ${it.h};max-width:100%` : `aspect-ratio:${kar}`; return `<span class="im ${ic0 ? 'is-' + it.ch : ''}" style="${box};${window.fxStyle(it.f, L.slot.startsWith('slide') ? BANNER_DEF : '')}"></span>`; };
+    const ratio = kind === 'all' ? `height:${mobile ? 45 : 59}px` : `aspect-ratio:${kar}`;
     const list = libList();
-    const grid = L.loading ? `<div class="lib-grid">${[0, 1, 2, 3, 4, 5].map(() => `<div class="lib-it"><span class="im skeleton" style="${ratio}"></span><span class="skeleton sk-line"></span></div>`).join('')}</div>`
-      : list.length ? `<div class="lib-grid">${list.map((it, i) => { const bad = !specOk(L.slot, it.w, it.h); return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}"><span class="im" style="${ratio};${window.fxStyle(it.f, L.slot.startsWith('slide') ? BANNER_DEF : '')}"></span><span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
+    const gcls = `lib-grid ${kind === 'icon' ? 'is-icon' : ''} ${kind === 'all' ? 'is-all' : ''}`;
+    const grid = L.loading ? `<div class="${gcls}">${[0, 1, 2, 3, 4, 5].map(() => `<div class="lib-it"><span class="im skeleton" style="${ratio}"></span><span class="skeleton sk-line"></span></div>`).join('')}</div>`
+      : list.length ? `<div class="${gcls}">${list.map((it, i) => { const bad = !specOk(L.slot, it.w, it.h); return `<button class="lib-it ${L.sel === i ? 'is-on' : ''} ${bad ? 'is-bad' : ''}" data-act="libSel" data-arg="${i}">${thumb(it)}<span class="n ellipsis">${esc(it.name)}</span><span class="s">${it.w}×${it.h}</span>${bad ? `<span class="pill-tag is-warn">${t('ed/lib-bad')}</span>` : ''}</button>`; }).join('')}</div>`
         : window.empty('stack-fill', t('ed/lib-empty'), t('ed/lib-empty-d'));
-    return `<div class="dialog-head"><h3>${t('ed/lib-title', { name: sp.name, w: sp.w, h: sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>${tabs}${chips}<div class="lib-body" data-sk="lib">${grid}</div>
+    const title = kind === 'logo' ? t('ed/lib-title-logo') : kind === 'icon' ? t('ed/lib-title-icon', { name: ent ? ent.name : sp.name }) : t('ed/lib-title', { name: sp.name, w: sp.w, h: sp.h });
+    return `<div class="dialog-head"><h3>${esc(title)}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>${tabs}${chips}<div class="lib-body" data-sk="lib">${grid}</div>
       <div class="dialog-foot lib-foot"><span class="caption faint">${t('ed/lib-free')}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary ${L.sel == null ? 'is-disabled' : ''}" data-act="libUse">${t('ed/lib-use')}</button></div>`;
   }
 
