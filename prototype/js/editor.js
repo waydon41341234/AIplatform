@@ -90,7 +90,7 @@
   const E = (window.E = {
     loading: false, step: 0, device: 'h5', sel: null, tab: 'content', ai: null, zoom: 50, palOpen: false, picker: null,
     checksPassed: false, dlg: null, exp: { stage: 'ready', opts: { figma: true, png: true, svg: false }, dl: {}, failed: {}, retrying: {} }, slide: 0, mpanel: null, preview: false,
-    upload: null, replaced: null, h5side: false, adv: false, D: defaultDesign(), past: [], future: [],
+    upload: null, replaced: null, h5side: false, D: defaultDesign(), past: [], future: [],
     name: LS.get('ed.last', '星河体育 · 首页'), status: 'designing', save: 'saved', nameEdit: null, rn: null, keys: null, bx: null,
     lib: null, rs: null, palQ: null, tpl: null, contentH: 0, loadFail: false,
     figmaLinked: !!meta0.figmaLinked, projAssets: meta0.projAssets || [],
@@ -371,15 +371,15 @@
   }
   // 余额框颜色（顶部栏内容页签 / 帐户栏颜色页签共用）
   function balColorRows() {
-    // 色块存 'key:<名>'（跟页面配色走）；「默认」按钮带默认 Key 的色点，色块列表不再重复默认色
+    // 色块存 'key:<名>'（跟页面配色走）；「默认」是纯文字按钮，右侧 Key 标签显示当前绑定的 Key，色块列表不再重复默认色
     const cfg = balCfg(), th = liveTheme().th, kv = (k) => keyVal(k, th) || '#000';
     const SW = ['primary', 'accent_3', 'accent_2', 'lead', 'bg_2', 'border'];
     const sw = (k, base) => {
       const cur = cfg.c[k] || '', hex = cur && !cur.startsWith('key:');
       const keys = SW.filter((x) => x !== base).slice(0, 5);
-      return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|"><i class="sw-dot" style="background:${kv(base)}"></i>${t('tx/c-auto')}</button>${keys.map((x) => `<button class="sw-btn ${cur === 'key:' + x ? 'is-on' : ''}" style="background:${kv(x)}" title="${esc(t('ed/key-' + x))}" aria-label="${esc(t('ed/key-' + x))}" data-act="balColor" data-arg="${k}|key:${x}"></button>`).join('')}<label class="rainbow tx-custom ${hex ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}"></label></div>`;
+      return `<div class="tx-colors"><button class="tx-auto ${cur ? '' : 'is-on'}" data-act="balColor" data-arg="${k}|">${t('tx/c-auto')}</button>${keys.map((x) => `<button class="sw-btn ${cur === 'key:' + x ? 'is-on' : ''}" style="background:${kv(x)}" title="${esc(t('ed/key-' + x))}" aria-label="${esc(t('ed/key-' + x))}" data-act="balColor" data-arg="${k}|key:${x}"></button>`).join('')}<label class="rainbow tx-custom ${hex ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}"></label>${window.MP.keyTag(cur || null, base)}</div>`;
     };
-    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}${E.adv ? `<small class="kk">${cfg.c[k] && cfg.c[k].startsWith('key:') ? cfg.c[k].slice(4) : base}</small>` : ''}</span>${sw(k, base)}</div>`).join('');
+    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('');
   }
   // 侧边栏入口图标：有图片（上传 / AI）用图片，否则用线性图标（滤镜模拟值叠在线性图标上）
   function sideIcHtml(v, cls) { const x = tbImg(v, ''); return x.src ? `<img class="${cls} ico-img" src="${x.src}" alt="" style="${tbFitCss('side')}">` : x.f !== 'none' ? `<span style="display:inline-flex;filter:${x.f}">${ic('list', cls)}</span>` : ic('list', cls); }
@@ -703,13 +703,9 @@
     const { th, ec } = liveTheme();
     const rows = window.MP.EL.banner.map(([id, key]) => {
       const v = E.D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
-      const defC = keyVal(key, th, ec);
-      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${defC}"></i>${t('mp/c-default')}</button>${BN_SW[id].map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? pickerHtml('in-panel', lab) : ''}</div>`;
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${BN_SW[id].map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${window.MP.keyTag(v, key)}</div>${pk ? pickerHtml('in-panel', lab) : ''}</div>`;
     }).join('');
-    return `<div class="p-sec">${rows}</div>
-      <div class="p-note">${t('ed/bn-c-note')}</div>
-      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+    return `<div class="p-sec">${rows}</div>`;
   }
   A.bnColor = (arg) => { const i = arg.indexOf('|'); const id = arg.slice(0, i), v = arg.slice(i + 1) || null; if ((E.D.ec[id] || null) === v) return false; E.picker = null; commit(() => { if (v) E.D.ec[id] = v; else delete E.D.ec[id]; }); };
   A.bnPick = (arg) => {
@@ -807,17 +803,15 @@
     // 颜色都绑 68 Key（Figma 317:55664）：底板 bs_topnav_bg、搜索文字 lead（Waydon 决定，Figma 为 neutral_1）、币种文字 neutral_2、
     // 币种外框 / 底部分割线 border、币种图标 accent_3、侧边栏入口 lead。文字颜色和「内容 › 文字样式」是同一个设置
     const { th, tb } = liveTheme(), raw = E.D.tb.colors || {}, D = E.D;
-    const kk = (k) => (E.adv ? `<small class="kk">${k}</small>` : '');
     const row = (k, lab) => {
       const v = raw[k] || null, pk = E.picker && E.picker.tbRow === k;
-      return `<div class="crow"><div class="k">${t(lab)}${kk(TB_KEY[k])}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="tbColor" data-arg="${k}|">${t('tx/c-auto')}</button>${TB_SW[k].map((key) => `<button class="sw-btn ${v === 'key:' + key ? 'is-on' : ''}" style="background:${th[key]}" title="${esc(t('ed/key-' + key))}" aria-label="${esc(t('ed/key-' + key))}" data-act="tbColor" data-arg="${k}|key:${key}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? pickerHtml('in-panel', t(lab)) : ''}</div>`;
+      return `<div class="crow"><div class="k">${t(lab)}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="tbColor" data-arg="${k}|">${t('tx/c-auto')}</button>${TB_SW[k].map((key) => `<button class="sw-btn ${v === 'key:' + key ? 'is-on' : ''}" style="background:${th[key]}" title="${esc(t('ed/key-' + key))}" aria-label="${esc(t('ed/key-' + key))}" data-act="tbColor" data-arg="${k}|key:${key}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="pickTb" data-arg="${k}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${window.MP.keyTag(v, TB_KEY[k])}</div>${pk ? pickerHtml('in-panel', t(lab)) : ''}</div>`;
     };
-    const txRow = (id, lab, key) => `<div class="crow"><div class="k">${t(lab)}${kk(key)}</div>${txColors(id)}</div>`;
-    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${t(lab)}${kk(key)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${keyVal(key, th)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span><button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
-    return `<div class="p-sec">${row('bg', 'ed/tb-c-bg')}${D.tb.items.side ? row('side', 'ed/tb-c-side') : ''}${txRow('tb.search', 'tx/tb-search', 'lead')}${D.login ? '' : txRow('tb.cur', 'tx/tb-cur', 'neutral_2')}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link('ed/tb-c-border', 'border')}${!D.login && !(D.tb.icons || {}).cur ? link('ed/tb-c-curic', 'accent_3') : ''}</div>
-      <div class="p-note">${t('ed/tb-c-note2')}</div>${D.login && D.tb.items.auth ? `<div class="p-note">${t('ed/tb-c-bal')}</div>` : ''}
-      <button class="p-note" style="align-items:center" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+    const txRow = (id, lab) => `<div class="crow"><div class="k">${t(lab)}</div>${txColors(id)}</div>`;
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${t(lab)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${keyVal(key, th)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${window.MP.keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    return `<div class="p-sec">${row('bg', 'ed/tb-c-bg')}${D.tb.items.side ? row('side', 'ed/tb-c-side') : ''}${txRow('tb.search', 'tx/tb-search')}${D.login ? '' : txRow('tb.cur', 'tx/tb-cur')}</div>
+      <div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link('ed/tb-c-border', 'border')}${!D.login && !(D.tb.icons || {}).cur ? link('ed/tb-c-curic', 'accent_3') : ''}</div>${D.login && D.tb.items.auth ? `
+      <div class="p-note">${t('ed/tb-c-bal')}</div>` : ''}`;
   }
   // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
   // [元素 ID, 名称 key, 字号/粗细选择器, 颜色选择器(选中态不改色), 默认字号(CSS px，=750 稿÷2), 默认粗细, 最大字号(可省，默认 24)]
@@ -1288,7 +1282,6 @@
       <div class="dialog-foot"><button class="btn btn-secondary" data-act="edTplBack">${t('ed/tpl-back')}</button><button class="btn btn-primary ${T.busy ? 'is-busy' : ''}" data-act="edTplUse">${T.busy ? ic('circle-notch', 'ic-16 spin') : ''}${t('ed/tpl-use')}</button></div>`;
   }
 
-  A.toggleAdv = () => { E.adv = !E.adv; };
   A.bannerSize = (v) => { if (E.D.banner.size === v) return false; commit(() => { E.D.banner.size = v; }); };
   A.bannerInd = (v) => { if (E.D.banner.ind === v) return false; commit(() => { E.D.banner.ind = v; }); };
   A.bannerMargin = (v) => { commit(() => { E.D.banner.margin = +v; }); };

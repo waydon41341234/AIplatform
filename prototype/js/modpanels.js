@@ -134,13 +134,19 @@
   const upThumb = (b, i, f, icon, cls = '', title = '') => { const it0 = M(b).items[i]; const src = it0[f] || defSrc(it0, f, b); return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
   const resetBtn = (b, i) => { const it = M(b).items[i]; return it.img || it.imgOn ? `<button class="ib-s" data-act="mpIconReset" data-arg="${b}|${i}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''; };
 
+  // 色块行右侧的 Key 标签（同文字样式 .tx-key，Waydon 2026-11-27）：默认 = 绑定的 Key，选了色块 = 那个 Key，自定义色 = 「自定义」
+  const keyTag = (v, key) => {
+    const kn = v ? (v.startsWith('key:') ? v.slice(4) : null) : key || null; // 默认值是 Figma 写死的色值（如游戏菜单投影）时直接显示色值
+    return `<span class="tx-key ${kn ? '' : 'is-custom'}" title="${esc(kn ? keyLabel(kn) : t('tx/c-custom'))}">${kn ? esc(kn) : t('tx/key-custom')}</span>`;
+  };
   function colors(b) {
     const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker;
     return EL[b].map(([id, k]) => {
-      const cur = (ec[id] || th[k]).toLowerCase();
-      const sw = [th[k], ...ALT.filter((a) => a !== k).map((a) => th[a])].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i).slice(0, 4);
-      return `<div class="crow"><div class="k">${t('mp/c-' + id.replace('.', '-'))}${ec[id] ? '' : ` · <span class="faint">${t('mp/c-default')}</span>`}</div><div class="sws">${sw.map((c) => `<button class="sw-btn ${cur === c ? 'is-on' : ''}" style="background:${c}" data-act="mpColor" data-arg="${id}|${c}"></button>`).join('')}<button class="rainbow ${P && P.elRow === id ? 'is-on' : ''}" data-act="mpPick" data-arg="${id}|${k}"></button></div>${P && P.elRow === id ? x.pickerHtml('in-panel', t('mp/c-' + id.replace('.', '-'))) : ''}</div>`;
-    }).join('') + note('mp/c-note');
+      // 同其它模块的颜色行：「默认」= 绑定的 Key，色块存 'key:<名>'，彩虹 = 自定义，右侧 Key 标签
+      const v = ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = P && P.elRow === id;
+      const sws = ALT.filter((a) => a !== k).slice(0, 4);
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${sws.map((a) => `<button class="sw-btn ${v === 'key:' + a ? 'is-on' : ''}" style="background:${th[a]}" title="${esc(keyLabel(a))}" aria-label="${esc(keyLabel(a))}" data-act="bnColor" data-arg="${id}|key:${a}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${k}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, k)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    }).join('');
   }
 
   // ---------- 各模块面板 ----------
@@ -258,15 +264,12 @@
     const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
     const row = (id) => {
       const key = EL.notice.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
-      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${kv(key)}"></i>${t('mp/c-default')}</button>${NT_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${NT_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, key)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
     const spkUp = !!its[0].img, badge = D.login && m.mail;
     return `<div class="p-sec">${row('notice.bg')}</div>
       <div class="p-sec"><div class="lab">${t('mp/nt-c-text')}</div>${row('notice.text')}${row('notice.hl')}${row('notice.g')}${row('notice.num')}</div>
-      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note(m.mail ? 'mp/nt-c-badge-out' : 'mp/nt-c-badge-nomail')}</div>
-      <div class="p-note">${t('mp/nt-c-note')}</div>
-      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note(m.mail ? 'mp/nt-c-badge-out' : 'mp/nt-c-badge-nomail')}</div>`;
   }
   // 帐户栏颜色：同公告栏做法（'key:<名>' 引用 68 Key）；余额框颜色（顶部栏共用）和固定跟 Key 的小图标也放这里
   const MN_SW = { 'midnav.bg': ['bg_1', 'bg_2', 'border', 'primary'], 'midnav.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'midnav.user': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'midnav.btn': ['primary', 'lead', 'accent_3', 'accent_1'], 'midnav.btnText': ['text_primary', 'bg_2', 'lead', 'primary'], 'midnav.icon': ['primary', 'lead', 'neutral_1', 'accent_3'] };
@@ -278,12 +281,11 @@
     const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
     const row = (id, key, sws, lab) => {
       const v = D.ec[id] || null, pk = E.picker && E.picker.elRow === id;
-      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
-      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${kv(key)}"></i>${t('mp/c-default')}</button>${sws.filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${sws.filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(t('ed/key-' + k))}" aria-label="${esc(t('ed/key-' + k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, key)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
     const elRow = (id) => row(id, EL.midnav.find((r) => r[0] === id)[1], MN_SW[id], t('mp/c-' + id.replace('.', '-')));
     // 跟 Key 走、不单独设置的颜色：点「去改」打开整页配色
-    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}${E.adv ? `<small class="kk">${key}</small>` : ''}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span><button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
     const toIn = `<button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button>`;
     const vis0 = m.items.filter((it) => it.on), fallback = vis0.some((it) => !it.img && !it.def);
     const bdItems = vis0.filter((it) => it.badge);
@@ -295,11 +297,9 @@
     h += `<div class="p-sec"><div class="lab">${t('mp/entries')}</div>${fallback ? elRow('midnav.icon') : ''}${note('mp/mn-c-icons')}</div>`;
     if (acct && D.login) {
       h += `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}</div>${x.balColorRows ? x.balColorRows() : ''}
-        ${cfg.caretImg ? '' : link(t('ed/bal-i-caret'), 'neutral_2')}${cfg.act !== 'none' && !cfg[cfg.act === 'copy' ? 'copyImg' : 'swImg'] ? link(t('ed/bal-act-' + cfg.act), 'primary') : ''}${cfg.mode === 'switch' && !cfg.curImg ? link(t('ed/bal-i-cur'), 'accent_3') : ''}
-        <div class="p-note">${t('ed/bal-note')}</div></div>`;
+        ${cfg.caretImg ? '' : link(t('ed/bal-i-caret'), 'neutral_2')}${cfg.act !== 'none' && !cfg[cfg.act === 'copy' ? 'copyImg' : 'swImg'] ? link(t('ed/bal-act-' + cfg.act), 'primary') : ''}${cfg.mode === 'switch' && !cfg.curImg ? link(t('ed/bal-i-cur'), 'accent_3') : ''}</div>`;
     } else if (acct) h += `<div class="p-note">${t('mp/mn-c-bal-out')} ${toIn}</div>`;
-    return h + `<div class="p-note">${t('mp/mn-c-note')}</div>
-      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+    return h;
   }
   // ---------- 游戏菜单：选中分类、按钮底图、颜色 ----------
   // 选中的分类：m.active（下标）；它被隐藏了就退回第一个显示的分类
@@ -344,11 +344,9 @@
     // 「默认」：底色两行默认是按钮图（缩略图），其它是 Figma 绑定的 Key
     const row = (id, imgF) => {
       const key = EL.gamemenu.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
-      const dot = imgF ? `<i class="sw-dot gm-dot" style="${gmBtnCss(imgF)}"></i>` : `<i class="sw-dot" style="background:${kv(key)}"></i>`;
       const sws = GM_SW[id].filter((k) => k !== key);
       if (imgF) sws.unshift(key); // 底色行：默认 = 图，Key 色块单独列出
-      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t(imgF ? 'mp/gm-c-img-tip' : 'ed/bn-c-def'))}">${dot}${t(imgF ? 'mp/gm-c-img' : 'mp/c-default')}</button>${sws.map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key[0] === '#' ? 'primary' : key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t(imgF ? 'mp/gm-c-img-tip' : 'ed/bn-c-def'))}">${t(imgF ? 'mp/gm-c-img' : 'mp/c-default')}</button>${sws.map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key[0] === '#' ? 'primary' : key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, key)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
     const fallback = vis('gamemenu').some((it) => !it.img && !it.imgOn && !it.def);
     let h = '';
@@ -356,8 +354,7 @@
     else h += `<div class="p-sec"><div class="lab">${t('mp/gm-tab-c')}</div>${row('gamemenu.bg')}${row('gamemenu.active')}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-text')}</div>${row('gamemenu.text')}${row('gamemenu.activeText')}</div>`;
     if (side || m.style === 'icons') h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-icons')}</div>${fallback ? row('gamemenu.icon') : ''}${note('mp/gm-c-icons-note')}</div>`;
-    return h + `<div class="p-note">${t('mp/gm-c-note')}</div>
-      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+    return h;
   }
   // ---------- 游戏卡片（经典蓝白 Figma 317:55739 / 317:55742）：兜底封面、收藏星、推荐角标、颜色 ----------
   const GC_STAR = { starOff: CL + 'star.png', starSel: CL + 'star-on.png' };
@@ -410,23 +407,21 @@
   }
   // 颜色：同游戏菜单做法（'key:<名>' 引用 68 Key），「默认」= Figma 绑定的 Key；选中页签 / 分隔线 / 展开 固定跟 Key，点「去改」进整页配色
   const GC_SW = { 'gamecards.tab': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'gamecards.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'gamecards.placeholder': ['ddt_bg', 'bg_1', 'neutral_3', 'primary'], 'gamecards.placeholderIcon': ['ddt_icon', 'bg_1', 'neutral_3', 'neutral_2'], 'gamecards.label': ['label_accent3', 'accent_2', 'accent_1', 'primary'], 'gamecards.labelText': ['labeltext_accent3', 'lead', 'accent_3', 'primary'] };
-  const GC_CAP = { 'gamecards.text': 'cards_text' }; // 「显示高级」时显示的 Key 名（游戏名称 = cards_text 经典卡片分支）
+  const GC_CAP = { 'gamecards.text': 'cards_text' }; // Key 标签显示的 Key 名（游戏名称 = cards_text 经典卡片分支）
   function gcColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamecards');
     const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
     const row = (id) => {
       const key = EL.gamecards.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : GC_CAP[id] || key}</small>` : '';
-      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${kv(key)}"></i>${t('mp/c-default')}</button>${GC_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${GC_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, GC_CAP[id] || key)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
-    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}${E.adv ? `<small class="kk">${key}</small>` : ''}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span><button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
     const fbImg = m.fallback && m.fallback.startsWith('img:');
     let h = `<div class="p-sec"><div class="lab">${t('mp/gc-c-text')}</div>${row('gamecards.tab')}${m.name ? row('gamecards.text') : ''}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gc-fallback')}</div>${m.fallbackOn === false ? note('mp/gc-c-fb-off') : row('gamecards.placeholder') + (fbImg ? note('mp/gc-c-fb-img') : row('gamecards.placeholderIcon'))}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gc-rec')}</div>${m.rec !== false ? row('gamecards.label') + row('gamecards.labelText') : note('mp/gc-c-rec-off')}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link(t('mp/gc-c-on'), 'primary')}${link(t('mp/gc-c-line'), 'border')}</div>`;
-    return h + `<div class="p-note">${t('mp/gc-c-note')}</div>
-      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+    return h;
   }
   function panel(b, tab) { if (tab === 'color') return P[b].color ? P[b].color() : colors(b); return (P[b][tab] || P[b].content)(); }
 
@@ -551,15 +546,12 @@
     const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
     const row = (id) => {
       const key = EL.bottomnav.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      const kk = E.adv ? `<small class="kk">${v && v.startsWith('key:') ? v.slice(4) : key}</small>` : '';
-      return `<div class="crow"><div class="k">${lab}${kk}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}"><i class="sw-dot" style="background:${kv(key)}"></i>${t('mp/c-default')}</button>${BN_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button></div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${BN_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, key)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
     const fallback = vis('bottomnav').some((it) => !bnSrc(it, bnOffF(it)));
     return `<div class="p-sec">${row('bottomnav.bg')}${note('mp/bn-c-shadow')}</div>
       <div class="p-sec"><div class="lab">${t('mp/bn-c-text')}</div>${row('bottomnav.def')}${row('bottomnav.active')}${note('mp/bn-c-act')}</div>
-      <div class="p-sec"><div class="lab">${t('mp/entries')}</div>${note(fallback ? 'mp/bn-c-icons-fb' : 'mp/bn-c-icons')}</div>
-      <div class="p-note">${t('mp/gm-c-note')}</div>
-      <button class="p-note" style="align-items:center;margin-top:12px" data-act="toggleAdv"><span class="check ${E.adv ? 'is-on' : ''}">${E.adv ? ic('check', 'ic-16') : ''}</span>${t('ed/show-advanced')}</button>`;
+      <div class="p-sec"><div class="lab">${t('mp/entries')}</div>${note(fallback ? 'mp/bn-c-icons-fb' : 'mp/bn-c-icons')}</div>`;
   }
   const bnavCls = () => `h-${M('bottomnav').h}`;
   // 导航文字放不下（字号调大 / 越南文长名 / 98 矮栏）时不掉出导航栏：改成一行，字号在画布上最多缩到设定的 75%（不小于 8px），
@@ -1128,6 +1120,7 @@
   window.MP = {
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
     resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
+    keyTag,
     elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },

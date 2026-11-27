@@ -852,8 +852,9 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .tx-w button.is-on { background: var(--brand-subtle, #0a84ff26); color: var(--brand); }
 .tx-colors { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .tx-colors .sw-btn { width: 22px; height: 22px; }
-.tx-auto { height: 22px; padding: 0 8px; border-radius: 11px; font-size: 11px; background: var(--bg-surface); border: var(--stroke-thin) solid var(--border); color: var(--text-2); }
-.tx-auto.is-on { border-color: var(--brand); color: var(--brand); }
+/* 「默认 / 自动」纯文字按钮（Figma G6/ColorDefaultBtn 424:548144）：选中 = 蓝框 + 品牌浅底 */
+.tx-auto { flex: none; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 18px; background: transparent; border: var(--stroke-thin) solid var(--border); color: var(--text-2); white-space: nowrap; }
+.tx-auto.is-on { border-color: var(--brand); background: var(--brand-subtle); color: var(--brand); }
 .tx-custom { position: relative; width: 22px; height: 22px; border-radius: 6px; overflow: hidden; cursor: pointer; flex: none; }
 .tx-custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 /* 布局参数「自定义」输入 */
@@ -957,7 +958,6 @@ html:not([lang^="zh"]) .cl-gm > span b { display: -webkit-box; -webkit-box-orien
 .tb-item .thumb.gm-bthumb { width: 54px; height: 26px; padding: 0; background: var(--bg-surface); border-radius: 6px; overflow: hidden; display: inline-flex; box-shadow: 0 0 0 1px var(--border); }
 .tb-item .thumb.gm-bthumb i { display: block; width: 100%; height: 100%; background-size: 100% 100%; background-position: center; background-repeat: no-repeat; }
 .tb-item .thumb.gm-bthumb:hover { outline: 2px solid var(--brand); outline-offset: 1px; }
-.sw-dot.gm-dot { width: 20px !important; border-radius: 4px !important; background-size: 100% 100% !important; }
 
 /* 一屏高度：内容在页面内滚动 */
 .h5-body { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; margin-right: -72px; padding-right: 72px; }
@@ -1036,7 +1036,6 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .tbai-hd { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
 .tbai-hd .ib-s { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--icon-2); }
 .tbai-hd .ib-s:hover { background: var(--bg-hover); color: var(--text); }
-.crow .k .kk { margin-left: 6px; font-family: var(--font-mono, monospace); color: var(--text-3); font-size: 11px; }
 .tb-link-r { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: var(--fs-caption); color: var(--text-2); }
 .tb-link-r .sw-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; border: var(--stroke-thin) solid var(--border); }
 .tb-link-r .ellipsis { min-width: 0; }
@@ -1055,7 +1054,6 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .slide-list .asset .top .more-btn { margin-left: 0; }
 .slide-list .slide-edit { display: inline-flex; align-items: center; justify-content: center; width: 20px; flex: none; color: var(--icon-3); }
 .slide-list .asset.compact:hover .slide-edit { color: var(--link); }
-.tx-auto .sw-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; border: var(--stroke-thin) solid var(--border); }
 
 /* 底部导航面板：两张缩略图（未选中 / 选中）右上角 ↺ 单独恢复 */
 .bn-hd { padding-right: 66px; }
@@ -1115,8 +1113,9 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .h5-banner .sm-row { position: relative; gap: 5px; padding: 0 5px; }
 .h5-banner .sm-row .h5-ind { position: absolute; left: 0; right: 0; bottom: 5px; padding: 0; align-items: center; pointer-events: none; }
 /* 文字颜色右边显示绑定的 Key */
-.tx-colors .tx-key { margin-left: auto; flex: none; max-width: 40%; padding: 2px 6px; border-radius: 6px; background: var(--bg-surface, rgba(127,127,127,.12)); color: var(--text-secondary, #8e8e93); font: 500 11px/16px ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tx-colors .tx-key.is-custom { font-family: inherit; }
+/* Key 标签（Figma G6/TxKeyTag）：文字样式和各模块颜色行共用，默认就显示 */
+.tx-colors .tx-key, .tb-link-r .tx-key { margin-left: auto; flex: none; max-width: 40%; padding: 2px 6px; border-radius: 6px; background: var(--bg-surface, rgba(127,127,127,.12)); color: var(--text-secondary, #8e8e93); font: 500 11px/16px ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-colors .tx-key.is-custom, .tb-link-r .tx-key.is-custom { font-family: inherit; }
 /* 样式 4（长条）放大 2 倍会超出选项框：缩小倍数并裁切（Waydon 2026-11-26 18:42） */
 .ind-opt .ind-prev.on-ind { overflow: hidden; }
 .ind-opt .ind-prev.on-ind .h5-ind { transform: scale(1.6); }
