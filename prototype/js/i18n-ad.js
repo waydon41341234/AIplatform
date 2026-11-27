@@ -134,6 +134,7 @@ Object.assign(window.I18N, {
   'ad/fp-slices-n': ['切图 {n} 个 · PNG @2x，能矢量的出 SVG', '切圖 {n} 個 · PNG @2x，能向量的出 SVG', '{n} slices · PNG @2x, SVG where possible', '{n} lát cắt · PNG @2x, SVG nếu được'],
   'ad/fp-comps-n': ['组件 {n} 个 / 变体 {m} 个', '元件 {n} 個 / 變體 {m} 個', '{n} components / {m} variants', '{n} thành phần / {m} biến thể'],
   'ad/fp-pages-n': ['H5 ×2（未登录 / 已登录）+ PC ×1', 'H5 ×2（未登入 / 已登入）+ PC ×1', 'H5 ×2 (signed out / in) + PC ×1', 'H5 ×2 (chưa / đã đăng nhập) + PC ×1'],
+  'ad/fp-pages-n-h5': ['H5 ×2（未登录 / 已登录）', 'H5 ×2（未登入 / 已登入）', 'H5 ×2 (signed out / in)', 'H5 ×2 (chưa / đã đăng nhập)'], // PC 未开放时
   'ad/fp-view': ['查看结构', '查看結構', 'View structure', 'Xem cấu trúc'],
   'ad/fp-title': ['源文件结构', '原始檔結構', 'Source file structure', 'Cấu trúc tệp nguồn'],
   'ad/fp-note': ['颜色都绑定色值规范的 Key 变量，图片引用切图组件，页面由组件实例拼成，不是整图。', '顏色都綁定色值規範的 Key 變數，圖片引用切圖元件，頁面由元件實例拼成，不是整圖。', 'Colors bind to token variables, images reference slice components, pages are built from instances—not flat images.', 'Màu gắn biến key, ảnh dùng thành phần lát cắt, trang ghép từ instance — không phải ảnh phẳng.'],

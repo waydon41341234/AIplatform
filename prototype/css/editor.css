@@ -10,6 +10,14 @@
 .iseg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--radius-sm); background: var(--fill-3); }
 .iseg button { height: 36px; min-width: 40px; padding: 0 10px; border-radius: 6px; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; font-size: var(--fs-body-sm); white-space: nowrap; }
 .iseg button.is-on { background: var(--brand-subtle); color: var(--brand); font-weight: 500; }
+/* PC 未开放（Figma IconSegOption State=Locked 434:441758）：图标 45%、右上角 12px 锁徽标；点了不切换，只提示「暂未开放」 */
+.iseg button.is-locked, .seg-opt.is-locked { position: relative; cursor: not-allowed; }
+.iseg button.is-locked > .ic:first-child { opacity: .45; color: var(--text-2); }
+.pc-lock { position: absolute; top: 5px; right: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg-raised); color: var(--icon-2); display: inline-flex; align-items: center; justify-content: center; pointer-events: none; }
+.pc-lock .ic { width: 8px; height: 8px; }
+.seg-opt.is-locked > span:first-child { opacity: .45; }
+.seg-opt.is-locked:hover { color: var(--text-2); }
+.seg-opt.is-locked .pc-lock { position: static; flex: none; }
 .btn-check { background: var(--fill-2); }
 .btn-check .ic { color: var(--warning); }
 .btn-check.is-ok .ic { color: var(--success); }

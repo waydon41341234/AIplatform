@@ -794,11 +794,11 @@
   const PAGES = ['cover', 'colors', 'slices', 'comps', 'pages'];
   function counts(D) {
     const sl = slices(D), cp = comps(D);
-    return { slices: sl.length, keys: 68, comps: cp.length, vars: cp.reduce((a, c) => a + c.vars.length, 0), pages: 3 };
+    return { slices: sl.length, keys: 68, comps: cp.length, vars: cp.reduce((a, c) => a + c.vars.length, 0), pages: window.PC_OPEN ? 3 : 2 }; // PC 未开放（editor.js PC_OPEN）时不出 PC 首页
   }
   function figIncl() {
     const E = X().E, D = E.D, n = counts(D), open = !!E.adFig;
-    const rows = [['cover', t('ad/fp-cover-n', { n: n.slices })], ['colors', t('ad/fp-colors-n', { n: n.keys })], ['slices', t('ad/fp-slices-n', { n: n.slices })], ['comps', t('ad/fp-comps-n', { n: n.comps, m: n.vars })], ['pages', t('ad/fp-pages-n')]];
+    const rows = [['cover', t('ad/fp-cover-n', { n: n.slices })], ['colors', t('ad/fp-colors-n', { n: n.keys })], ['slices', t('ad/fp-slices-n', { n: n.slices })], ['comps', t('ad/fp-comps-n', { n: n.comps, m: n.vars })], ['pages', t(window.PC_OPEN ? 'ad/fp-pages-n' : 'ad/fp-pages-n-h5')]];
     return `<div class="ad-incl"><button class="ad-incl-hd" data-act="adFigToggle" aria-expanded="${open}">${ic('tree-structure-fill', 'ic-16')}<span class="grow">${t('ad/fp-incl')}</span><span class="caption faint">${t('ad/fp-incl-sum', { s: n.slices, c: n.comps })}</span>${ic(open ? 'caret-up' : 'caret-down', 'ic-16')}</button>
       ${open ? `<ol class="ad-incl-list">${rows.map(([k, v], i) => `<li><span class="no">0${i}</span><b>${t('ad/fp-' + k)}</b><span class="caption muted">${esc(v)}</span></li>`).join('')}<li class="note caption faint">${t('ad/fp-incl-note')}</li></ol>` : ''}</div>`;
   }
@@ -842,7 +842,7 @@
     } else {
       const Din = clone(D); Din.login = true; const Dout = clone(D); Dout.login = false;
       const shot = (title, sub, html, cls) => `<div class="ad-fpage ${cls}"><div class="ad-fpage-v">${html}</div><b>${esc(title)}</b><span class="caption faint">${esc(sub)}</span></div>`;
-      body = `<p class="caption muted ad-fp-sub">${t('ad/fpg-sub')}</p><div class="ad-fpages">${shot(t('ad/fpg-h5-out'), `750×${D.height}`, mini(Dout, 0.42, 'is-long'), '')}${shot(t('ad/fpg-h5-in'), `750×${D.height}`, mini(Din, 0.42, 'is-long'), '')}${shot(t('ad/fpg-pc'), '1920 × auto', `<div class="ad-fpc">${pcHtml(D, mobile ? 0.17 : 0.2)}</div>`, 'is-pc')}</div>`;
+      body = `<p class="caption muted ad-fp-sub">${t('ad/fpg-sub')}</p><div class="ad-fpages">${shot(t('ad/fpg-h5-out'), `750×${D.height}`, mini(Dout, 0.42, 'is-long'), '')}${shot(t('ad/fpg-h5-in'), `750×${D.height}`, mini(Din, 0.42, 'is-long'), '')}${window.PC_OPEN ? shot(t('ad/fpg-pc'), '1920 × auto', `<div class="ad-fpc">${pcHtml(D, mobile ? 0.17 : 0.2)}</div>`, 'is-pc') : ''}</div>`;
     }
     const x2 = `<button class="ibtn ibtn-sm" data-act="closeDlg" aria-label="${esc(t('ed/close'))}">${ic('x')}</button>`;
     if (mobile) return `<div class="dialog-head ad-fhead"><h3 class="ellipsis">${ic('tree-structure-fill', 'ic-16')} ${esc(file)}</h3>${x2}</div><div class="ad-fnavs scroll-x" data-sk="adfnav">${nav}</div><div class="ad-fbody" data-sk="adfbody">${body}</div>`;

@@ -72,6 +72,11 @@
       tb: { h: 90, pad: 24, gap: 16, items: { logo: true, side: false, cur: true, search: true, auth: true }, searchFirst: false, colors: { bg: null, side: null }, logoF: 'none' }, // 已登录默认显示余额框（Waydon 2026-11-26）
     };
   }
+  // PC 电脑版暂未开放（Waydon 2026-11-27，Figma IconSegOption State=Locked / 434:448257）：只用这一个开关。
+  // false = 顶部栏 H5/PC 的 PC 锁住、点了提示「暂未开放」，所有切到 PC 的入口（手机「页面」面板、导出 PC 图 / PC 预览、恢复 PC 视图）都回落 H5；
+  // PC 画布代码（js/pc.js）原样保留，改成 true 就恢复
+  window.PC_OPEN = false;
+  const pcOpen = () => !!window.PC_OPEN;
   const meta0 = LS.get('ed.meta', {});
   const E = (window.E = {
     loading: false, step: 0, device: 'h5', sel: null, tab: 'content', ai: null, zoom: 50, palOpen: false, picker: null,
@@ -1279,8 +1284,12 @@
   // 顶部栏颜色：c 为空 = 恢复默认（跟绑定的 Key）；'key:<名>' = 跟整页配色的某个 Key
   A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); }); };
   ['h', 'pad', 'gap'].forEach((k) => { A['tbLayout_' + k] = (v) => { commit(() => { E.D.tb[k] = +v; }); }; });
-  A.setDevice = (v) => { E.device = v; E.ai = null; E.picker = null; };
-  A.mDevice = (v) => { E.device = v; E.mpanel = null; E.sel = null; E.picker = null; };
+  // PC 未开放（PC_OPEN = false）：点 PC 不切换画面，只弹「暂未开放」（level/coming-soon，同 Figma Toast 434:448499）
+  const pcLocked = (v) => { if (v !== 'pc' || pcOpen()) return false; window.toast(t('level/coming-soon'), { info: true }); return true; };
+  // PC 按钮右上角的锁徽标（Figma IconSegOption State=Locked 434:441762）
+  const pcLockBadge = () => `<span class="pc-lock" aria-hidden="true">${ic('lock-fill')}</span>`;
+  A.setDevice = (v) => { if (pcLocked(v)) return false; E.device = v; E.ai = null; E.picker = null; };
+  A.mDevice = (v) => { if (pcLocked(v)) return false; E.device = v; E.mpanel = null; E.sel = null; E.picker = null; };
   A.zoom = (d) => { const z = [25, 50, 75, 100]; const i = z.indexOf(E.zoom) + +d; if (i >= 0 && i < z.length) E.zoom = z[i]; else return false; };
   A.togglePal = () => { E.palOpen = !E.palOpen; if (!E.palOpen && E.picker && E.picker.where === 'float') E.picker = null; };
   A.edBack = () => { window.go('home'); return false; };
@@ -1530,7 +1539,7 @@
   }
   function expFiles() {
     const o = E.exp.opts; const base = E.name.replace(/\s*·\s*/g, '-');
-    return [o.figma && [base + '.fig', 'Figma', 'figma'], o.png && [base + '-PNG.zip', 'PNG', 'png'], o.svg && [base + '-SVG.zip', 'SVG', 'svg'], window.PC && o.png && [base + '-PC.png', t('ed/exp-pc-png'), 'pc'], ['theme.json', 'JSON', 'json']].filter(Boolean);
+    return [o.figma && [base + '.fig', 'Figma', 'figma'], o.png && [base + '-PNG.zip', 'PNG', 'png'], o.svg && [base + '-SVG.zip', 'SVG', 'svg'], window.PC && pcOpen() && o.png && [base + '-PC.png', t('ed/exp-pc-png'), 'pc'], ['theme.json', 'JSON', 'json']].filter(Boolean);
   }
   function exportBody() {
     const x = E.exp; const req = checks().req.length;
@@ -1604,7 +1613,7 @@
     return `<div class="ed">
       <header class="ed-top"><button class="ibtn ibtn-sm" data-act="edBack" title="${esc(t('nav/home'))}">${ic('caret-left')}</button>${nameHtml()}
         ${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span>` : ''}<span class="lv-pill"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span>${window.demoTag()}${saveHtml()}
-        <div class="ed-prev" role="group" aria-label="${esc(t('ed/preview-cap'))}"><span class="cap">${t('ed/preview-cap')}</span><div class="iseg">${[['h5', 'device-mobile', 'ed/device-h5'], ['pc', 'desktop', 'ed/device-pc']].map(([v, i, k]) => `<button class="${E.device === v ? 'is-on' : ''}" data-act="setDevice" data-arg="${v}" title="${esc(t(k))}" aria-label="${esc(t(k))}">${ic(i)}</button>`).join('')}</div>
+        <div class="ed-prev" role="group" aria-label="${esc(t('ed/preview-cap'))}"><span class="cap">${t('ed/preview-cap')}</span><div class="iseg">${[['h5', 'device-mobile', 'ed/device-h5'], ['pc', 'desktop', 'ed/device-pc']].map(([v, i, k]) => { const lk = v === 'pc' && !pcOpen(); return `<button class="${E.device === v ? 'is-on' : ''}${lk ? ' is-locked' : ''}" data-act="setDevice" data-arg="${v}" title="${esc(t(k))}" aria-label="${esc(t(k))}"${lk ? ' aria-disabled="true"' : ''}>${ic(i)}${lk ? pcLockBadge() : ''}</button>`; }).join('')}</div>
         <div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>
         <span class="spacer"></span>
         <button class="ibtn ibtn-sm" data-act="undo" ${E.past.length ? '' : 'disabled'} title="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="redo" ${E.future.length ? '' : 'disabled'} title="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>
@@ -1695,12 +1704,14 @@
     const menu = S.menu === 'mmodmenu' ? moduleMenu(id).replace('class="menu" data-stop>', `class="menu" data-stop style="top:calc(100% + 4px);right:0;left:auto">${mv}${vis}${mv || vis ? '<div class="menu-sep"></div>' : ''}`) : '';
     return `${ai}${window.AD ? window.AD.toolBtn(id, true) : ''}<span class="rel"><button class="ibtn ibtn-sm" data-act="menu:toggle" data-arg="mmodmenu" aria-label="${esc(t('ed/more'))}">${ic('dots-three')}</button>${menu}</span>`;
   }
+  // 手机「页面」面板 H5 / PC 分段：PC 未开放时同顶部栏，灰掉 + 锁徽标，点了提示「暂未开放」
+  const devSeg = () => `<div class="seg">${[['h5', 'ed/device-h5'], ['pc', 'ed/device-pc']].map(([v, k]) => { const lk = v === 'pc' && !pcOpen(); return `<button class="seg-opt ${E.device === v ? 'is-on' : ''}${lk ? ' is-locked' : ''}" data-act="mDevice" data-arg="${v}"${lk ? ' aria-disabled="true"' : ''}><span class="ellipsis">${esc(t(k))}</span>${lk ? pcLockBadge() : ''}</button>`; }).join('')}</div>`;
   function mobilePanel() {
     if (!E.mpanel) return '';
     let head = '', body = '', cls = '';
     if (E.mpanel === 'pages') {
       head = t('ed/pages');
-      body = `<div class="p-sec" style="margin-top:0">${segBtns([{ v: 'h5', label: t('ed/device-h5') }, { v: 'pc', label: t('ed/device-pc') }], E.device, 'mDevice')}</div><div class="p-sec">${tplRow()}</div>
+      body = `<div class="p-sec" style="margin-top:0">${devSeg()}</div><div class="p-sec">${tplRow()}</div>
         <div class="row ${E.sel === null ? 'is-on' : ''}" style="margin-top:12px"><span class="dot ${checks().req.length ? 'check' : 'done'}"></span>${ic('house-fill', 'ic-16')}<span class="nm">${t('cat/home')}</span></div>
         <div class="p-sec"><div class="lab">${t('ed/page-height')}</div><div class="h-row"><input class="input" style="width:110px" type="number" min="1334" max="6000" value="${E.D.height}" data-input="pageHeight" data-key="heightKey"><span class="caption faint">${E.contentH ? t('ed/height-note-n', { n: E.contentH }) : t('ed/height-note')}</span></div></div>`;
     } else if (E.mpanel === 'modules') { head = t('ed/m-modules'); body = tree().replace(/^[\s\S]*?<div class="grp-label">/, '<div class="grp-label">').replace(/<div class="grp-label">[^<]*<\/div>\s*<div class="row[\s\S]*?<div class="divider"><\/div>/, ''); }
@@ -1867,6 +1878,7 @@
   window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), assetMenuItems: (id) => assetMenuItems(id), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist };
-  window.VIEWS.editor = function () { if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
+  // PC 未开放：不管从哪里带进来的 PC 视图（恢复的状态 / 外部直接改 E.device）一律回落 H5
+  window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); return mobileEd() ? mobile() : desktop(); };
   window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod), escape };
 })();
