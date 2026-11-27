@@ -5,7 +5,7 @@ Object.assign(window.I18N, {
   // 入口
   'ct/entry-title': ['自定义模版', '自訂模版', 'Custom template', 'Mẫu tùy chỉnh'],
   'ct/entry-desc': ['用灰阶线框自由排版，选好风格 AI 一键生成整页', '用灰階線框自由排版，選好風格 AI 一鍵生成整頁', 'Lay out your page in wireframes, pick a style, and AI builds the whole page', 'Tự sắp xếp bằng khung dây, chọn phong cách, AI tạo cả trang chỉ một chạm'],
-  'ct/entry-btn': ['开始排版', '開始排版', 'Start layout', 'Bắt đầu'],
+  'ct/entry-btn': ['开始设计', '開始設計', 'Start designing', 'Bắt đầu thiết kế'],
   'ct/new': ['新', '新', 'New', 'Mới'],
   // 顶部栏
   'ct/title': ['自定义模版 · 首页排版', '自訂模版 · 首頁排版', 'Custom template · Home layout', 'Mẫu tùy chỉnh · Bố cục trang chủ'],

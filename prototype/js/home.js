@@ -530,8 +530,9 @@
       <section class="section"><div class="section-head"><h2>${t('section/level')}</h2></div><div class="levels">${lv(1, 'standard', true)}${lv(2, 'pro', false)}${lv(3, 'full', false)}</div></section>
       ${auOff() ? window.AU.homeCard() : !window.PROJECTS.length ? '' : `<section class="section"><div class="section-head"><h2>${t('section/recent')}</h2><button class="view-all" data-act="go" data-arg="projects">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
         <div class="cards" data-sk="recent">${window.PROJECTS.slice(0, 6).map((p) => window.projectCard(p)).join('')}</div></section>`}
+      ${window.CT ? `<section class="section" id="sec-custom"><div class="section-head"><h2>${t('ct/entry-title')}</h2></div>${window.CT.entry()}</section>` : ''}
       <section class="section" id="sec-templates"><div class="section-head"><h2>${t('section/templates')}</h2><button class="view-all" data-act="go" data-arg="templates">${t('common/view-all')}${ic('caret-right', 'ic-16')}</button></div>
-        ${window.CT ? window.CT.entry() : ''}<div class="filters scroll-x" data-sk="filters">${['all', 'classic', 'western', 'minimal', 'dark', 'festive'].map((f) => `<button class="chip ${S.filter === f ? 'is-on' : ''}" data-act="filter" data-arg="${f}">${t('filter/' + f)}</button>`).join('')}</div>
+        <div class="filters scroll-x" data-sk="filters">${['all', 'classic', 'western', 'minimal', 'dark', 'festive'].map((f) => `<button class="chip ${S.filter === f ? 'is-on' : ''}" data-act="filter" data-arg="${f}">${t('filter/' + f)}</button>`).join('')}</div>
         <div class="cards ${tpls.length ? '' : 'is-empty'}" data-sk="tpls">${tpls.length ? tpls.slice(0, 6).map((x) => window.templateCard(x)).join('') : tplEmpty}</div></section>
     </main>`;
     return window.shell(inner);
