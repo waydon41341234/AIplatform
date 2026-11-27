@@ -922,9 +922,12 @@
   }
   // 颜色「恢复默认」（壳层整理）：清掉这个模块的元素颜色（E.D.ec['<模块>.*']，含与文字样式共用的文字颜色）；
   // 顶部栏另有 tb.colors 和文字样式里的颜色。全站基础色 / 68 Key 不动
+  // 帐户栏（已登录 · 帐户样式）的颜色页签里也有余额框颜色（E.D.bal.c）：改了它按钮不能再写「当前已是默认颜色」，恢复时一起清掉
+  const balInColorTab = (b) => b === 'midnav' && E.D.login && ((E.D.m || {}).midnav || {}).layout === 'account';
   function colorDirty(b) {
     const ec = E.D.ec || {};
     if (Object.keys(ec).some((k) => k.startsWith(b + '.'))) return true;
+    if (balInColorTab(b) && Object.keys(balCfg().c).length) return true;
     if (b === 'topbar') { const tx = E.D.txt || {}; return Object.values(E.D.tb.colors || {}).some(Boolean) || (TXT.topbar || []).some(([id]) => tx[id] && tx[id].c); }
     return false;
   }
@@ -937,6 +940,7 @@
     E.picker = null;
     commit(() => {
       const ec = E.D.ec || {}; Object.keys(ec).forEach((k) => { if (k.startsWith(b + '.')) delete ec[k]; });
+      if (balInColorTab(b) && E.D.bal) E.D.bal = Object.assign({}, E.D.bal, { c: {} });
       if (b === 'topbar') { E.D.tb.colors = { bg: null, side: null }; const tx = E.D.txt || {}; (TXT.topbar || []).forEach(([id]) => { if (tx[id]) { delete tx[id].c; if (!Object.keys(tx[id]).length) delete tx[id]; } }); }
     });
     window.toast(t('ed/color-reset-done'), undoOpt());

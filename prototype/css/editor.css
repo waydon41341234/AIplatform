@@ -1132,6 +1132,9 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .tx-colors .tx-key, .tb-link-r .tx-key { margin-left: auto; flex: none; max-width: 40%; padding: 2px 6px; border-radius: 6px; background: var(--bg-surface, rgba(127,127,127,.12)); color: var(--text-secondary, #8e8e93); font: 500 11px/16px ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-colors .tx-key.is-custom, .tb-link-r .tx-key.is-custom { font-family: inherit; }
 .crow .tx-key, .bx-sec .tx-key { background: var(--fill-2); border: var(--stroke-thin) solid var(--border); } /* 颜色页签在面板底上：用 Figma color/fill/secondary 底 + 细边，否则标签和面板同色看不出 */
+/* 颜色页签的 Key 标签照 Figma G6/TxKeyTag（Noto Sans SC 12/18 常规、左右 8 上下 2、圆角 8、不截断）：
+   原来 40% 最大宽 + 等宽字把 labeltext_accent3 截成「labeltext_accen…」；色块都是 flex:none，标签只在真放不下时才缩、出省略号 */
+.crow .tx-key, .bx-sec .tx-key { max-width: none; flex: 0 1 auto; min-width: 0; padding: 2px 8px; border-radius: 8px; font-family: inherit; font-size: 12px; line-height: 18px; font-weight: 400; }
 /* 样式 4（长条）放大 2 倍会超出选项框：缩小倍数并裁切（Waydon 2026-11-26 18:42） */
 .ind-opt .ind-prev.on-ind { overflow: hidden; }
 .ind-opt .ind-prev.on-ind .h5-ind { transform: scale(1.6); }
