@@ -138,7 +138,7 @@
       if (opts.name) E.name = opts.name;
       const d = !opts.template && LS.get('ed.d.' + E.name, null);
       E.D = d && d.v === DV ? migrate(d) : defaultDesign(opts.template, opts.palette);
-      if (opts.ct && window.CT) E.D = window.CT.ctDesign(E.D, opts.ct); // 自定义模版：采用的成品纳入编辑器
+      if (opts.ct && window.CT) E.D = window.CT.ctDesign(E.D, opts.ct, opts.cs); // 自定义模版：采用的成品纳入编辑器
       if (opts.design) { E.D = JSON.parse(JSON.stringify(opts.design)); E.D.v = DV; persist(); } // AD：AI 首页设计作为初始设计
       E.past = []; E.future = []; E.checksPassed = false; clearTimeout(expTimer); E.exp.stage = 'ready'; E.exp.dl = {}; E.exp.failed = {};
       const pj = Array.isArray(window.PROJECTS) && window.PROJECTS.find((p) => p.name === E.name);

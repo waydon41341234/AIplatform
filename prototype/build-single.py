@@ -17,7 +17,8 @@ def data_uri(name):
 
 # 递归收集 assets（含 thumbs/ 子目录），key 是相对 assets/ 的路径
 # AI 风格模版的 thumb.webp 只是 Figma 对照图，原型里卡片是实时渲染，不打进单文件（省 ~1.3MB）
-SKIP = re.compile(r'^ai-tpl/[^/]+/thumb\.webp$')
+# 自定义模版 12 张配色版本整页图（~5.5MB）不内嵌，发布 Artifact 时作为附带文件 assets/custom-tpl/result-X-风格.jpg
+SKIP = re.compile(r'^(ai-tpl/[^/]+/thumb\.webp|custom-tpl/(result|banner)-[A-D]-\w+\.jpg)$')
 assets = {p.relative_to(ROOT / 'assets').as_posix(): data_uri(p.relative_to(ROOT / 'assets').as_posix())
           for p in sorted((ROOT / 'assets').rglob('*')) if p.suffix in MIME and not SKIP.match(p.relative_to(ROOT / 'assets').as_posix())}
 html = (ROOT / 'index.html').read_text(encoding='utf-8')

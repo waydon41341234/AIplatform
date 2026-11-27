@@ -54,8 +54,24 @@
     blue: { x: 'D', sw: ['#ffffff', '#eef4ff', '#0a7cff', '#bcd8ff'], bg: '#eef4ff', top: '#ffffff', hero: '#0a7cff', a: '#bcd8ff', b: '#ffffff' },
   };
   const STYLE_OF = { A: 'green', B: 'gold', C: 'night', D: 'blue' }; // 效果图本身的风格
-  const PAL_OF = { A: 'green', B: 'gold', C: 'green', D: 'blue' }; // 采用后编辑器主题色（editor.js PRESETS）
-  const swDots = (k) => `<span class="ct-sw">${STYLES[k].sw.map((c) => `<i style="background:${c}"></i>`).join('')}</span>`;
+  // ---------- 自定义配色（Figma 03 D-01C / M-01C，组件 AIF/CustomPaletteRow）----------
+  // 演示：按主色色相取最接近的一套配色版本（Figma 04 配色版本页，16 张 = 4 版式 × 4 风格）
+  const CP_P = ['#19B36B', '#D9A441', '#2EE68A', '#1677FF', '#7B4DFF', '#E0245E', '#FF6A00', '#00B3B3'];
+  const CP_A = ['#FFD166', '#F5C26B', '#2EE6A8', '#4CC9F0', '#FF8FA3', '#FFFFFF', '#C0C0C0', '#1C1C1E'];
+  const hueOf = (hex) => { const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; if (!d) return { h: 0, s: 0 }; let h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return { h: h * 60, s: d / (1 - Math.abs(mx + mn - 1) || 1) }; };
+  const hd = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+  function nearStyle(cp) {
+    const p = hueOf(cp.p).h, a = hueOf(cp.a);
+    const H = { green: 158, gold: 38, night: 150, blue: 212 };
+    let k = Object.keys(H).sort((x, y) => hd(p, H[x]) - hd(p, H[y]))[0];
+    // 绿色系：点缀色偏金 → 墨绿金，否则 → 暗夜绿
+    if (k === 'green' || k === 'night') k = a.s > 0.25 && hd(a.h, 42) < 25 ? 'green' : 'night';
+    return k;
+  }
+  const effStyle = (st) => (st === 'custom' ? nearStyle(C.cp) : st);
+  const resKey = (x, cs) => (!cs || cs === STYLE_OF[x] ? x : x + '-' + cs);
+  const swDots = (k) => (k === 'custom' ? `<span class="ct-sw"><i style="background:${C.cp.p}"></i><i style="background:${C.cp.a}"></i><i style="background:${C.cp.base === 'light' ? '#f5f5f7' : '#111'}"></i></span>` : `<span class="ct-sw">${STYLES[k].sw.map((c) => `<i style="background:${c}"></i>`).join('')}</span>`);
+  const stLabel = (st, cs) => (st === 'custom' ? t('ct/cp-near', { s: t('ct/s-' + (cs || effStyle(st))) }) : t('ct/s-' + st));
 
   // ---------- 起始线框（Figma 01 页 WF 起始 · 空白 / A / B / C / D）----------
   const ST = {
@@ -105,14 +121,14 @@
   const saved = LS.get('ct', null) || {};
   const okDoc = (d) => d && d.fixed && d.fixed.topbar && Array.isArray(d.blocks);
   const C = (window.CT_S = {
-    doc: okDoc(saved.doc) ? saved.doc : null, style: STYLES[saved.style] ? saved.style : 'green', prompt: '', last: saved.last || null,
+    doc: okDoc(saved.doc) ? saved.doc : null, style: STYLES[saved.style] || saved.style === 'custom' ? saved.style : 'green', cp: saved.cp && saved.cp.p ? saved.cp : { p: '#7B4DFF', a: '#FFD166', base: 'dark' }, cpOpen: saved.style === 'custom', prompt: '', last: saved.last || null,
     sel: null, pane: null, orig: null, picker: false, pick: 'A', stage: 'edit', gen: null, res: null, past: [], future: [],
     zoom: 55, msheet: null, preview: false, rtab: 'ai', dlg: null,
   });
   let savedSnap = '';
   window.AFTER_RENDER.push(() => {
     if (!C.doc) return;
-    const s = JSON.stringify({ doc: C.doc, style: C.style, last: C.last });
+    const s = JSON.stringify({ doc: C.doc, style: C.style, cp: C.cp, last: C.last });
     if (s !== savedSnap) { savedSnap = s; LS.set('ct', JSON.parse(s)); }
   });
   const mob = () => window.innerWidth < 840;
@@ -304,7 +320,7 @@
   }
   function pagePanel() {
     const d = C.doc, vis = d.blocks.filter((b) => !b.hid).length, fx = FIXED.filter((k) => !d.fixed[k].hid).length;
-    const last = C.last ? `<div class="ct-sec"><div class="ct-lab">${esc(t('ct/last'))}</div><button class="ct-last" data-act="ctShowLast"><img src="assets/custom-tpl/result-${C.last.x}.jpg" alt=""><span class="grow"><b>${esc(t('ct/plan', { x: C.last.x }))} · ${esc(t('ct/s-' + STYLE_OF[C.last.x]))}</b><span class="caption muted">${esc(t('ct/match-n', { n: C.last.pct }))}</span></span>${ic('caret-right', 'ic-16')}</button></div>` : '';
+    const last = C.last ? `<div class="ct-sec"><div class="ct-lab">${esc(t('ct/last'))}</div><button class="ct-last" data-act="ctShowLast"><img src="assets/custom-tpl/result-${resKey(C.last.x, C.last.cs)}.jpg" alt=""><span class="grow"><b>${esc(t('ct/plan', { x: C.last.x }))} · ${esc(t('ct/s-' + (C.last.cs || STYLE_OF[C.last.x])))}</b><span class="caption muted">${esc(t('ct/match-n', { n: C.last.pct }))}</span></span>${ic('caret-right', 'ic-16')}</button></div>` : '';
     return `<div class="ct-ph"><h3>${esc(t('ct/page-title'))}</h3><p class="caption faint">${esc(t('ct/page-sub'))}</p></div>
       <div class="ct-sec"><div class="ct-lab">${esc(t('ct/start'))}</div>${startCard()}</div>
       <div class="ct-sec"><div class="ct-lab">${esc(t('ct/glob'))}</div>${globHtml()}</div>
@@ -343,7 +359,7 @@
   function canvasHtml() {
     const z = zoomVal(), gen = C.stage === 'gen', d = C.doc;
     const lit = gen && C.gen ? Math.min(litTotal(d), Math.floor(C.gen.p * (litTotal(d) + 1))) : null;
-    const st = STYLES[(C.gen && C.gen.style) || C.style];
+    const st = STYLES[effStyle((C.gen && C.gen.style) || C.style)];
     const pg = `<div class="wf-page ${gen ? 'is-gen' : ''} ${C.preview ? 'is-prev' : ''}" style="zoom:${z};--ow:${(2 / z).toFixed(2)}px;--st1:${st.hero};--st2:${st.a};--st0:${st.bg}">${pageHtml(d, { act: !gen && !C.preview, tags: !C.preview, lit })}</div>`;
     const genPill = gen ? `<div class="ct-genpill">${ic('sparkle-fill', 'ic-16')}${esc(t('ct/gen-pill', { s: t('ct/step-' + STEPS[Math.min(3, Math.floor(C.gen.p * 4))]) }))}</div>` : '';
     return `<div class="ct-stage">${pg}</div>${toolHtml()}<div class="ct-drop" hidden><span></span></div>${genPill}`;
@@ -370,19 +386,21 @@
     const cards = Object.keys(STYLES).map((k) => { const s = STYLES[k]; return `<button class="ct-scard ${C.style === k ? 'is-on' : ''}" data-act="ctStyle" data-arg="${k}" aria-pressed="${C.style === k}">
       <div class="ct-sprev" style="background:${s.bg}"><i class="tp" style="background:${s.top}"></i><i class="hero" style="background:${s.hero}"></i><span class="row"><i style="background:${s.a}"></i><i style="background:${s.b}"></i><i style="background:${s.b}"></i></span></div>
       <div class="ct-sname"><b>${esc(t('ct/s-' + k))}</b>${swDots(k)}</div><div class="caption ct-sdesc">${esc(t('ct/sd-' + k))}</div></button>`; }).join('');
+    const cp = cpRow(m);
     const prompt = `<label class="ct-lab" for="ct-prompt">${esc(t('ct/prompt'))}</label><div class="ct-prompt"><input id="ct-prompt" class="input" data-input="ctPrompt" maxlength="50" value="${esc(C.prompt)}" placeholder="${esc(t('ct/prompt-ph'))}"><span class="caption faint" data-ct-cnt>${C.prompt.length}/50</span></div>`;
     const ok = window.canAfford(COST);
     const costLine = `<div class="ct-costl"><b class="${ok ? '' : 'err-text'}">${esc(t('ct/cost-n', { n: COST }))}</b><span class="caption muted">${esc(t('ct/balance-eta', { n: num(S.credits) }))}</span></div>`;
     const go = `<button class="btn btn-primary ${m ? 'btn-block' : ''}" data-act="ctGenGo">${ic('sparkle-fill', 'ic-16')}${esc(t('ct/gen-go', { n: COST }))}</button>`;
     const head = `<div class="dialog-head"><div><h3>${esc(t('ct/style-title'))}</h3><p class="caption muted">${esc(t(m ? 'ct/style-sub-m' : 'ct/style-sub'))}</p></div>${xBtn('ctClose')}</div>`;
-    if (m) return `${head}<div class="ct-scards is-m">${cards}</div>${prompt}${costLine}${go}`;
-    return `${head}<div class="ct-scards">${cards}</div>${prompt}<div class="ct-sfoot">${costLine}<span class="grow"></span><button class="btn btn-secondary" data-act="ctClose">${esc(t('confirm/cancel'))}</button>${go}</div>`;
+    if (m) return `${head}<div class="ct-scards is-m">${cards}</div>${cp}${prompt}${costLine}${go}`;
+    return `${head}<div class="ct-scards">${cards}</div>${cp}${prompt}<div class="ct-sfoot">${costLine}<span class="grow"></span><button class="btn btn-secondary" data-act="ctClose">${esc(t('confirm/cancel'))}</button>${go}</div>`;
   }
   function layers() {
     let h = '';
     const m = mob();
     if (C.picker) h += m ? ctSheet(pickerBody(true), 'is-pick', 'ctPickClose') : ctDialog(pickerBody(false), 'is-pick', 'ctPickClose');
     else if (C.dlg === 'style') h += m ? ctSheet(styleBody(true), 'is-style') : ctDialog(styleBody(false), 'is-style');
+    else if (C.dlg === 'cpal') h += m ? ctSheet(cpSheet(), 'is-style is-cpal') : ctDialog(styleBody(false), 'is-style');
     if (m && C.stage === 'gen') h += `<div class="sheet ct-sheet is-gen${still('gen')}" role="status"><div class="sheet-grab"></div><div class="ct-mgen-h"><h3>${esc(t('ct/gen-title'))}</h3><span class="caption muted">${esc(t('ct/gen-charged', { n: COST }))}</span></div>${genSteps()}<button class="btn btn-secondary btn-block" data-act="ctGenCancel" style="margin-top:16px">${esc(t('ct/gen-cancel'))}</button></div>`;
     if (m && C.msheet && C.stage === 'edit' && !C.picker && !C.dlg) h += mSheet();
     h += window.costConfirmLayer ? window.costConfirmLayer() : '';
@@ -418,11 +436,26 @@
       ${C.preview ? `<button class="btn btn-primary ct-prevx" data-act="ctPreview">${ic('x', 'ic-16')}${esc(t('ct/exit-preview'))}</button>` : ''}
       <nav class="ct-mbar">${tools.map(([k, i, l]) => `<button class="${(C.msheet === k || (k === 'layout' && C.msheet === 'glob') || (k === 'preview' && C.preview)) ? 'is-on' : ''}" data-act="ctMTool" data-arg="${k}" ${C.stage === 'gen' ? 'disabled' : ''}>${ic(i)}<span>${esc(t(l))}</span></button>`).join('')}</nav></div>${layers()}${b ? '' : ''}`;
   }
+  function cpControls() {
+    const sw = (arr, key) => `<div class="ct-cpsw">${arr.map((c) => `<button class="${C.cp[key] === c ? 'is-on' : ''}" data-act="ctCp" data-arg="${key}|${c}" style="--c:${c}" aria-label="${c}" aria-pressed="${C.cp[key] === c}"></button>`).join('')}<span class="ct-cphex caption">${C.cp[key]}</span></div>`;
+    return `<div class="ct-cpgrid"><span class="caption muted">${esc(t('ct/cp-main'))}</span>${sw(CP_P, 'p')}<span class="caption muted">${esc(t('ct/cp-acc'))}</span>${sw(CP_A, 'a')}${pseg(t('ct/cp-base'), ['dark', 'light'], C.cp.base, 'ctCp', 'base', (v) => t('ct/cp-' + v))}</div>
+      <p class="caption muted ct-cpnear">${ic('sparkle-fill', 'ic-16')}${esc(t('ct/cp-near-d', { s: t('ct/s-' + nearStyle(C.cp)) }))}</p>`;
+  }
+  function cpRow(m) {
+    const on = C.style === 'custom';
+    const head = `<button class="ct-cprow-h" data-act="ctStyle" data-arg="custom" aria-pressed="${on}"><span class="ct-cptile" style="background:linear-gradient(135deg,${C.cp.p},${C.cp.a})"></span><span class="grow"><b>${esc(t('ct/s-custom'))}</b><span class="caption muted">${esc(t('ct/cp-sub'))}</span></span>${swDots('custom')}${m ? ic('caret-right', 'ic-16') : ''}</button>`;
+    return `<div class="ct-cprow ${on ? 'is-on' : ''}">${head}${on && C.cpOpen && !m ? cpControls() : ''}</div>`;
+  }
+  function cpSheet() {
+    return `<div class="sheet-head"><button class="ibtn ibtn-sm" data-act="ctCpBack" aria-label="${esc(t('pg/back'))}">${ic('caret-left')}</button><h3 class="grow">${esc(t('ct/s-custom'))}</h3>${xBtn('ctClose')}</div>
+      <div class="ct-cpprev" style="background:${C.cp.base === 'light' ? '#f5f5f7' : '#111'}"><i style="background:${C.cp.p}"></i><i style="background:${C.cp.a}"></i><i style="background:${C.cp.p};opacity:.5"></i></div>
+      <p class="caption muted">${esc(t('ct/cp-sub'))}</p>${cpControls()}<button class="btn btn-primary btn-block" data-act="ctCpUse" style="margin-top:16px">${esc(t('ct/cp-use'))}</button>`;
+  }
   function resultView() {
-    const r = C.res, m = mob(), rs = STYLE_OF[r.x];
-    const img = `<img src="assets/custom-tpl/result-${r.x}.jpg" alt="${esc(t('ct/res-ai', { s: t('ct/s-' + rs) }))}">`;
+    const r = C.res, m = mob(), rs = r.cs || STYLE_OF[r.x];
+    const img = `<img src="assets/custom-tpl/result-${resKey(r.x, rs)}.jpg" alt="${esc(t('ct/res-ai', { s: t('ct/s-' + rs) }))}">`;
     const wf = `<div class="wf-page" style="zoom:${m ? (window.innerWidth - 34) / 750 : 0.5}">${pageHtml(r.doc || C.doc, { tags: true })}</div>`;
-    const info = [['ct/i-style', `${swDots(r.style)}<b>${esc(t('ct/s-' + r.style))}</b>`], ['ct/i-match', `<b>${esc(t('ct/plan', { x: r.x }))} · ${esc(t('ct/match-n', { n: r.pct }))}</b>`], ['ct/i-cost', `<b>${esc(t('ct/pts', { n: r.cost }))}</b>`], ['ct/i-time', `<b>${esc(t('ct/secs', { n: r.sec }))}</b>`]];
+    const info = [['ct/i-style', `${swDots(r.style)}<b>${esc(stLabel(r.style, rs))}</b>`], ['ct/i-match', `<b>${esc(t('ct/plan', { x: r.x }))} · ${esc(t('ct/match-n', { n: r.pct }))}</b>`], ['ct/i-cost', `<b>${esc(t('ct/pts', { n: r.cost }))}</b>`], ['ct/i-time', `<b>${esc(t('ct/secs', { n: r.sec }))}</b>`]];
     const pill = `<span class="pill-tag ct-rpill">${esc(t('ct/plan', { x: r.x }))} · ${esc(t('ct/s-' + rs))}</span>`;
     if (m) {
       return `<div class="ct ct-m ct-res is-m"><header class="ct-mtop"><button class="ibtn ibtn-sm" data-act="ctResBack" aria-label="${esc(t('ct/back-wf'))}">${ic('caret-left')}</button><b class="grow ellipsis">${esc(t('ct/res-title'))}</b>${pill}</header>
@@ -463,15 +496,16 @@
     D: { top: [0, 90], bn: [4040, 4235], m: [['banner', 90, 420], ['notice', 420, 490], ['midnav', 490, 610], ['gamemenu', 610, 2005, 'side', [0, 122]], ['gamecards', 610, 2005, null, [122, 750]], ['footer', 2005, 4040]] },
   };
   // 采用：在编辑器默认设计上挂成品（D.ct），模块顺序 = 成品模块
-  function ctDesign(D, x) {
+  function ctDesign(D, x, cs) {
     const bd = BANDS[x]; if (!bd) return D;
-    D.ct = { x, s: STYLE_OF[x], b: {} };
+    cs = STYLES[cs] ? cs : STYLE_OF[x];
+    D.ct = { x, s: cs, k: resKey(x, cs), b: {} };
     bd.m.forEach((r) => { D.ct.b[r[0]] = { y: [r[1], r[2]], sub: r[3] || null, xr: r[4] || null }; });
     D.ct.b.topbar = { y: bd.top }; D.ct.b.bottomnav = { y: bd.bn };
     D.order = bd.m.map((r) => r[0]); D.hidden = {};
     D.tb.items.side = false; D.tb.h = bd.top[1] - bd.top[0];
     // Banner 面板里的轮播图 = 成品自己的 Banner（换图 / AI 生成后画布改用编辑器的 Banner 组件显示新图）
-    const bf = 'img:assets/custom-tpl/banner-' + x + '.jpg';
+    const bf = 'img:assets/custom-tpl/banner-' + D.ct.k + '.jpg';
     D.banner.size = 'medium'; D.banner.slides = [0, 1, 2].map(() => ({ f: bf, w: 1020, h: 300 }));
     D.ct.bf = bf;
     return D;
@@ -485,12 +519,13 @@
     return base + ' · ' + (c.sub[0] === '=' ? c.sub.slice(1) : t('ct/sub-' + c.sub));
   }
   // 成品大图只在根节点挂一次（CSS 变量），切片引用变量：单文件版不用每次渲染都把 1MB 的内嵌图写进 DOM
-  ['A', 'B', 'C', 'D'].forEach((x) => { const k = 'custom-tpl/result-' + x + '.jpg'; document.documentElement.style.setProperty('--ct-res-' + x, `url(${(window.A_ && window.A_[k]) || 'assets/' + k})`); });
+  // 16 张：原稿 result-X（内嵌），配色版本 result-X-风格（太大不内嵌，发布时作为附带文件）
+  ['A', 'B', 'C', 'D'].forEach((x) => Object.keys(STYLES).forEach((st) => { const id = resKey(x, st), k = 'custom-tpl/result-' + id + '.jpg'; document.documentElement.style.setProperty('--ct-res-' + id, `url(${(window.A_ && window.A_[k]) || 'assets/' + k})`); }));
   // 画布切片：750 稿 → 画布 375（÷2）
   function ctSlice(D, id) {
     const c = D.ct && D.ct.b[id]; if (!c) return null;
     const [y0, y1] = c.y, [x0, x1] = c.xr || [0, 750];
-    return `<div class="ct-slice" style="width:${(x1 - x0) / 2}px;height:${(y1 - y0) / 2}px;background-image:var(--ct-res-${D.ct.x});background-position:${-x0 / 2}px ${-y0 / 2}px"></div>`;
+    return `<div class="ct-slice" style="width:${(x1 - x0) / 2}px;height:${(y1 - y0) / 2}px;background-image:var(--ct-res-${D.ct.k || D.ct.x});background-position:${-x0 / 2}px ${-y0 / 2}px"></div>`;
   }
   // 右栏「页面」：AI 成品已纳入编辑器（Figma D-05 panel-right · 已采用）
   function edPanel(D) {
@@ -577,12 +612,15 @@
     const open = () => { C.dlg = 'style'; C.picker = false; C.msheet = null; C.preview = false; };
     if (window.requireLogin) { if (!window.requireLogin(open)) return; } else open();
   };
-  A.ctStyle = (k) => { C.style = k; };
+  A.ctStyle = (k) => { if (k === 'custom') { C.style = 'custom'; if (mob()) C.dlg = 'cpal'; else C.cpOpen = true; return; } C.style = k; C.cpOpen = false; };
+  A.ctCp = (arg) => { const [k, v] = arg.split('|'); C.cp = Object.assign({}, C.cp, { [k]: v }); C.style = 'custom'; };
+  A.ctCpBack = () => { C.dlg = 'style'; };
+  A.ctCpUse = () => { C.style = 'custom'; C.dlg = 'style'; };
   I.ctPrompt = (v, el) => { C.prompt = v.slice(0, 50); const c = document.querySelector('[data-ct-cnt]'); if (c) c.textContent = C.prompt.length + '/50'; return false; };
   A.ctGenGo = () => {
     const style = C.style;
     C.dlg = null;
-    window.costConfirm({ title: t('ct/cc-title'), body: t('ct/cc-body', { s: t('ct/s-' + style) }), cost: COST, okLabel: t('ct/cc-ok'), onOk: () => startGen(style), onCancel: () => { C.dlg = 'style'; } });
+    window.costConfirm({ title: t('ct/cc-title'), body: t('ct/cc-body', { s: stLabel(style) }), cost: COST, okLabel: t('ct/cc-ok'), onOk: () => startGen(style), onCancel: () => { C.dlg = 'style'; } });
   };
   let genTok = 0, genTimer = null;
   function startGen(style) {
@@ -595,9 +633,9 @@
       if (tok !== genTok || C.stage !== 'gen') return;
       C.gen.p = Math.min(1, (Date.now() - C.gen.t0) / GEN_MS);
       if (C.gen.p >= 1) {
-        const mres = match(C.gen.doc, style);
-        C.res = { x: mres.x, pct: mres.pct, style, cost: COST, sec: Math.max(1, Math.round((Date.now() - C.gen.t0) / 1000)), doc: C.gen.doc, at: Date.now() };
-        C.last = { x: C.res.x, pct: C.res.pct, style, cost: COST, sec: C.res.sec, doc: C.res.doc, at: C.res.at };
+        const cs = effStyle(style), mres = match(C.gen.doc, cs);
+        C.res = { x: mres.x, pct: mres.pct, style, cs, cost: COST, sec: Math.max(1, Math.round((Date.now() - C.gen.t0) / 1000)), doc: C.gen.doc, at: Date.now() };
+        C.last = { x: C.res.x, pct: C.res.pct, style, cs, cost: COST, sec: C.res.sec, doc: C.res.doc, at: C.res.at };
         C.gen = null; C.stage = 'result'; C.rtab = 'ai';
         if (S.route === 'custom') { window.render(); const sc = document.querySelector('.ct-res-body'); if (sc) sc.scrollTop = 0; }
         else window.toast(t('ct/done-away'), { action: () => { window.go('custom'); }, actionLabel: t('ct/view'), ms: 5000 });
@@ -623,7 +661,7 @@
   A.ctRTab = (v) => { C.rtab = v; };
   A.ctAdopt = () => {
     const r = C.res; if (!r) return false;
-    const pal = PAL_OF[r.x];
+    const cs = r.cs || STYLE_OF[r.x], pal = { green: 'green', gold: 'gold', night: 'green', blue: 'blue' }[cs];
     const base = t('ct/proj-name', { x: r.x });
     const P = Array.isArray(window.PROJECTS) ? window.PROJECTS : [];
     let name = base, i = 2;
@@ -632,10 +670,10 @@
       if (Array.isArray(window.PROJECTS)) window.PROJECTS.unshift({ name, st: 'designing', time: 'time/just', tone: pal, template: 'classic-blue' });
       C.stage = 'edit'; C.dlg = null;
       try { ['ed.d.', 'ed.st.', 'ed.x.'].forEach((k) => localStorage.removeItem('proto.' + k + name)); } catch (e) { /* 隐私模式 */ }
-      window.openEditor({ name, template: 'classic-blue', palette: pal, status: 'designing', ct: r.x });
+      window.openEditor({ name, template: 'classic-blue', palette: pal, status: 'designing', ct: r.x, cs });
       // 编辑器先显示约 1.5 秒加载步骤，加载完再提示
       const t0 = Date.now();
-      const wait = () => { if (window.E && window.E.loading && Date.now() - t0 < 8000) { setTimeout(wait, 150); return; } window.toast(t('ct/adopted', { s: t('ct/s-' + STYLE_OF[r.x]) }), { ms: 5000, action: () => { window.go('custom'); }, actionLabel: t('ct/back-wf') }); };
+      const wait = () => { if (window.E && window.E.loading && Date.now() - t0 < 8000) { setTimeout(wait, 150); return; } window.toast(t('ct/adopted', { s: t('ct/s-' + cs) }), { ms: 5000, action: () => { window.go('custom'); }, actionLabel: t('ct/back-wf') }); };
       setTimeout(wait, 200);
     };
     go();
