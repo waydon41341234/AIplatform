@@ -195,7 +195,11 @@
     const tb = Object.assign({}, E.D.tb.colors);
     const ec = Object.assign({}, E.D.ec);
     if (E.picker) { if (E.picker.tbRow) tb[E.picker.tbRow] = E.picker.value; else if (E.picker.elRow) ec[E.picker.elRow] = E.picker.value; else th[E.picker.key] = E.picker.value; }
+    const rawBg = tb.bg || null;
     Object.keys(tb).forEach((k) => { tb[k] = tbRef(tb[k], th, ec); }); // 'key:xxx' → 当前配色的值（PC 画布也用这里）
+    // AI 设计算好的顶部栏字色 / 图标色（搜索、币种、余额、登录注册）是按当时的底色挑的：业主之后改底板颜色、恢复默认或改 68 Key，
+    // 在新底色上看不清就重算，看得清的默认色就回默认（11-27 QA：套模版后底板改回默认，CNY / 搜索 / 余额变白看不见）
+    if (window.AD && window.AD.tbFix && (E.D.aiDesign || window.AD.TB_AUTO.some((k) => E.D.tb.colors && E.D.tb.colors[k] != null))) window.AD.tbFix(tb, th, tb.bg || keyVal('bs_topnav_bg', th, ec) || th.bg_2, rawBg);
     return { th, tb, ec };
   }
   // 顶部栏底板默认绑定 68 Key 的 bs_topnav_bg（Waydon 2026-11-26）
@@ -810,7 +814,7 @@
     const txRow = (id, lab) => `<div class="crow"><div class="k"><span class="ellipsis">${t(lab)}</span>${window.MP.hexChip(txCol(id))}</div>${txColors(id)}</div>`;
     const link = (lab, key) => window.MP.linkRow(t(lab), key, keyVal(key, th));
     return `<div class="p-sec">${row('bg', 'ed/tb-c-bg')}${D.tb.items.side ? row('side', 'ed/tb-c-side') : ''}${txRow('tb.search', 'tx/tb-search')}${D.login ? '' : txRow('tb.cur', 'tx/tb-cur')}</div>
-      <div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link('ed/tb-c-border', 'border')}${!D.login && !(D.tb.icons || {}).cur ? link('ed/tb-c-curic', 'accent_3') : ''}</div>${D.login && D.tb.items.auth ? `
+      <div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link('ed/tb-c-border', 'border')}${!D.login && !(D.tb.icons || {}).cur ? window.MP.linkRow(t('ed/tb-c-curic'), 'accent_3', tb.curIc || keyVal('accent_3', th)) : ''}</div>${D.login && D.tb.items.auth ? `
       <div class="p-note">${t('ed/tb-c-bal')}</div>` : ''}`;
   }
   // ---------- 文字样式（Waydon 2026-11-26：有文字的地方都能调字号 / 粗细 / 颜色） ----------
@@ -876,11 +880,13 @@
   const gmSide = () => !!(E.D.m && E.D.m.gamemenu && E.D.m.gamemenu.style === 'side');
   const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
   // 文字颜色绑定的 Key（Waydon 2026-11-26 17:23：色盘右边显示绑定的 Key）；没写的 = lead
-  const TX_KEY = { 'tb.cur': 'neutral_2', 'tb.search': 'lead', 'notice.badgeTx': 'text_primary', 'midnav.btn': 'primary', 'midnav.greet': 'neutral_2', 'midnav.badge': 'text_primary', 'gamecards.more': 'neutral_2', 'gamecards.title': 'lead', 'gamecards.all': 'neutral_2' };
+  const TX_KEY = { 'tb.cur': 'neutral_2', 'tb.search': 'lead', 'tb.bal': 'accent_3', 'midnav.bal': 'accent_3', 'notice.badgeTx': 'text_primary', 'midnav.btn': 'primary', 'midnav.greet': 'neutral_2', 'midnav.badge': 'text_primary', 'gamecards.more': 'neutral_2', 'gamecards.title': 'lead', 'gamecards.all': 'neutral_2' };
   // 默认 Key：跟颜色页签同源的 = 那一行绑定的 Key（如公告文字 neutral_1、消息气泡 text_primary），其它查 TX_KEY
   const txDefKey = (id) => (TX_EC[id] ? (window.MP && window.MP.elKey && window.MP.elKey(TX_EC[id])) || 'lead' : TX_KEY[id] || 'lead');
   // 生效的颜色（标题行色值胶囊）：改过 = 那个值，没改 = 默认 Key 的色值
-  const txCol = (id) => txRes(txRaw(id)) || keyVal(txDefKey(id), liveTheme().th, liveTheme().ec) || '';
+  // 顶部栏没改过的字：AI 设计按底色自动换的色（liveTheme().tb.cur / text / bal）才是画布上的色，胶囊显示它
+  const TX_AUTO = { 'tb.cur': 'cur', 'tb.search': 'text', 'tb.bal': 'bal' };
+  const txCol = (id) => { const lt = liveTheme(); return txRes(txRaw(id)) || (TX_AUTO[id] && lt.tb[TX_AUTO[id]]) || keyVal(txDefKey(id), lt.th, lt.ec) || ''; };
   // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）。Figma G6/TxColorRow 463:31176（Waydon 11-27 09:18「默认选中默认的颜色，不是默认按钮」）：
   // 没有「默认」按钮：[默认色块 = 绑定的 Key，没改过时选中，再点 = 恢复默认][lead / neutral_1 / neutral_2 / primary / accent_2 / accent_3 / 白 去掉默认 Key 后取前 6 个][彩虹 = 自定义]，
   // Key 标签换到第二行靠右。色块存 'key:<名>'（跟整页配色走），白色存 #ffffff；色块提示「Key 名 · #HEX」
@@ -1518,7 +1524,7 @@
       return E.projAssets.map((a) => {
         if (ico && !imgOf(a.f)) return null;
         const z = libSize(a.f, sp, a); if (!z) return null;
-        if (ico && Math.abs(z[0] - z[1]) > 0.05 * Math.max(z[0], z[1])) return null;
+        if (ico && !(z[0] === sp.w && z[1] === sp.h) && Math.abs(z[0] - z[1]) > 0.05 * Math.max(z[0], z[1])) return null; // 方图或刚好是规格尺寸（搜索 56×49）
         return { f: a.f, w: z[0], h: z[1], name: a.name };
       }).filter(Boolean);
     }

@@ -132,7 +132,31 @@
     c.regInk = best(c.reg, [th.bg_2, th.lead, '#ffffff', '#111111']);
     const logins = mode === 'brand' ? [c.text] : [th.primary, mix(th.primary, dark ? '#ffffff' : th.lead, 0.4), c.text || th.lead];
     c.login = logins.find((x) => okOn(x, 3)) || best(top, logins);
+    c.for = c.bg || null; // 这些色是按哪个底板算的（tbFix：底板没变就照 AI 原样，不重算）
     return c;
+  }
+  // 顶部栏底色变了以后（业主改底板颜色 / 恢复默认 / 改 68 Key，editor liveTheme 每次渲染调）：AI 存的字色 / 图标色在当前底色 top 上
+  // 不到门槛就重算——默认色看得清就回默认（null），否则从候选里挑最先过门槛的（都不过取对比最高）。看得清的照旧不动。
+  // （11-27 QA F1：套节日红金后把底板改回默认白，CNY / 币种图标 / 搜索 / 余额金额还是白色，整块看不见）
+  const TB_AUTO = ['text', 'search', 'bal', 'cur', 'curIc', 'reg', 'regInk', 'login'];
+  function tbFix(tb, th, top, rawBg) {
+    if (typeof top !== 'string' || top[0] !== '#') return tb;
+    if ('for' in tb && String(rawBg || '').toLowerCase() === String(tb.for || '').toLowerCase()) return tb; // 底板还是 AI 当时那个
+    const isHex = (x) => typeof x === 'string' && x[0] === '#';
+    const ok = (x, m, on = top) => isHex(x) && contrast(on, x) >= m;
+    const pick = (cs, m, on = top) => { cs = cs.filter(isHex); return cs.find((x) => ok(x, m, on)) || best(on, cs); };
+    const fix = (k, def, cands, m) => { const v = tb[k]; if (v ? ok(v, m) : ok(def, m)) return; tb[k] = ok(def, m) ? null : pick([v, ...cands], m); };
+    fix('text', th.lead, [th.lead, th.bg_2, ink(top)], 3);
+    const tx = tb.text || th.lead;
+    fix('search', '#1678ff', [th.primary, tx, th.lead, ink(top)], 3); // 默认 = 经典蓝搜索图（PC 是 primary，下面的候选第一个就是它）
+    fix('bal', th.accent_3, [th.primary, tx, th.lead, ink(top)], 3);
+    fix('cur', th.neutral_2, [tx, th.lead, ink(top)], 3);
+    fix('curIc', th.accent_3, [th.primary, tx, th.lead, ink(top)], 3);
+    fix('reg', th.accent_3, [th.primary, th.accent_3, th.lead, ink(top)], 1.6);
+    const reg = tb.reg || th.accent_3;
+    if (!ok(tb.regInk || th.bg_2, 3, reg)) tb.regInk = pick([th.bg_2, th.lead, '#ffffff', '#111111'], 3, reg);
+    fix('login', th.primary, [tx, th.lead, ink(top)], 3);
+    return tb;
   }
   // 编辑器「AI 一键设计」：把候选套到当前项目上——页面模块、内容、素材不变；自己锁定过的颜色不覆盖（ED-14）
   function mergeInto(D0, C) {
@@ -1097,7 +1121,7 @@
   window.AD = {
     composer, recordView, doneIdx: okIdx, tile, openViewer, entryCard, edPanel: () => edPanel(false), mSheet, edBar, toolBtn, modMask,
     figIncl, figViewBtn, checks, dlgs: { adfig: figBody, adcancel: edCancelBody }, ST, buildDesign, mergeInto, slices, comps, counts,
-    TPLS, tplsOf, tplDesign, mergeAny, TPL_N,
+    TPLS, tplsOf, tplDesign, mergeAny, TPL_N, tbFix, TB_AUTO,
     failTpl: (id) => { FAIL.add(id); delete TL[id]; }, // 测试用：下一次加载这套模版的图时模拟失败
 
   };
