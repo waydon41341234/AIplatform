@@ -680,6 +680,7 @@
   let ntComp = false, ntTyping = false; // 输入法组字中；一段连续输入只记一步撤销
   const ntEd = () => document.querySelector('#app [data-ntrich]');
   const inNt = (n) => { const el = n && (n.nodeType === 1 ? n : n.parentElement); return el && el.closest ? el.closest('[data-ntrich]') : null; };
+  const inBar = (n) => !!(n && n.nodeType === 1 && n.closest && n.closest('[data-ntbar]')); // 键盘 Tab 进颜色条：焦点在色块上也算「选区还在」
   const spEq = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
   const ntOff = (root, node, off) => { const r = document.createRange(); r.selectNodeContents(root); try { r.setEnd(node, off); } catch (e) { return 0; } return r.toString().length; };
   function ntGetSel(root) {
@@ -716,7 +717,7 @@
   function ntSync() {
     const ed = ntEd(); if (!ed) return;
     const sec = ed.closest('[data-ntsec]'), bar = sec && sec.querySelector('[data-ntbar]'), hint = sec && sec.querySelector('[data-nthint]'); if (!bar) return;
-    const r = document.activeElement === ed && ntLive && ntLive.e > ntLive.s ? ntLive : null;
+    const a0 = document.activeElement, r = (a0 === ed || inBar(a0)) && ntLive && ntLive.e > ntLive.s ? ntLive : null;
     sec.classList.toggle('is-sel', !!r);
     const h = r ? t('mp/nt-sel', { n: r.e - r.s }) : t('mp/nt-hl'); if (hint && hint.textContent !== h) hint.textContent = h;
     if (!r) { bar.hidden = true; return; }
@@ -750,6 +751,8 @@
   document.addEventListener('compositionend', (e) => { const ed = inNt(e.target); ntComp = false; if (ed) ntInput(ed); });
   // 捕获阶段先拦：Enter 不换行；Esc 只收起颜色条（不关面板）；Ctrl/⌘+Z / Y 走编辑器的撤销（不用浏览器自带的）
   document.addEventListener('keydown', (e) => {
+    // 焦点在颜色条色块上按 Esc：收起颜色条，光标回到输入框（选区末尾），不关面板
+    if (e.key === 'Escape' && inBar(e.target)) { e.preventDefault(); e.stopPropagation(); const ed0 = ntEd(), s0 = ntLive; if (ed0 && s0) { ntLive = { s: s0.e, e: s0.e }; ed0.focus({ preventScroll: true }); ntSetSel(ed0, s0.e, s0.e); } ntSync(); return; }
     const ed = inNt(e.target); if (!ed || e.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter') { e.preventDefault(); return; }
     if (e.key === 'Escape') { const s = ntLive; if (s && s.e > s.s) { e.preventDefault(); e.stopPropagation(); ntLive = { s: s.e, e: s.e }; ntSetSel(ed, s.e, s.e); ntSync(); } return; }
@@ -770,14 +773,20 @@
   document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('[data-ntbar]')) e.preventDefault(); });
   document.addEventListener('selectionchange', () => { const ed = ntEd(); if (!ed) return; const s = document.activeElement === ed ? ntGetSel(ed) : null; if (s) ntLive = s; ntSync(); });
   // 失焦：等这一轮渲染完再看焦点在不在新的输入框里（点色块会重渲染，输入框换了一个）
+  // 键盘 Tab 从输入框进到颜色条（或在色块之间切换）不算失焦，颜色条留着；离开颜色条 / 输入框才收起
   document.addEventListener('focusout', (e) => {
-    if (!inNt(e.target)) return;
-    setTimeout(() => { const ed = ntEd(), a = document.activeElement; if (ed && a && ed.contains(a)) return; ntLive = null; ntTyping = false; ntSync(); }, 0);
+    if (!inNt(e.target) && !inBar(e.target)) return;
+    setTimeout(() => { const ed = ntEd(), a = document.activeElement; if (ed && a && (ed.contains(a) || inBar(a))) { ntSync(); return; } ntLive = null; ntTyping = false; ntSync(); }, 0);
   });
+  // 键盘焦点在颜色条哪个按钮上（data-c / 清除）：重渲染（上色、自动保存）后放回同一个按钮，不跳回输入框
+  let ntBarK = null;
+  document.addEventListener('focusin', (e) => { const n = e.target; ntBarK = inBar(n) ? (n.dataset && n.dataset.c) || (n.classList.contains('nt-clear') ? 'clear' : null) : null; });
   window.AFTER_RENDER.push(() => {
-    const ed = ntEd(); if (!ed) { ntLive = null; return; }
+    const ed = ntEd(), k = ntBarK; if (!ed) { ntLive = null; return; }
     if (ntLive) { const L = (ntM().text || '').length; ed.focus({ preventScroll: true }); ntSetSel(ed, Math.min(ntLive.s, L), Math.min(ntLive.e, L)); }
     ntSync();
+    const bar = ntLive && k && (ed.closest('[data-ntsec]') || document).querySelector('[data-ntbar]');
+    const btn = bar && !bar.hidden && bar.querySelector(k === 'clear' ? '.nt-clear' : `[data-c="${k}"]`); if (btn) btn.focus({ preventScroll: true });
   });
 
   // ---------- 改名（ED-19）：上限中文 6 字 / 12 个字符 ----------
