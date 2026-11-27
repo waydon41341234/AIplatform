@@ -27,6 +27,10 @@
 - **验收**：老板账号在电脑和手机上都能打开页面并点进编辑器；刷新后改过的内容还在。
 - **以后更新**：改完原型后重新运行 `build-single.py`，用新的 `prototype-showcase.html` 覆盖文档平台上的文件。
 
+### 0.7 2026-11-27 Waydon 修改需求（进行中）
+- 全部原话、理解与进度见 [docs/changes-2026-11-27.md](changes-2026-11-27.md)；AI 生图提示词见 [docs/ai-prompts.md](ai-prompts.md)。
+- 工作方式：先改 Figma 再改 HTML；一个模块做完先 push 再做下一个。
+
 ### 0.6 统一 AI 生成（2026-11-26 晚，Waydon：「统一ai生成的排版和流程」，先改 Figma 04-AI 统一生成，再改 HTML）
 - 已做：所有模块共用一个 AI 面板 `prototype/js/aigen.js`（window.AIG；`AIG.reg(mod, adapter)`），入口 `data-act="aigOpen"`，规格见 docs/ai-unified.md。旧面板已删除。
 - 定价：余额框币种 ✦20、游戏卡片 ✦10；帐户栏 4 个入口；Banner 只留行尾 ✦。
