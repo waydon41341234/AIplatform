@@ -1102,11 +1102,13 @@
     const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker; const v = x.E.D.ec[HB] || null;
     const col = resolveKey('home_bg', th, ec); const pk = P && P.elRow === HB && P.where === 'home';
     const src = !v ? t('ed/hb-src-design', { hex: DESIGN_DEF.home_bg }) : v.startsWith('key:') ? t('ed/keys-follow', { name: keyLabel(v.slice(4)) }) : `${t('tx/c-custom')} · <span class="mono">${esc(v.toUpperCase())}</span>`;
-    const opt = (val, c, lab, cls = '') => `<span class="hb-opt"><button class="sw-btn ${cls} ${(v || '') === val ? 'is-on' : ''}" style="background:${c}" title="${esc(lab)}" aria-label="${esc(lab)}" data-act="homeBg" data-arg="${val}"></button><small>${esc(lab)}</small></span>`;
-    const custom = `<span class="hb-opt"><button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}" data-act="homeBgPick"></button><small>${esc(t('ed/hb-custom'))}</small></span>`;
+    // 快捷选项照 Figma 424:433232：左侧 72 标签列「快捷选项」+ 28 色块（色盘统一圆形），自定义 = 虚线空色块；名字放 title / aria-label
+    const opt = (val, c, lab) => `<button class="sw-btn ${(v || '') === val ? 'is-on' : ''}" style="background:${c}" title="${esc(lab)}" aria-label="${esc(lab)}" data-act="homeBg" data-arg="${val}"></button>`;
+    const custom = `<button class="sw-btn hb-custom ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" ${v && !v.startsWith('key:') ? `style="background:${esc(v)}"` : ''} title="${esc(t('ed/hb-custom'))}" aria-label="${esc(t('ed/hb-custom'))}" data-act="homeBgPick"></button>`;
+    const own = v && !(x.E.D.baseEc && x.E.D.baseEc[HB] === v); // AI 风格给的不算业主自改
     return `<div class="p-sec hb-sec" data-sec="home_bg"><div class="lab">${t('ed/home-bg')}</div>
-      <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap">${src}</span><span class="kk mono">home_bg</span></span>${v ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
-      <div class="crow hb-opts"><div class="tx-colors">${opt('', DESIGN_DEF.home_bg, t('ed/hb-design'))}${opt('key:bg_1', th.bg_1, t('ed/hb-bg1'))}${opt('key:bg_2', th.bg_2, t('ed/hb-bg2'))}${custom}</div></div>
+      <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap">${src}</span><span class="kk mono">home_bg</span></span>${own ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
+      <div class="bc-row hb-opts"><span class="k">${t('ed/hb-quick')}</span><div class="sws">${opt('', DESIGN_DEF.home_bg, t('ed/hb-design'))}${opt('key:bg_1', th.bg_1, t('ed/hb-bg1'))}${opt('key:bg_2', th.bg_2, t('ed/hb-bg2'))}${custom}</div></div>
       ${pk && !mobile ? x.pickerHtml('in-panel', t('ed/home-bg')) : ''}</div>`;
   }
   A.homeBg = (val) => {

@@ -1329,11 +1329,9 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .am-sheet .menu-item.is-ai { color: var(--brand); }
 
 /* 整页设置 · 首页背景（home_bg，Figma 424:433220）：KeyRow + 快捷选项（跟设计 / 同页面背景 / 同卡片底 / 自定义） */
-.hb-sec .krow { border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; }
+.hb-sec .krow { border-radius: 12px; padding: 10px 8px; }
 .hb-sec .krow .kt2 .kk { max-width: none; font-size: 12px; color: var(--text-3); }
 .hb-sec .krow > .ic-16, .hb-sec .krow > svg { flex: none; color: var(--text-3); }
 .hb-opts { margin-top: 12px; }
-.hb-opts .tx-colors { gap: 8px; align-items: flex-start; }
-.hb-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; text-align: center; }
-.hb-opt .sw-btn, .hb-opt .rainbow { width: 28px; height: 28px; }
-.hb-opt small { font-size: 11px; line-height: 14px; color: var(--text-3); overflow-wrap: anywhere; }
+.hb-opts .sws { display: flex; }
+.hb-opts .sw-btn.hb-custom { border: 1px dashed var(--text-3); background: transparent; }

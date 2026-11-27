@@ -96,6 +96,7 @@
     const bnOn = vi === 1 ? (dark ? th.primary : mix(th.primary, th.lead, 0.25)) : th.primary;
     put('bottomnav.active', contrast(th.bg_2, bnOn) >= 3 ? bnOn : best(th.bg_2, [mix(th.primary, th.lead, 0.35), mix(th.primary, th.lead, 0.6), th.lead]), th.primary);
     if (contrast(th.bg_1, th.neutral_2) < 3.2) put('footer.text', best(th.bg_1, [th.neutral_1, mix(th.neutral_2, th.lead, 0.5)]), th.neutral_2);
+    if (dark) ec['key:home_bg'] = 'key:bg_1'; // 深色风格：首页背景改跟页面背景（home_bg 跟设计默认 #FFFFFF 是经典蓝白的，深色底上会整页发白）
     D.ec = ec; D.baseEc = Object.assign({}, ec);
     return D;
   }

@@ -22,6 +22,7 @@ Object.assign(window.I18N, {
   'ed/hb-bg1': ['同页面背景', '同頁面背景', 'Page bg', 'Nền trang'],
   'ed/hb-bg2': ['同卡片底', '同卡片底', 'Card bg', 'Nền thẻ'],
   'ed/hb-custom': ['自定义', '自訂', 'Custom', 'Tùy chỉnh'],
+  'ed/hb-quick': ['快捷选项', '快捷選項', 'Quick picks', 'Chọn nhanh'],
   'ed/keys-custom': ['已单独设置', '已單獨設定', 'Customized', 'Đã tùy chỉnh'],
   'ed/keys-detach': ['改成独立配色', '改成獨立配色', 'Use its own color', 'Dùng màu riêng'],
   'ed/keys-restore': ['恢复跟随', '恢復跟隨', 'Follow again', 'Theo lại'],
