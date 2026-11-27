@@ -25,7 +25,45 @@
   const SIDE = [['首页', 'house-fill'], ['优惠活动', 'gift-fill'], ['VIP 特权', 'crown-fill'], ['在线客服', 'headset-fill'], ['个人中心', 'user-circle']];
   const FOOT = ['关于我们', '帮助中心', '隐私政策'];
   const items = (arr) => arr.map((x) => ({ n: x[0], i: x[1] || null, req: !!x[2], on: true }));
-  const NOTICE = '恭喜玩家在“龙虎斗”游戏【中级场】房间赢得18888元彩金，祝您好运连连！'; // Figma 317:55675：“引号”红、【中级场】绿、数字橙
+  // 公告内容富文本（Waydon 2026-11-27 第 5 条，Figma 442:37665 ⑦）：存纯文本 text + spans [{ s, e, c }]（c = 'key:<名>' 或 #hex），
+  // 选中部分文字可单独改色；默认 “龙虎斗”（含引号）→ accent_2、中级场 → accent_1、数字 → accent_3（Figma 317:55675 原样配色）
+  const NOTICE = '恭喜玩家在“龙虎斗”游戏中级场房间赢得18888元彩金，祝您好运连连！';
+  const NT_MAX = 80;
+  // spans 整理：去掉空段 / 越界，按起点排序，相邻同色合并（spans 之间不重叠，spPaint 保证）
+  const spNorm = (sp, len) => {
+    const o = [];
+    (sp || []).filter((x) => x && x.c).map((x) => ({ s: Math.max(0, x.s), e: Math.min(len, x.e), c: x.c })).filter((x) => x.e > x.s).sort((p, q) => p.s - q.s)
+      .forEach((x) => { const l = o[o.length - 1]; if (l && l.c === x.c && l.e >= x.s) l.e = Math.max(l.e, x.e); else o.push(x); });
+    return o;
+  };
+  // 给 [s, e) 上色（c 为空 = 清除，回到正文色）：先把这一段从原有 spans 里挖掉再加新段
+  const spPaint = (sp, s, e, c) => {
+    const o = [];
+    (sp || []).forEach((x) => { if (x.e <= s || x.s >= e) o.push(Object.assign({}, x)); else { if (x.s < s) o.push({ s: x.s, e: s, c: x.c }); if (x.e > e) o.push({ s: e, e: x.e, c: x.c }); } });
+    if (c) o.push({ s, e, c });
+    return spNorm(o, Infinity);
+  };
+  // 旧存档（11-27 之前）：【方括号】里的字绿色（括号不显示）、“引号”红、数字橙，都是渲染时按规则算的；读的时候转成 spans 并去掉括号。
+  // 颜色页签里单独改过的这三种颜色（E.D.ec['notice.g' / 'notice.hl' / 'notice.num']）带进对应的 span
+  function ntFromOld(raw, ec) {
+    let text = '', last = 0, mm; const g = []; const re = /【([^】]*)】/g;
+    while ((mm = re.exec(raw))) { text += raw.slice(last, mm.index); g.push([text.length, text.length + mm[1].length]); text += mm[1]; last = re.lastIndex; }
+    text += raw.slice(last); text = text.slice(0, NT_MAX);
+    const col = (id, k) => (ec && ec[id]) || 'key:' + k;
+    let sp = [];
+    g.forEach(([s, e]) => { sp = spPaint(sp, s, e, col('notice.g', 'accent_1')); });
+    for (const x of text.matchAll(/“[^”]*”/g)) sp = spPaint(sp, x.index, x.index + x[0].length, col('notice.hl', 'accent_2'));
+    for (const x of text.matchAll(/\d[\d,.]*/g)) sp = spPaint(sp, x.index, x.index + x[0].length, col('notice.num', 'accent_3'));
+    return { text, spans: spNorm(sp, text.length) };
+  }
+  const ntDef = () => ntFromOld(NOTICE.replace('中级场', '【中级场】'), null);
+  // 补齐公告栏数据：旧存档转 spans；「显示消息气泡」（Waydon 11-27 第 3 条）默认开
+  function ntNorm(m, ec) {
+    if (!m) return m;
+    if (!Array.isArray(m.spans)) { const r = ntFromOld(String(m.text || ''), ec); m.text = r.text; m.spans = r.spans; if (ec) ['notice.hl', 'notice.g', 'notice.num'].forEach((k) => { delete ec[k]; }); }
+    if (m.badge == null) m.badge = true;
+    return m;
+  }
   const defaults = () => {
     const bn = BN.map(([k, i, req, def, defOut, outK]) => Object.assign({ n: '', k: 'mp/bn-n-' + k, i, req, on: true, def: CL + def + '.png' }, defOut ? { defOut: CL + defOut + '.png' } : {}, outK ? { outK: 'mp/bn-n-' + outK } : {}));
     bn[0].onBuiltin = true; bn[0].defOn = CL + 'bi0.png'; // 首页选中态图标内置
@@ -33,7 +71,7 @@
     bn[2].raised = true; bn[1].bigOut = true;
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
-      notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] },
+      notice: Object.assign(ntDef(), { mail: true, badge: true, speed: 'normal' }, { items:[{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] }),
       midnav: { mode: 'conf', items: MID.map(([k, i, def, badge]) => ({ n: '', k: 'mp/mn-n-' + k, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 57 },
       // active = 选中的分类（下标，不再固定第一个）；btnOff / btnSel = 业主上传 / AI 的按钮底图（空 = 效果图默认底图）
       gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill', active: 0, btnOff: null, btnSel: null },
@@ -49,7 +87,7 @@
   // 入口图标规格（逻辑尺寸，PNG 交付 @2x）
   // 帐户栏入口图标 Figma 317:55709：57×50（750 稿）
   const ICON_SPEC = { notice: [57, 50], midnav: [57, 50], bottomnav: [50, 50], gamemenu: [100, 76], sidebar: [60, 60] };
-  // 公告栏两个图标尺寸不同（Figma 317:55673）：喇叭 36×32、信箱 57×50
+  // 公告栏两个图标尺寸不同（Figma 317:55673）：喇叭 36×32、消息 57×50
   const NT_SPEC = { 'mp/nt-i-spk': [36, 32], 'mp/nt-i-mail': [57, 50] };
   // 游戏菜单竖排图标位 Figma 317:55796：58×58 框内 58×44；横向「图标分类」仍按 100×76
   const GM_SPEC = { side: [58, 44], icons: [100, 76], tabs: [100, 76] };
@@ -61,9 +99,9 @@
     // Banner（Figma 317:55531）：占位底 = ddt_bg（兜底图底板），指示器选中 / 未选中 = text_primary（Figma 固定 #FFFFFF，未选中叠 50% 透明度）
     banner: [['banner.placeholder', 'ddt_bg'], ['banner.indActive', 'text_primary'], ['banner.indDef', 'text_primary']],
     jackpot: [['jackpot.bg', 'primary'], ['jackpot.title', 'bg_2'], ['jackpot.amount', 'bg_2']],
-    // 公告栏（Figma 317:55673）：自身无填充 = 透出首页底 home_bg；喇叭和正文 neutral_1；“引号”accent_2、【中级场】accent_1、数字 accent_3；
-    // 已登录信箱未读数底 accent_2（数字固定白，在「文字样式」里改）
-    notice: [['notice.bg', 'home_bg'], ['notice.icon', 'neutral_1'], ['notice.text', 'neutral_1'], ['notice.hl', 'accent_2'], ['notice.g', 'accent_1'], ['notice.num', 'accent_3'], ['notice.badge', 'accent_2']],
+    // 公告栏（Figma 317:55673）：自身无填充 = 透出首页底 home_bg；喇叭和正文 neutral_1；消息气泡（未读数）底 accent_2（数字固定白，在「文字样式」里改）。
+    // 部分文字的颜色（原来的“引号”accent_2、【中级场】accent_1、数字 accent_3）11-27 起存在公告内容的 spans 里（选中文字改色），不再是颜色页签的三行
+    notice: [['notice.bg', 'home_bg'], ['notice.icon', 'neutral_1'], ['notice.text', 'neutral_1'], ['notice.badge', 'accent_2']],
     // 帐户栏（Figma 317:55705）：自身无填充 = 透出首页底 home_bg；入口名 neutral_1、用户名 lead；登录框 / 注册底 primary、注册字 text_primary；
     // 入口图标是位图（颜色在图里），midnav.icon 只给没有图片的入口兜底线性图标用
     midnav: [['midnav.bg', 'home_bg'], ['midnav.text', 'neutral_1'], ['midnav.user', 'lead'], ['midnav.btn', 'primary'], ['midnav.btnText', 'text_primary'], ['midnav.icon', 'primary']],
@@ -92,9 +130,10 @@
     return s;
   }
   const M = (b) => X().E.D.m[b];
-  // 公告栏图标（喇叭 / 信箱）可替换或 AI 生成（Waydon 2026-11-26）；旧存档没有 items 时补上
-  // 已登录信箱是另一张图（Figma 317:55690 主色渐变），旧存档补上默认图
+  // 公告栏图标（喇叭 / 消息）可替换或 AI 生成（Waydon 2026-11-26）；旧存档没有 items 时补上
+  // 消息两张图：img = 已读（左，未登录预览显示）、imgOn = 未读（右，已登录预览显示，Figma 317:55690 主色渐变），旧存档补上默认图
   const ntItems = () => { const m = M('notice'); if (!m.items) m.items = defaults().notice.items; const ml = m.items.find((x) => x.k === 'mp/nt-i-mail'); if (ml && !ml.defOn) ml.defOn = CL + 'mail-on.png'; return m.items; };
+  const ntM = () => ntNorm(M('notice'), X().E.D.ec);
   const set = (b, k, v) => { const x = X(); x.commit(() => { x.E.D.m[b][k] = v; }); };
 
   // ---------- 面板零件 ----------
@@ -176,15 +215,17 @@
         + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }),
     },
     notice: {
-      // 顺序：公告内容 → 文字样式（紧跟文字）→ 图标（喇叭；信箱开关紧挨信箱）→ AI 生成
+      // 顺序（Waydon 2026-11-27 第 1 条，Figma 440:635497 NT-01）：图标（置顶）→ 公告内容（富文本）→ 文字样式（整段默认 / 消息气泡）
       content: () => {
-        const m = M('notice'), its = ntItems(), x = X();
+        const m = ntM(), its = ntItems(), x = X(), badge = m.badge !== false;
         const sp = (i) => specOf('notice', i).join('×');
-        const spk = `<div class="nt-ic-row">${upThumb('notice', 0, 'img', its[0].i)}<span class="tx"><b>${esc(nm(its[0]))}</b><small>${sp(0)}</small></span>${resetBtn('notice', 0)}${icAi('notice', 0)}</div>`;
-        const mail = `<div class="nt-ic-row ${m.mail ? '' : 'is-off'}">${upThumb('notice', 1, 'img', its[1].i, 'st2', t('ed/signed-out'))}${upThumb('notice', 1, 'imgOn', its[1].i, 'st2', t('mp/nt-st-in'))}<span class="tx"><b>${esc(nm(its[1]))}</b><small>${sp(1)} · ${t('mp/nt-two')}</small></span>${resetBtn('notice', 1)}${m.mail ? icAi('notice', 1) : ''}</div>`;
-        return sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;height:auto;min-height:84px;padding:8px 12px;line-height:1.5;resize:vertical" data-input="mpNtText" maxlength="80">${esc(m.text)}</textarea>`) + note('mp/nt-hl')
-          + (x.txtSec ? x.txtSec('notice') : '')
-          + sec(t('mp/nt-icons'), spk + toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')) + mail + (m.mail ? '' : note('mp/nt-mail-off')));
+        const spk = `<div class="nt-card"><div class="nt-ic-row">${upThumb('notice', 0, 'img', its[0].i)}<span class="tx"><b>${esc(nm(its[0]))}</b><small>${sp(0)}</small></span>${resetBtn('notice', 0)}${icAi('notice', 0)}</div></div>`;
+        // 消息卡片（第 2–4 条）：开关「显示消息入口」→ 消息行（左 已读 = img、右 未读 = imgOn，各带 12 号说明）→ 开关「显示消息气泡」+ 说明；
+        // 关掉消息入口：卡片只剩开关，下方说明 mp/nt-mail-off（气泡一起隐藏）
+        const slot = (f, k) => `<span class="nt-slot">${upThumb('notice', 1, f, its[1].i, 'st2', t(k))}<small>${t(k)}</small></span>`;
+        const mailRow = `<div class="nt-ic-row nt-mail-row">${slot('img', 'mp/nt-st-read')}${slot('imgOn', 'mp/nt-st-unread')}<span class="tx"><b>${esc(nm(its[1]))}</b><small>${sp(1)} · ${t('mp/nt-two')}</small></span>${resetBtn('notice', 1)}${icAi('notice', 1)}</div>`;
+        const mail = `<div class="nt-card">${toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail'))}${m.mail ? `<i class="nt-hr"></i>${mailRow}<i class="nt-hr"></i><div class="nt-badge">${toggle(badge, 'mpFlag', 'notice|badge', t('mp/nt-badge'))}<div class="nt-tg-note">${t(badge ? 'mp/nt-badge-note' : 'mp/nt-badge-off')}</div></div>` : ''}</div>${m.mail ? '' : note('mp/nt-mail-off')}`;
+        return sec(t('mp/nt-icons'), `<div class="nt-cards">${spk}${mail}</div>`) + ntTextSec(m) + (x.txtSec ? x.txtSec('notice') : '');
       },
       layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-speed-note') + note('mp/nt-size'),
       color: () => ntColor(),
@@ -275,18 +316,20 @@
     },
   };
   // 公告栏颜色：同 Banner 的做法，色块存 'key:<名>' 引用 68 Key（换整页配色跟着变），「默认」= Figma 绑定的 Key，彩虹 = 自定义
-  const NT_SW = { 'notice.bg': ['bg_1', 'border', 'primary', 'lead'], 'notice.icon': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.hl': ['accent_2', 'accent_3', 'accent_1', 'primary'], 'notice.g': ['accent_1', 'accent_2', 'accent_3', 'primary'], 'notice.num': ['accent_3', 'accent_2', 'accent_1', 'primary'], 'notice.badge': ['accent_2', 'accent_3', 'primary', 'lead'] };
+  const NT_SW = { 'notice.bg': ['bg_1', 'border', 'primary', 'lead'], 'notice.icon': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.badge': ['accent_2', 'accent_3', 'primary', 'lead'] };
   function ntColor() {
-    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('notice'), its = ntItems();
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = ntM(), its = ntItems();
     const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
     const row = (id) => {
       const key = EL.notice.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
       return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: NT_SW[id], kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
-    const spkUp = !!its[0].img, badge = D.login && m.mail;
+    // 消息气泡底色（Figma 442:37665 ⑧）：消息入口开、气泡开、预览已登录才显示这一行，否则说明为什么改不了
+    const spkUp = !!its[0].img, bd = !m.mail ? 'mp/nt-c-badge-nomail' : m.badge === false ? 'mp/nt-c-badge-off' : !D.login ? 'mp/nt-c-badge-out' : null;
+    // 部分文字的颜色在「内容 › 公告内容」里选中文字改（11-27 富文本），颜色页签只留整段正文色
     return `<div class="p-sec">${row('notice.bg')}</div>
-      <div class="p-sec"><div class="lab">${t('mp/nt-c-text')}</div>${row('notice.text')}${row('notice.hl')}${row('notice.g')}${row('notice.num')}</div>
-      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note(m.mail ? 'mp/nt-c-badge-out' : 'mp/nt-c-badge-nomail')}</div>`;
+      <div class="p-sec"><div class="lab">${t('mp/nt-c-text')}</div>${row('notice.text')}${note('mp/nt-c-spans')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${bd ? note(bd) : row('notice.badge')}</div>`;
   }
   // 帐户栏颜色：同公告栏做法（'key:<名>' 引用 68 Key）；余额框颜色（顶部栏共用）和固定跟 Key 的小图标也放这里
   const MN_SW = { 'midnav.bg': ['bg_1', 'bg_2', 'border', 'primary'], 'midnav.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'midnav.user': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'midnav.btn': ['primary', 'lead', 'accent_3', 'accent_1'], 'midnav.btnText': ['text_primary', 'bg_2', 'lead', 'primary'], 'midnav.icon': ['primary', 'lead', 'neutral_1', 'accent_3'] };
@@ -453,16 +496,18 @@
       return `<div class="h5-jack ${m.layout}" style="margin:${m.margin / 2}px 12px;border-radius:${m.corner / 2}px;${bg}"><span class="tt">${esc(m.title)}</span>${amt}</div>`;
     }
     if (b === 'notice') {
-      // 信箱：未登录 = 位图、无未读数；已登录 = 主色渐变图标 + 红色未读数（Figma 317:55672 / 317:55684）
+      // 消息（Waydon 11-27，Figma 442:37665 ④）：未登录预览 = 已读图标（img）、无气泡；已登录预览 = 未读图标（imgOn）+ 未读数气泡
+      // （「显示消息气泡」开才显示，底色 notice.badge = accent_2）；消息入口关 = 右侧整个不显示
       // 喇叭默认图用遮罩着色（跟 notice.icon = neutral_1）；上传 / AI 的图按原图显示
+      ntNorm(m, X().E.D.ec);
       const its = ntItems(), login = X().E.D.login;
       const gi = (i, cls) => {
         const it = its[i], f = i === 1 && login ? 'imgOn' : 'img', up = it[f], src = up || (f === 'imgOn' ? it.defOn || it.def : it.def), on = S().menu === 'icon:notice|' + i;
         const pic = i === 0 && !up ? `<i class="spk-def" style="-webkit-mask-image:url(${it.def});mask-image:url(${it.def})"></i>` : `<img src="${src}" alt="">`;
-        return `<span class="${cls} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'notice'}|notice|${i}|${f}" data-stop>${pic}${i === 1 && login ? '<i class="bd">99</i>' : ''}</span>${on ? iconMenu('notice', i, f) : ''}`;
+        return `<span class="${cls} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'notice'}|notice|${i}|${f}" data-stop>${pic}${i === 1 && login && m.badge !== false ? '<i class="bd">99</i>' : ''}</span>${on ? iconMenu('notice', i, f) : ''}`;
       };
-      // 跑马灯文字：“引号”= accent_2、【方括号】= accent_1（括号不显示）、数字 = accent_3
-      const tx = esc(m.text || '').replace(/【([^】]*)】/g, '<em class="g">$1</em>').replace(/“([^”]*)”/g, '<em class="hl">“$1”</em>').replace(/(\d[\d,.]*)/g, '<em class="num">$1</em>');
+      // 跑马灯文字按 spans 分段上色：Key 色用画布上的 --o-<Key>（换配色 / 取色器预览跟着变），自定义色直接写色值；没上色的跟「公告文字」默认色
+      const tx = ntSegs(m.text || '', m.spans).map(([str, c]) => (c ? `<em style="color:${c.startsWith('key:') ? `var(--o-${c.slice(4)}, ${ntCol(c)})` : esc(c)}">${esc(str)}</em>` : esc(str))).join('');
       // 滚动一圈的时间按文字长度算（字越多越久），速度档位只改每秒移动的距离
       const w = [...(m.text || '')].reduce((a, c) => a + (/[\u0000-ɏ]/.test(c) ? 0.55 : 1), 0) * 13 + 40;
       const dur = Math.max(4, w / ({ slow: 28, normal: 42, fast: 64 }[m.speed] || 42)).toFixed(1);
@@ -611,10 +656,129 @@
   const typeText = (b, k) => (v) => { const x = X(); if (typing !== b + k) { x.commit(() => {}); typing = b + k; } x.E.D.m[b][k] = v; x.save(); return true; };
   I.mpJpTitle = typeText('jackpot', 'title');
   I.mpFtCopy = typeText('footer', 'copy');
-  I.mpNtText = typeText('notice', 'text');
   // 帐户栏入口角标文字（空 = 不显示角标）
   I.mpMidBadge = (v, el) => { const x = X(), i = +el.dataset.i; if (typing !== 'midbd' + i) { x.commit(() => {}); typing = 'midbd' + i; } x.E.D.m.midnav.items[i].badge = v.trim() ? v.slice(0, 9) : null; x.save(); return true; };
   document.addEventListener('click', () => { typing = null; }, true);
+
+  // ---------- 公告内容富文本（Waydon 2026-11-27 第 5 条；Figma 440:635497 NT-01 / NT-02 / NT-M02，规格 442:37665 ⑤⑥⑦） ----------
+  // contenteditable 输入框：没单独上色的字用面板正文色显示，上过色的段落直接用它的 Key / 自定义色。选中 ≥1 个字出颜色条（NT/RichColorBar）：
+  // 电脑浮在选区上方 8px、水平居中、夹在面板内容区里；手机贴在输入框正下方（不挡系统复制 / 粘贴菜单）。点色块立即上色，一次 = 一步撤销。
+  // 输入不换行（跑马灯一行）、粘贴只取纯文本、上限 80 字；输入法组字过程中不重渲染。
+  const NT_KEYS = ['neutral_1', 'neutral_2', 'primary', 'lead', 'accent_1', 'accent_2', 'accent_3'];
+  function ntCol(c) { if (!c) return ''; if (!c.startsWith('key:')) return c; const { th, ec } = X().liveTheme(); const k = c.slice(4); return th[k] != null ? th[k] : resolveKey(k, th, ec); }
+  function ntSegs(text, spans) { const o = []; let p = 0; spNorm(spans, text.length).forEach((x) => { if (x.s > p) o.push([text.slice(p, x.s), null]); o.push([text.slice(x.s, x.e), x.c]); p = x.e; }); if (p < text.length) o.push([text.slice(p), null]); return o; }
+  const ntRich = (m) => ntSegs(m.text || '', m.spans).map(([str, c]) => (c ? `<span data-c="${esc(c)}" style="color:${esc(ntCol(c))}">${esc(str)}</span>` : esc(str))).join('');
+  function ntTextSec(m) {
+    const x = X(), P = x.E.picker, pk = P && P.ntSpan;
+    const sw = NT_KEYS.map((k) => `<button class="sw-btn" data-act="ntColor" data-arg="key:${k}" data-c="key:${k}" style="background:${ntCol('key:' + k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" aria-pressed="false"></button>`).join('');
+    const bar = `<div class="nt-cbar ${x.mobileEd() ? 'is-inline' : ''}" data-ntbar role="toolbar" aria-label="${esc(t('mp/nt-text'))}" hidden>${sw}<button class="rainbow" data-act="ntPick" data-c="custom" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}" aria-pressed="false"></button><i class="nt-div"></i><button class="nt-clear" data-act="ntColor" data-arg="" title="${esc(t('mp/nt-clear'))}" aria-label="${esc(t('mp/nt-clear'))}"></button><i class="nt-ptr"></i></div>`;
+    return `<div class="p-sec nt-text-sec" data-ntsec><div class="lab">${t('mp/nt-text')}<span class="nt-cnt">${(m.text || '').length}/${NT_MAX}</span></div>`
+      + `<div class="nt-rich" contenteditable="true" role="textbox" aria-multiline="false" spellcheck="false" aria-label="${esc(t('mp/nt-text'))}" data-ntrich>${ntRich(m)}</div>${bar}`
+      + `<div class="p-note nt-hint" data-nthint>${t('mp/nt-hl')}</div>${pk ? x.pickerHtml('in-panel', t('tx/c-custom')) : ''}</div>`;
+  }
+  let ntLive = null; // 输入框里的选区（字符下标 { s, e }）；重渲染后按它恢复焦点和选区，失焦时清掉
+  let ntComp = false, ntTyping = false; // 输入法组字中；一段连续输入只记一步撤销
+  const ntEd = () => document.querySelector('#app [data-ntrich]');
+  const inNt = (n) => { const el = n && (n.nodeType === 1 ? n : n.parentElement); return el && el.closest ? el.closest('[data-ntrich]') : null; };
+  const spEq = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
+  const ntOff = (root, node, off) => { const r = document.createRange(); r.selectNodeContents(root); try { r.setEnd(node, off); } catch (e) { return 0; } return r.toString().length; };
+  function ntGetSel(root) {
+    const s = window.getSelection(); if (!s || !s.rangeCount) return null; const r = s.getRangeAt(0);
+    if (!root.contains(r.startContainer) || !root.contains(r.endContainer)) return null;
+    return { s: ntOff(root, r.startContainer, r.startOffset), e: ntOff(root, r.endContainer, r.endOffset) };
+  }
+  function ntSetSel(root, s, e) {
+    const at = (n) => { const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let tn, acc = 0, last = null; while ((tn = w.nextNode())) { if (n <= acc + tn.data.length) return [tn, n - acc]; acc += tn.data.length; last = tn; } return last ? [last, last.data.length] : [root, 0]; };
+    const [a, ao] = at(s), [b, bo] = at(e); const r = document.createRange(); r.setStart(a, ao); r.setEnd(b, bo);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  }
+  // DOM → 纯文本 + spans（颜色看最近的 data-c；浏览器自己插的标签只取文字）
+  function ntParse(root) {
+    let text = ''; const sp = [];
+    const walk = (n, c) => n.childNodes.forEach((k) => {
+      if (k.nodeType === 3) { const v = k.data.replace(/[\r\n\t ]/g, ' '); if (c && v) sp.push({ s: text.length, e: text.length + v.length, c }); text += v; }
+      else if (k.nodeType === 1 && k.tagName !== 'BR') walk(k, (k.dataset && k.dataset.c) || c);
+    });
+    walk(root, null);
+    return { text, spans: spNorm(sp, text.length) };
+  }
+  function ntInput(ed) {
+    const x = X(), m = ntM(), r = ntParse(ed); let sel = ntGetSel(ed) || { s: r.text.length, e: r.text.length };
+    const cut = r.text.length > NT_MAX;
+    if (cut) { r.text = r.text.slice(0, NT_MAX); r.spans = spNorm(r.spans, NT_MAX); sel = { s: Math.min(sel.s, NT_MAX), e: Math.min(sel.e, NT_MAX) }; }
+    ntLive = sel;
+    if (r.text === m.text && spEq(r.spans, m.spans)) { if (cut) window.render(); return; }
+    if (!ntTyping) { x.commit(() => {}); ntTyping = true; }
+    m.text = r.text; m.spans = r.spans; x.save(); window.render();
+  }
+  // 选区现在的颜色：整段同一个颜色才算（色块带选中圈），混色 = 'mixed'
+  const ntSelC = (r) => { const sp = ntM().spans; let c0 = null; for (let i = r.s; i < r.e; i++) { const q = sp.find((y) => y.s <= i && i < y.e); const c = q ? q.c : null; if (i === r.s) c0 = c; else if (c !== c0) return 'mixed'; } return c0; };
+  function ntSync() {
+    const ed = ntEd(); if (!ed) return;
+    const sec = ed.closest('[data-ntsec]'), bar = sec && sec.querySelector('[data-ntbar]'), hint = sec && sec.querySelector('[data-nthint]'); if (!bar) return;
+    const r = document.activeElement === ed && ntLive && ntLive.e > ntLive.s ? ntLive : null;
+    sec.classList.toggle('is-sel', !!r);
+    const h = r ? t('mp/nt-sel', { n: r.e - r.s }) : t('mp/nt-hl'); if (hint && hint.textContent !== h) hint.textContent = h;
+    if (!r) { bar.hidden = true; return; }
+    const cur = ntSelC(r);
+    bar.querySelectorAll('[data-c]').forEach((b) => { const on = b.dataset.c === cur || (b.dataset.c === 'custom' && !!cur && cur[0] === '#'); b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
+    bar.hidden = false;
+    if (bar.classList.contains('is-inline')) return;
+    const s = window.getSelection(); if (!s || !s.rangeCount) return;
+    const rg = s.getRangeAt(0), q = [...rg.getClientRects()].find((z) => z.width > 0) || rg.getBoundingClientRect();
+    const sr = sec.getBoundingClientRect(), bw = bar.offsetWidth, bh = bar.offsetHeight, cx = q.left + q.width / 2 - sr.left;
+    const left = Math.max(0, Math.min(sr.width - bw, cx - bw / 2));
+    bar.style.left = left + 'px'; bar.style.top = (q.top - sr.top - 8 - bh) + 'px';
+    bar.style.setProperty('--ptr', Math.max(14, Math.min(bw - 14, cx - left)) + 'px');
+  }
+  A.ntColor = (c) => {
+    const x = X(), m = ntM(), r = ntLive; if (!r || r.e <= r.s) return false;
+    const sp = spNorm(spPaint(m.spans, r.s, r.e, c || null), m.text.length); if (spEq(sp, m.spans)) return false;
+    ntTyping = false; x.E.picker = null;
+    x.commit(() => { M('notice').spans = sp; });
+  };
+  // 彩虹 = 自定义：打开编辑器自带的取色器（面板内，跟颜色行一样），应用时给记下的选区上色
+  A.ntPick = () => {
+    const x = X(), r = ntLive; if (!r || r.e <= r.s) return false;
+    if (x.E.picker && x.E.picker.ntSpan) { x.E.picker = null; return; }
+    const c = ntSelC(r), cur = (ntCol(c && c !== 'mixed' ? c : x.E.D.ec['notice.text'] || 'key:neutral_1') || '#333333').slice(0, 7);
+    const span = { s: r.s, e: r.e }; ntTyping = false; ntLive = null;
+    x.E.picker = { key: 'primary', elRow: 'nt.span', label: t('tx/c-custom'), orig: cur, value: cur, where: 'el', ntSpan: span, onApply: (v) => { ntLive = span; A.ntColor(v.toLowerCase()); } };
+  };
+  document.addEventListener('input', (e) => { const ed = inNt(e.target); if (!ed || e.isComposing || ntComp) return; ntInput(ed); });
+  document.addEventListener('compositionstart', (e) => { if (inNt(e.target)) ntComp = true; });
+  document.addEventListener('compositionend', (e) => { const ed = inNt(e.target); ntComp = false; if (ed) ntInput(ed); });
+  // 捕获阶段先拦：Enter 不换行；Esc 只收起颜色条（不关面板）；Ctrl/⌘+Z / Y 走编辑器的撤销（不用浏览器自带的）
+  document.addEventListener('keydown', (e) => {
+    const ed = inNt(e.target); if (!ed || e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter') { e.preventDefault(); return; }
+    if (e.key === 'Escape') { const s = ntLive; if (s && s.e > s.s) { e.preventDefault(); e.stopPropagation(); ntLive = { s: s.e, e: s.e }; ntSetSel(ed, s.e, s.e); ntSync(); } return; }
+    const k = (e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'y')) {
+      e.preventDefault(); e.stopPropagation(); ntTyping = false;
+      if ((k === 'y' || e.shiftKey ? A.redo() : A.undo()) !== false) { const L = (ntM().text || '').length; if (ntLive) ntLive = { s: Math.min(ntLive.s, L), e: Math.min(ntLive.e, L) }; window.render(); }
+    }
+  }, true);
+  document.addEventListener('paste', (e) => {
+    const ed = inNt(e.target); if (!ed) return; e.preventDefault();
+    const s = ntGetSel(ed) || { s: 0, e: 0 }, room = NT_MAX - ((ntM().text || '').length - (s.e - s.s));
+    const v = ((e.clipboardData && e.clipboardData.getData('text/plain')) || '').replace(/[\r\n\t]+/g, ' ').slice(0, Math.max(0, room));
+    if (v) document.execCommand('insertText', false, v);
+  });
+  document.addEventListener('drop', (e) => { if (inNt(e.target)) e.preventDefault(); });
+  // 点颜色条不抢输入框焦点（选区保持）
+  document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('[data-ntbar]')) e.preventDefault(); });
+  document.addEventListener('selectionchange', () => { const ed = ntEd(); if (!ed) return; const s = document.activeElement === ed ? ntGetSel(ed) : null; if (s) ntLive = s; ntSync(); });
+  // 失焦：等这一轮渲染完再看焦点在不在新的输入框里（点色块会重渲染，输入框换了一个）
+  document.addEventListener('focusout', (e) => {
+    if (!inNt(e.target)) return;
+    setTimeout(() => { const ed = ntEd(), a = document.activeElement; if (ed && a && ed.contains(a)) return; ntLive = null; ntTyping = false; ntSync(); }, 0);
+  });
+  window.AFTER_RENDER.push(() => {
+    const ed = ntEd(); if (!ed) { ntLive = null; return; }
+    if (ntLive) { const L = (ntM().text || '').length; ed.focus({ preventScroll: true }); ntSetSel(ed, Math.min(ntLive.s, L), Math.min(ntLive.e, L)); }
+    ntSync();
+  });
 
   // ---------- 改名（ED-19）：上限中文 6 字 / 12 个字符 ----------
   const wlen = (s) => [...s].reduce((a, c) => a + (/[\u0000-ɏ]/.test(c) ? 1 : 2), 0);
@@ -740,10 +904,35 @@
   function styleSrc(b, it, style, color, f) {
     if (/^r-/.test(style)) {
       const st = style.slice(2); const r = RMAP[b] && RMAP[b](it, f);
-      if (r) return 'assets/' + r + '-' + st + (b === 'bottomnav' && (f === 'img' || (f === 'imgOut' && !bnBig(it))) ? '-off' : '') + '.webp';
-      const [vs, c] = R_FALL[st]; return aiSvg(it.i || 'sparkle-fill', vs, c || color);
+      if (r) { const src = 'assets/' + r + '-' + st + (b === 'bottomnav' && (f === 'img' || (f === 'imgOut' && !bnBig(it))) ? '-off' : '') + '.webp'; return b === 'notice' ? tintSrc(src, color) : src; }
+      const [vs, c] = R_FALL[st]; return aiSvg(it.i || 'sparkle-fill', vs, b === 'notice' ? color : c || color);
     }
-    return aiSvg(it.i || 'sparkle-fill', style, color);
+    // 公告栏矢量款式照 Figma G3 公告栏（线性 / 面性 / 双色 / 渐变缩略图）用铃铛图形、主色画（图标集里没有喇叭 / 信封）
+    return aiSvg(b === 'notice' && !(window.PH || {})[it.i] ? 'bell-fill' : it.i || 'sparkle-fill', style, color);
+  }
+  // 公告栏 AI 图标统一主色（Waydon 2026-11-27 第 1 条；Figma G3 公告栏位图候选调向主色）：实物款式的样图按主色色相重新着色
+  // （保留明暗和透明度，接近灰白的高光不动），结果缓存成 dataURL；第一次用时先给原图，着色好了再刷新一次
+  const TINT = {}; let tintRr = 0;
+  function rgbHsl(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; if (!d) return [0, 0, l]; const s = d / (1 - Math.abs(2 * l - 1)); const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, s, l]; }
+  function hslRgb(h, s, l) { const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2; const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x]; return [(r + m) * 255, (g + m) * 255, (b + m) * 255]; }
+  function tintSrc(src, hex) {
+    if (!/^#[0-9a-f]{6}/i.test(hex || '')) return src;
+    const k = src + '|' + hex.slice(0, 7).toLowerCase(), v = TINT[k]; if (v) return v === 1 ? src : v;
+    TINT[k] = 1;
+    const im = new Image();
+    im.onload = () => {
+      try {
+        const sc = Math.min(1, 160 / Math.max(im.naturalWidth, im.naturalHeight)), w = Math.max(1, Math.round(im.naturalWidth * sc)), h = Math.max(1, Math.round(im.naturalHeight * sc));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'); g.drawImage(im, 0, 0, w, h);
+        const d = g.getImageData(0, 0, w, h), px = d.data, n = parseInt(hex.slice(1, 7), 16), [ph, ps] = rgbHsl(n >> 16, (n >> 8) & 255, n & 255);
+        for (let i = 0; i < px.length; i += 4) { if (!px[i + 3]) continue; const [, s0, l0] = rgbHsl(px[i], px[i + 1], px[i + 2]); if (s0 < 0.08) continue; const [r, gg, b] = hslRgb(ph, Math.min(1, (s0 + ps) / 2), l0); px[i] = r; px[i + 1] = gg; px[i + 2] = b; }
+        g.putImageData(d, 0, 0); TINT[k] = cv.toDataURL('image/webp', 0.9);
+      } catch (e) { TINT[k] = src; } // file:// 直接打开源码时画布被污染，退回原图
+      clearTimeout(tintRr); tintRr = setTimeout(() => { if (S().route === 'editor') window.render(); }, 40);
+    };
+    im.onerror = () => { TINT[k] = src; };
+    im.src = (window.A_ && src.startsWith('assets/') && window.A_[src.slice(7)]) || src;
+    return src;
   }
   const tType = (b) => (b === 'gamemenu' ? 'gametype' : b); // 流水里的类型名
   function lighten(hex, k) { const n = parseInt(hex.slice(1, 7), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * k)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); }
@@ -770,6 +959,7 @@
   // 矢量款式的颜色：底部导航未选中 btmnav_def、选中第一次 btmnav_active；游戏菜单未选中 = 左侧栏图标 Key icon_tg_z（Figma 317:52363 等）；其余按 k 换色
   function candColor(b, f, k) {
     const x = X(), th = x.E.D.theme, lt = x.liveTheme(); const pal = [th.primary, th.accent_3, th.accent_1, th.accent_2, '#7b4dff'];
+    if (b === 'notice') return th.primary; // 公告栏图标统一主色（Waydon 11-27），候选不再轮换辅助色
     if (f === 'img' && b === 'gamemenu') return resolveKey('icon_tg_z', lt.th, lt.ec).slice(0, 7);
     if (b === 'bottomnav') { if (f !== 'imgOn') return resolveKey('btmnav_def', lt.th, lt.ec).slice(0, 7); if (!k) return resolveKey('btmnav_active', lt.th, lt.ec).slice(0, 7); }
     return pal[(k || 0) % pal.length];
@@ -784,7 +974,7 @@
   // 款式 id 跟顶部栏同一套（glossy… 实物 5 种 + line… 矢量 4 种），styleSrc 用的 'r-' 前缀在这里转换
   const STY = RSTY.concat(['line', 'fill', 'duotone', 'gradient']);
   const sOf = (st) => (RSTY.includes(st) ? 'r-' + st : st);
-  // 一个入口的一组图（未选 / 选中一起生成；公告栏信箱 = 未登录 / 已登录）：候选 c = { st, k }，k = 换色序号
+  // 一个入口的一组图（未选 / 选中一起生成；公告栏消息 = 已读 / 未读）：候选 c = { st, k }，k = 换色序号
   // 游戏菜单分类图标 AI 只出一张（Figma G4-02「4 张 · 58×44」「候选 · 挑一张」），选中态图在使用时按同款式一起换
   const perAi = (b, i) => { const it = M(b).items[+i]; return b === 'notice' && it && it.defOn ? ['img', 'imgOn'] : b === 'gamemenu' ? ['img'] : perEntry(b, +i); };
   const entSrcs = (b, i, c) => { const it = M(b).items[+i]; return perAi(b, i).map((f) => [f, styleSrc(b, it, sOf(c.st), candColor(b, f, c.k), f)]); };
@@ -797,22 +987,29 @@
     const one = a && a.scope === 'one' && M(b).items[+a.idx], it = one;
     const what = it ? t(IC_NAME[b], { n: iaNm(b, it) }) : t(IC_UNIT[b]);
     const pr = it ? perAi(b, +a.idx) : null;
-    return t('aig/ic-p2', { adj: t('aig/adj-' + st), name: what, look: t('aig/look-' + st) }) + (pr && pr.length > 1 ? t('aig/p-pair', pairLab(b)) : '');
+    // 公告栏（Waydon 11-27）：消息光泽款默认提示词照 Figma G3-16C「光泽质感的消息图标：主色玻璃信封…；同时出已读 / 未读两张」；
+    // 其它实物款式加一句「使用主色 #xxxxxx」（矢量款式本来就按主色画）
+    if (b === 'notice' && it && it.k === 'mp/nt-i-mail' && st === 'glossy') return t('mp/nt-ai-p-mail');
+    const pc0 = b === 'notice' && RSTY.includes(st) ? t('aig/p-primary', { hex: String(X().E.D.theme.primary || '').toUpperCase() }) : '';
+    return t('aig/ic-p2', { adj: t('aig/adj-' + st), name: what, look: t('aig/look-' + st) }) + pc0 + (pr && pr.length > 1 ? t('aig/p-pair', pairLab(b)) : '');
   };
-  const pairLab = (b) => (b === 'notice' ? { a: t('ed/signed-out'), b: t('ed/signed-in') } : { a: t('aig/s-off'), b: t('aig/s-on') }); // 「未选 / 选中」（Figma G4-07 / G4-09）
-  // 整套里哪些入口必交：帐户栏只有样板「利息宝」（M-11），公告栏喇叭 + 信箱都必交（G3-15a），底部导航 / 游戏菜单没有（G4-13 / G4-14）
+  // 一组两张的说明：公告栏消息 = 「已读 / 未读」（左 img、右 imgOn，Waydon 11-27 第 4 条）；其它 = 「未选 / 选中」（Figma G4-07 / G4-09）
+  const pairLab = (b) => (b === 'notice' ? { a: t('mp/nt-st-read'), b: t('mp/nt-st-unread') } : { a: t('aig/s-off'), b: t('aig/s-on') });
+  // 整套里哪些入口必交：帐户栏只有样板「利息宝」（M-11），公告栏喇叭 + 消息都必交（G3-15a），底部导航 / 游戏菜单没有（G4-13 / G4-14）
   const aiReq = (b, it, i) => (b === 'notice' ? isReq(b, it) : b === 'midnav' ? i === 0 : false);
   const ICON_AI = (b) => ({
     // 游戏菜单只算显示着的分类（Figma「整套 · 9 个」，隐藏的区块链 / 最近 / 收藏 / 试玩不在里面）
     entries: () => M(b).items.map((it, i) => ({ i, name: iaNm(b, it), label: b === 'notice' && perAi(b, i).length > 1 ? iaNm(b, it) + t('aig/pair-note', { name: '', a: pairLab(b).a, b: pairLab(b).b }) : '', thumb: thHtml(b, it), req: aiReq(b, it, i), def: isReq(b, it) || ((b === 'gamemenu' || b === 'sidebar') && !!it.on) || (b === 'midnav' && M(b).mode === 'conf') || b === 'bottomnav', pics: perAi(b, i).length, cost: b === 'notice' && perAi(b, i).length > 1 ? 40 : 0, on: b !== 'gamemenu' || !!it.on })).filter((e) => (b !== 'notice' || e.i !== 1 || M(b).mail) && e.on),
     // 底部导航整套的样板默认「优惠」（首页是内置图标，Figma G4-14C）
     sample: () => (b === 'bottomnav' ? 1 : 0),
-    styles: (tg, a) => { const its = M(b).items, pv = (a && a.scope === 'one' && its[+a.idx]) || its[0]; return STY.map((st) => ({ id: st, label: t('aig/st-' + st), html: `<img src="${styleSrc(b, pv, sOf(st), X().E.D.theme.primary, 'imgOn')}" alt="">` })); },
+    // 公告栏：打开面板时把两个图标 × 5 种实物款式的主色着色一次算好（后面出候选 / 列表直接用缓存，不再中途重渲染）
+    styles: (tg, a) => { const its = M(b).items, pv = (a && a.scope === 'one' && its[+a.idx]) || its[0]; if (b === 'notice') its.forEach((it) => RSTY.forEach((st) => styleSrc(b, it, 'r-' + st, X().E.D.theme.primary, 'img'))); return STY.map((st) => ({ id: st, label: t('aig/st-' + st), html: `<img src="${styleSrc(b, pv, sOf(st), X().E.D.theme.primary, 'imgOn')}" alt="">` })); },
     preset: (tg, st, a) => icPrompt(b, st, a),
     where: () => [0, 1].map(() => t('mp/ai-where', { m: modTitle(b) })),
     refPrompt: (tg, res, a) => ({ style: res.style, prompt: icPrompt(b, res.style, a) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
     // 4 张候选：实物款式 = 选中的款式 + 相邻 3 种；矢量款式 = 同款式 4 种配色。整套的其余入口按样板（base）出 1 张
-    gen: (a, tg, i, n, base) => (base ? [{ st: base.st, k: base.redo ? base.redo % 5 : base.k }] : RSTY.includes(a.style) ? window.AIG.rot(RSTY, a.style, n).map((st) => ({ st, k: 0 })) : Array.from({ length: n }, (v, k) => ({ st: a.style, k: (k + a.round) % 5 }))),
+    // 公告栏矢量款式只用主色（不换色），4 张候选改成 4 种矢量款式（选中的在前）
+    gen: (a, tg, i, n, base) => (base ? [{ st: base.st, k: base.redo ? base.redo % 5 : base.k }] : RSTY.includes(a.style) ? window.AIG.rot(RSTY, a.style, n).map((st) => ({ st, k: 0 })) : b === 'notice' ? window.AIG.rot(STY.slice(RSTY.length), a.style, n).map((st) => ({ st, k: 0 })) : Array.from({ length: n }, (v, k) => ({ st: a.style, k: (k + a.round) % 5 }))),
     tile: (a, tg, i, c) => pairHtml(entSrcs(b, i, c)),
     old: (a, tg, i) => thHtml(b, M(b).items[+i]),
     lib: (a, tg, i, c) => 'img:' + entSrcs(b, i, c).slice(-1)[0][1],
@@ -868,7 +1065,7 @@
         },
         defaultTarget: () => 'icons',
         cntSample: b !== 'midnav' && b !== 'notice', // G3 只算其余（已生成 3/3 · 样板 1 + 其余 3）；G4 连样板一起算（9/9）
-        rowTags: b === 'notice', // 「喇叭（样板）」「信箱 ×2」（Figma G3-15e）
+        rowTags: b === 'notice', // 「喇叭（样板）」「消息 ×2」（Figma G3-15e）
         impl: (tg) => (tg.id === 'btn' ? GM_BTN_AI : tg.id === 'bal' ? bal.impl : IC),
       });
     });
@@ -1147,7 +1344,8 @@
     gcFbInner: (m) => gcFbInner(m),
     gcStarImg: (m, f, cls) => gcStarImg(m, f, cls), // PC 卡片也显示收藏星（含上传 / AI 图）
     // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
-    migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); },
+    // 公告栏 11-27：旧的「【方括号】/“引号”/ 数字」规则上色转成 spans（括号去掉），补上「显示消息气泡」
+    migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); if (D && D.m && D.m.notice) ntNorm(D.m.notice, D.ec || (D.ec = {})); },
     toggleAsset: (slot) => { const [b, f] = slotOf(slot); set(b, f + 'On', M(b)[f + 'On'] === false); },
   };
 })();

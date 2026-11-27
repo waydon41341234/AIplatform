@@ -716,10 +716,7 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .cl-notice { display: flex; align-items: center; gap: 4px; height: 25px; margin: 10px; padding: 0; background: var(--e-notice-bg); color: var(--e-notice-text); font-size: 13px; } /* Figma 710×50、上下间距 20、图文间距 8（750 稿÷2） */
 .cl-notice .mq { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; }
 .cl-notice .mq span { display: inline-block; padding-right: 40px; animation: cl-mq 14s linear 1.5s infinite; } /* 时长由 h5() 按文字长度写在行内 */
-.cl-notice em { font-style: normal; }
-.cl-notice em.hl { color: var(--e-notice-hl); }
-.cl-notice em.g { color: var(--e-notice-g); }
-.cl-notice em.num { color: var(--e-notice-num); }
+.cl-notice em { font-style: normal; } /* 公告内容富文本：分段颜色写在行内（spans，Waydon 11-27） */
 @keyframes cl-mq { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 @media (prefers-reduced-motion: reduce) { .cl-notice .mq span { animation: none; } }
 .cl-notice .mail { position: relative; flex: none; }
@@ -984,17 +981,53 @@ html:not([lang^="zh"]) .cl-gm > span b { display: -webkit-box; -webkit-box-orien
 .cl-notice .spk-def { display: block; width: 18px; height: 16px; background: var(--e-notice-icon, currentColor); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .cl-notice .mail { cursor: pointer; }
 .cl-notice .is-focus { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
-.nt-ic-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-.nt-ic-row + .tg-row { margin-top: 6px; }
-.nt-ic-row.is-off { opacity: .45; }
-.nt-ic-row .thumb.up { position: relative; flex: none; width: 40px; height: 40px; padding: 6px; box-sizing: border-box; border: 0; border-radius: 8px; background: var(--bg-surface); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; overflow: visible; }
+/* 公告栏 · 内容（Waydon 2026-11-27，Figma 440:635497 NT-01 / 规格 442:37665）：图标区两张卡片（喇叭 / 消息），r12、1px border、行底 bg/surface、行内边距 12、元素间距 10 */
+.nt-cards { display: flex; flex-direction: column; gap: 8px; }
+.nt-card { border: var(--stroke-thin) solid var(--border); border-radius: 12px; background: var(--bg-surface); overflow: hidden; }
+.nt-card .tg-row { min-height: 44px; padding: 0 12px; border: 0; border-radius: 0; background: none; }
+.nt-card .tg-row + .tg-row { margin-top: 0; }
+.nt-hr { display: block; height: var(--stroke-thin); background: var(--border); opacity: .6; }
+.nt-badge { padding-bottom: 12px; }
+.nt-tg-note { padding: 0 12px; font-size: 12px; line-height: 18px; color: var(--text-3); }
+.nt-ic-row { display: flex; align-items: center; gap: 10px; padding: 12px; }
+.nt-ic-row .thumb.up { position: relative; flex: none; width: 44px; height: 44px; padding: 6px; box-sizing: border-box; border: 0; border-radius: 8px; background: var(--bg-sunken); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; overflow: visible; }
 .nt-ic-row .thumb.up:hover { outline: 2px solid var(--brand); outline-offset: 1px; }
 .nt-ic-row .thumb.up img.cu { width: 100%; height: 100%; object-fit: contain; display: block; }
-.nt-ic-row .thumb.up .ub { position: absolute; right: -4px; bottom: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--brand); color: var(--text-on-brand, #fff); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1.5px var(--bg-surface); }
-.nt-ic-row .thumb.up .ub .ic { width: 9px; height: 9px; }
-.nt-ic-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.nt-ic-row .tx b { font-weight: 500; font-size: 13px; }
-.nt-ic-row .tx small { font-size: 11px; color: var(--text-2); overflow-wrap: anywhere; }
+.nt-ic-row .thumb.up .ub { position: absolute; right: 2px; bottom: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--brand); color: var(--text-on-brand, #fff); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1.5px var(--bg-sunken); }
+.nt-ic-row .thumb.up .ub .ic { width: 8px; height: 8px; }
+.nt-ic-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.nt-ic-row .tx b { font-weight: 500; font-size: 13px; line-height: 18px; }
+.nt-ic-row .tx small { font-size: 12px; line-height: 18px; color: var(--text-3); overflow-wrap: anywhere; }
+.nt-ic-row .ib-s { width: 28px; height: 28px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--icon-2); }
+.nt-ic-row .ib-s:hover { background: var(--bg-hover); color: var(--text); }
+.nt-ic-row .ib-s.tb-ai { color: var(--brand); }
+.nt-ic-row .ib-s.tb-ai:hover { background: var(--brand-subtle); }
+/* 消息行：左 已读 / 右 未读两个上传位（间距 8），各带 12 号说明 */
+.nt-mail-row { align-items: flex-start; }
+.nt-mail-row .tx { padding-top: 4px; }
+.nt-mail-row .tb-ai { margin-top: 2px; }
+.nt-slot { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.nt-slot + .nt-slot { margin-left: -2px; } /* 行内间距 10，两张上传位之间 8 */
+.nt-slot > small { font-size: 12px; line-height: 16px; color: var(--text-3); }
+/* 公告内容富文本：r12、bg/sunken、1px border、内边距 10/12、最小高 92、字 13/20；聚焦 / 有选区边框 1.5px brand；选区底 text/primary 22% */
+.nt-text-sec { position: relative; }
+.nt-text-sec > .lab .nt-cnt { font-size: 12px; font-weight: 400; color: var(--text-3); }
+.nt-rich { min-height: 92px; padding: 10px 12px; border-radius: 12px; background: var(--bg-sunken); border: var(--stroke-thin) solid var(--border); color: var(--text); font-size: 13px; line-height: 20px; font-weight: 400; white-space: pre-wrap; overflow-wrap: anywhere; outline: none; cursor: text; -webkit-user-select: text; user-select: text; }
+.nt-rich:focus, .nt-text-sec.is-sel .nt-rich { border-color: var(--brand); box-shadow: 0 0 0 .5px var(--brand); }
+.nt-rich ::selection, .nt-rich::selection { background: color-mix(in srgb, var(--text) 22%, transparent); }
+/* 颜色条 NT/RichColorBar：高 38、内边距 6/8、间距 6、r12、bg/raised、1px border、阴影 0 6 20 rgba(0,0,0,.28)；电脑浮在选区上方（JS 定位）带 14×7 小三角，手机贴在输入框正下方 */
+.nt-cbar { position: absolute; z-index: 6; display: flex; align-items: center; gap: 6px; height: 38px; padding: 6px 8px; box-sizing: border-box; border-radius: 12px; background: var(--bg-raised); border: var(--stroke-thin) solid var(--border); box-shadow: 0 6px 20px rgba(0, 0, 0, .28); }
+.nt-cbar[hidden] { display: none; }
+.nt-cbar .sw-btn, .nt-cbar .rainbow, .nt-cbar .nt-clear { flex: none; width: 24px; height: 24px; padding: 0; border-radius: 50%; cursor: pointer; }
+.nt-cbar .sw-btn { border: var(--stroke-thin) solid rgba(127, 127, 127, .35); }
+.nt-cbar .sw-btn.is-on, .nt-cbar .rainbow.is-on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand); }
+.nt-cbar .nt-div { flex: none; width: 1px; height: 16px; background: var(--border); }
+.nt-cbar .nt-clear { position: relative; background: var(--bg-surface); border: var(--stroke-thin) solid var(--border-strong); }
+.nt-cbar .nt-clear::after { content: ''; position: absolute; left: 50%; top: 3px; bottom: 3px; width: 1.5px; margin-left: -.75px; background: var(--error); transform: rotate(45deg); border-radius: 1px; }
+.nt-cbar .nt-clear:hover { background: var(--bg-hover); }
+.nt-cbar .nt-ptr { position: absolute; bottom: -6px; left: var(--ptr, 50%); width: 10px; height: 10px; margin-left: -5px; background: var(--bg-raised); border-right: var(--stroke-thin) solid var(--border); border-bottom: var(--stroke-thin) solid var(--border); transform: rotate(45deg); }
+.nt-cbar.is-inline { position: static; width: fit-content; max-width: 100%; margin-top: 8px; }
+.nt-cbar.is-inline .nt-ptr { display: none; }
 
 /* 顶部栏 AI 生成图标 */
 @keyframes tbspin { to { transform: rotate(360deg); } }

@@ -810,8 +810,8 @@
   const TXT = {
     // 顶部栏：币种文字 26/750=13（下拉箭头跟文字同色，Figma 都是 neutral_2）；搜索文字 22/750=11；余额金额只在已登录显示
     topbar: [['tb.cur', 'tx/tb-cur', '.h5-top .cur-cl b', '.h5-top .cur-cl', 13, 400], ['tb.search', 'tx/tb-search', '.h5-top .srch-cl small', '.h5-top .srch-cl', 11, 400], ['tb.bal', 'tx/tb-bal', '.h5-top .bx b', '.h5-top .bx b', 13, 400]],
-    // 公告栏：正文 26/750=13（Figma 317:55675）；已登录信箱未读数 18/750=9，固定白字
-    notice: [['notice.text', 'tx/notice-text', '.cl-notice .mq', '.cl-notice .mq', 13, 400], ['notice.badgeTx', 'tx/notice-badge', '.cl-notice .mail .bd', '.cl-notice .mail .bd', 9, 700]],
+    // 公告栏：公告文字（整段默认）26/750=13（Figma 317:55675），选中改过色的字不跟这里变；消息气泡（未读数）18/750=9，固定白字（Figma 442:37665 ⑦）
+    notice: [['notice.text', 'mp/nt-tx-whole', '.cl-notice .mq', '.cl-notice .mq', 13, 400], ['notice.badgeTx', 'mp/nt-tx-badge', '.cl-notice .mail .bd', '.cl-notice .mail .bd', 9, 700]],
     // 帐户栏（Figma 317:55705）：入口名 22/750=11 neutral_1；登录 / 注册 24=12（颜色 primary / text_primary）；用户名 22=11 lead；
     // 问候语 11 neutral_2；余额金额 26=13 Bold（只改帐户栏里的余额框，顶部栏余额在顶部栏里改）；入口角标 18=9 白字
     midnav: [['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400], ['midnav.btn', 'tx/midnav-login', '.cl-user.out .lg', '.cl-user.out .lg', 12, 400], ['midnav.reg', 'tx/midnav-reg', '.cl-user.out .rg', '.cl-user.out .rg', 12, 400],
@@ -854,7 +854,7 @@
     return css ? `<style>${css}</style>` : '';
   }
   // 只在对应状态下出现的文字（顶部栏：未登录才有币种，已登录且显示余额框才有金额）
-  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth, 'notice.badgeTx': () => E.D.login && E.D.m.notice && E.D.m.notice.mail,
+  const TXT_WHEN = { 'tb.cur': () => !E.D.login, 'tb.bal': () => E.D.login && E.D.tb.items.auth, 'notice.badgeTx': () => !!(E.D.m.notice && E.D.m.notice.mail && E.D.m.notice.badge !== false), // 消息入口和消息气泡都开才有（Waydon 11-27）
     // 帐户栏：未登录只有登录 / 注册按钮，已登录才有用户名、余额、角标；单行（无帐户区）两边都没有
     'midnav.btn': () => mnAcct() && !E.D.login, 'midnav.reg': () => mnAcct() && !E.D.login, 'midnav.user': () => mnAcct() && E.D.login, 'midnav.bal': () => mnAcct() && E.D.login,
     'midnav.greet': () => mnAcct() && E.D.login && balCfg().head === 'greet', 'midnav.badge': () => E.D.login && E.D.m.midnav.items.some((x) => x.on && x.badge),
@@ -890,7 +890,7 @@
         <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
         ${txColors(id)}</div>`;
     }).join('');
-    return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t(b === 'bottomnav' ? 'tx/note-bn' : 'tx/note')}</div></div>`; // 底部导航有「选中」文字行，颜色可改，不能说「选中态文字颜色不变」
+    return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t(b === 'bottomnav' ? 'tx/note-bn' : b === 'notice' ? 'mp/nt-tx-note' : 'tx/note')}</div></div>`; // 底部导航有「选中」文字行，颜色可改，不能说「选中态文字颜色不变」
   }
   const txSet = (id, k, v) => {
     if (TX_EC[id] && k === 'c') {
@@ -996,6 +996,7 @@
     const p = E.picker; if (!p) return;
     const back = () => { E.picker = null; if (E.mpanel === 'picker') E.mpanel = p.back || null; };
     if (p.value.toLowerCase() === p.orig.toLowerCase()) { back(); return; }
+    if (p.onApply) { back(); p.onApply(p.value); return; } // 公告内容富文本：选中文字的自定义色（modpanels.js A.ntPick）
     commit(() => { if (p.tbRow) E.D.tb.colors[p.tbRow] = p.value; else if (p.elRow) E.D.ec[p.elRow] = p.value; else { E.D.theme[p.key] = p.value; E.D.palette = null; } });
     back();
     if (p.elRow && p.elRow.startsWith('key:')) { window.toast(t('ed/changed-undo'), undoOpt(4000)); return; }

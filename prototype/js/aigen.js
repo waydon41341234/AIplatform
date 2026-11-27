@@ -59,9 +59,9 @@
   // 确认框 / toast 里的名字：拉丁字母开头前面留空格（生成 Banner 第 2 张？/ 生成整套帐户栏图标？）；en / vi 句中整套名首字母小写
   const midName = (n) => String(n || '').replace(/^(All|Cả bộ) /, (m) => m.toLowerCase());
   const cTitle = (n) => { n = midName(n); return t('aig/confirm-title', { sp: /^[A-Za-z0-9]/.test(n) ? ' ' : '', name: n }); };
-  // 一组两张的说明：「（信箱 未登录 / 已登录）」「（未选 / 选中）」
+  // 一组两张的说明：「（消息 已读 / 未读）」「（未选 / 选中）」
   const pairNote = (a, tg, list) => { const ents = entriesOf(a, tg), two = list.filter((i) => ((ents.find((e) => e.i === String(i)) || {}).pics || 1) > 1); if (!two.length || !tg.pair) return ''; const pr = tg.pair(two[0]); if (!pr) return ''; return t('aig/pair-note', { name: two.length === 1 && list.length === 1 ? entName(a, tg, two[0]) + ' ' : '', a: pr[0], b: pr[1] }); };
-  // 其余只有一个、且一个入口两张：「（信箱 2 张）」（Figma G3-15c）
+  // 其余只有一个、且一个入口两张：「（消息 2 张）」（Figma G3-15c）
   const picsNote = (a, tg, list) => { if (list.length !== 1) return ''; const k = picsOf(a, tg, list); return k > 1 ? t('aig/rest-pics', { name: entName(a, tg, list[0]), k }) : ''; };
   const cBody = (a, tg, list, x) => t('aig/confirm-body', { n: list.length, k: picsOf(a, tg, list), p: pairNote(a, tg, list), x });
   // 计数：G2 / G4 把样板算进总数（已生成 9/9 · 样板 1 + 其余 8）；G3 帐户栏 / 公告栏只算其余（已生成 3/3 · 样板 1 + 其余 3）
@@ -348,7 +348,7 @@
       const si = sampleIdx(a, tg), rest = a.scope === 'set' ? picked(a, tg).filter((i) => i !== String(si)) : [];
       const pr = pairOf(a, tg);
       const lab = a.scope === 'set' ? t('aig/sample', { name: esc(entName(a, tg, si)) }) : pr ? t(tg.lr ? 'aig/cands-pair-lr' : 'aig/cands-pair', { a: pr[0], b: pr[1] }) : t('aig/cands');
-      // 左 / 右一组（公告栏信箱 未登录 / 已登录、游戏菜单按钮底图）：2×2，每个候选是两张分开的格子，说明写在下面（Figma G3-16C）
+      // 左 / 右一组（公告栏消息 已读 / 未读、游戏菜单按钮底图）：2×2，每个候选是两张分开的格子，说明写在下面（Figma G3-16C）
       const lr = pr && tg.lr;
       const tiles = lr ? a.cands.map((c, k) => `<button class="aig-pair2 ${a.pick === k ? 'is-on' : ''}" data-act="aigPick" data-arg="${k}" aria-pressed="${a.pick === k}"><span class="aig-pp">${tile(a, tg, si, c)}${k === a.best ? `<span class="best">${t('aig/best')}</span>` : ''}</span><span class="aig-cap">${esc(pr[0])} / ${esc(pr[1])}</span></button>`).join('')
         : a.cands.map((c, k) => `<button class="aig-cand ${pr ? 'is-pair' : ''} ${a.pick === k ? 'is-on' : ''}" style="${ratioCss(tg)}" data-act="aigPick" data-arg="${k}" aria-pressed="${a.pick === k}">${tile(a, tg, si, c)}${k === a.best ? `<span class="best">${t('aig/best')}</span>` : ''}</button>`).join('');
