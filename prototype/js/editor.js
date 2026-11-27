@@ -363,14 +363,16 @@
   // 余额框颜色（顶部栏内容页签 / 帐户栏颜色页签共用）
   function balColorRows() {
     // 色块存 'key:<名>'（跟页面配色走）；同各模块颜色行（Figma G6/ColorRow）：第一个色块 = 默认 Key（默认选中，再点 = 恢复默认），后面 4 个其它色块、彩虹、Key 标签
-    const cfg = balCfg(), th = liveTheme().th, kv = (k) => keyVal(k, th) || '#000';
+    const cfg = balCfg(), th = liveTheme().th, kv = (k) => keyVal(k, th) || '#000', MP = window.MP;
     const SW = ['primary', 'accent_3', 'accent_2', 'lead', 'bg_2', 'border'];
     const sw = (k, base) => {
       const cur = cfg.c[k] || '', hex = cur && !cur.startsWith('key:');
-      const rainbow = `<label class="rainbow tx-custom ${hex ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}"></label>`;
-      return window.MP.swRow({ act: 'balColor', id: k, v: cur, key: base, sws: SW.filter((x) => x !== base).slice(0, 4), kv, rainbow });
+      const cu = hex && MP.hexOf(cur), rbTip = cu ? `${t('tx/c-custom')} · ${cu.hex}` : t('tx/c-custom'); // 自定义色：彩虹中间填上那个颜色
+      const rainbow = `<label class="rainbow tx-custom ${hex ? 'is-on' : ''} ${cu ? 'has-val' : ''}" ${cu ? `style="--c:${cu.css}"` : ''} title="${esc(rbTip)}"><input type="color" data-balcolor="${k}" value="${hex ? cur : kv(cur ? cur.slice(4) : base)}" aria-label="${esc(rbTip)}"></label>`;
+      return MP.swRow({ act: 'balColor', id: k, v: cur, key: base, sws: SW.filter((x) => x !== base).slice(0, 4), kv, rainbow });
     };
-    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><span>${t(lab)}</span>${sw(k, base)}</div>`).join('');
+    // 标题行 = 名称 + 色值胶囊（同 G6/ColorRow）
+    return BAL_C.map(([k, lab, base]) => `<div class="bx-crow"><div class="k"><span class="ellipsis">${t(lab)}</span>${MP.hexChip(MP.curCol(cfg.c[k] || null, base, kv))}</div>${sw(k, base)}</div>`).join('');
   }
   // 侧边栏入口图标：有图片（上传 / AI）用图片，否则用线性图标（滤镜模拟值叠在线性图标上）
   function sideIcHtml(v, cls) { const x = tbImg(v, ''); return x.src ? `<img class="${cls} ico-img" src="${x.src}" alt="" style="${tbFitCss('side')}">` : x.f !== 'none' ? `<span style="display:inline-flex;filter:${x.f}">${ic('list', cls)}</span>` : ic('list', cls); }
@@ -561,7 +563,7 @@
     const th = liveTheme().th;
     const groups = [['ed/grp-primary', ['primary', 'lead']], ['ed/grp-text', ['neutral_1', 'neutral_2', 'neutral_3']], ['ed/grp-bg', ['bg_1', 'bg_2', 'border']], ['ed/grp-accent', ['accent_1', 'accent_2', 'accent_3']]];
     const colorsSec = `<div class="p-sec"><div class="lab">${t('ed/brand-colors')}</div><div class="pals">${Object.keys(PRESETS).map((k) => `<button class="pal ${E.D.palette === k ? 'is-on' : ''}" data-act="setPalette" data-arg="${k}" title="${esc(t('color/palette-' + k))}">${[0, 8, 10].map((i) => `<i style="background:${PRESETS[k][i]}"></i>`).join('')}</button>`).join('')}</div>
-        <div class="basecard"><div class="hd">${t('ed/base-colors')}</div>${groups.map(([g, ks]) => `<div class="bc-row"><span class="k">${t(g)}</span><div class="sws">${ks.map((k) => `<button class="sw-btn ${E.picker && E.picker.key === k && !E.picker.tbRow && !E.picker.elRow ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" data-act="pick" data-arg="${k}|panel"></button>`).join('')}</div></div>`).join('')}</div>
+        <div class="basecard"><div class="hd">${t('ed/base-colors')}</div>${groups.map(([g, ks]) => `<div class="bc-row"><span class="k">${t(g)}</span><div class="sws">${ks.map((k) => `<button class="sw-btn ${E.picker && E.picker.key === k && !E.picker.tbRow && !E.picker.elRow ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-label="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" data-act="pick" data-arg="${k}|panel"></button>`).join('')}</div></div>`).join('')}</div>
         ${E.picker && E.picker.where === 'panel' ? pickerHtml('in-panel') : ''}
         <button class="btn btn-secondary btn-sm btn-block" style="margin-top:12px" data-act="openKeys">${ic('caret-right', 'ic-16')}${t('ed/all-keys')}</button></div>`;
     const homeSec = window.MP && window.MP.homeBgSec ? window.MP.homeBgSec(mobileEd()) : ''; // 首页背景（home_bg，Figma 424:433220）：品牌配色之后
@@ -695,7 +697,8 @@
     const rows = window.MP.EL.banner.map(([id, key]) => {
       const v = E.D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
       // 第一个色块 = 默认 Key（如占位底 ddt_bg），默认选中（Figma G6/ColorRow 424:548184）
-      return `<div class="crow"><div class="k">${lab}</div>${window.MP.swRow({ act: 'bnColor', id, v, key, sws: BN_SW[id], kv: (k) => keyVal(k, th, ec), pk, pickArg: `${id}|${key}` })}${pk ? pickerHtml('in-panel', lab) : ''}</div>`;
+      const kv = (k) => keyVal(k, th, ec); // 标题行右侧色值胶囊 = 当前生效颜色（取色中 = 实时值）
+      return window.MP.colorRow(lab, { act: 'bnColor', id, v, key, sws: BN_SW[id], kv, pk, pickArg: `${id}|${key}`, col: window.MP.curCol(ec[id], key, kv) }, pk ? pickerHtml('in-panel', lab) : '');
     }).join('');
     return `<div class="p-sec">${rows}</div>`;
   }
@@ -797,10 +800,11 @@
     const { th, tb } = liveTheme(), raw = E.D.tb.colors || {}, D = E.D;
     const row = (k, lab) => {
       const v = raw[k] || null, pk = E.picker && E.picker.tbRow === k;
-      return `<div class="crow"><div class="k">${t(lab)}</div>${window.MP.swRow({ act: 'tbColor', id: k, v, key: TB_KEY[k], sws: TB_SW[k], kv: (x) => keyVal(x, th), pk, pickAct: 'pickTb', pickArg: k })}${pk ? pickerHtml('in-panel', t(lab)) : ''}</div>`;
+      return window.MP.colorRow(t(lab), { act: 'tbColor', id: k, v, key: TB_KEY[k], sws: TB_SW[k], kv: (x) => keyVal(x, th), pk, pickAct: 'pickTb', pickArg: k, col: tb[k] || keyVal(TB_KEY[k], th) }, pk ? pickerHtml('in-panel', t(lab)) : '');
     };
-    const txRow = (id, lab) => `<div class="crow"><div class="k">${t(lab)}</div>${txColors(id)}</div>`;
-    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${t(lab)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${keyVal(key, th)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${window.MP.keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    // 文字颜色行（跟「内容 › 文字样式」同一个值）：同 G6/TxColorRow，标题行也有色值胶囊
+    const txRow = (id, lab) => `<div class="crow"><div class="k"><span class="ellipsis">${t(lab)}</span>${window.MP.hexChip(txCol(id))}</div>${txColors(id)}</div>`;
+    const link = (lab, key) => window.MP.linkRow(t(lab), key, keyVal(key, th));
     return `<div class="p-sec">${row('bg', 'ed/tb-c-bg')}${D.tb.items.side ? row('side', 'ed/tb-c-side') : ''}${txRow('tb.search', 'tx/tb-search')}${D.login ? '' : txRow('tb.cur', 'tx/tb-cur')}</div>
       <div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link('ed/tb-c-border', 'border')}${!D.login && !(D.tb.icons || {}).cur ? link('ed/tb-c-curic', 'accent_3') : ''}</div>${D.login && D.tb.items.auth ? `
       <div class="p-note">${t('ed/tb-c-bal')}</div>` : ''}`;
@@ -836,12 +840,15 @@
   const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText',
     'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.activeText',
     'gamecards.tab': 'gamecards.tab', 'gamecards.name': 'gamecards.text', 'bottomnav.name': 'bottomnav.def', 'bottomnav.nameOn': 'bottomnav.active' };
+  // 文字颜色原始值：'key:<名>'（色块，跟整页配色走）/ 十六进制（自定义、白色）/ 空（= 默认 Key）。跟颜色页签同源的存在 E.D.ec，其它存在 E.D.txt[id].c
+  const txRaw = (id) => (TX_EC[id] ? (E.D.ec || {})[TX_EC[id]] : ((E.D.txt || {})[id] || {}).c) || null;
+  const txRes = (c) => (c && c.startsWith('key:') ? keyVal(c.slice(4), liveTheme().th, liveTheme().ec) || '' : c || '');
+  window.txRes = txRes; // PC 画布（pc.js）的文字颜色也要把 'key:<名>' 换成色值
+  // 返回 { s, w, c }，c = 生效的色值（没改 = 不带 c）
   const txOf = (id) => {
-    const o = ((E.D.txt || {})[id]) || {};
-    if (!TX_EC[id]) return o;
-    const v = (E.D.ec || {})[TX_EC[id]]; if (!v) return o;
-    const c = v.startsWith('key:') ? (keyVal(v.slice(4), liveTheme().th) || '') : v;
-    return Object.assign({}, o, c ? { c } : {});
+    const o = Object.assign({}, ((E.D.txt || {})[id]) || {}); delete o.c;
+    const c = txRes(txRaw(id)); if (c) o.c = c;
+    return o;
   };
   function txtCss() {
     const T = E.D.txt || {}; let css = '';
@@ -849,7 +856,7 @@
       const v = T[id]; if (!v) continue;
       const scope = (q) => q.split(',').map((x) => '.h5 ' + x.trim()).join(',');
       if (v.s || v.w) css += `${scope(sel)}{${v.s ? `font-size:${v.s}px;` : ''}${v.w ? `font-weight:${v.w};` : ''}}`;
-      if (v.c && !TX_EC[id]) css += `${scope(csel)}{color:${v.c}}`;
+      if (v.c && !TX_EC[id]) css += `${scope(csel)}{color:${txRes(v.c)}}`;
     }
     return css ? `<style>${css}</style>` : '';
   }
@@ -864,20 +871,31 @@
     'gamecards.name': () => !!(E.D.m.gamecards && E.D.m.gamecards.name), 'gamecards.title': () => !!(E.D.m.gamecards && E.D.m.gamecards.title !== false), 'gamecards.all': () => !!(E.D.m.gamecards && E.D.m.gamecards.title !== false) };
   const gmSide = () => !!(E.D.m && E.D.m.gamemenu && E.D.m.gamemenu.style === 'side');
   const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
-  const txSw = () => { const th = liveTheme().th; return [th.lead, th.neutral_1, th.neutral_2, th.primary, th.accent_2, th.accent_3, '#ffffff'].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i); };
-  // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）
-  // 文字颜色绑定的 Key（Waydon 2026-11-26 17:23：色盘右边显示绑定的 Key）
+  // 文字颜色绑定的 Key（Waydon 2026-11-26 17:23：色盘右边显示绑定的 Key）；没写的 = lead
   const TX_KEY = { 'tb.cur': 'neutral_2', 'tb.search': 'lead', 'notice.badgeTx': 'text_primary', 'midnav.btn': 'primary', 'midnav.greet': 'neutral_2', 'midnav.badge': 'text_primary', 'gamecards.more': 'neutral_2', 'gamecards.title': 'lead', 'gamecards.all': 'neutral_2' };
-  function txKeyName(id) {
-    if (TX_EC[id]) { const v = (E.D.ec || {})[TX_EC[id]]; if (v && v.startsWith('key:')) return v.slice(4); if (v) return null; return window.MP && window.MP.elKey ? window.MP.elKey(TX_EC[id]) : null; }
-    if ((E.D.txt || {})[id] && E.D.txt[id].c) return null;
-    return TX_KEY[id] || 'lead';
-  }
+  // 默认 Key：跟颜色页签同源的 = 那一行绑定的 Key（如公告文字 neutral_1、消息气泡 text_primary），其它查 TX_KEY
+  const txDefKey = (id) => (TX_EC[id] ? (window.MP && window.MP.elKey && window.MP.elKey(TX_EC[id])) || 'lead' : TX_KEY[id] || 'lead');
+  // 生效的颜色（标题行色值胶囊）：改过 = 那个值，没改 = 默认 Key 的色值
+  const txCol = (id) => txRes(txRaw(id)) || keyVal(txDefKey(id), liveTheme().th, liveTheme().ec) || '';
+  // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）。Figma G6/TxColorRow 463:31176（Waydon 11-27 09:18「默认选中默认的颜色，不是默认按钮」）：
+  // 没有「默认」按钮：[默认色块 = 绑定的 Key，没改过时选中，再点 = 恢复默认][lead / neutral_1 / neutral_2 / primary / accent_2 / accent_3 / 白 去掉默认 Key 后取前 6 个][彩虹 = 自定义]，
+  // Key 标签换到第二行靠右。色块存 'key:<名>'（跟整页配色走），白色存 #ffffff；色块提示「Key 名 · #HEX」
+  const TX_PAL = ['lead', 'neutral_1', 'neutral_2', 'primary', 'accent_2', 'accent_3', '#ffffff'];
   function txColors(id) {
-    const sw = txSw(), c = (txOf(id).c || '').toLowerCase();
-    const kn = txKeyName(id);
-    const keyTag = `<span class="tx-key ${kn ? '' : 'is-custom'}" title="${esc(kn ? t('tx/key-tip') : t('tx/c-custom'))}">${kn ? esc(kn) : t('tx/key-custom')}</span>`;
-    return `<div class="tx-colors"><button class="tx-auto ${c ? '' : 'is-on'}" data-act="txColor" data-arg="${id}|" title="${esc(t('tx/c-auto'))}">${t('tx/c-auto')}</button>${sw.map((x) => `<button class="sw-btn ${c === x ? 'is-on' : ''}" style="background:${x}" data-act="txColor" data-arg="${id}|${x}"></button>`).join('')}<label class="rainbow tx-custom ${c && !sw.includes(c) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}"><input type="color" data-txcolor="${id}" value="${c || '#333333'}"></label>${keyTag}</div>`;
+    const MP = window.MP, { th, ec } = liveTheme(), kv = (k) => (k[0] === '#' ? k : keyVal(k, th, ec) || '');
+    const def = txDefKey(id), raw = txRaw(id), sws = TX_PAL.filter((k) => k !== def).slice(0, 6);
+    const lc = (c) => String(c || '').slice(0, 7).toLowerCase();
+    // 选中哪个：没改 = 默认色块（-1）；'key:<名>' = 那个色块；十六进制 = 同色的色块（白色、旧存档存的色值）；都对不上 = 彩虹（自定义 / 颜色页签选了色盘里没有的 Key）
+    let on = -1;
+    if (raw && raw.startsWith('key:')) { const k = raw.slice(4); on = k === def ? -1 : sws.indexOf(k) >= 0 ? sws.indexOf(k) : 'c'; }
+    else if (raw) { const i = sws.findIndex((k) => lc(kv(k)) === lc(raw)); on = i >= 0 ? i : lc(kv(def)) === lc(raw) ? -1 : 'c'; }
+    const btn = (isOn, col, tip, arg, cls = '') => `<button class="sw-btn ${cls} ${isOn ? 'is-on' : ''}" style="background:${col}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${isOn}" data-act="txColor" data-arg="${id}|${arg}"></button>`;
+    const defB = btn(on === -1, kv(def), MP.swTip(`${t('mp/c-default')} · ${MP.keyLabel(def)}`, kv(def)), '', 'sw-def');
+    const swB = sws.map((k, i) => (k[0] === '#' ? btn(on === i, k, MP.swTip(k.toUpperCase(), k), k) : btn(on === i, kv(k), MP.swTip(MP.keyLabel(k), kv(k)), 'key:' + k))).join('');
+    const cu = on === 'c' ? MP.hexOf(txRes(raw)) : null, rbTip = cu ? `${t('tx/c-custom')} · ${cu.hex}` : t('tx/c-custom');
+    const rb = `<label class="rainbow tx-custom ${cu ? 'is-on has-val' : ''}" ${cu ? `style="--c:${cu.css}"` : ''} title="${esc(rbTip)}"><input type="color" data-txcolor="${id}" value="${cu ? cu.hex.toLowerCase() : lc(kv(def)) || '#333333'}" aria-label="${esc(rbTip)}"></label>`;
+    const tagV = on === -1 ? null : typeof on === 'number' ? (sws[on][0] === '#' ? sws[on] : 'key:' + sws[on]) : raw;
+    return `<div class="tx-colors cr-sw tx-pal">${defB}${swB}${rb}<i class="tx-br" aria-hidden="true"></i>${MP.keyTag(tagV, def)}</div>`;
   }
   function txtSec(b) {
     const els = (TXT[b] || []).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
@@ -885,7 +903,8 @@
       const [id, k, , , , dw, mx = 24] = df, ds = txDs(df);
       const v = txOf(id), size = v.s || ds, w = v.w || dw;
       const changed = v.s || v.w || v.c;
-      return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
+      // 标题行：[名称][色值胶囊（当前生效的文字颜色，点一下复制）][↺ 重置]（Figma G6/HexChip，Waydon 11-27 方案 A）
+      return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${window.MP.hexChip(txCol(id))}${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
         <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em title="${esc(t('tx/size-tip', { n: size * 2 }))}">${size * 2}</em><button data-act="txSize" data-arg="${id}|1" ${size >= mx ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
         <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
         ${txColors(id)}</div>`;
@@ -893,18 +912,19 @@
     return `<div class="p-sec tx-sec"><div class="lab">${t('tx/title')}</div>${rows}<div class="p-note">${t(b === 'bottomnav' ? 'tx/note-bn' : b === 'notice' ? 'mp/nt-tx-note' : 'tx/note')}</div></div>`; // 底部导航有「选中」文字行，颜色可改，不能说「选中态文字颜色不变」
   }
   const txSet = (id, k, v) => {
-    if (TX_EC[id] && k === 'c') {
-      // 选到的色块正好是某个基础 Key 就存 Key 引用（颜色页签能对上同一个色块）；等于默认 Key 就回到「默认」
-      const th = liveTheme().th, key = v && KEYS.find((x) => String(th[x]).toLowerCase() === v.toLowerCase());
-      const eid = TX_EC[id], def = ((window.MP.EL[eid.split('.')[0]] || []).find((r) => r[0] === eid) || [])[1];
-      const val = !v || key === def ? null : key ? 'key:' + key : v;
-      commit(() => { E.D.ec = E.D.ec || {}; if (val) E.D.ec[eid] = val; else delete E.D.ec[eid]; }); return;
+    if (k === 'c') {
+      // 色块存 'key:<名>'（颜色页签能对上同一个色块，换整页配色跟着变）；选默认 Key / 点默认色块 = 回到默认（清掉）；彩虹 / 白色存十六进制
+      const key = v && v.startsWith('key:') ? v.slice(4) : null;
+      const val = !v || key === txDefKey(id) ? null : key ? v : v.toLowerCase();
+      if ((txRaw(id) || null) === val) return false; // 再点已选中的色块：没有变化，不记撤销
+      if (TX_EC[id]) { const eid = TX_EC[id]; commit(() => { E.D.ec = E.D.ec || {}; if (val) E.D.ec[eid] = val; else delete E.D.ec[eid]; }); return; }
+      commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (val) o.c = val; else delete o.c; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); return;
     }
     commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
   const txDef = (id) => TX_ALL.find((x) => x[0] === id);
   A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const ds = txDs(df), cur = txOf(id).s || ds; const n = Math.max(8, Math.min(df[6] || 24, cur + (+d))); txSet(id, 's', n === ds ? null : n); };
   A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
-  A.txColor = (arg) => { const i = arg.indexOf('|'); txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
+  A.txColor = (arg) => { const i = arg.indexOf('|'); return txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[TX_EC[id]]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
   // 布局「恢复默认」（Waydon 2026-11-26）：只恢复布局页签里的参数，内容和颜色不动
@@ -981,7 +1001,7 @@
       <div class="pk-cmp"><div style="background:${p.orig};color:${inkOn(p.orig)}">${t('ed/pick-current')}</div><div data-pk-new style="background:${p.value};color:${inkOn(p.value)}">${t('ed/pick-new')}</div></div>
       <div class="pk-sv" data-drag="sv" style="background:hsl(${hsv.h},100%,50%)"><span class="pk-dot" data-pk-svdot style="left:${hsv.s * 100}%;top:${(1 - hsv.v) * 100}%;background:${p.value}"></span></div>
       <div class="pk-h" data-drag="hue"><span class="pk-dot" data-pk-hdot style="left:${(hsv.h / 360) * 100}%;background:hsl(${hsv.h},100%,50%)"></span></div>
-      <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"></label>
+      <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"><button type="button" class="pk-copy" data-act="copyHex" data-arg="picker" title="${esc(t('ed/hex-copy', { hex: p.value.toUpperCase() }))}" aria-label="${esc(t('ed/hex-copy', { hex: p.value.toUpperCase() }))}">${ic('copy', 'hc-ic hc-cp')}${ic('check', 'hc-ic hc-ok')}</button></label>
       <div class="caption muted" style="margin-top:8px">${t('ed/pick-suggest')}</div>
       <div class="pk-sug">${SUGGEST.map((c) => `<button style="background:${c}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
       <div class="caption faint" style="margin-bottom:10px">${t(p.tbRow ? 'ed/pick-sync-tb' : p.elRow && !p.elRow.startsWith('key:') ? 'ed/pick-sync-el' : 'ed/pick-sync')}</div>
@@ -1014,6 +1034,10 @@
     document.querySelectorAll('[data-drag="sv"]').forEach((n) => { n.style.background = `hsl(${p.h != null ? p.h : hsv.h},100%,50%)`; });
     document.querySelectorAll('[data-pk-hdot]').forEach((n) => { const h = p.h != null ? p.h : hsv.h; n.style.left = (h / 360) * 100 + '%'; n.style.background = `hsl(${h},100%,50%)`; });
     document.querySelectorAll('[data-input="pkHex"]').forEach((n) => { if (document.activeElement !== n) n.value = p.value.toUpperCase(); });
+    // 取色中那一行的色值胶囊、取色器 ⧉ 的提示跟着实时值走（胶囊永远显示「目前生效」的颜色）
+    const h = window.MP.hexOf(p.value), tip = h && t('ed/hex-copy', { hex: h.hex });
+    if (h) document.querySelectorAll('[data-pk-chip]').forEach((n) => { n.dataset.arg = h.hex; n.title = tip; n.setAttribute('aria-label', tip); const d = n.querySelector('.hc-dot'), x = n.querySelector('.hc-hex'), a = n.querySelector('.hc-a'); if (d) d.style.setProperty('--c', h.hex); if (x) x.textContent = h.hex; if (a) a.remove(); n.classList.remove('has-a'); });
+    if (h) document.querySelectorAll('.pk-copy').forEach((n) => { n.title = tip; n.setAttribute('aria-label', tip); });
   }
 
   // ---------- 拖动：取色、模块 / 入口 / 轮播图排序、Banner 滑动、裁切框 ----------
@@ -1522,7 +1546,7 @@
     const card = (m, icn, k) => `<button class="rcard ${r.mode === m ? 'is-on' : ''}" data-act="rsMode" data-arg="${m}">${ic(icn)}<span><b>${t(k)}</b></span></button>`;
     return `<div class="dialog-head"><h3>${t('ed/rs-title', { w: g.sp.w, h: g.sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>
       <div class="rs ${mobile ? 'is-m' : ''}"><div class="rs-stage">${stage}</div><div class="rs-opts">${card('crop', 'crop', 'ed/rs-crop')}${card('pad', 'frame-corners', 'ed/rs-pad')}
-        ${r.mode === 'pad' ? `<div class="lab">${t('ed/rs-fill')}</div><div class="sws">${['bg_1', 'bg_2', 'primary'].map((k) => `<button class="sw-btn ${r.fill === k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" data-act="rsFill" data-arg="${k}"></button>`).join('')}</div>` : ''}
+        ${r.mode === 'pad' ? `<div class="lab">${t('ed/rs-fill')}</div><div class="sws">${['bg_1', 'bg_2', 'primary'].map((k) => `<button class="sw-btn ${r.fill === k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-label="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-pressed="${r.fill === k}" data-act="rsFill" data-arg="${k}"></button>`).join('')}</div>` : ''}
         <button class="btn btn-ghost btn-sm" data-act="rsReupload">${ic('upload-simple', 'ic-16')}${t('ed/rs-reupload')}</button></div></div>
       <div class="dialog-foot"><span class="caption faint rs-cap">${t('ed/rs-from-to', { w: r.w, h: r.h, tw: g.sp.w, th: g.sp.h })}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary" data-act="rsApply">${t('ed/pick-apply')}</button></div>`;
   }

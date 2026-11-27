@@ -193,7 +193,7 @@ window.I18N = {
   'ed/custom': ['自定义', '自訂', 'Custom', 'Tùy chỉnh'],
   'ed/custom-clamped': ['已调整到可用范围 {min}–{max}', '已調整到可用範圍 {min}–{max}', 'Adjusted to the allowed range {min}–{max}', 'Đã chỉnh về khoảng {min}–{max}'],
   'tx/title': ['文字样式', '文字樣式', 'Text style', 'Kiểu chữ'],
-  'tx/note': ['字号按 750 设计稿标注；颜色选「默认」跟随配色，选中态文字颜色不变', '字號按 750 設計稿標註；顏色選「預設」跟隨配色，選中態文字顏色不變', 'Sizes are in 750 design units. "Default" follows the palette; selected-state text keeps its color.', 'Cỡ chữ theo bản 750; "Mặc định" theo bảng màu; chữ ở trạng thái chọn giữ màu.'],
+  'tx/note': ['字号按 750 设计稿标注；颜色第一个色块是默认，跟随配色，选中态文字颜色不变', '字號按 750 設計稿標註；顏色第一個色塊是預設，跟隨配色，選中態文字顏色不變', 'Sizes are in 750 design units. The first swatch is the default and follows the palette; selected-state text keeps its color.', 'Cỡ chữ theo bản 750; ô màu đầu tiên là mặc định, theo bảng màu; chữ ở trạng thái chọn giữ màu.'],
   'tx/reset': ['恢复', '恢復', 'Reset', 'Đặt lại'],
   'tx/w-400': ['常规', '常規', 'Regular', 'Thường'],
   'tx/w-500': ['中等', '中等', 'Medium', 'Vừa'],

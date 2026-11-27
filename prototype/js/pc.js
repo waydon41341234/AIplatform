@@ -83,7 +83,7 @@
   function midnav() {
     const m = M('midnav'), D = X().E.D, T = D.txt || {};
     // 文字样式按 H5 字号等比换算到 PC（H5 默认 → PC 默认），粗细原样；颜色走模块色变量（跟 H5 同源）
-    const tx = (id, h5, pc) => { const v = T[id] || {}; return (v.s ? `font-size:${Math.round((v.s * pc) / h5)}px;` : '') + (v.w ? `font-weight:${v.w};` : '') + (v.c && id !== 'midnav.name' && id !== 'midnav.reg' ? `color:${v.c};` : ''); };
+    const tx = (id, h5, pc) => { const v = T[id] || {}; return (v.s ? `font-size:${Math.round((v.s * pc) / h5)}px;` : '') + (v.w ? `font-weight:${v.w};` : '') + (v.c && id !== 'midnav.name' && id !== 'midnav.reg' ? `color:${window.txRes ? window.txRes(v.c) : v.c};` : ''); };
     // 帐户区跟 H5 一致：未登录 = 登录 / 注册按钮，已登录 = 用户名 + 余额框（通用组件，顶部栏共用设置）
     const acct = m.layout !== 'account' ? '' : D.login
       ? `<div class="acct in"><span class="u" style="${tx('midnav.user', 11, 14)}">${window.balUser ? window.balUser() : ''}</span><span class="b" style="${tx('midnav.bal', 13, 18)}">${window.balBox ? window.balBox() : ''}</span><span class="sp"></span></div>`

@@ -173,6 +173,56 @@
   const upThumb = (b, i, f, icon, cls = '', title = '') => { const it0 = M(b).items[i]; const src = it0[f] || defSrc(it0, f, b); return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
   const resetBtn = (b, i) => { const it = M(b).items[i]; return it.img || it.imgOn ? `<button class="ib-s" data-act="mpIconReset" data-arg="${b}|${i}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''; };
 
+  // ---------- 色值胶囊（Waydon 11-27 09:20「颜色看不出也复制不了 hex」→ 09:30 选方案 A；Figma G6/HexChip 460:31190） ----------
+  // hexOf：#rgb / #rgba / #rrggbb / #rrggbbaa / rgb() / rgba() → { hex: '#RRGGBB', a: null | 0–100（透明度 %）, css: 带透明度的 8 位色值 }
+  function hexOf(col) {
+    const s = String(col || '').trim(); let m = /^#?([0-9a-f]{3,8})$/i.exec(s), r, g, b, a = null;
+    if (m) {
+      let h = m[1]; if (h.length === 3 || h.length === 4) h = h.replace(/./g, (c) => c + c); if (h.length !== 6 && h.length !== 8) return null;
+      [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); if (h.length === 8) a = parseInt(h.slice(6), 16) / 255;
+    } else if ((m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i.exec(s))) {
+      [r, g, b] = [+m[1], +m[2], +m[3]]; if (m[4] != null) a = m[4].endsWith('%') ? parseFloat(m[4]) / 100 : +m[4];
+    } else return null;
+    const x = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+    const hex = ('#' + x(r) + x(g) + x(b)).toUpperCase(), pct = a == null || a >= 0.995 ? null : Math.round(a * 100);
+    return { hex, a: pct, css: pct == null ? hex : hex + x(a * 255).toUpperCase() };
+  }
+  // 当前生效的颜色：v = 业主的覆盖值（'key:<名>' / 十六进制 / 空），key = 默认 Key，kv = Key → 色值
+  const curCol = (v, key, kv) => (v ? (v.startsWith('key:') ? kv(v.slice(4)) : v) : key ? kv(key) : null);
+  // Key → 色值（默认值也可以直接是 Figma 写死的色值，如游戏菜单投影 #729FFF26）
+  const kvOf = (th, ec) => (k) => (k[0] === '#' ? k : th[k] != null ? th[k] : resolveKey(k, th, ec));
+  // 胶囊上写什么就复制什么：大写 6 位 #RRGGBB；有透明度的另外灰字显示「40%」，复制仍是 6 位。live = 取色中那一行（取色器拖动时实时改）
+  const hexChip = (col, live) => {
+    const h = hexOf(col); if (!h) return '';
+    const tip = t('ed/hex-copy', { hex: h.hex + (h.a != null ? ` · ${h.a}%` : '') });
+    return `<button type="button" class="hex-chip ${h.a != null ? 'has-a' : ''}" data-act="copyHex" data-arg="${h.hex}${h.a != null ? '|' + h.a : ''}" title="${esc(tip)}" aria-label="${esc(tip)}"${live ? ' data-pk-chip' : ''}><i class="hc-dot" style="--c:${h.css}"></i><span class="hc-hex">${h.hex}</span>${h.a != null ? `<span class="hc-a">${h.a}%</span>` : ''}${ic('copy', 'hc-ic hc-cp')}${ic('check', 'hc-ic hc-ok')}</button>`;
+  };
+  // 隐形占位（68 Key 行按钮里）：跟胶囊同样内容 → 同样宽高，真胶囊绝对定位盖在它上面
+  const hexGhost = (col) => { const h = hexOf(col); return h ? `<span class="hex-chip hc-ghost ${h.a != null ? 'has-a' : ''}" aria-hidden="true"><i class="hc-dot"></i><span class="hc-hex">${h.hex}</span>${h.a != null ? `<span class="hc-a">${h.a}%</span>` : ''}${ic('copy', 'hc-ic hc-cp')}</span>` : ''; };
+  // 色块提示：「Key 名 · #HEX」（没选的色块也看得到色值）
+  const swTip = (lab, col) => { const h = hexOf(col); return h ? `${lab} · ${h.hex}${h.a != null ? ` ${h.a}%` : ''}` : lab; };
+  // 颜色行（Figma G6/ColorRow 424:548184）：标题行 = 名称（太长先截名称）+ 右侧色值胶囊；下面一行色块（swRow）；after = 展开的取色器
+  // o 同 swRow，另加 col = 当前生效颜色（liveTheme 里取，取色中 = 实时值；默认是图片、没有颜色时不给，不显示胶囊）
+  const colorRow = (lab, o, after = '') => `<div class="crow"><div class="k"><span class="ellipsis">${lab}</span>${o.col ? hexChip(o.col, o.pk) : ''}</div>${swRow(o)}${after}</div>`;
+  // 跟 Key 走、不单独设置的颜色行：标题行胶囊显示被跟随的 Key 的色值；点「去改」打开整页配色
+  const linkRow = (lab, key, col) => `<div class="crow tb-link"><div class="k"><span class="ellipsis">${lab}</span>${hexChip(col)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${col}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+  // 复制色值：先 navigator.clipboard，不行再用隐藏 textarea + execCommand；都失败提示长按手动复制（色值可整段选取）。
+  // 不改设计、不记撤销；arg = '#RRGGBB[|透明度]'，'picker' = 取色器当前值
+  function copyText(s) {
+    const legacy = () => { try { const ta = document.createElement('textarea'); ta.value = s; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, s.length); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; } };
+    try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(s).then(() => true, () => legacy()); } catch (e) { /* 走旧方法 */ }
+    return Promise.resolve(legacy());
+  }
+  A.copyHex = (arg, el) => {
+    let hex, a = null;
+    if (arg === 'picker') { const p = X().E.picker, h = p && hexOf(p.value); if (!h) return false; hex = h.hex; } else { const [h0, a0] = String(arg || '').split('|'); const h = hexOf(h0); if (!h) return false; hex = h.hex; a = a0 ? +a0 : null; }
+    copyText(hex).then((ok) => {
+      if (!ok) { if (el) el.classList.add('is-sel'); window.toast(t('ed/hex-copy-fail'), { info: true }); return; }
+      if (el) { el.classList.add('is-copied'); clearTimeout(el.__hcT); el.__hcT = setTimeout(() => el.classList.remove('is-copied'), 1200); }
+      window.toast(t(a != null ? 'ed/hex-copied-a' : 'ed/hex-copied', { hex, a }), { ms: 1600 });
+    });
+    return window.__prevMenu ? undefined : false; // 只复制：不重渲染（开着菜单时分发已把菜单关掉，才需要重渲染一次）
+  };
   // 色块行右侧的 Key 标签（同文字样式 .tx-key，Waydon 2026-11-27）：默认 = 绑定的 Key，选了色块 = 那个 Key，自定义色 = 「自定义」
   // defLab：默认值不是颜色（游戏菜单侧边样式的底色默认是按钮图）时，没覆盖就显示这个文字
   const keyTag = (v, key, defLab) => {
@@ -188,20 +238,22 @@
   //   rainbow：自带的彩虹（余额框用 <input type=color>），不给就用 pickAct / pickArg 的按钮
   //   defCss / defTip / defLab：默认值不是 Key 颜色（游戏菜单按钮图）时色块里那张图的样式（滤镜只加在图上，不染选中圈）、提示和 Key 标签文字
   // 正在用彩虹取色（取色器开着，画布已实时预览）时同「自定义」：只有彩虹带圈，Key 标签写「自定义」
+  // 色块提示 = 「Key 名 · #HEX」；选了自定义色时彩虹中间填上那个颜色（.has-val，外圈留细彩虹看得出是自定义）
   const swRow = (o) => {
     const v = o.v || null, img = !!o.defCss, pk = !!o.pk, onDef = !pk && (!v || (!img && v === 'key:' + o.key));
     const sws = (img ? o.sws : o.sws.filter((k) => k !== o.key));
-    const defTip = o.defTip || `${t('mp/c-default')} · ${keyLabel(o.key)}`;
+    const defTip = o.defTip || swTip(o.key[0] === '#' ? t('mp/c-default') : `${t('mp/c-default')} · ${keyLabel(o.key)}`, o.kv(o.key));
     const btn = (on, style, tip, arg, cls = '', inner = '') => `<button class="sw-btn ${cls} ${on ? 'is-on' : ''}" style="${style}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${on}" data-act="${o.act}" data-arg="${o.id}|${arg}">${inner}</button>`;
-    const rb = o.rainbow || `<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="${o.pickAct || 'bnPick'}" data-arg="${o.pickArg}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>`;
-    return `<div class="tx-colors cr-sw">${img ? btn(onDef, '', defTip, '', 'sw-def sw-img', `<i style="${o.defCss}"></i>`) : btn(onDef, `background:${o.kv(o.key)}`, defTip, '', 'sw-def')}${sws.map((k) => btn(!pk && v === 'key:' + k, `background:${o.kv(k)}`, keyLabel(k), 'key:' + k)).join('')}${rb}${keyTag(pk ? 'custom' : onDef && !img ? null : v, o.tag || o.key, o.defLab)}</div>`;
+    const cu = v && !v.startsWith('key:') ? hexOf(v) : null, rbTip = cu ? `${t('tx/c-custom')} · ${cu.hex}` : t('tx/c-custom');
+    const rb = o.rainbow || `<button class="rainbow ${pk || cu ? 'is-on' : ''} ${cu ? 'has-val' : ''}" ${cu ? `style="--c:${cu.css}"` : ''} data-act="${o.pickAct || 'bnPick'}" data-arg="${o.pickArg}" title="${esc(rbTip)}" aria-label="${esc(rbTip)}"></button>`;
+    return `<div class="tx-colors cr-sw">${img ? btn(onDef, '', defTip, '', 'sw-def sw-img', `<i style="${o.defCss}"></i>`) : btn(onDef, `background:${o.kv(o.key)}`, defTip, '', 'sw-def')}${sws.map((k) => btn(!pk && v === 'key:' + k, `background:${o.kv(k)}`, swTip(keyLabel(k), o.kv(k)), 'key:' + k)).join('')}${rb}${keyTag(pk ? 'custom' : onDef && !img ? null : v, o.tag || o.key, o.defLab)}</div>`;
   };
   function colors(b) {
     const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker;
     return EL[b].map(([id, k]) => {
       // 同其它模块的颜色行：第一个色块 = 绑定的 Key（默认选中），色块存 'key:<名>'，彩虹 = 自定义，右侧 Key 标签
-      const v = ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = P && P.elRow === id;
-      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key: k, sws: ALT.filter((a) => a !== k).slice(0, 4), kv: (a) => (th[a] != null ? th[a] : resolveKey(a, th, ec)), pk, pickArg: `${id}|${k}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      const v = x.E.D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = P && P.elRow === id, kv = kvOf(th, ec);
+      return colorRow(lab, { act: 'bnColor', id, v, key: k, sws: ALT.filter((a) => a !== k).slice(0, 4), kv, pk, pickArg: `${id}|${k}`, col: curCol(ec[id], k, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     }).join('');
   }
 
@@ -319,10 +371,10 @@
   const NT_SW = { 'notice.bg': ['bg_1', 'border', 'primary', 'lead'], 'notice.icon': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.badge': ['accent_2', 'accent_3', 'primary', 'lead'] };
   function ntColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = ntM(), its = ntItems();
-    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const kv = kvOf(th, ec);
     const row = (id) => {
       const key = EL.notice.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: NT_SW[id], kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return colorRow(lab, { act: 'bnColor', id, v, key, sws: NT_SW[id], kv, pk, pickArg: `${id}|${key}`, col: curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     };
     // 消息气泡底色（Figma 442:37665 ⑧）：消息入口开、气泡开、预览已登录才显示这一行，否则说明为什么改不了
     const spkUp = !!its[0].img, bd = !m.mail ? 'mp/nt-c-badge-nomail' : m.badge === false ? 'mp/nt-c-badge-off' : !D.login ? 'mp/nt-c-badge-out' : null;
@@ -338,14 +390,14 @@
   const bdKey = (it) => ({ mid2: 'accent_1' })[baseOf(it.def)] || 'accent_2'; // Figma：VIP 角标 accent_2、分享赚钱角标 accent_1
   function mnColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('midnav'), acct = m.layout === 'account';
-    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const kv = kvOf(th, ec);
     const row = (id, key, sws, lab) => {
       const v = D.ec[id] || null, pk = E.picker && E.picker.elRow === id;
-      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws, kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return colorRow(lab, { act: 'bnColor', id, v, key, sws, kv, pk, pickArg: `${id}|${key}`, col: curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     };
     const elRow = (id) => row(id, EL.midnav.find((r) => r[0] === id)[1], MN_SW[id], t('mp/c-' + id.replace('.', '-')));
     // 跟 Key 走、不单独设置的颜色：点「去改」打开整页配色
-    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const link = (lab, key) => linkRow(lab, key, kv(key));
     const toIn = `<button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button>`;
     const vis0 = m.items.filter((it) => it.on), fallback = vis0.some((it) => !it.img && !it.def);
     const bdItems = vis0.filter((it) => it.badge);
@@ -400,14 +452,15 @@
   const GM_SW = { 'gamemenu.bg': ['bg_2', 'bg_1', 'border', 'primary'], 'gamemenu.active': ['primary', 'accent_3', 'accent_1', 'lead'], 'gamemenu.text': ['leftnav_def', 'neutral_1', 'lead', 'primary'], 'gamemenu.activeText': ['leftnav_active', 'bg_2', 'lead', 'primary'], 'gamemenu.shadow': ['web_left_bg_shadow'], 'gamemenu.icon': ['icon_tg_z', 'neutral_2', 'lead', 'primary'] };
   function gmColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamemenu'), side = m.style === 'side';
-    const kv = (k) => (k[0] === '#' ? k : th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const kv = kvOf(th, ec);
     // 第一个色块 = 默认：底色两行（侧边样式）默认是按钮图，色块显示按钮图、Key 标签写「按钮图」，Key 色块单独列在后面；其它是 Figma 绑定的 Key
     const row = (id, imgF) => {
       const key = EL.gamemenu.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
       const sws = GM_SW[id].filter((k) => k !== key);
       if (imgF) sws.unshift(key); // 底色行：默认 = 图，Key 色块单独列出
       const img = imgF ? { defCss: gmBtnCss(imgF), defTip: `${t('mp/c-default')} · ${t('mp/gm-c-img-tip')}`, defLab: t('mp/gm-c-img') } : {};
-      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws, kv, pk, pickArg: `${id}|${key[0] === '#' ? 'primary' : key}`, ...img })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      // 底色行没覆盖时生效的是按钮图（不是颜色），不显示色值胶囊
+      return colorRow(lab, { act: 'bnColor', id, v, key, sws, kv, pk, pickArg: `${id}|${key[0] === '#' ? 'primary' : key}`, ...img, col: imgF && !ec[id] ? null : curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     };
     const fallback = vis('gamemenu').some((it) => !it.img && !it.imgOn && !it.def);
     let h = '';
@@ -471,12 +524,12 @@
   const GC_CAP = { 'gamecards.text': 'cards_text' }; // Key 标签显示的 Key 名（游戏名称 = cards_text 经典卡片分支）
   function gcColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamecards');
-    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const kv = kvOf(th, ec);
     const row = (id) => {
       const key = EL.gamecards.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: GC_SW[id], kv, pk, pickArg: `${id}|${key}`, tag: GC_CAP[id] })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return colorRow(lab, { act: 'bnColor', id, v, key, sws: GC_SW[id], kv, pk, pickArg: `${id}|${key}`, tag: GC_CAP[id], col: curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     };
-    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const link = (lab, key) => linkRow(lab, key, kv(key));
     const fbImg = m.fallback && m.fallback.startsWith('img:');
     let h = `<div class="p-sec"><div class="lab">${t('mp/gc-c-text')}</div>${row('gamecards.tab')}${m.name ? row('gamecards.text') : ''}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gc-fallback')}</div>${m.fallbackOn === false ? note('mp/gc-c-fb-off') : row('gamecards.placeholder') + (fbImg ? note('mp/gc-c-fb-img') : row('gamecards.placeholderIcon'))}</div>`;
@@ -606,10 +659,10 @@
   const BN_SW = { 'bottomnav.bg': ['web_btmnav_db', 'bg_2', 'bg_1', 'lead'], 'bottomnav.def': ['btmnav_def', 'neutral_2', 'neutral_1', 'lead'], 'bottomnav.active': ['btmnav_active', 'primary', 'accent_3', 'lead'] };
   function bnColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D;
-    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const kv = kvOf(th, ec);
     const row = (id) => {
       const key = EL.bottomnav.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: BN_SW[id], kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+      return colorRow(lab, { act: 'bnColor', id, v, key, sws: BN_SW[id], kv, pk, pickArg: `${id}|${key}`, col: curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     };
     const fallback = vis('bottomnav').some((it) => !bnSrc(it, bnOffF(it)));
     return `<div class="p-sec">${row('bottomnav.bg')}</div>
@@ -670,7 +723,7 @@
   const ntRich = (m) => ntSegs(m.text || '', m.spans).map(([str, c]) => (c ? `<span data-c="${esc(c)}" style="color:${esc(ntCol(c))}">${esc(str)}</span>` : esc(str))).join('');
   function ntTextSec(m) {
     const x = X(), P = x.E.picker, pk = P && P.ntSpan;
-    const sw = NT_KEYS.map((k) => `<button class="sw-btn" data-act="ntColor" data-arg="key:${k}" data-c="key:${k}" style="background:${ntCol('key:' + k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" aria-pressed="false"></button>`).join('');
+    const sw = NT_KEYS.map((k) => { const c = ntCol('key:' + k), tip = swTip(keyLabel(k), c); return `<button class="sw-btn" data-act="ntColor" data-arg="key:${k}" data-c="key:${k}" style="background:${c}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="false"></button>`; }).join('');
     const bar = `<div class="nt-cbar ${x.mobileEd() ? 'is-inline' : ''}" data-ntbar role="toolbar" aria-label="${esc(t('mp/nt-text'))}" hidden>${sw}<button class="rainbow" data-act="ntPick" data-c="custom" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}" aria-pressed="false"></button><i class="nt-div"></i><button class="nt-clear" data-act="ntColor" data-arg="" title="${esc(t('mp/nt-clear'))}" aria-label="${esc(t('mp/nt-clear'))}"></button><i class="nt-ptr"></i></div>`;
     return `<div class="p-sec nt-text-sec" data-ntsec><div class="lab">${t('mp/nt-text')}<span class="nt-cnt">${(m.text || '').length}/${NT_MAX}</span></div>`
       + `<div class="nt-rich" contenteditable="true" role="textbox" aria-multiline="false" spellcheck="false" aria-label="${esc(t('mp/nt-text'))}" data-ntrich>${ntRich(m)}</div>${bar}`
@@ -723,6 +776,9 @@
     if (!r) { bar.hidden = true; return; }
     const cur = ntSelC(r);
     bar.querySelectorAll('[data-c]').forEach((b) => { const on = b.dataset.c === cur || (b.dataset.c === 'custom' && !!cur && cur[0] === '#'); b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
+    // 选中的字是自定义色：彩虹中间填上那个颜色（同颜色行 .rainbow.has-val）
+    const rb = bar.querySelector('.rainbow'), cu = cur && cur[0] === '#' ? hexOf(cur) : null;
+    if (rb) { rb.classList.toggle('has-val', !!cu); if (cu) rb.style.setProperty('--c', cu.css); else rb.style.removeProperty('--c'); }
     bar.hidden = false;
     if (bar.classList.contains('is-inline')) return;
     const s = window.getSelection(); if (!s || !s.rangeCount) return;
@@ -1273,8 +1329,11 @@
   const GROUPS = [['base', 'ed/keys-g-base'], ['ref', 'ed/keys-g-ref'], ['fixed', 'ed/keys-g-fixed'], ['design', 'ed/keys-g-design'], ['cond', 'ed/keys-g-cond']];
   function keysPanel(mobile) {
     const x = X(); const K = x.E.keys; const { th, ec } = x.liveTheme(); const P = x.E.picker; const q = (K.q || '').trim().toLowerCase();
+    // 搜索也能直接打色值（「0a84」「#0A84FF」）：只比对显示色值胶囊的行（基础 / 引用 / 固定），跟设计、条件规则没有胶囊不比对
+    const qh = /^#?[0-9a-f]+$/.test(q) && q.replace('#', '').length >= (q[0] === '#' ? 1 : 3) ? q.replace('#', '') : '';
+    const hexHit = (e) => qh && HC_KIND[e[1]] && (hexOf(resolveKey(e[0], th, ec)) || { hex: '' }).hex.toLowerCase().includes(qh);
     const rowsOf = (g) => (g === 'base' ? KEYS68.base.map(([k, l]) => [k, 'base', null, l]) : KEYS68.ext.filter((e) => e[1] === g))
-      .filter((e) => !q || e[0].toLowerCase().includes(q) || e[3].toLowerCase().includes(q) || keyLabel(e[0]).toLowerCase().includes(q));
+      .filter((e) => !q || e[0].toLowerCase().includes(q) || e[3].toLowerCase().includes(q) || keyLabel(e[0]).toLowerCase().includes(q) || hexHit(e));
     let total = 0;
     const groups = GROUPS.map(([g, lk]) => {
       const rows = rowsOf(g); total += rows.length; if (!rows.length) return '';
@@ -1284,11 +1343,12 @@
     const tools = `<div class="kt"><label class="kt-s">${ic('magnifying-glass', 'ic-16')}<input data-input="keysQ" value="${esc(K.q || '')}" placeholder="${esc(t('ed/keys-search'))}"></label></div>`;
     return `${tools}<div class="klist">${total ? groups : `<div class="empty is-sm"><div class="ico">${ic('magnifying-glass', 'ic-24')}</div><h3>${esc(t('ed/keys-none', { q: K.q }))}</h3></div>`}</div>`;
   }
+  const HC_KIND = { base: 1, ref: 1, fixed: 1 }; // 68 Key 清单里显示色值胶囊的行（Figma KeyRow 229:115018；跟设计待确认、条件规则不显示）
   function keyRow(e, th, ec, P, K, mobile) {
     const [k, kind, arg, usage] = e;
     const col = resolveKey(k, th, ec); const custom = kind !== 'base' && !!ec['key:' + k];
     let cap = '';
-    if (kind === 'base') cap = `<span class="mono">${col.toUpperCase()}</span>`;
+    if (kind === 'base') cap = t('ed/keys-base-cap'); // 色值改在右侧胶囊里显示，说明行写「基础色 · 点击取色」
     else if (custom && ec['key:' + k].startsWith('key:')) cap = t('ed/keys-follow', { name: keyLabel(ec['key:' + k].slice(4)) });
     else if (custom) cap = `<span class="kc-custom">${t('ed/keys-custom')}</span>`;
     else if (kind === 'ref') { const [tk, al] = Array.isArray(arg) ? arg : [arg, null]; cap = t('ed/keys-follow', { name: keyLabel(tk) }) + (al != null ? ` · ${Math.round(al * 100)}%` : ''); }
@@ -1299,7 +1359,9 @@
     const open = S().menu === 'km:' + k;
     const menu = open && kind !== 'base' && kind !== 'cond' ? `<div class="menu km-menu"><button class="menu-item" data-act="keyDetach" data-arg="${k}">${ic('paint-brush-fill')}${t('ed/keys-detach')}</button><button class="menu-item" data-act="keyRestore" data-arg="${k}" ${custom ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/keys-restore')}</button></div>` : '';
     const showPick = !mobile && P && P.where === 'keys' && (kind === 'base' ? !P.elRow && P.key === k : P.elRow === 'key:' + k);
-    return `<div class="krow-w"><button class="krow ${open ? 'is-open' : ''}" data-act="keyRow" data-arg="${k}|${kind}"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${esc(label)}</span><span class="kcap">${cap}</span></span><span class="kk">${k}</span>${ic('caret-right', 'kchev')}</button>${menu}${showPick ? X().pickerHtml('in-panel', label) : ''}</div>`;
+    // 右侧一列：上 = 色值胶囊，下 = Key 标签。胶囊是按钮，不能套在行按钮里：放在行外（绝对定位到行右上），行里留出同高的空位
+    const hc = HC_KIND[kind] ? hexChip(col, showPick) : '';
+    return `<div class="krow-w ${hc ? 'has-hc' : ''}"><button class="krow ${open ? 'is-open' : ''}" data-act="keyRow" data-arg="${k}|${kind}"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${esc(label)}</span><span class="kcap">${cap}</span></span><span class="kr-r">${hc ? hexGhost(col) : ''}<span class="kk">${k}</span></span>${ic('caret-right', 'kchev')}</button>${hc}${menu}${showPick ? X().pickerHtml('in-panel', label) : ''}</div>`;
   }
   A.keysGrp = (g) => { const K = X().E.keys; K.closed[g] = !K.closed[g]; };
   I.keysQ = (v) => { X().E.keys.q = v; return true; };
@@ -1326,8 +1388,10 @@
     const col = resolveKey('home_bg', th, ec); const pk = P && P.elRow === HB && P.where === 'home';
     const src = !v ? t('ed/hb-src-design', { hex: DESIGN_DEF.home_bg }) : v.startsWith('key:') ? t('ed/keys-follow', { name: keyLabel(v.slice(4)) }) : `${t('tx/c-custom')} · <span class="mono">${esc(v.toUpperCase())}</span>`;
     // 快捷选项照 Figma 424:433232：左侧 72 标签列「快捷选项」+ 28 色块（色盘统一圆形），自定义 = 虚线空色块；名字放 title / aria-label
-    const opt = (val, c, lab) => `<button class="sw-btn ${(v || '') === val ? 'is-on' : ''}" style="background:${c}" title="${esc(lab)}" aria-label="${esc(lab)}" data-act="homeBg" data-arg="${val}"></button>`;
-    const custom = `<button class="sw-btn hb-custom ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" ${v && !v.startsWith('key:') ? `style="background:${esc(v)}"` : ''} title="${esc(t('ed/hb-custom'))}" aria-label="${esc(t('ed/hb-custom'))}" data-act="homeBgPick"></button>`;
+    // 第一个 = 跟设计（默认，没覆盖时选中，同颜色行默认色块）；提示「名称 · #HEX」
+    const opt = (val, c, lab) => { const on = (v || '') === val, tip = swTip(lab, c); return `<button class="sw-btn ${on ? 'is-on' : ''}" style="background:${c}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${on}" data-act="homeBg" data-arg="${val}"></button>`; };
+    const cuTip = v && !v.startsWith('key:') ? swTip(t('ed/hb-custom'), v) : t('ed/hb-custom');
+    const custom = `<button class="sw-btn hb-custom ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" ${v && !v.startsWith('key:') ? `style="background:${esc(v)}"` : ''} title="${esc(cuTip)}" aria-label="${esc(cuTip)}" data-act="homeBgPick"></button>`;
     const own = v && !(x.E.D.baseEc && x.E.D.baseEc[HB] === v); // AI 风格给的不算业主自改
     return `<div class="p-sec hb-sec" data-sec="home_bg"><div class="lab">${t('ed/home-bg')}</div>
       <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap">${src}</span><span class="kk mono">home_bg</span></span>${own ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
@@ -1351,7 +1415,7 @@
   window.MP = {
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b], libIcons,
     resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
-    keyTag, swRow,
+    keyTag, swRow, keyLabel, hexOf, curCol, hexChip, swTip, colorRow, linkRow, // 色值胶囊（Figma G6/HexChip 460:31190）：editor.js 的颜色行、文字样式卡、取色器共用
     elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },

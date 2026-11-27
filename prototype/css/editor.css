@@ -60,9 +60,11 @@ html[data-theme="light"] .ed-canvas { background: var(--bg-sunken); }
 .fpal-x .hd .ic { color: var(--icon); }
 .fpal-x .lab { font-size: var(--fs-caption); color: var(--text-2); margin: 6px 0 4px; }
 .sws { display: flex; gap: 8px; flex-wrap: wrap; }
-.sw-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); }
-.sw-btn:hover { box-shadow: 0 0 0 2px var(--brand); }
-.sw-btn.is-on { box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 4px var(--brand); }
+/* 色块：不再用 1px 外边框，改 1px 内描边 --sw-edge（白 / 黑色块在深浅主题都看得见，Figma color/border/swatch-edge）；
+   选中 = 全局一条规则：2px 底色间隙（--cr-gap，默认面板底 bg-surface）+ 2px 品牌蓝（Figma G6/TxSwatch 状态=选中 392:174055） */
+.sw-btn { width: 24px; height: 24px; border-radius: 6px; border: 0; box-shadow: inset 0 0 0 1px var(--sw-edge); }
+.sw-btn:hover { box-shadow: 0 0 0 2px var(--brand), inset 0 0 0 1px var(--sw-edge); }
+.sw-btn.is-on, .rainbow.is-on { box-shadow: 0 0 0 2px var(--cr-gap, var(--bg-surface)), 0 0 0 4px var(--brand), inset 0 0 0 1px var(--sw-edge); }
 .canvas-login { position: absolute; left: 16px; top: 16px; z-index: 15; }
 .ed-canvas .empty { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); width: 340px; }
 
@@ -122,9 +124,12 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .elrow .sw { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); flex: none; }
 .elrow .ic { margin-left: auto; color: var(--icon-3); width: 16px; height: 16px; }
 .crow { margin-top: 12px; }
-.crow .k { font-size: var(--fs-caption); color: var(--text-2); margin-bottom: 6px; }
+.crow .k { font-size: var(--fs-caption); color: var(--text-2); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; min-height: 20px; } /* 标题行：名称（太长先截名称）+ 右侧色值胶囊 */
+.crow .k > .ellipsis { flex: 1; min-width: 0; }
 .crow .sws { align-items: center; }
-.rainbow { width: 24px; height: 24px; border-radius: 6px; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); border: 1px solid var(--border); }
+.rainbow { width: 24px; height: 24px; border-radius: 6px; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); border: 1px solid var(--border); position: relative; }
+/* 选了自定义色：彩虹中间填满那个颜色，外圈留 3px 细彩虹看得出是自定义（Figma G6/RainbowSwatch 自定义（已填色）462:31116） */
+.rainbow.has-val::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px var(--sw-edge); pointer-events: none; }
 .chk-grp { margin: 16px 0 8px; font-size: var(--fs-caption); font-weight: 600; }
 .chk-grp.err { color: var(--error); } .chk-grp.warn { color: var(--warning); } .chk-grp.ok { color: var(--success); }
 .chk { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: var(--radius-md); background: var(--fill-3); border: var(--stroke-thin) solid var(--border); }
@@ -165,6 +170,14 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .pk-hex { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 8px; border: var(--stroke-thin) solid var(--border); font-size: var(--fs-body-sm); }
 .pk-hex i { width: 16px; height: 16px; border-radius: 4px; }
 .pk-hex input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; text-transform: uppercase; }
+/* 色值栏尾端 ⧉ 复制（Figma ColorPicker 141:1372 / 464:33597）：28×28 圆角 6、图标 16；手机 36×36 圆角 8、图标 20、点按区 44 */
+.pk-hex { padding-right: 4px; }
+.pk-copy { position: relative; flex: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--icon-2); }
+.pk-copy .hc-ic { width: 16px; height: 16px; }
+.pk-copy:hover { background: var(--bg-hover); color: var(--brand); }
+.pk-copy:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand); }
+.pk-copy .hc-ok, .pk-copy.is-copied .hc-cp { display: none; }
+.pk-copy.is-copied .hc-ok { display: block; color: var(--success); }
 .pk-sug { display: flex; gap: 6px; margin: 8px 0 10px; flex-wrap: wrap; }
 .pk-sug button { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); }
 .pk-foot { display: flex; gap: 8px; } .pk-foot .btn { flex: 1; }
@@ -583,7 +596,7 @@ button.ed-name:hover { background: var(--bg-hover); }
 .krow-w { position: relative; }
 .krow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 12px; text-align: left; } /* Figma KeyRow 229:115018：行 8/10、圆角 12 */
 .krow:hover, .krow.is-open { background: var(--bg-hover); }
-.ksw { width: 24px; height: 24px; flex: none; border-radius: 8px; border: 1px solid var(--border); }
+.ksw { width: 24px; height: 24px; flex: none; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--sw-edge); }
 .kt2 { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ku { font-size: var(--fs-body-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kcap { font-size: var(--fs-caption); color: var(--text-2); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* 一行省略（块级，flex 下省略号出不来） */
@@ -595,6 +608,12 @@ button.ed-name:hover { background: var(--bg-hover); }
 .krow > .kk { flex: none; padding: 2px 8px; border-radius: 8px; background: var(--fill-2); border: var(--stroke-hairline) solid var(--border); font-size: 12px; line-height: 18px; color: var(--text-2); white-space: nowrap; }
 .krow > .kchev { flex: none; width: 14px; height: 14px; color: var(--text-3); }
 .krow .pill-tag { flex: none; }
+/* 右侧一列（Figma KeyRow 229:115018）：上 = 色值胶囊，下 = Key 标签；行高 56 → 63。胶囊是按钮不能套在行按钮里：
+   放在行外绝对定位到右上（行内边距 8 / 右边 10 + 箭头 14 + 间距 10 = 34），行里用同样内容的隐形胶囊占位 */
+.krow .kr-r { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.krow .kr-r > .kk { padding: 2px 8px; border-radius: 8px; background: var(--fill-2); border: var(--stroke-hairline) solid var(--border); font-size: 12px; line-height: 18px; color: var(--text-2); white-space: nowrap; }
+.krow .hc-ghost { visibility: hidden; }
+.krow-w.has-hc > .hex-chip { position: absolute; top: 8px; right: 34px; }
 .km-menu { top: calc(100% + 2px); right: 0; left: auto; width: 220px; }
 
 /* 手机编辑器补齐（ED-01/10/11/15/18） */
@@ -873,12 +892,14 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
    选中圈 = 外圈：2px 面板底色间隙 + 2px 品牌蓝（彩虹选中同样）；面板底是 --bg-surface，不用 --bg-raised（深色下会多一圈灰） */
 .cr-sw { --cr-gap: var(--bg-surface); }
 .cr-sw .sw-btn, .cr-sw .rainbow { flex: none; width: 24px; height: 24px; }
-.cr-sw .sw-btn.is-on, .cr-sw .rainbow.is-on { box-shadow: 0 0 0 2px var(--cr-gap), 0 0 0 4px var(--brand); }
+.cr-sw .sw-btn.is-on, .cr-sw .rainbow.is-on { box-shadow: 0 0 0 2px var(--cr-gap), 0 0 0 4px var(--brand), inset 0 0 0 1px var(--sw-edge); }
 .cr-sw .sw-img { padding: 0; overflow: hidden; }
 .cr-sw .sw-img i { display: block; width: 100%; height: 100%; border-radius: 50%; background-size: cover; background-position: center; background-repeat: no-repeat; }
-/* 「默认 / 自动」纯文字按钮：现在只有「文字样式」卡片用（模块颜色行已改成默认色块） */
-.tx-auto { flex: none; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 18px; background: transparent; border: var(--stroke-thin) solid var(--border); color: var(--text-2); white-space: nowrap; }
-.tx-auto.is-on { border-color: var(--brand); background: var(--brand-subtle); color: var(--brand); }
+/* 文字样式色盘（Figma G6/TxColorRow 463:31176）：同颜色行，没有「默认」按钮——第一个色块 = 默认 Key；色块 24 间距 6（8 个共 234），
+   Key 标签换到第二行靠右。卡片底是 fill-3（半透明），选中圈的间隙用它叠在面板上的实色 */
+.tx-row, .basecard { --cr-gap: var(--fill-3-solid); }
+.tx-pal .tx-br { flex: 0 0 100%; height: 0; margin-top: -6px; }
+.tx-pal > .tx-key { margin-left: auto; }
 .tx-custom { position: relative; width: 22px; height: 22px; border-radius: 6px; overflow: hidden; cursor: pointer; flex: none; }
 .tx-custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 /* 布局参数「自定义」输入 */
@@ -949,7 +970,8 @@ html:not([lang^="zh"]) .cl-gm > span { letter-spacing: 0; font-size: 11px; gap: 
 .bx-img .tx b { font-weight: 500; font-size: 13px; }
 .bx-img .tx small { font-size: 11px; color: var(--text-3, var(--text-2)); }
 .bx-crow { display: flex; flex-direction: column; gap: 6px; padding: 6px 0; }
-.bx-crow > span { font-size: 12px; color: var(--text-1, inherit); }
+.bx-crow > .k { display: flex; align-items: center; gap: 8px; min-height: 20px; font-size: 12px; color: var(--text-1, inherit); } /* 标题行 = 名称 + 色值胶囊（同颜色行） */
+.bx-crow > .k > .ellipsis { flex: 1; min-width: 0; }
 
 /* 经典蓝白顶部栏：底板 bs_topnav_bg、下划线 border（Waydon 2026-11-26） */
 .h5-top { border-bottom: 1px solid var(--o-border); box-sizing: border-box; }
@@ -1031,8 +1053,7 @@ html:not([lang^="zh"]) .cl-gm > span b { display: -webkit-box; -webkit-box-orien
 .nt-cbar { position: absolute; z-index: 6; display: flex; align-items: center; gap: 6px; height: 38px; padding: 6px 8px; box-sizing: border-box; border-radius: 12px; background: var(--bg-raised); border: var(--stroke-thin) solid var(--border); box-shadow: 0 6px 20px rgba(0, 0, 0, .28); }
 .nt-cbar[hidden] { display: none; }
 .nt-cbar .sw-btn, .nt-cbar .rainbow, .nt-cbar .nt-clear { flex: none; width: 24px; height: 24px; padding: 0; border-radius: 50%; cursor: pointer; }
-.nt-cbar .sw-btn { border: var(--stroke-thin) solid rgba(127, 127, 127, .35); }
-.nt-cbar .sw-btn.is-on, .nt-cbar .rainbow.is-on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand); }
+.nt-cbar { --cr-gap: var(--bg-raised); } /* 颜色条浮在 bg-raised 上：选中圈间隙用它（全局选中规则，Figma G6/TxSwatch 选中） */
 .nt-cbar .nt-div { flex: none; width: 1px; height: 16px; background: var(--border); }
 .nt-cbar .nt-clear { position: relative; background: var(--bg-surface); border: var(--stroke-thin) solid var(--border-strong); }
 .nt-cbar .nt-clear::after { content: ''; position: absolute; left: 50%; top: 3px; bottom: 3px; width: 1.5px; margin-left: -.75px; background: var(--error); transform: rotate(45deg); border-radius: 1px; }
@@ -1064,7 +1085,6 @@ html:not([lang^="zh"]) .cl-gm > span b { display: -webkit-box; -webkit-box-orien
 
 /* 色盘统一圆形（Waydon 2026-11-26） */
 .sw-btn, .bc-row .sw-btn, .tx-colors .sw-btn, .elrow .sw, .keymenu .sw, .ksw, .rainbow, .tx-custom, .tbai-ref .lab2 .sw { border-radius: 50%; }
-.sw-btn.is-on { box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 4px var(--brand); }
 .pal-prev { display: flex; gap: 4px; }
 .pal-prev i { flex: none; width: 20px; height: 20px; border-radius: 50%; }
 
@@ -1097,7 +1117,7 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 .tbai-hd .ib-s { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--icon-2); }
 .tbai-hd .ib-s:hover { background: var(--bg-hover); color: var(--text); }
 .tb-link-r { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: var(--fs-caption); color: var(--text-2); }
-.tb-link-r .sw-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; border: var(--stroke-thin) solid var(--border); }
+.tb-link-r .sw-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px var(--sw-edge); }
 .tb-link-r .ellipsis { min-width: 0; }
 .tb-goto { margin-left: auto; flex: none; color: var(--link); font-size: var(--fs-caption); font-weight: 500; }
 .tb-goto:hover { text-decoration: underline; }
@@ -1176,10 +1196,10 @@ body.is-rz, body.is-rz * { cursor: col-resize !important; user-select: none !imp
 /* Key 标签（Figma G6/TxKeyTag）：文字样式和各模块颜色行共用，默认就显示 */
 .tx-colors .tx-key, .tb-link-r .tx-key { margin-left: auto; flex: none; max-width: 40%; padding: 2px 6px; border-radius: 6px; background: var(--bg-surface, rgba(127,127,127,.12)); color: var(--text-secondary, #8e8e93); font: 500 11px/16px ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-colors .tx-key.is-custom, .tb-link-r .tx-key.is-custom { font-family: inherit; }
-.crow .tx-key, .bx-sec .tx-key { background: var(--fill-2); border: var(--stroke-thin) solid var(--border); } /* 颜色页签在面板底上：用 Figma color/fill/secondary 底 + 细边，否则标签和面板同色看不出 */
+.crow .tx-key, .bx-sec .tx-key, .tx-pal .tx-key { background: var(--fill-2); border: var(--stroke-thin) solid var(--border); } /* 颜色页签在面板底上：用 Figma color/fill/secondary 底 + 细边，否则标签和面板同色看不出 */
 /* 颜色页签的 Key 标签照 Figma G6/TxKeyTag（Noto Sans SC 12/18 常规、左右 8 上下 2、圆角 8、不截断）：
    原来 40% 最大宽 + 等宽字把 labeltext_accent3 截成「labeltext_accen…」；色块都是 flex:none，标签只在真放不下时才缩、出省略号 */
-.crow .tx-key, .bx-sec .tx-key { max-width: none; flex: 0 1 auto; min-width: 0; padding: 2px 8px; border-radius: 8px; font-family: inherit; font-size: 12px; line-height: 18px; font-weight: 400; }
+.crow .tx-key, .bx-sec .tx-key, .tx-pal .tx-key { max-width: none; flex: 0 1 auto; min-width: 0; padding: 2px 8px; border-radius: 8px; font-family: inherit; font-size: 12px; line-height: 18px; font-weight: 400; }
 /* 样式 4（长条）放大 2 倍会超出选项框：缩小倍数并裁切（Waydon 2026-11-26 18:42） */
 .ind-opt .ind-prev.on-ind { overflow: hidden; }
 .ind-opt .ind-prev.on-ind .h5-ind { transform: scale(1.6); }
@@ -1398,3 +1418,30 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .hb-opts { margin-top: 12px; }
 .hb-opts .sws { display: flex; }
 .hb-opts .sw-btn.hb-custom { border: 1px dashed var(--text-3); background: transparent; }
+
+/* ---------- 色值胶囊（Waydon 11-27 09:30 方案 A，Figma G6/HexChip 460:31190）：颜色行 / 文字样式卡 / 跟随行 / 余额框 / 68 Key 清单 ----------
+   「● #0A84FF ⧉」永远显示目前生效的颜色；点一下复制大写 #RRGGBB，图标变 ✓ 1.2 秒 + Toast「已复制 #0A84FF」，不改设计、不记撤销 */
+.hex-chip { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: 6px; background: var(--fill-2); border: var(--stroke-hairline) solid var(--border); color: var(--text); font: 500 11px/16px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; cursor: pointer; }
+.hex-chip .hc-dot { position: relative; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px var(--sw-edge); }
+.hex-chip.has-a .hc-dot { background: linear-gradient(var(--c), var(--c)), repeating-conic-gradient(#c8c8c8 0 25%, #ffffff 0 50%) 0 0 / 5px 5px; } /* 有透明度：点下面垫棋盘格 */
+.hex-chip .hc-a { color: var(--text-3); }
+.hex-chip .hc-ic { flex: none; width: 12px; height: 12px; color: var(--icon-2); }
+.hex-chip .hc-ok, .hex-chip.is-copied .hc-cp { display: none; }
+.hex-chip.is-copied .hc-ok { display: block; color: var(--success); }
+.hex-chip:hover { background: var(--bg-hover); }
+.hex-chip:hover .hc-cp { color: var(--brand); }
+.hex-chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand); }
+.hex-chip.is-copied { border-color: var(--success); }
+.hex-chip.is-sel .hc-hex { -webkit-user-select: all; user-select: all; } /* 复制被浏览器挡住：色值可整段选取，长按手动复制 */
+/* 手机（≤599）：28 高、左右 8、间距 6、圆角 8、12px 字、12 点、14 图标；上下各扩 8 = 44 点按区 */
+@media (max-width: 599px) {
+  .hex-chip { height: 28px; padding: 0 8px; gap: 6px; border-radius: 8px; font-size: 12px; line-height: 16px; }
+  .hex-chip::before { content: ''; position: absolute; inset: -8px 0; }
+  .hex-chip .hc-dot { width: 12px; height: 12px; }
+  .hex-chip .hc-ic { width: 14px; height: 14px; }
+  .crow .k, .bx-crow > .k { min-height: 28px; }
+  .pk-copy { width: 36px; height: 36px; border-radius: 8px; }
+  .pk-copy::before { content: ''; position: absolute; inset: -4px; }
+  .pk-copy .hc-ic { width: 20px; height: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .hex-chip, .pk-copy { transition: none; } }

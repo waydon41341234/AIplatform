@@ -264,7 +264,7 @@ Object.assign(window.I18N, {
   'mp/nt-clear': ['清除颜色（回到正文色）', '清除顏色（回到正文色）', 'Clear color (back to body color)', 'Xóa màu (về màu chữ thường)'],
   'mp/nt-tx-whole': ['公告文字（整段默认）', '公告文字（整段預設）', 'Notice text (default for all)', 'Chữ thông báo (mặc định cả đoạn)'],
   'mp/nt-tx-badge': ['消息气泡（未读数）', '訊息氣泡（未讀數）', 'Unread bubble (count)', 'Bong bóng (số chưa đọc)'],
-  'mp/nt-tx-note': ['字号按 750 设计稿标注；颜色选「默认」跟随配色 Key；单独改过色的文字不跟这里变', '字號按 750 設計稿標註；顏色選「預設」跟隨配色 Key；單獨改過色的文字不跟這裡變', 'Sizes follow the 750 design. Default follows the theme Key; text colored separately keeps its own color.', 'Cỡ chữ theo bản 750. Mặc định theo Key của bảng màu; chữ đã đổi màu riêng giữ nguyên màu.'],
+  'mp/nt-tx-note': ['字号按 750 设计稿标注；颜色第一个色块是默认，跟随配色 Key；单独改过色的文字不跟这里变', '字號按 750 設計稿標註；顏色第一個色塊是預設，跟隨配色 Key；單獨改過色的文字不跟這裡變', 'Sizes follow the 750 design. The first swatch is the default and follows the theme Key; text colored separately keeps its own color.', 'Cỡ chữ theo bản 750. Ô màu đầu tiên là mặc định, theo Key của bảng màu; chữ đã đổi màu riêng giữ nguyên màu.'],
   'mp/nt-speed-note': ['文字越长滚动一圈越久，速度不受文字长短影响', '文字越長滾動一圈越久，速度不受文字長短影響', 'Longer text takes longer to scroll through; the speed stays the same.', 'Chữ càng dài chạy một vòng càng lâu; tốc độ không đổi.'],
   'mp/nt-c-text': ['公告文字', '公告文字', 'Notice text', 'Chữ thông báo'],
   'mp/nt-c-spk-up': ['喇叭已换成上传 / AI 的图片，按原图颜色显示；恢复默认图标后可在这里改颜色', '喇叭已換成上傳 / AI 的圖片，按原圖顏色顯示；恢復預設圖示後可在這裡改顏色', 'The speaker uses an uploaded or AI image and keeps its own colors. Reset it to the default icon to color it here.', 'Loa đang dùng ảnh tải lên / AI nên giữ màu gốc. Khôi phục biểu tượng mặc định để đổi màu tại đây.'],
@@ -420,7 +420,7 @@ Object.assign(window.I18N, {
   'ed/key-leftnav_def': ['左侧栏未选中文字', '左側欄未選中文字', 'Side menu text', 'Chữ menu bên'],
   'ed/key-leftnav_active': ['左侧栏选中文字', '左側欄選中文字', 'Side menu selected text', 'Chữ menu bên đang chọn'],
   'ed/key-icon_tg_z': ['左侧栏图标', '左側欄圖示', 'Side menu icon', 'Biểu tượng menu bên'],
-  'tx/note-bn': ['字号按 750 设计稿标注；颜色选「默认」跟随配色（未选中 / 选中各自一行，跟「颜色」页签同一个值）；字号太大放不下时画布上自动缩成一行', '字號按 750 設計稿標註；顏色選「預設」跟隨配色（未選中 / 選中各自一行，跟「顏色」頁籤同一個值）；字號太大放不下時畫布上自動縮成一行', 'Sizes are in 750 design units. "Default" follows the palette; inactive and active text each have their own row (same value as the Colors tab). Labels that no longer fit shrink to one line on the canvas.', 'Cỡ chữ theo bản 750; "Mặc định" theo bảng màu; chữ chưa chọn / đang chọn mỗi loại một dòng (cùng giá trị với thẻ Màu). Tên quá dài sẽ tự thu về một dòng trên khung xem.'],
+  'tx/note-bn': ['字号按 750 设计稿标注；颜色第一个色块是默认，跟随配色（未选中 / 选中各自一行，跟「颜色」页签同一个值）；字号太大放不下时画布上自动缩成一行', '字號按 750 設計稿標註；顏色第一個色塊是預設，跟隨配色（未選中 / 選中各自一行，跟「顏色」頁籤同一個值）；字號太大放不下時畫布上自動縮成一行', 'Sizes are in 750 design units. The first swatch is the default and follows the palette; inactive and active text each have their own row (same value as the Colors tab). Labels that no longer fit shrink to one line on the canvas.', 'Cỡ chữ theo bản 750; ô màu đầu tiên là mặc định, theo bảng màu; chữ chưa chọn / đang chọn mỗi loại một dòng (cùng giá trị với thẻ Màu). Tên quá dài sẽ tự thu về một dòng trên khung xem.'],
   'mp/bn-pv': ['预览选中', '預覽選中', 'Preview as active', 'Xem trạng thái đang chọn'],
   'mp/gm-bai-ref-c': ['；参考图主色约 {hex}', '；參考圖主色約 {hex}', '; reference main color about {hex}', '; màu chính ảnh tham chiếu khoảng {hex}'],
   // AI 生成 · 统一面板（docs/ai-unified.md）
@@ -572,4 +572,10 @@ Object.assign(window.I18N, {
   'aig/t-icons': ['入口图标', '入口圖示', 'Item icons', 'Biểu tượng mục'],
   'aig/t-mn-icons': ['入口图标（整套）', '入口圖示（整套）', 'Item icons (set)', 'Biểu tượng mục (cả bộ)'],
   'aig/t-gm-icons': ['分类图标', '分類圖示', 'Category icons', 'Biểu tượng danh mục'],
+  // 色值胶囊（Waydon 11-27 09:30 选方案 A，Figma G6/HexChip 460:31190；Toast 1.6 秒、无撤销）
+  'ed/hex-copy': ['复制色值 {hex}', '複製色值 {hex}', 'Copy hex {hex}', 'Sao chép mã màu {hex}'],
+  'ed/hex-copied': ['已复制 {hex}', '已複製 {hex}', 'Copied {hex}', 'Đã sao chép {hex}'],
+  'ed/hex-copied-a': ['已复制 {hex} · {a}%', '已複製 {hex} · {a}%', 'Copied {hex} · {a}%', 'Đã sao chép {hex} · {a}%'],
+  'ed/hex-copy-fail': ['无法复制，请长按色值手动复制', '無法複製，請長按色值手動複製', 'Couldn’t copy — press and hold the value to copy it', 'Không sao chép được — nhấn giữ mã màu để sao chép'],
+  'ed/keys-base-cap': ['基础色 · 点击取色', '基礎色 · 點擊取色', 'Base · click to edit', 'Cơ bản · bấm để sửa'],
 });
