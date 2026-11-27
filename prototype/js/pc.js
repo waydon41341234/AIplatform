@@ -26,7 +26,7 @@
   function themeStyle() {
     const { th, tb, ec } = X().liveTheme();
     let s = Object.keys(th).map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP && window.MP.vars ? window.MP.vars(th, ec || {}) : '');
-    if (tb) { if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`; }
+    if (tb) { if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`; if (tb.bal) s += `;--tb-bal:${tb.bal}`; }
     return s;
   }
   const zStyle = (z) => `zoom:${z};--pc-iz:${(1 / z).toFixed(4)}`;

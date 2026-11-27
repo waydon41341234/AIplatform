@@ -156,14 +156,38 @@
 .ad-cand.is-void { color: var(--text-3); }
 .ad-ck { position: absolute; right: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
 .ad-ck .ic { width: 14px; height: 14px; }
-.ad-eacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--space-12); }
-.ad-eacts .btn { flex: 1 1 auto; min-width: 0; }
-.ad-msheet { display: flex; flex-direction: column; }
+.ad-eacts { display: flex; flex-wrap: nowrap; gap: 8px; margin-top: var(--space-12); }
+.ad-eacts .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; }
+.ad-eacts .btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-msheet { display: flex; flex-direction: column; padding-bottom: 0; }
 .ad-msheet > .sheet-head { padding: 0 var(--space-4); }
-.ad-msheet > .sheet-head h3 { display: flex; align-items: center; gap: 6px; }
-.ad-mbody { flex: 1; min-height: 0; overflow: auto; padding-bottom: var(--space-16); }
+.ad-msheet > .sheet-head h3 { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+/* 底部「生成 3 套」贴着屏幕底：滚动区不留下边距，安全区算进按钮条自己（不再露出一条底下的内容） */
+.ad-mbody { flex: 1; min-height: 0; overflow: auto; padding-bottom: 0; }
 .ad-msheet .ad-cand { min-height: calc(667px * .28); }
-.ad-msheet .ad-egen { bottom: 0; }
+.ad-msheet .ad-egen { bottom: 0; margin-bottom: 0; padding-bottom: calc(var(--space-16) + env(safe-area-inset-bottom)); }
+/* 标题栏 ✦50（Figma header · cost） */
+.ad-cost { flex: none; margin-left: auto; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 600; line-height: 22px; }
+.ad-msheet > .sheet-head .ad-cost { margin-left: 0; }
+/* 风格卡 · 横排（Figma StyleCard 150×60：36×48 缩略 + 名称 / 高级皇冠 + 短描述） */
+.ad-scard.is-row { flex-direction: row; align-items: center; gap: 8px; height: 60px; padding: 6px 8px 6px 6px; border-width: 1px; border-radius: 12px; }
+.ad-scard.is-row .ad-sthumb { flex: none; width: 36px; height: 48px; gap: 2px; padding: 0 0 3px; border-radius: 8px; }
+.ad-scard.is-row .ad-sthumb .t { height: 6px; }
+.ad-scard.is-row .ad-sthumb .t em { right: 3px; top: 1.5px; width: 7px; height: 3px; border-radius: 2px; }
+.ad-scard.is-row .ad-sthumb .b { height: 10px; margin: 0 3px; border-radius: calc(var(--r) / 4); }
+.ad-scard.is-row .ad-sthumb .j { height: 5px; margin: 0 3px; border-radius: calc(var(--r) / 4); }
+.ad-scard.is-row .ad-sthumb .j em { height: 1.5px; }
+.ad-scard.is-row .ad-sthumb .n { margin: 0 3px; }
+.ad-scard.is-row .ad-sthumb .n em { width: 4px; height: 4px; border-radius: 1.5px; }
+.ad-scard.is-row .ad-sthumb .c { gap: 2px; margin: 0 3px; }
+.ad-scard.is-row .ad-sthumb .c em { border-radius: 2px; }
+.ad-scard.is-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ad-scard.is-row .nm { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.ad-scard.is-row b { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text); }
+.ad-scard.is-row small { font-size: 12px; line-height: 18px; color: var(--text-2); }
+.ad-scard.is-row.is-on b, .ad-scard.is-row.is-on small { color: var(--brand); }
+.ad-prem { flex: none; display: inline-flex; width: 12px; height: 12px; color: #E8B53A; }
+.ad-prem .ic { width: 12px; height: 12px; }
 /* AI 一键设计 · 页面风格模版（Waydon 11-27 第 5 条；Figma 440:334066 电脑 / 440:335401 手机） */
 .ad-tsec .lab { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ad-tfree { flex: none; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
@@ -192,12 +216,13 @@
 .ad-tp-btn { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--fill-2); color: var(--text); font-size: 12px; font-weight: 500; white-space: nowrap; }
 .ad-tp-btn:hover { background: var(--bg-hover); }
 .ad-tp-btn .ic { width: 14px; height: 14px; }
+.ad-tp-more[hidden] { display: none; }
 .ad-tp-more { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--brand); white-space: nowrap; }
 .ad-tp-more .ic { width: 12px; height: 12px; }
 .ad-tnote { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12px; line-height: 18px; color: var(--text-3); }
 .ad-tnote .ic { flex: none; margin-top: 1px; }
 .ad-tacts { flex-wrap: nowrap; }
-.ad-tacts .btn { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; height: auto; min-height: 40px; white-space: normal; line-height: 16px; text-align: center; }
+.ad-tacts .btn { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; height: auto; min-height: 40px; white-space: nowrap; line-height: 16px; text-align: center; }
 .ad-msheet .ad-tno { min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; line-height: 20px; }
 .ad-msheet .ad-tck { width: 22px; height: 22px; }
 .ad-msheet .ad-tck .ic { width: 14px; height: 14px; }
@@ -344,3 +369,7 @@
 .ad-sw i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--bg-raised); margin-left: -4px; }
 .ad-sw i:first-child { margin-left: 0; }
 .menu .ad-sw i { width: 18px; height: 18px; }
+
+/* AI 设计的顶部栏（aidesign tbColors → --tb-search / --tb-bal）：默认搜索图标按同形状遮罩跟色；已登录余额金额换成在顶部栏底色上看得清的色（余额框颜色里自己改过的 --bx-amt 照旧优先） */
+.h5-top .srch-cl .srch-k { display: block; width: 22px; height: 19px; background: var(--tb-search); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.h5-top .bx b, .pc-top .bx b { color: var(--bx-amt, var(--tb-bal, var(--o-accent_3))); }

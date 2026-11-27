@@ -226,7 +226,8 @@
   function themeStyle() {
     const { th, tb, ec } = liveTheme();
     let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP ? window.MP.vars(th, ec) : '');
-    s += `;--tb-bg:${tb.bg || tbBgDef(th)}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.side) s += `;--tb-side:${tb.side}`; // H5 只用这三个；搜索/注册等变量只有 PC 顶部栏用（pc.js）
+    s += `;--tb-bg:${tb.bg || tbBgDef(th)}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.side) s += `;--tb-side:${tb.side}`; // 搜索/注册等变量 PC 顶部栏用（pc.js）
+    if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.bal) s += `;--tb-bal:${tb.bal}`; // AI 设计的顶部栏底色上：默认搜索图标跟色、余额金额换成看得清的色（aidesign tbColors）
     return s;
   }
 
@@ -387,7 +388,9 @@
     // 画布上点 Logo / 币种 / 搜索：弹出 上传 / AI / 恢复 菜单（跟其它模块的图标一致）
     const icm = (k) => (S.menu === 'tbic:' + k && !mobileEd() ? `<div class="menu icon-menu tb-ic-menu" data-stop>${assetMenuItems('tb-' + k)}</div>` : '');
     const tw = (k, cls, inner) => `<span class="${cls} tb-ic ${S.menu === 'tbic:' + k || S.menu === 'am:tb-' + k ? 'is-focus' : ''}" data-act="tbIconMenu" data-arg="${k}" data-stop>${inner}${icm(k)}</span>`;
-    const search = it.search ? tw('search', 'srch-cl', `${tbImgTag(tic.search, 'assets/classic/search.png', '', '', 'search')}<small>${t('ed/tb-search')}</small>`) : '';
+    // 默认搜索图（经典蓝）放在 AI 设计的彩色 / 深色顶部栏上看不清：有 tb.colors.search 时按同形状遮罩跟色；上传 / AI 的图照原图
+    const sK = !tic.search && liveTheme().tb.search ? `<i class="srch-k" style="-webkit-mask-image:url(${CLA}search.png);mask-image:url(${CLA}search.png)"></i>` : '';
+    const search = it.search ? tw('search', 'srch-cl', `${sK || tbImgTag(tic.search, 'assets/classic/search.png', '', '', 'search')}<small>${t('ed/tb-search')}</small>`) : '';
     // 币种框：外框 border、文案 neutral_2、默认币种图标 accent_3（Figma 25517:2140 comm_icon_sqb，用遮罩跟色）（Waydon 2026-11-26）
     const curIc = tic.cur ? tbImgTag(tic.cur, CLA + 'bal-sym.png', '', '', 'cur') : `<span class="cur-ic" style="-webkit-mask-image:url(${CLA}bal-sym.png);mask-image:url(${CLA}bal-sym.png)"></span>`;
     const cur = it.cur && !D.login ? tw('cur', 'cur-cl', `${curIc}<b>CNY</b><i></i>`) : '';
@@ -1418,7 +1421,7 @@
         const prev = getAsset(slot);
         commit(() => { setAsset(slot, { f, w, h, fit }); });
         E.upload = null; E.replaced = { slot, prev };
-        if (!E.projAssets.some((a) => a.f === f)) E.projAssets.push({ f, name: slotSpec(slot).name + ' · ' + (E.projAssets.length + 1) });
+        if (!E.projAssets.some((a) => a.f === f)) E.projAssets.push({ f, w, h, name: slotSpec(slot).name + ' · ' + (E.projAssets.length + 1) });
         window.toast(t('ed/upload-done')); window.render();
       }
     }, 140);
@@ -1494,18 +1497,39 @@
   A.libUse = () => { const L = E.lib; const it = libList()[L.sel]; if (!it) return false; E.lib = null; uploadTo(L.slot, it.f, it.w, it.h); };
   // 素材值统一成 'img:路径'（入口图标字段存的是裸路径 / dataURL）
   const asF = (v) => (v && typeof v === 'string' && !/^img:/.test(v) && /^(assets\/|data:|blob:|https?:)/.test(v) ? 'img:' + v : v);
+  // 本项目素材 / 已采用 的真实尺寸：上传时记下的 > 素材库登记的 > 读图（比例跟槽位一样按槽位规格算，@2x 文件不算尺寸不符）；
+  // 滤镜模拟值（不是图片）不能放进入口图标槽（会变成坏图），图标槽只列接近 1:1 的图
+  const PSZ = {};
+  const imgOf = (f) => { const v = asF(f); if (!v || !/^img:/.test(v)) return null; const p = v.slice(4); return (window.A_ && p.startsWith('assets/') && window.A_[p.slice(7)]) || p; };
+  function libSize(f, sp, rec) {
+    if (rec && rec.w && rec.h) return [rec.w, rec.h];
+    const known = libAll(E.lib.slot).find((x) => x.f === asF(f)); if (known) return [known.w, known.h];
+    const src = imgOf(f); if (!src) return [sp.w, sp.h];
+    const z = PSZ[f];
+    if (!z) { PSZ[f] = 'ing'; const im = new Image(); im.onload = () => { PSZ[f] = [im.naturalWidth, im.naturalHeight]; if (E.dlg === 'lib') window.render(); }; im.onerror = () => { PSZ[f] = 'bad'; }; im.src = src; return null; }
+    if (!Array.isArray(z)) return null;
+    return Math.abs(z[0] / z[1] - sp.w / sp.h) <= 0.03 * (sp.w / sp.h) ? [sp.w, sp.h] : z;
+  }
   function libList() {
-    const L = E.lib; const sp = slotSpec(L.slot);
+    const L = E.lib; const sp = slotSpec(L.slot), ico = isIconSlot(L.slot);
     if (L.tab === 'shared') { const g = libChips(L.slot); return libAll(L.slot).filter((x) => g.includes(x.ch) && (L.chip === 'all' || x.ch === L.chip)); }
-    if (L.tab === 'project') return E.projAssets.map((a) => ({ f: a.f, w: sp.w, h: sp.h, name: a.name }));
+    if (L.tab === 'project') {
+      return E.projAssets.map((a) => {
+        if (ico && !imgOf(a.f)) return null;
+        const z = libSize(a.f, sp, a); if (!z) return null;
+        if (ico && Math.abs(z[0] - z[1]) > 0.05 * Math.max(z[0], z[1])) return null;
+        return { f: a.f, w: z[0], h: z[1], name: a.name };
+      }).filter(Boolean);
+    }
     if (L.slot.startsWith('slide')) return E.D.banner.slides.map((s, i) => ({ f: s.f, w: s.w, h: s.h, name: t('ed/slide-n', { n: i + 1 }) }));
-    const cur = asF(getAsset(L.slot)); return cur && cur !== 'none' ? [{ f: cur, w: sp.w, h: sp.h, name: sp.name }] : [];
+    const cur = asF(getAsset(L.slot)); const z = cur && cur !== 'none' ? libSize(cur, sp) || [sp.w, sp.h] : null;
+    return z ? [{ f: cur, w: z[0], h: z[1], name: sp.name }] : [];
   }
   function libBody(mobile) {
     const L = E.lib; const sp = slotSpec(L.slot), kind = libKind(L.slot), ent = kind === 'icon' ? libEntry(L.slot) : null;
     const tabs = segBtns([{ v: 'shared', label: t('ed/lib-tab-shared') }, { v: 'project', label: t('ed/lib-tab-project') }, { v: 'used', label: t('ed/lib-tab-used') }], L.tab, 'libTab');
     const chipName = (c) => (c === 'all' ? t('filter/all') : t('ed/lib-chip-' + c));
-    const chips = L.tab === 'shared' ? `<div class="filters scroll-x lib-chips">${libChips(L.slot).map((c) => `<button class="chip ${L.chip === c ? 'is-on' : ''}" data-act="libChip" data-arg="${c}">${chipName(c)}</button>`).join('')}</div>${ent ? `<div class="lib-hint">${t('ed/lib-icon-only', { name: ent.name, n: ent.list.length })}</div>` : ''}` : '';
+    const chips = L.tab === 'shared' ? `<div class="filters scroll-x lib-chips" data-sk="libchips">${libChips(L.slot).map((c) => `<button class="chip ${L.chip === c ? 'is-on' : ''}" data-act="libChip" data-arg="${c}">${chipName(c)}</button>`).join('')}</div>${ent ? `<div class="lib-hint">${t('ed/lib-icon-only', { name: ent.name, n: ent.list.length })}</div>` : ''}` : '';
     // 缩略：比例跟槽位（Banner 大 1500:680、小 320:202、Logo 浅灰底留边 Figma 200×58、图标正方形）；「全部」= 固定高度按原图比例
     const kar = kind === 'icon' ? '1 / 1' : kind === 'logo' ? '345 / 100' : `${sp.w} / ${sp.h}`;
     const thumb = (it) => { const ic0 = it.ch === 'icon' || it.ch === 'logo'; const box = kind === 'all' ? `height:${mobile ? 45 : 59}px;aspect-ratio:${it.w} / ${it.h};max-width:100%` : `aspect-ratio:${kar}`; return `<span class="im ${ic0 ? 'is-' + it.ch : ''}" style="${box};${window.fxStyle(it.f, L.slot.startsWith('slide') ? BANNER_DEF : '')}"></span>`; };

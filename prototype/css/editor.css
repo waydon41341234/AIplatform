@@ -515,6 +515,12 @@ button.ed-name:hover { background: var(--bg-hover); }
 .sk-line { display: block; height: 10px; width: 70%; border-radius: 4px; }
 .lib-foot { align-items: center; }
 .lib-foot .caption { margin-right: auto; }
+/* 手机素材库（Figma AssetLibraryDialog Mobile 434:447460 / 231:117619）：页签、分组条、提示、列表都不被压扁，整张 sheet 一起滚；
+   底部 = 「使用素材库不消耗点数」单独一行 + 取消 / 使用这张 两个等宽按钮，上方分割线 */
+.ed-dlg-sheet.dialog-lib > .seg, .ed-dlg-sheet.dialog-lib > .lib-chips, .ed-dlg-sheet.dialog-lib > .lib-hint, .ed-dlg-sheet.dialog-lib > .lib-body { flex: none; }
+.ed-dlg-sheet.dialog-lib .lib-chips { flex-wrap: nowrap; }
+.ed-dlg-sheet .lib-foot { flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--border); }
+.ed-dlg-sheet .lib-foot .caption { flex-basis: 100%; margin-right: 0; text-align: center; }
 
 /* 调整尺寸（ED-08） */
 .dialog.dialog-rs { width: min(640px, calc(100vw - 32px)); }

@@ -15,7 +15,7 @@
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // ---------- 颜色工具 ----------
-  const rgb = (h) => { const n = parseInt(String(h).replace('#', '').slice(0, 6), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const rgb = (h) => { let x = String(h).replace('#', ''); if (x.length === 3 || x.length === 4) x = x.slice(0, 3).split('').map((c) => c + c).join(''); const n = parseInt(x.slice(0, 6), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }; // 也认 #fff 简写（inkOn 返回的就是简写）
   const hex = (c) => '#' + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
   const mix = (a, b, k) => { const x = rgb(a), y = rgb(b); return hex(x.map((v, i) => v + (y[i] - v) * k)); };
   const lum = (h) => { const L = rgb(h).map((c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }); return 0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2]; };
@@ -106,10 +106,16 @@
     let c;
     if (mode === 'brand') { const k = ink(th.primary); c = { bg: th.primary, text: k, search: k }; }
     else if (mode === 'deep') c = dark ? { bg: mix(th.bg_1, th.primary, 0.14), text: th.lead, search: th.primary } : { bg: th.lead, text: th.bg_2, search: th.primary };
-    else c = { bg: null, text: null, search: null };
+    // 平铺：浅色 = 默认白底；深色 = bg_2 底 + lead 字 / 搜索图标（Figma TPL 深色模版顶部栏填 bg_2，不是白底）
+    else c = dark ? { bg: th.bg_2, text: th.lead, search: th.lead } : { bg: null, text: null, search: null };
     // 登录 / 注册：在顶部栏底色上必须看得清（字色按亮度取黑白或主题色）
     const top = c.bg || th.bg_2;
     const okOn = (x, min) => contrast(top, x) >= min;
+    // 已登录余额金额（默认 accent_3）：顶部栏底色上看不清就换成看得清的主题色（业主在余额框颜色里自己改过的照旧优先）
+    // 搜索图标：在底色上看不清就换成看得清的色（极简灰深色底 + 深色主色等）
+    if (c.search && !okOn(c.search, 3)) { const ss = [c.search, c.text, th.lead, ink(top)].filter(Boolean); c.search = ss.find((x) => okOn(x, 3)) || best(top, ss); }
+    const bals = [th.accent_3, th.primary, c.text || th.lead, th.lead, ink(top)];
+    c.bal = okOn(th.accent_3, 3) ? null : bals.find((x) => okOn(x, 3)) || best(top, bals);
     const regs = [th.primary, th.accent_3, th.lead, dark ? th.bg_1 : mix(th.primary, th.lead, 0.4)];
     c.reg = regs.find((x) => okOn(x, 1.6)) || best(top, regs);
     c.regInk = best(c.reg, [th.bg_2, th.lead, '#ffffff', '#111111']);
@@ -149,7 +155,9 @@
   const bse = (v) => (v ? String(v).split('/').pop().replace(/\.\w+$/, '') : '');
   // 白金 / 黑金 6 套 UI 还没生成素材（generate_image 被权限拦了，manifest 的 assets 为空）：先用昨天生成的黑金风格图标代替，Banner 用风格滤镜模拟
   const STAND = 'blackgold';
-  const STAND_A = { 'acct-dep': 'ai-acct/dep', 'acct-vip': 'ai-acct/vip', 'acct-share': 'ai-acct/share', 'acct-more': 'ai-acct/more', 'bn-home': 'ai-bnav/home', 'bn-promo': 'ai-bnav/promo', 'bn-share': 'ai-bnav/bonus', 'bn-mine': 'ai-bnav/mine', 'bn-reg': 'ai-bnav/invite' };
+  // 底部导航「存款」昨天没出单独的图：用帐户栏「存款」黑金图（-off = 同图去色，ai-acct/dep-blackgold-off.webp）
+  const STAND_A = { 'acct-dep': 'ai-acct/dep', 'acct-vip': 'ai-acct/vip', 'acct-share': 'ai-acct/share', 'acct-more': 'ai-acct/more', 'bn-home': 'ai-bnav/home', 'bn-promo': 'ai-bnav/promo', 'bn-share': 'ai-bnav/bonus', 'bn-dep': 'ai-acct/dep', 'bn-mine': 'ai-bnav/mine', 'bn-reg': 'ai-bnav/invite' };
+  const isStand = (T) => !T.a; // 还在用代替素材（Banner = 风格滤镜，图标 = 昨天的黑金图）
   function tplAssets(T) {
     if (T.a) return T.a;
     const a = {};
@@ -158,13 +166,15 @@
     return a;
   }
   // 素材放进模块槽位（按入口身份对应，不按顺序）：底部导航 选中 = bn-X、未选中 = bn-X-off，未登录「优惠」礼盒 = bn-promo、未登录「注册」= bn-reg-off；
+  // 中间凸起样式的「分享赚钱」未选中也用彩色 bn-share（Figma 凸起模版 slot/bn-share，平铺模版才是 -off 灰图）；
   // 游戏分类 一张图（选中态沿用）；模版没有的图 = 清掉，回到默认图。槽位里的图之后照样能换、能恢复
   function putTplAssets(D, a) {
     const set = (it, f, src) => { if (src) it[f] = src; else delete it[f]; };
+    const raised = (D.m.bottomnav || {}).style === 'raised';
     ((D.m.midnav || {}).items || []).forEach((it) => { const k = MID_A[bse(it.def)]; if (k) set(it, 'img', a[k]); });
     ((D.m.bottomnav || {}).items || []).forEach((it) => {
       const k = BN_A[bse(it.def)]; if (!k) return;
-      set(it, 'imgOn', a['bn-' + k]); set(it, 'img', a['bn-' + k + '-off']);
+      set(it, 'imgOn', a['bn-' + k]); set(it, 'img', a['bn-' + k + (raised && k === 'share' ? '' : '-off')]);
       if (k === 'promo') set(it, 'imgOut', a['bn-promo']);
       if (k === 'dep') set(it, 'imgOut', a['bn-reg-off']);
     });
@@ -667,24 +677,36 @@
     if (tplLoad(T).st === 'fail') return false;
     a.pick = pickIs(a, 'tpl', id) ? null : { src: 'tpl', id }; a.more = false;
   };
-  A.adEPreview = () => { const a = P(); if (!pickD(a)) return false; X().E.preview = true; };
+  // 按钮带 data-arg = 它所在的区块（gen 生成结果 / tpl 风格模版）：只认当前选中的那一类，灰掉的按钮点了不生效
+  const pickOf = (a, src) => (a && a.pick && (!src || a.pick.src === src) ? pickD(a) : null);
+  A.adEPreview = (src) => { const a = P(); if (!pickOf(a, src)) return false; X().E.preview = true; };
   // 应用 = 一次提交（主题 + 模块选项 + 素材一起进撤销）；之后各模块照常可改、素材照常可换
-  A.adEApply = () => {
-    const x = X(), E = x.E, a = E.adp; const D = pickD(a); if (!D) return false;
+  // 风格模版的图标就是模版自己的 AI 图：应用后不出「生成整套图标」提示条（Figma 440:401410）；生成结果才出
+  A.adEApply = (src) => {
+    const x = X(), E = x.E, a = E.adp; const D = pickOf(a, src); if (!D) return false;
     const T = a.pick.src === 'tpl' ? TPL_BY[a.pick.id] : null;
     const nd = clone(D);
     x.commit(() => { E.D = nd; });
-    x.fixSlide(); E.adp = null; E.adBar = { ics: nd.iconStyle }; if (E.mpanel === 'ad') E.mpanel = null;
+    x.fixSlide(); E.adp = null; E.adBar = T ? null : { ics: nd.iconStyle, sig: JSON.stringify(nd.aiDesign || null) }; if (E.mpanel === 'ad') E.mpanel = null;
     clearInterval(edTimer);
     window.toast(T ? t('ad/tpl-applied', { name: tplName(T) }) : t('ad/applied'), x.undoOpt());
   };
   // ---------- 风格模版：合并预览缓存 / 素材预加载 / 提示词 ----------
+  // 模版的图标是模版自己的 AI 图，「图标风格」选项不改它（只影响「生成 3 套」）：合并 / 卡片都按模版自己的图标风格
   const TM = new Map();
   function tplMerged(a, id) {
-    const T = TPL_BY[id]; const q = a.p, base = a.real || X().E.D, pri = tplPri(q), ics = q.follow ? null : q.ics;
-    const key = id + '|' + (pri || '') + '|' + (ics || '') + '|' + JSON.stringify(base);
+    const T = TPL_BY[id]; const q = a.p, base = a.real || X().E.D, pri = tplPri(q);
+    const key = id + '|' + (pri || '') + '|' + JSON.stringify(base);
     let D = TM.get(key);
-    if (!D) { if (TM.size > 30) TM.clear(); D = mergeTpl(base, tplDesign(T, pri, ics, 'editor')).D; TM.set(key, D); }
+    if (!D) { if (TM.size > 30) TM.clear(); D = mergeTpl(base, tplDesign(T, pri, null, 'editor')).D; TM.set(key, D); }
+    return D;
+  }
+  // 模版卡片缩略 = 模版自己的整页（规格 §4.1 mini(tplDesign(id))，同 Figma 卡片：带彩金池、页脚），不跟当前项目合并
+  const TC = new Map();
+  function tplCard(a, id) {
+    const pri = tplPri(a.p), key = id + '|' + (pri || '');
+    let D = TC.get(key);
+    if (!D) { if (TC.size > 60) TC.clear(); D = tplDesign(TPL_BY[id], pri, null, 'editor'); TC.set(key, D); }
     return D;
   }
   function pickD(a) { const k = a && a.pick; if (!k) return null; if (k.src === 'tpl') return TPL_BY[k.id] ? tplMerged(a, k.id) : null; const s = a.sets[k.i]; return s && s.st === 'ok' ? s.D : null; }
@@ -742,11 +764,12 @@
   function edPanel(mobile) {
     const x = X(), a = P(), q = a.p, th = (a.real || x.E.D).theme;
     const gen = a.stage === 'gen', can = window.canAfford(AD_COST);
-    const head = mobile ? '' : `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="adEClose" title="${esc(t('ed/tpl-back'))}" aria-label="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button>${t('ad/e-title')}</h2>`;
+    const head = mobile ? '' : `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="adEClose" title="${esc(t('ed/tpl-back'))}" aria-label="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button>${t('ad/e-title')}${costPill()}</h2>`;
     const ref = window.refSlot(q.refSt, 'adERef').split(t('composer/ref-slot')).join(t('ad/ref-slot')).split(t('composer/ref-hint')).join(t('ad/ref-hint'));
     const sec = (lab, body, v) => `<div class="p-sec"><div class="lab">${lab}${v ? `<span class="v">${v}</span>` : ''}</div>${body}</div>`;
     const refSec = sec(t('ad/ref-slot'), `<div class="ad-eref">${ref}<div class="caption muted">${q.ref.length ? `${t('ad/picked')}<span class="ad-dots">${q.ref.map((c) => `<i style="background:${c}"></i>`).join('')}</span>` : t('ad/ref-hint')}</div></div>`);
-    const styles = sec(t('ad/opt-style'), `<div class="ad-st-grid">${STYLES.map((k) => `<button class="ad-scard ${q.style === k ? 'is-on' : ''}" data-act="adEStyle" data-arg="${k}" ${gen ? 'disabled' : ''}>${styleThumb(k)}<b>${esc(stName(k))}</b></button>`).join('')}</div>`);
+    // 风格卡（Figma StyleCard 150×60）：左 36×48 缩略，右 名称（白金 / 黑金带高级皇冠）+ 一句短描述；卡片矮了，下面的「3 套模版」一打开就看得到
+    const styles = sec(t('ad/opt-style'), `<div class="ad-st-grid is-row">${STYLES.map((k) => `<button class="ad-scard is-row ${q.style === k ? 'is-on' : ''}" data-act="adEStyle" data-arg="${k}" ${gen ? 'disabled' : ''} title="${esc(stName(k) + ' · ' + t('ad/st-' + k + '-s'))}">${styleThumb(k)}<span class="tx"><span class="nm"><b class="ellipsis">${esc(stName(k))}</b>${PREMIUM.includes(k) ? `<span class="ad-prem" title="${esc(t('ad/st-premium'))}">${ic('crown-fill')}</span>` : ''}</span><small class="ellipsis">${esc(t('ad/st-' + k + '-s'))}</small></span></button>`).join('')}</div>`);
     const c0 = curPrimary(q);
     const icsSec = sec(t('ad/opt-ics'), `<div class="ad-chips"><button class="chip ${q.follow ? 'is-on' : ''}" data-act="adEIcs" data-arg="follow">${esc(t('ad/ics-follow-s', { name: icsName(ST[q.style].ics) }))}</button>${ICS.map((k) => `<button class="chip ad-chip ${!q.follow && q.ics === k ? 'is-on' : ''}" data-act="adEIcs" data-arg="${k}">${icsDemo(k, c0)}${esc(icsName(k))}</button>`).join('')}</div>`);
     const sug = x.SUGGEST, cur = (q.colorMode === 'hex' || q.colorMode === 'custom') ? (q.hex || '').toLowerCase() : '';
@@ -774,11 +797,19 @@
         const gi = a.pick && a.pick.src === 'gen' ? a.pick.i : null;
         st += `<div class="p-note">${t(gi == null ? 'ad/pick-hint' : 'ad/previewing', { i: (gi || 0) + 1 })}</div>`;
         if (gi != null) st += promptBlock(a);
-        st += `<div class="ad-eacts"><button class="btn btn-primary ${gi == null ? 'is-disabled' : ''}" data-act="adEApply">${t('ad/apply')}</button>${mobile ? `<button class="btn btn-secondary ${gi == null ? 'is-disabled' : ''}" data-act="adEPreview">${ic('eye-fill', 'ic-16')}${t('ad/full-preview')}</button>` : ''}<button class="btn btn-secondary" data-act="adEDiscard">${t('ad/discard')}</button></div>`;
+        // 正在预览风格模版时，应用 / 放弃只在模版区出一组（不再出第二组灰按钮）
+        if (!(a.pick && a.pick.src === 'tpl')) st += actRow('gen', gi == null, mobile, '');
       }
       res = `<div class="p-sec ad-eres"><div class="lab">${t('ad/e-results')}</div><div class="ad-cands">${cards}</div>${st}</div>`;
     }
     return `${head}<div class="ad-epanel">${res}${styles}${tplSec(a, mobile)}${refSec}${icsSec}${colorSec}${promptSec}${kept}<div class="ad-egen">${genBtn}<div class="caption faint">${t('ad/e-cost', { c: AD_COST, b: num(S.credits) })}</div></div></div>`;
+  }
+  const costPill = () => `<span class="pill-tag ad-cost">✦${AD_COST}</span>`;
+  const PREMIUM = ['platinum', 'blackgold'];
+  // 应用这一套 / 全屏预览（手机）/ 放弃：文字一行放不下用省略号（规格 §4.5），title 带全文
+  function actRow(src, dis, mobile, cls) {
+    const b = (k, c, act, icon) => `<button class="btn ${c}" data-act="${act}" data-arg="${src}" title="${esc(t(k))}">${icon || ''}<span>${t(k)}</span></button>`;
+    return `<div class="ad-eacts ${cls}">${b('ad/apply', 'btn-primary' + (dis ? ' is-disabled' : ''), 'adEApply')}${mobile ? b('ad/full-preview', 'btn-secondary' + (dis ? ' is-disabled' : ''), 'adEPreview', ic('eye-fill', 'ic-16')) : ''}${b('ad/discard', 'btn-secondary', 'adEDiscard')}</div>`;
   }
   // 提示词块（Figma 「生成这套模版的提示词」）：默认 4 行，「展开」看全部；复制 / 改写后生成
   function promptBlock(a) {
@@ -793,19 +824,24 @@
     const cards = list.map((T, k) => {
       const on = pickIs(a, 'tpl', T.id), L = tplLoad(T);
       const pv = L.st === 'fail' ? `<span class="ad-tfail">${ic('image-broken-fill', 'ic-24')}<span>${t('ad/tpl-img-fail')}</span><button class="ad-tp-btn" data-act="adETplRetry" data-arg="${T.id}">${t('ad/tpl-retry')}</button></span>`
-        : L.st === 'loading' ? '<span class="ad-tskel skeleton"></span>' : mini(tplMerged(a, T.id), 0.25);
+        : L.st === 'loading' ? '<span class="ad-tskel skeleton"></span>' : mini(tplCard(a, T.id), 0.25);
       return `<div class="ad-tcard ${on ? 'is-on' : ''} ${gen ? 'is-dis' : ''} ${L.st === 'fail' ? 'is-fail' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-act="adETpl" data-arg="${T.id}" aria-label="${esc(tplName(T))}"><span class="ad-tpv">${pv}<span class="ad-tno">${k + 1}</span>${on ? `<span class="ad-tck">${ic('eye-fill')}</span>` : ''}</span><b class="ellipsis">${esc(tplName(T))}</b></div>`;
     }).join('');
-    const on = a.pick && a.pick.src === 'tpl';
-    const acts = on ? `${promptBlock(a)}<div class="ad-tnote">${ic('info-fill', 'ic-16')}<span>${t('ad/tpl-replace-note', { n: TPL_N })}</span></div>
-      <div class="ad-eacts ad-tacts"><button class="btn btn-primary" data-act="adEApply">${t('ad/apply')}</button>${mobile ? `<button class="btn btn-secondary" data-act="adEPreview">${ic('eye-fill', 'ic-16')}${t('ad/full-preview')}</button>` : ''}<button class="btn btn-secondary" data-act="adEDiscard">${t('ad/discard')}</button></div>` : '';
+    const on = a.pick && a.pick.src === 'tpl', T0 = on && TPL_BY[a.pick.id];
+    // 还在用代替素材的模版（白金 / 黑金）：照实说明替换的是什么（入口图标 19 张，Banner 是滤镜模拟）
+    const note = T0 && isStand(T0) ? t('ad/tpl-stand-note', { n: TPL_N - 3 }) : t('ad/tpl-replace-note', { n: TPL_N });
+    const acts = on ? `${promptBlock(a)}<div class="ad-tnote">${ic('info-fill', 'ic-16')}<span>${note}</span></div>${actRow('tpl', false, mobile, 'ad-tacts')}` : '';
     return `<div class="p-sec ad-tsec" data-sk="adtpl"><div class="lab">${esc(t('ad/tpl-title', { style: stName(q.style) }))}<span class="pill-tag ad-tfree">${t('ad/tpl-free')}</span></div><div class="ad-thint">${t('ad/tpl-hint')}</div><div class="ad-tcards">${cards}</div>${acts}</div>`;
   }
   // 模版卡片缩略按卡片实际宽度缩放（375 宽的页面缩到卡片宽）
-  const fitTpl = () => document.querySelectorAll('.ad-tpv > .ad-mini').forEach((m) => { const w = m.parentElement.clientWidth; if (w) m.style.setProperty('--k', (w / 375).toFixed(4)); });
+  // 提示词不到 4 行（没被截断）就不出「展开」
+  const fitTpl = () => {
+    document.querySelectorAll('.ad-tpv > .ad-mini').forEach((m) => { const w = m.parentElement.clientWidth; if (w) m.style.setProperty('--k', (w / 375).toFixed(4)); });
+    document.querySelectorAll('.ad-tprompt:not(.is-open)').forEach((b) => { const x = b.querySelector('.ad-tp-tx'), mb = b.querySelector('.ad-tp-more'); if (x && mb) mb.hidden = x.scrollHeight <= x.clientHeight + 1; });
+  };
   window.AFTER_RENDER.push(fitTpl); window.addEventListener('resize', fitTpl);
   function mSheet() {
-    return `<div class="scrim" data-act="adEClose"></div><div class="sheet med-sheet is-full ad-msheet" data-sk="admsheet"><div class="sheet-head"><h3>${ic('sparkle-fill', 'ic-16 is-brand')} ${t('ad/e-title')}</h3><button class="ibtn ibtn-sm" data-act="adEClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div><div class="ad-mbody">${edPanel(true)}</div></div>`;
+    return `<div class="scrim" data-act="adEClose"></div><div class="sheet med-sheet is-full ad-msheet"><div class="sheet-head"><h3>${ic('sparkle-fill', 'ic-16 is-brand')} ${t('ad/e-title')}</h3>${costPill()}<button class="ibtn ibtn-sm" data-act="adEClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div><div class="ad-mbody" data-sk="admbody">${edPanel(true)}</div></div>`;
   }
   // 预览候选时：渲染那一刻把画布换成候选（不改 E.D，不进撤销、不保存）
   const view0 = window.VIEWS.editor;
@@ -836,6 +872,7 @@
   // 已应用提示条：生成整套图标（打开 ED-04 面板并预填图标风格）
   function edBar() {
     const E = X().E; if (!E.adBar || E.adp) return '';
+    if (E.adBar.sig && E.adBar.sig !== JSON.stringify(E.D.aiDesign || null)) return ''; // 撤销掉了 AI 设计：提示条跟着不出（重做回来再出）
     return `<div class="ad-bar" data-stop>${ic('sparkle-fill', 'ic-16')}<span class="tx ellipsis">${t('ad/bar-applied')}</span><button class="ad-bar-go" data-act="adBarGo">${esc(t('ad/bar-icons', { ics: icsName(E.adBar.ics) }))}</button><button class="ibtn ibtn-sm" data-act="adBarX" aria-label="${esc(t('common/close'))}">${ic('x', 'ic-16')}</button></div>`;
   }
   A.adBarX = () => { X().E.adBar = null; };
