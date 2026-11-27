@@ -23,9 +23,9 @@
 | 11-26 | 大 Banner 1500×680 | 3 | 1500×680 |
 | 11-27 | Banner 主题 | 6 | 2048×928 |
 | 11-27 | 默认头像（8 款，一张总图切） | 1 | 2048×1024 |
-| 11-27 | AI 一键设计模版：Banner 总图（15 套） | 15 | 1020×948 / 1024×1024 |
-| 11-27 | AI 一键设计模版：图标总图（15 套） | 15 | 1024×820 / 1280×1024 |
-| | **合计** | **74** | |
+| 11-27 | AI 一键设计模版：Banner 总图（21 套） | 21 | 1020×948 / 1024×1024 |
+| 11-27 | AI 一键设计模版：图标总图（21 套） | 21 | 1024×820 / 1280×1024 |
+| | **合计** | **86** | |
 
 ---
 
@@ -756,7 +756,7 @@ Waydon 11-27 08:59 要求「AI 一键设计」的页面风格模版改成真实 
 
 两种总图的英文结构是固定的，每套只换风格、主题、配色这几处；下面每条都给出完整中文翻译和英文原文。
 
-> **白金（platinum-1~3）、黑金（blackgold-1~3）6 套还没有生成**：11-27 09:37 和 12:27 两次调用都被会话的自动权限检查拦下，没有出图、没有扣点。这 6 套目前用 11-26 黑金风格图标 + 滤镜处理的 Banner 代替，提示词已备好（`/mnt/project-files/custom-design-platform/team/day-1127-templates.json` 的 `gen_prompts`），生成后再补进本节。
+> 白金（platinum-1~3）、黑金（blackgold-1~3）6 套：11-27 09:37 和 12:27 两次调用被会话的自动权限检查拦下（没出图、没扣点）；14:34 Waydon 选「現在補生成」，14:36–14:41 补生成 12 张，排在本节最后。白金 3 套是浅色底，Banner 总图照极简的经验加了「每张 Banner 有自己的底色面板」一句、图标总图加了「图标下不要投影」一句。
 
 ### 科技蓝 · 深海科技（techblue-1）
 
@@ -1236,4 +1236,196 @@ Three separate horizontal promotional banners for a mobile online gaming (casino
 
 ```text
 A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F6F4F1 background, no text, no labels, no grid lines. Consistent icon set: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; motif: graphite, terracotta clay, paper grain texture, warm daylight; main colour #4A4440 with #C98B4A highlights. Icons float on the flat background with no cast shadow or ground shadow beneath them. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 白金 · 香槟晨光（platinum-1）
+
+#### 香槟晨光 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 14:36 · Figma 原图 478:2
+- 产出：`prototype/assets/ai-tpl/platinum-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F7F6F3 间隔。每张 Banner 是一块通栏面板，有自己的底色（象牙白到香槟色的渐变，或暖灰褐），和纯色间隔明显区分，方便把三张切开。风格：奢华白金与香槟金，柔和日光，象牙白底，细金线勾勒，大量留白；主题：香槟金丝带、水晶奖杯、柔和晨光、珍珠光泽。配色：主色 #C8A96A，点缀色 #B98A45，底色 #F7F6F3。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F7F6F3 gutters. Each banner is a full-width panel with its own background tone (ivory-to-champagne gradient or warm taupe), clearly distinct from the flat gutters so the three banners are easy to separate. Style: luxury platinum and champagne-gold, soft daylight, ivory background, thin gold linework, generous white space; theme: champagne-gold silk ribbons, crystal trophy, soft morning light, pearl highlights. Palette primary #C8A96A, accent #B98A45, background #F7F6F3. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 香槟晨光 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 14:37 · Figma 原图 478:3
+- 产出：`prototype/assets/ai-tpl/platinum-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F7F6F3 底；不要文字、不要标签、不要网格线。同一套统一的图标：奢华白金与香槟金，柔和日光，象牙白底，细金线勾勒，大量留白；主题元素：香槟金丝带、水晶奖杯、柔和晨光、珍珠光泽；主色 #C8A96A，#B98A45 做高光。图标浮在纯色底上，下方不要投影，也不要地面阴影。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F7F6F3 background, no text, no labels, no grid lines. Consistent icon set: luxury platinum and champagne-gold, soft daylight, ivory background, thin gold linework, generous white space; motif: champagne-gold silk ribbons, crystal trophy, soft morning light, pearl highlights; main colour #C8A96A with #B98A45 highlights. Icons float on the flat background with no cast shadow or ground shadow beneath them. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 白金 · 玫瑰香槟（platinum-2）
+
+#### 玫瑰香槟 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 14:38 · Figma 原图 478:4
+- 产出：`prototype/assets/ai-tpl/platinum-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #FAF6F4 间隔。每张 Banner 是一块通栏面板，有自己的底色（粉象牙色渐变，或玫瑰灰褐），和纯色间隔明显区分，方便把三张切开。风格：奢华白金与香槟金，柔和日光，象牙白底，细金线勾勒，大量留白；主题：玫瑰金花瓣、香槟气泡、粉金色光斑、缎面质感。配色：主色 #C99A82，点缀色 #B8806A，底色 #FAF6F4。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #FAF6F4 gutters. Each banner is a full-width panel with its own background tone (blush-ivory gradient or rose-taupe), clearly distinct from the flat gutters so the three banners are easy to separate. Style: luxury platinum and champagne-gold, soft daylight, ivory background, thin gold linework, generous white space; theme: rose-gold petals, champagne bubbles, blush-gold bokeh, satin texture. Palette primary #C99A82, accent #B8806A, background #FAF6F4. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 玫瑰香槟 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 14:38 · Figma 原图 478:5
+- 产出：`prototype/assets/ai-tpl/platinum-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #FAF6F4 底；不要文字、不要标签、不要网格线。同一套统一的图标：奢华白金与香槟金，柔和日光，象牙白底，细金线勾勒，大量留白；主题元素：玫瑰金花瓣、香槟气泡、粉金色光斑、缎面质感；主色 #C99A82，#B8806A 做高光。图标浮在纯色底上，下方不要投影，也不要地面阴影。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #FAF6F4 background, no text, no labels, no grid lines. Consistent icon set: luxury platinum and champagne-gold, soft daylight, ivory background, thin gold linework, generous white space; motif: rose-gold petals, champagne bubbles, blush-gold bokeh, satin texture; main colour #C99A82 with #B8806A highlights. Icons float on the flat background with no cast shadow or ground shadow beneath them. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 白金 · 铂银之境（platinum-3）
+
+#### 铂银之境 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 14:38 · Figma 原图 478:6
+- 产出：`prototype/assets/ai-tpl/platinum-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F4F5F7 间隔。每张 Banner 是一块通栏面板，有自己的底色（银灰渐变，或深枪灰），和纯色间隔明显区分，方便把三张切开。风格：奢华白金与香槟金，柔和日光，象牙白底，细金线勾勒，大量留白；主题：拉丝铂金、银色多面几何、冷调镜面高光、一处香槟金点缀。配色：主色 #9AA3AD，点缀色 #C8A96A，底色 #F4F5F7。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F4F5F7 gutters. Each banner is a full-width panel with its own background tone (silver-grey gradient or deep gunmetal), clearly distinct from the flat gutters so the three banners are easy to separate. Style: luxury platinum and champagne-gold, soft daylight, ivory background, thin gold linework, generous white space; theme: brushed platinum, silver faceted geometry, cool specular highlights, a single champagne-gold accent. Palette primary #9AA3AD, accent #C8A96A, background #F4F5F7. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 铂银之境 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 14:39 · Figma 原图 478:7
+- 产出：`prototype/assets/ai-tpl/platinum-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F4F5F7 底；不要文字、不要标签、不要网格线。同一套统一的图标：奢华白金与香槟金，柔和日光，象牙白底，细金线勾勒，大量留白；主题元素：拉丝铂金、银色多面几何、冷调镜面高光、一处香槟金点缀；主色 #9AA3AD，#C8A96A 做高光。图标浮在纯色底上，下方不要投影，也不要地面阴影。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F4F5F7 background, no text, no labels, no grid lines. Consistent icon set: luxury platinum and champagne-gold, soft daylight, ivory background, thin gold linework, generous white space; motif: brushed platinum, silver faceted geometry, cool specular highlights, a single champagne-gold accent; main colour #9AA3AD with #C8A96A highlights. Icons float on the flat background with no cast shadow or ground shadow beneath them. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 黑金 · 午夜鎏金（blackgold-1）
+
+#### 午夜鎏金 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 14:39 · Figma 原图 478:8
+- 产出：`prototype/assets/ai-tpl/blackgold-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #111111 间隔。风格：黑金奢华 VIP 娱乐场，深黑丝绒，抛光的金属金，戏剧性的轮廓光，高对比；主题：黑丝绒上的金皇冠、金币雨、戏剧性聚光灯。配色：主色 #D4AF37，点缀色 #E8A33A，底色 #111111。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #111111 gutters. Style: black-and-gold luxury VIP casino, deep black velvet, polished gold metal, dramatic rim light, high contrast; theme: gold crown on black velvet, raining gold coins, dramatic spotlight. Palette primary #D4AF37, accent #E8A33A, background #111111. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 午夜鎏金 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 14:40 · Figma 原图 478:9
+- 产出：`prototype/assets/ai-tpl/blackgold-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #111111 底；不要文字、不要标签、不要网格线。同一套统一的图标：黑金奢华 VIP 娱乐场，深黑丝绒，抛光的金属金，戏剧性的轮廓光，高对比；主题元素：黑丝绒上的金皇冠、金币雨、戏剧性聚光灯；主色 #D4AF37，#E8A33A 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #111111 background, no text, no labels, no grid lines. Consistent icon set: black-and-gold luxury VIP casino, deep black velvet, polished gold metal, dramatic rim light, high contrast; motif: gold crown on black velvet, raining gold coins, dramatic spotlight; main colour #D4AF37 with #E8A33A highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 黑金 · 古铜尊享（blackgold-2）
+
+#### 古铜尊享 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 14:40 · Figma 原图 478:10
+- 产出：`prototype/assets/ai-tpl/blackgold-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #14100B 间隔。风格：黑金奢华 VIP 娱乐场，深黑丝绒，抛光的金属金，戏剧性的轮廓光，高对比；主题：古铜浮雕、深色皮革纹理、琥珀暖光、装饰艺术（Art Deco）纹饰。配色：主色 #B8862B，点缀色 #E6C675，底色 #14100B。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #14100B gutters. Style: black-and-gold luxury VIP casino, deep black velvet, polished gold metal, dramatic rim light, high contrast; theme: antique bronze embossing, dark leather texture, amber warm light, art-deco ornaments. Palette primary #B8862B, accent #E6C675, background #14100B. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 古铜尊享 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 14:41 · Figma 原图 478:11
+- 产出：`prototype/assets/ai-tpl/blackgold-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #14100B 底；不要文字、不要标签、不要网格线。同一套统一的图标：黑金奢华 VIP 娱乐场，深黑丝绒，抛光的金属金，戏剧性的轮廓光，高对比；主题元素：古铜浮雕、深色皮革纹理、琥珀暖光、装饰艺术（Art Deco）纹饰；主色 #B8862B，#E6C675 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #14100B background, no text, no labels, no grid lines. Consistent icon set: black-and-gold luxury VIP casino, deep black velvet, polished gold metal, dramatic rim light, high contrast; motif: antique bronze embossing, dark leather texture, amber warm light, art-deco ornaments; main colour #B8862B with #E6C675 highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 黑金 · 香槟夜宴（blackgold-3）
+
+#### 香槟夜宴 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 14:41 · Figma 原图 478:12
+- 产出：`prototype/assets/ai-tpl/blackgold-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #0B0B0D 间隔。风格：黑金奢华 VIP 娱乐场，深黑丝绒，抛光的金属金，戏剧性的轮廓光，高对比；主题：香槟塔、金色光斑、夜宴舞台、柔和金光。配色：主色 #E6C675，点缀色 #D4AF37，底色 #0B0B0D。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #0B0B0D gutters. Style: black-and-gold luxury VIP casino, deep black velvet, polished gold metal, dramatic rim light, high contrast; theme: champagne tower, golden bokeh, night gala stage, soft gold glow. Palette primary #E6C675, accent #D4AF37, background #0B0B0D. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 香槟夜宴 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 14:41 · Figma 原图 478:13
+- 产出：`prototype/assets/ai-tpl/blackgold-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #0B0B0D 底；不要文字、不要标签、不要网格线。同一套统一的图标：黑金奢华 VIP 娱乐场，深黑丝绒，抛光的金属金，戏剧性的轮廓光，高对比；主题元素：香槟塔、金色光斑、夜宴舞台、柔和金光；主色 #E6C675，#D4AF37 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #0B0B0D background, no text, no labels, no grid lines. Consistent icon set: black-and-gold luxury VIP casino, deep black velvet, polished gold metal, dramatic rim light, high contrast; motif: champagne tower, golden bokeh, night gala stage, soft gold glow; main colour #E6C675 with #D4AF37 highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
 ```
