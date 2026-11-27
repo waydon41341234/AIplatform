@@ -188,3 +188,32 @@ button.pg-row:hover, .pg-row.is-open { background: var(--bg-hover); }
   .pg.is-msel { padding-bottom: 120px; }
   .pg-mbar { position: fixed; left: 12px; right: 12px; bottom: calc(var(--nav-tabbar-height) + env(safe-area-inset-bottom) + 8px); z-index: 41; margin: 0; background: var(--bg-surface); box-shadow: 0 6px 24px rgba(0,0,0,.18); flex-wrap: wrap; }
 }
+
+/* 头像（11-27）：AI 默认头像 a1~a8 / 业主上传，图来自根节点 --av-img（pages.js applyAvatar）；没图时露出原来的品牌渐变 */
+.avatar { background-image: var(--av-img, none), linear-gradient(135deg, var(--grad-start), var(--grad-end)); background-size: cover; background-position: center; background-repeat: no-repeat; }
+.pg-av-btn { position: relative; flex: none; width: 64px; height: 64px; border-radius: 50%; padding: 0; }
+.pg-av-btn .avatar { display: block; }
+.pg-av-btn::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: rgba(0, 0, 0, .45) center / 22px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%23fff' d='M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z'/%3E%3C/svg%3E"); opacity: 0; transition: opacity .15s ease; }
+.pg-av-btn:hover::after, .pg-av-btn:focus-visible::after { opacity: 1; }
+.pg-av-edit { position: absolute; right: -2px; bottom: -2px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-raised); border: var(--stroke-thin) solid var(--border); color: var(--icon); }
+.pg-av-edit svg { width: 14px; height: 14px; }
+.av-head { margin-bottom: var(--space-16); }
+.av-cur { display: flex; align-items: center; gap: var(--space-16); }
+.av-pv { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex: none; background: var(--fill-2); }
+.av-cur-t { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.av-cur-t p { margin: 0; }
+.av-grid { display: grid; grid-template-columns: repeat(4, 72px); justify-content: space-between; row-gap: var(--space-16); margin-top: var(--space-20); }
+.av-opt { position: relative; box-sizing: border-box; width: 72px; height: 72px; padding: 2px; border-radius: 50%; border: 2px solid transparent; transition: border-color .15s ease; }
+.av-opt img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.av-opt:hover { border-color: var(--border-strong); }
+.av-opt.is-on { border-color: var(--brand); }
+.av-ck { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: var(--text-on-brand); box-shadow: 0 0 0 2px var(--bg-surface); }
+.av-ck svg { width: 14px; height: 14px; }
+.av-foot { display: flex; align-items: center; gap: var(--space-12); margin-top: var(--space-20); }
+.av-foot .av-sp { flex: 1; }
+.av-foot.is-m .btn { flex: 1; }
+@media (max-width: 599px) {
+  .av-pv { width: 64px; height: 64px; }
+  .av-grid { row-gap: var(--space-12); margin-top: var(--space-16); }
+  .av-foot { margin-top: var(--space-16); }
+}

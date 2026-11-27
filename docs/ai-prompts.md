@@ -22,7 +22,8 @@
 | 11-26 | 小 Banner | 3 | 1024×646 |
 | 11-26 | 大 Banner 1500×680 | 3 | 1500×680 |
 | 11-27 | Banner 主题 | 6 | 2048×928 |
-| | **合计** | **43** | |
+| 11-27 | 默认头像（8 款，一张总图切） | 1 | 2048×1024 |
+| | **合计** | **44** | |
 
 ---
 
@@ -723,6 +724,26 @@ Wide website hero banner for an online entertainment platform, new member welcom
 
 ```text
 Wide website hero banner for an online sports betting entertainment platform, major sports tournament match theme. Night stadium pitch with dynamic orange and blue speed light trails, a football and a basketball flying with motion blur and energy sparks on the right side as the main visual. The left 45% is a clean dark area left empty for a match title and date. Polished 3D render, intense, energetic, cinematic sports advertising. No text, no letters, no logos, no brands, no team crests, no people.
+```
+
+
+### 默认头像
+
+业主账号的 AI 默认头像（「我的」页账户卡片、顶部栏头像），新账号默认 a1，业主可换成任意一款或上传自己的图。一张总图出 4 列 × 2 行，每格 384×432（实际出图 1536×864），切图时左右各补 24px 底色成 432×432 正方形，再缩到 256×256 存 webp；界面里一律圆形裁切。8 款依次为：a1 短发眼镜女生 / a2 卷发胡子男生 / a3 马尾女生 / a4 银发长者 / a5 小机器人 / a6 橘猫 / a7 小熊猫 / a8 大熊猫。
+
+#### 默认头像 · 8 款总图
+
+- 尺寸 2048×1024（实际出图 1536×864，默认模型 gpt-image-2.5-flare）· 时间 2026-11-27 09:33
+- 产出：`prototype/assets/avatars/a1.webp` ~ `a8.webp`（256×256，每张 4–5 KB）；Figma「02 切图母组件」`slice/avatar/a1` ~ `a8`（434:446127 内），源图同一画框里的 `source · avatar sprite sheet 4×2`（434:441757）
+
+**中文**
+
+一张包含 8 个默认头像的总图，精确排成 4 列 × 2 行：8 个等大的正方形格子边贴边，没有间隙、没有边框、没有外框、没有文字、没有 Logo。每格一个友好的卡通角色，头肩像，居中、正面，头部四周留足空间，保证圆形裁切后仍然完整。每格满版一种纯色粉彩底色，每格颜色不同：天蓝、薄荷绿、蜜桃、薰衣草紫、奶油黄、珊瑚粉、青绿、长春花蓝。8 个风格统一：柔和现代的 3D 黏土搪胶玩具质感，圆润造型，平滑哑光光影，大而友善的眼睛，温和的微笑，细节干净简洁，高品质 App 头像。第 1 行从左到右：黑色短波波头、戴圆框眼镜的年轻女性；深棕色皮肤、短卷发、胡子修剪整齐的男性；暖棕肤色、红棕色波浪长发扎马尾的女性；银发、穿开衫的年长男性。第 2 行从左到右：白蓝配色、圆形屏幕脸的友好小机器人；橘色虎斑猫；小熊猫；大熊猫。只要虚构角色，不像任何真实人物，不要任何品牌元素。
+
+**English**
+
+```text
+A sprite sheet of 8 default profile avatars arranged in a precise grid of 4 columns by 2 rows: 8 equal square tiles touching edge to edge, no gutters, no borders, no frames, no text, no logos. Each tile shows one friendly cartoon character, head and shoulders, centered, facing forward, with generous margin around the head so it stays fully inside a circular crop. Each tile has a flat solid pastel background color filling the whole tile, a different color per tile: sky blue, mint green, peach, lavender, butter yellow, coral pink, teal, periwinkle. Consistent style across all 8: soft modern 3D clay vinyl-toy look, rounded shapes, smooth matte shading, big friendly eyes, gentle smile, clean simple details, high quality app avatar. Row 1, left to right: a young woman with a short black bob and round glasses; a man with dark brown skin, short curly hair and a neat beard; a woman with warm tan skin and wavy auburn hair in a ponytail; an older man with silver hair wearing a cardigan. Row 2, left to right: a small friendly white and blue robot with a round screen face; an orange tabby cat; a red panda; a giant panda. Fictional characters only, not resembling any real person, no brand elements.
 ```
 
 ---
