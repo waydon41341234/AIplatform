@@ -790,7 +790,7 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .tb-item .thumb.gc-sthumb + .thumb.gc-sthumb { margin-left: -4px; }
 .tb-item .thumb.gc-sthumb img { width: 100%; height: 100%; object-fit: contain; }
 .h5-bnav .it .bi img, .h5-bnav .it .bi img.cu { width: 25px; height: 25px; object-fit: contain; display: block; border-radius: 0; }
-.h5-bnav .it .bi.big img, .h5-bnav .it .bi.big img.cu { width: 50px; height: 50px; margin: -25px -12px 0; } /* 未登录动效礼盒 100×100：多出的高度全往上顶出导航栏，不往下压住「优惠」文字 */
+.h5-bnav .it .bi.big img, .h5-bnav .it .bi.big img.cu { width: 50px; height: 50px; margin: -12.5px -12.5px; position: relative; z-index: 1; } /* 未登录动效礼盒 100×100：照 Figma 317:55538 以 50×50 图标位为中心向四周外扩（不整体往上顶） */
 .h5-bnav .it.raised { position: relative; }
 .h5-bnav .it.raised .bi img, .h5-bnav .it.raised .bi img.cu { width: 60px; height: 60px; margin: -35px 0 0; border-radius: 0; } /* 120×120，顶出导航栏 27px */
 .h5-bnav .it.raised .bi .ic { width: 34px; height: 34px; padding: 7px; margin-top: -18px; border-radius: 50%; background: var(--e-bottomnav-active); color: var(--e-bottomnav-bg); box-shadow: 0 2px 6px #0003; box-sizing: border-box; }
