@@ -23,7 +23,9 @@
 | 11-26 | 大 Banner 1500×680 | 3 | 1500×680 |
 | 11-27 | Banner 主题 | 6 | 2048×928 |
 | 11-27 | 默认头像（8 款，一张总图切） | 1 | 2048×1024 |
-| | **合计** | **44** | |
+| 11-27 | AI 一键设计模版：Banner 总图（15 套） | 15 | 1020×948 / 1024×1024 |
+| 11-27 | AI 一键设计模版：图标总图（15 套） | 15 | 1024×820 / 1280×1024 |
+| | **合计** | **74** | |
 
 ---
 
@@ -748,6 +750,490 @@ A sprite sheet of 8 default profile avatars arranged in a precise grid of 4 colu
 
 ---
 
-## 待补：11-27 AI 模版（7 风格 × 3 套）
+## 11-27 AI 一键设计 · 页面风格模版（7 风格 × 3 套）
 
-这批生成还在进行中，完成后在此补入每条提示词（格式同上，中英文对照）。
+Waydon 11-27 08:59 要求「AI 一键设计」的页面风格模版改成真实 AI 生成的模版。每套模版用两次生图：一张 **Banner 总图**（3 张通用 Banner 上下排，切成 `banner-1~3.webp`，存 720×212 webp，上传规格 1020×300）和一张 **图标总图**（5×4 格，切成帐户栏 4 个 `acct-*`、底部导航 6 个 `bn-*`（`-off` 是程序去饱和做的未选中灰图，72×72）、游戏分类 9 个 `gm-*`，去背存 96×96 透明 webp）。Logo 沿用 11-26 已生成的 `assets/ai-logo/`，不重新生成。Figma 页「04-AI 模版 11-27」（430:619174），两张总图原图在每套模版画框旁边。模型一律 `gpt-image-2.5-sunburst`。每套的中文「生成提示词」（界面里选中模版时显示的那段）在 `prototype/assets/ai-tpl/<id>/manifest.json` 的 `prompt_zh`。
+
+两种总图的英文结构是固定的，每套只换风格、主题、配色这几处；下面每条都给出完整中文翻译和英文原文。
+
+> **白金（platinum-1~3）、黑金（blackgold-1~3）6 套还没有生成**：11-27 09:37 和 12:27 两次调用都被会话的自动权限检查拦下，没有出图、没有扣点。这 6 套目前用 11-26 黑金风格图标 + 滤镜处理的 Banner 代替，提示词已备好（`/mnt/project-files/custom-design-platform/team/day-1127-templates.json` 的 `gen_prompts`），生成后再补进本节。
+
+### 科技蓝 · 深海科技（techblue-1）
+
+#### 深海科技 · Banner 总图
+
+- 尺寸 请求 1020×948（实际出图 1024×1024）· 时间 2026-11-27 09:40
+- 产出：`prototype/assets/ai-tpl/techblue-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #0A1430 间隔。风格：未来科技蓝、深海军蓝空间、发光的电光蓝光线、全息界面、干净的科幻感；主题：深海蓝光、数据光轨、全息球场。配色：主色 #1678FF，点缀色 #FFB020，底色 #0A1430。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #0A1430 gutters. Style: futuristic tech blue, deep navy space, glowing electric blue light lines, holographic UI, clean sci-fi; theme: deep-sea blue glow, data light trails, holographic stadium. Palette primary #1678FF, accent #FFB020, background #0A1430. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 深海科技 · 图标总图
+
+- 尺寸 请求 1024×820（实际出图 1280×1024）· 时间 2026-11-27 09:37
+- 产出：`prototype/assets/ai-tpl/techblue-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #0A1430 底；不要文字、不要标签、不要网格线。同一套统一的图标：未来科技蓝、深海军蓝空间、发光的电光蓝光线、全息界面、干净的科幻感；主题元素：深海蓝光、数据光轨、全息球场；主色 #1678FF，#FFB020 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #0A1430 background, no text, no labels, no grid lines. Consistent icon set: futuristic tech blue, deep navy space, glowing electric blue light lines, holographic UI, clean sci-fi; motif: deep-sea blue glow, data light trails, holographic stadium; main colour #1678FF with #FFB020 highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 科技蓝 · 极光青域（techblue-2）
+
+#### 极光青域 · Banner 总图
+
+- 尺寸 请求 1020×948（实际出图 1024×1024）· 时间 2026-11-27 09:50
+- 产出：`prototype/assets/ai-tpl/techblue-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #061A2B 间隔。风格：未来科技蓝、深海军蓝空间、发光的电光蓝光线、全息界面、干净的科幻感；主题：青色极光丝带、冰晶、电路板纹理。配色：主色 #00A8FF，点缀色 #FFB020，底色 #061A2B。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #061A2B gutters. Style: futuristic tech blue, deep navy space, glowing electric blue light lines, holographic UI, clean sci-fi; theme: cyan aurora ribbons, ice crystals, circuit-board patterns. Palette primary #00A8FF, accent #FFB020, background #061A2B. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 极光青域 · 图标总图
+
+- 尺寸 请求 1024×820（实际出图 1280×1024）· 时间 2026-11-27 09:51
+- 产出：`prototype/assets/ai-tpl/techblue-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #061A2B 底；不要文字、不要标签、不要网格线。同一套统一的图标：未来科技蓝、深海军蓝空间、发光的电光蓝光线、全息界面、干净的科幻感；主题元素：青色极光丝带、冰晶、电路板纹理；主色 #00A8FF，#FFB020 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #061A2B background, no text, no labels, no grid lines. Consistent icon set: futuristic tech blue, deep navy space, glowing electric blue light lines, holographic UI, clean sci-fi; motif: cyan aurora ribbons, ice crystals, circuit-board patterns; main colour #00A8FF with #FFB020 highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 科技蓝 · 星际蓝紫（techblue-3）
+
+#### 星际蓝紫 · Banner 总图
+
+- 尺寸 请求 1020×948（实际出图 1024×1024）· 时间 2026-11-27 09:55
+- 产出：`prototype/assets/ai-tpl/techblue-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #0D1036 间隔。风格：未来科技蓝、深海军蓝空间、发光的电光蓝光线、全息界面、干净的科幻感；主题：星云、蓝紫色行星、曲速粒子。配色：主色 #4F6BFF，点缀色 #8F7BFF，底色 #0D1036。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #0D1036 gutters. Style: futuristic tech blue, deep navy space, glowing electric blue light lines, holographic UI, clean sci-fi; theme: nebula clouds, blue-violet planets, warp-speed particles. Palette primary #4F6BFF, accent #8F7BFF, background #0D1036. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 星际蓝紫 · 图标总图
+
+- 尺寸 请求 1024×820（实际出图 1280×1024）· 时间 2026-11-27 09:56
+- 产出：`prototype/assets/ai-tpl/techblue-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #0D1036 底；不要文字、不要标签、不要网格线。同一套统一的图标：未来科技蓝、深海军蓝空间、发光的电光蓝光线、全息界面、干净的科幻感；主题元素：星云、蓝紫色行星、曲速粒子；主色 #4F6BFF，#8F7BFF 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #0D1036 background, no text, no labels, no grid lines. Consistent icon set: futuristic tech blue, deep navy space, glowing electric blue light lines, holographic UI, clean sci-fi; motif: nebula clouds, blue-violet planets, warp-speed particles; main colour #4F6BFF with #8F7BFF highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 清新明亮 · 薄荷清晨（fresh-1）
+
+#### 薄荷清晨 · Banner 总图
+
+- 尺寸 请求 1020×948（实际出图 1024×1024）· 时间 2026-11-27 09:45
+- 产出：`prototype/assets/ai-tpl/fresh-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F2FAF6 间隔。风格：清新明亮、亲切友好，白底上的薄荷绿与叶绿，柔和日光，圆润造型，俏皮的轻 3D；主题：薄荷叶、露珠、阳光明媚的清晨草地。配色：主色 #14B87A，点缀色 #FFA61A，底色 #F2FAF6。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F2FAF6 gutters. Style: fresh bright and friendly, mint and leaf greens on white, soft daylight, rounded shapes, playful 3D-lite; theme: mint leaves, dew drops, sunny morning meadow. Palette primary #14B87A, accent #FFA61A, background #F2FAF6. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 薄荷清晨 · 图标总图
+
+- 尺寸 请求 1024×820（实际出图 1280×1024）· 时间 2026-11-27 09:46
+- 产出：`prototype/assets/ai-tpl/fresh-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F2FAF6 底；不要文字、不要标签、不要网格线。同一套统一的图标：清新明亮、亲切友好，白底上的薄荷绿与叶绿，柔和日光，圆润造型，俏皮的轻 3D；主题元素：薄荷叶、露珠、阳光明媚的清晨草地；主色 #14B87A，#FFA61A 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F2FAF6 background, no text, no labels, no grid lines. Consistent icon set: fresh bright and friendly, mint and leaf greens on white, soft daylight, rounded shapes, playful 3D-lite; motif: mint leaves, dew drops, sunny morning meadow; main colour #14B87A with #FFA61A highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 清新明亮 · 青柠海岸（fresh-2）
+
+#### 青柠海岸 · Banner 总图
+
+- 尺寸 请求 1020×948（实际出图 1024×1024）· 时间 2026-11-27 09:51
+- 产出：`prototype/assets/ai-tpl/fresh-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #EFFAF9 间隔。风格：清新明亮、亲切友好，白底上的薄荷绿与叶绿，柔和日光，圆润造型，俏皮的轻 3D；主题：青柠片、松石绿海浪、阳光沙滩、夏日氛围。配色：主色 #10B3A8，点缀色 #FFC233，底色 #EFFAF9。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #EFFAF9 gutters. Style: fresh bright and friendly, mint and leaf greens on white, soft daylight, rounded shapes, playful 3D-lite; theme: lime slices, turquoise waves, sunny beach, summer vibe. Palette primary #10B3A8, accent #FFC233, background #EFFAF9. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 青柠海岸 · 图标总图
+
+- 尺寸 请求 1024×820（实际出图 1280×1024）· 时间 2026-11-27 09:52
+- 产出：`prototype/assets/ai-tpl/fresh-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #EFFAF9 底；不要文字、不要标签、不要网格线。同一套统一的图标：清新明亮、亲切友好，白底上的薄荷绿与叶绿，柔和日光，圆润造型，俏皮的轻 3D；主题元素：青柠片、松石绿海浪、阳光沙滩、夏日氛围；主色 #10B3A8，#FFC233 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #EFFAF9 background, no text, no labels, no grid lines. Consistent icon set: fresh bright and friendly, mint and leaf greens on white, soft daylight, rounded shapes, playful 3D-lite; motif: lime slices, turquoise waves, sunny beach, summer vibe; main colour #10B3A8 with #FFC233 highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 清新明亮 · 森系草绿（fresh-3）
+
+#### 森系草绿 · Banner 总图
+
+- 尺寸 请求 1020×948（实际出图 1024×1024）· 时间 2026-11-27 09:56
+- 产出：`prototype/assets/ai-tpl/fresh-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F5FBEF 间隔。风格：清新明亮、亲切友好，白底上的薄荷绿与叶绿，柔和日光，圆润造型，俏皮的轻 3D；主题：森林草地、可爱蘑菇、萤火虫光点、纸艺层次。配色：主色 #3CBF4A，点缀色 #FFB21A，底色 #F5FBEF。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F5FBEF gutters. Style: fresh bright and friendly, mint and leaf greens on white, soft daylight, rounded shapes, playful 3D-lite; theme: forest grass, cute mushrooms, firefly sparkles, papercraft layers. Palette primary #3CBF4A, accent #FFB21A, background #F5FBEF. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 森系草绿 · 图标总图
+
+- 尺寸 请求 1024×820（实际出图 1280×1024）· 时间 2026-11-27 09:57
+- 产出：`prototype/assets/ai-tpl/fresh-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F5FBEF 底；不要文字、不要标签、不要网格线。同一套统一的图标：清新明亮、亲切友好，白底上的薄荷绿与叶绿，柔和日光，圆润造型，俏皮的轻 3D；主题元素：森林草地、可爱蘑菇、萤火虫光点、纸艺层次；主色 #3CBF4A，#FFB21A 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F5FBEF background, no text, no labels, no grid lines. Consistent icon set: fresh bright and friendly, mint and leaf greens on white, soft daylight, rounded shapes, playful 3D-lite; motif: forest grass, cute mushrooms, firefly sparkles, papercraft layers; main colour #3CBF4A with #FFB21A highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 节日红金 · 新春红包（festive-1）
+
+#### 新春红包 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:06
+- 产出：`prototype/assets/ai-tpl/festive-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #FFF6EC 间隔。风格：中国节庆红金，灯笼、红包、金币、祥云，喜庆；主题：红包雨、金元宝、红灯笼、鞭炮。配色：主色 #D9302C，点缀色 #E9B23C，底色 #FFF6EC。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #FFF6EC gutters. Style: Chinese festive red and gold, lanterns, red envelopes, gold coins, auspicious clouds, celebratory; theme: red envelope rain, gold ingots, red lanterns, firecrackers. Palette primary #D9302C, accent #E9B23C, background #FFF6EC. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 新春红包 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:06
+- 产出：`prototype/assets/ai-tpl/festive-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #FFF6EC 底；不要文字、不要标签、不要网格线。同一套统一的图标：中国节庆红金，灯笼、红包、金币、祥云，喜庆；主题元素：红包雨、金元宝、红灯笼、鞭炮；主色 #D9302C，#E9B23C 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #FFF6EC background, no text, no labels, no grid lines. Consistent icon set: Chinese festive red and gold, lanterns, red envelopes, gold coins, auspicious clouds, celebratory; motif: red envelope rain, gold ingots, red lanterns, firecrackers; main colour #D9302C with #E9B23C highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 节日红金 · 锦鲤鸿运（festive-2）
+
+#### 锦鲤鸿运 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:10
+- 产出：`prototype/assets/ai-tpl/festive-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #FFF1E6 间隔。风格：中国节庆红金，灯笼、红包、金币、祥云，喜庆；主题：金红锦鲤、祥云、水波纹、剪纸风。配色：主色 #C4161C，点缀色 #F0B429，底色 #FFF1E6。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #FFF1E6 gutters. Style: Chinese festive red and gold, lanterns, red envelopes, gold coins, auspicious clouds, celebratory; theme: gold-and-red koi fish, auspicious clouds, water ripples, paper-cut style. Palette primary #C4161C, accent #F0B429, background #FFF1E6. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 锦鲤鸿运 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:10
+- 产出：`prototype/assets/ai-tpl/festive-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #FFF1E6 底；不要文字、不要标签、不要网格线。同一套统一的图标：中国节庆红金，灯笼、红包、金币、祥云，喜庆；主题元素：金红锦鲤、祥云、水波纹、剪纸风；主色 #C4161C，#F0B429 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #FFF1E6 background, no text, no labels, no grid lines. Consistent icon set: Chinese festive red and gold, lanterns, red envelopes, gold coins, auspicious clouds, celebratory; motif: gold-and-red koi fish, auspicious clouds, water ripples, paper-cut style; main colour #C4161C with #F0B429 highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 节日红金 · 红金夜宴（festive-3）
+
+#### 红金夜宴 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:10
+- 产出：`prototype/assets/ai-tpl/festive-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #3A0D0B 间隔。风格：中国节庆红金，灯笼、红包、金币、祥云，喜庆；主题：深红夜空、烟花、金色舞狮。配色：主色 #E8541E，点缀色 #F2C14E，底色 #3A0D0B。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #3A0D0B gutters. Style: Chinese festive red and gold, lanterns, red envelopes, gold coins, auspicious clouds, celebratory; theme: deep crimson night, fireworks, golden lion dance. Palette primary #E8541E, accent #F2C14E, background #3A0D0B. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 红金夜宴 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:10
+- 产出：`prototype/assets/ai-tpl/festive-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #3A0D0B 底；不要文字、不要标签、不要网格线。同一套统一的图标：中国节庆红金，灯笼、红包、金币、祥云，喜庆；主题元素：深红夜空、烟花、金色舞狮；主色 #E8541E，#F2C14E 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #3A0D0B background, no text, no labels, no grid lines. Consistent icon set: Chinese festive red and gold, lanterns, red envelopes, gold coins, auspicious clouds, celebratory; motif: deep crimson night, fireworks, golden lion dance; main colour #E8541E with #F2C14E highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 霓虹电竞 · 电竞紫电（neon-1）
+
+#### 电竞紫电 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:06
+- 产出：`prototype/assets/ai-tpl/neon-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #0E0A1A 间隔。风格：赛博朋克电竞霓虹，暗紫黑底，发光的紫色与青色霓虹灯管，故障风点缀；主题：紫色霓虹闪电、电竞手柄、竞技场舞台。配色：主色 #B14DFF，点缀色 #FFB03B，底色 #0E0A1A。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #0E0A1A gutters. Style: cyberpunk esports neon, dark purple-black, glowing violet and cyan neon tubes, glitch accents; theme: violet neon lightning, esports gamepad, arena stage. Palette primary #B14DFF, accent #FFB03B, background #0E0A1A. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 电竞紫电 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:06
+- 产出：`prototype/assets/ai-tpl/neon-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #0E0A1A 底；不要文字、不要标签、不要网格线。同一套统一的图标：赛博朋克电竞霓虹，暗紫黑底，发光的紫色与青色霓虹灯管，故障风点缀；主题元素：紫色霓虹闪电、电竞手柄、竞技场舞台；主色 #B14DFF，#FFB03B 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #0E0A1A background, no text, no labels, no grid lines. Consistent icon set: cyberpunk esports neon, dark purple-black, glowing violet and cyan neon tubes, glitch accents; motif: violet neon lightning, esports gamepad, arena stage; main colour #B14DFF with #FFB03B highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 霓虹电竞 · 赛博青光（neon-2）
+
+#### 赛博青光 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:12
+- 产出：`prototype/assets/ai-tpl/neon-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #071615 间隔。风格：赛博朋克电竞霓虹，暗紫黑底，发光的紫色与青色霓虹灯管，故障风点缀；主题：赛博朋克城市、青色霓虹招牌、雨夜倒影、故障效果。配色：主色 #19D3C5，点缀色 #FFB03B，底色 #071615。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #071615 gutters. Style: cyberpunk esports neon, dark purple-black, glowing violet and cyan neon tubes, glitch accents; theme: cyberpunk city, cyan neon signs, rainy night reflections, glitch. Palette primary #19D3C5, accent #FFB03B, background #071615. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 赛博青光 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:12
+- 产出：`prototype/assets/ai-tpl/neon-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #071615 底；不要文字、不要标签、不要网格线。同一套统一的图标：赛博朋克电竞霓虹，暗紫黑底，发光的紫色与青色霓虹灯管，故障风点缀；主题元素：赛博朋克城市、青色霓虹招牌、雨夜倒影、故障效果；主色 #19D3C5，#FFB03B 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #071615 background, no text, no labels, no grid lines. Consistent icon set: cyberpunk esports neon, dark purple-black, glowing violet and cyan neon tubes, glitch accents; motif: cyberpunk city, cyan neon signs, rainy night reflections, glitch; main colour #19D3C5 with #FFB03B highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 霓虹电竞 · 霓虹粉夜（neon-3）
+
+#### 霓虹粉夜 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:12
+- 产出：`prototype/assets/ai-tpl/neon-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #14080F 间隔。风格：赛博朋克电竞霓虹，暗紫黑底，发光的紫色与青色霓虹灯管，故障风点缀；主题：粉色霓虹招牌、迪斯科球、激光束、合成波网格。配色：主色 #FF3D8B，点缀色 #FFB03B，底色 #14080F。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #14080F gutters. Style: cyberpunk esports neon, dark purple-black, glowing violet and cyan neon tubes, glitch accents; theme: pink neon signs, disco ball, laser beams, synthwave grid. Palette primary #FF3D8B, accent #FFB03B, background #14080F. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 霓虹粉夜 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:12
+- 产出：`prototype/assets/ai-tpl/neon-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #14080F 底；不要文字、不要标签、不要网格线。同一套统一的图标：赛博朋克电竞霓虹，暗紫黑底，发光的紫色与青色霓虹灯管，故障风点缀；主题元素：粉色霓虹招牌、迪斯科球、激光束、合成波网格；主色 #FF3D8B，#FFB03B 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #14080F background, no text, no labels, no grid lines. Consistent icon set: cyberpunk esports neon, dark purple-black, glowing violet and cyan neon tubes, glitch accents; motif: pink neon signs, disco ball, laser beams, synthwave grid; main colour #FF3D8B with #FFB03B highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 极简灰 · 墨白（minimal-1）
+
+#### 墨白 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:09
+- 产出：`prototype/assets/ai-tpl/minimal-1/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F5F5F5 间隔。每张 Banner 是一块通栏面板，有自己的底色（白到浅灰的渐变，或炭灰），和纯色间隔明显区分，方便把三张切开。风格：极简单色，浅灰与米白，干净的几何造型，细微阴影，瑞士设计式的克制；主题：黑白几何、大面积留白、一抹琥珀色点缀。配色：主色 #222222，点缀色 #F59E0B，底色 #F5F5F5。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F5F5F5 gutters. Each banner is a full-width panel with its own background tone (white-to-light-grey gradient or charcoal), clearly distinct from the flat gutters so the three banners are easy to separate. Style: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; theme: black-and-white geometry, big negative space, one amber accent. Palette primary #222222, accent #F59E0B, background #F5F5F5. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 墨白 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:09
+- 产出：`prototype/assets/ai-tpl/minimal-1/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F5F5F5 底；不要文字、不要标签、不要网格线。同一套统一的图标：极简单色，浅灰与米白，干净的几何造型，细微阴影，瑞士设计式的克制；主题元素：黑白几何、大面积留白、一抹琥珀色点缀；主色 #222222，#F59E0B 做高光。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F5F5F5 background, no text, no labels, no grid lines. Consistent icon set: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; motif: black-and-white geometry, big negative space, one amber accent; main colour #222222 with #F59E0B highlights. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 极简灰 · 雾蓝灰（minimal-2）
+
+#### 雾蓝灰 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:15
+- 产出：`prototype/assets/ai-tpl/minimal-2/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F3F4F7 间隔。每张 Banner 是一块通栏面板，有自己的底色（雾蓝灰渐变，或深石板灰），和纯色间隔明显区分，方便把三张切开。风格：极简单色，浅灰与米白，干净的几何造型，细微阴影，瑞士设计式的克制；主题：雾蓝灰渐变、磨砂玻璃卡片、柔和阴影。配色：主色 #3B4250，点缀色 #5B8DEF，底色 #F3F4F7。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F3F4F7 gutters. Each banner is a full-width panel with its own background tone (misty blue-grey gradient or deep slate), clearly distinct from the flat gutters so the three banners are easy to separate. Style: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; theme: misty blue-grey gradients, frosted glass cards, soft shadows. Palette primary #3B4250, accent #5B8DEF, background #F3F4F7. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 雾蓝灰 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:15
+- 产出：`prototype/assets/ai-tpl/minimal-2/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F3F4F7 底；不要文字、不要标签、不要网格线。同一套统一的图标：极简单色，浅灰与米白，干净的几何造型，细微阴影，瑞士设计式的克制；主题元素：雾蓝灰渐变、磨砂玻璃卡片、柔和阴影；主色 #3B4250，#5B8DEF 做高光。图标浮在纯色底上，下方不要投影，也不要地面阴影。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F3F4F7 background, no text, no labels, no grid lines. Consistent icon set: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; motif: misty blue-grey gradients, frosted glass cards, soft shadows; main colour #3B4250 with #5B8DEF highlights. Icons float on the flat background with no cast shadow or ground shadow beneath them. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
+
+### 极简灰 · 石墨暖灰（minimal-3）
+
+#### 石墨暖灰 · Banner 总图
+
+- 尺寸 请求 1024×1024（实际出图 1024×1024）· 时间 2026-11-27 10:15
+- 产出：`prototype/assets/ai-tpl/minimal-3/banner-1.webp` ~ `banner-3.webp`
+
+**中文**
+
+为手机线上游戏（娱乐场、体育、电竞）首页做三张独立的横幅宣传 Banner，在一张图里上下排列，每张严格 3.4:1（1020×300），之间用 24px 纯色 #F6F4F1 间隔。每张 Banner 是一块通栏面板，有自己的底色（暖纸米色，或石墨灰），和纯色间隔明显区分，方便把三张切开。风格：极简单色，浅灰与米白，干净的几何造型，细微阴影，瑞士设计式的克制；主题：石墨、赤陶黏土、纸张颗粒质感、温暖日光。配色：主色 #4A4440，点缀色 #C98B4A，底色 #F6F4F1。第 1 张：首存优惠，大号粗体中文标题「首存豪礼 最高送 888」，加一个小的行动按钮胶囊「立即领取」。第 2 张：体育 / 电竞赛事，标题「赛事狂欢 天天加奖」。第 3 张：VIP 会员，标题「VIP 尊享 返水无上限」。标题放在左侧 55% 内，主体物放右侧，四边各留 6% 安全边距；不要真实品牌 Logo，不要真人面孔，文字清晰，细节丰富。
+
+**English**
+
+```text
+Three separate horizontal promotional banners for a mobile online gaming (casino, sports, esports) home page, stacked vertically in one image, each banner exactly 3.4:1 (1020x300), separated by 24px solid #F6F4F1 gutters. Each banner is a full-width panel with its own background tone (warm paper beige or graphite), clearly distinct from the flat gutters so the three banners are easy to separate. Style: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; theme: graphite, terracotta clay, paper grain texture, warm daylight. Palette primary #4A4440, accent #C98B4A, background #F6F4F1. Banner 1: welcome bonus with a large bold Chinese headline '首存豪礼 最高送 888' and a small CTA pill '立即领取'. Banner 2: sports/esports event with headline '赛事狂欢 天天加奖'. Banner 3: VIP club with headline 'VIP 尊享 返水无上限'. Keep headlines in the left 55%, hero object on the right, safe margin 6% on every side, no logos of real brands, no real people faces, crisp text, high detail.
+```
+
+#### 石墨暖灰 · 图标总图
+
+- 尺寸 请求 1280×1024（实际出图 1280×1024）· 时间 2026-11-27 10:15
+- 产出：`prototype/assets/ai-tpl/minimal-3/acct-*.webp`（4）、`bn-*.webp`（6 + 6 张 -off）、`gm-*.webp`（9）
+
+**中文**
+
+一张 5 列 × 4 行的网格总图：20 个等大的正方形格子，每格居中放一个手机 App 图标，四周留 18% 内边距，纯色 #F6F4F1 底；不要文字、不要标签、不要网格线。同一套统一的图标：极简单色，浅灰与米白，干净的几何造型，细微阴影，瑞士设计式的克制；主题元素：石墨、赤陶黏土、纸张颗粒质感、温暖日光；主色 #4A4440，#C98B4A 做高光。图标浮在纯色底上，下方不要投影，也不要地面阴影。第 1 行：存钱罐（利息宝）、VIP 皇冠、带金币的分享赚钱礼物、更多（四个小方块）、注册（带加号的人像）。第 2 行：首页（房子）、优惠礼盒、分享赚钱红包、存款钱包、我的（人像）。第 3 行：火焰（热门）、扑克牌、鱼、真人荷官、老虎机。第 4 行：足球、电竞手柄、彩票球、公鸡，最后一格留空（只有底色）。光影、线条粗细、透视全部一致，游戏 UI 品质，1024×820。
+
+**English**
+
+```text
+A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one icon centered per cell with 18% padding, on a flat solid #F6F4F1 background, no text, no labels, no grid lines. Consistent icon set: minimal monochrome, light grey and off-white, clean geometric, subtle shadows, Swiss design restraint; motif: graphite, terracotta clay, paper grain texture, warm daylight; main colour #4A4440 with #C98B4A highlights. Icons float on the flat background with no cast shadow or ground shadow beneath them. Row 1: piggy-bank interest vault, VIP crown, share-and-earn gift with coins, more (four small squares), register (person with plus). Row 2: home house, promotions gift box, share-and-earn red envelope, deposit wallet, my profile person. Row 3: flame / hot, playing cards, fish, live dealer, slot machine. Row 4: soccer ball, esports gamepad, lottery balls, rooster, and the last cell left EMPTY (background only). Same lighting, same stroke weight, same perspective, game-UI quality, 1024x820.
+```
