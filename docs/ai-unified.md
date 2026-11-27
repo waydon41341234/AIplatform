@@ -87,7 +87,7 @@
 1. **标题栏**：左侧 ✦ 加标题 `aig/title`「AI 生成 · {name}」，{name} 是当前目标的名字（例如「Banner 第 2 张」「搜索图标」「整套底部导航图标」）。右侧是 ✕（`aig/close`），点了回到模块面板。手机上不再额外显示弹层自己的 ✕，以免出现两个关闭按钮。
 2. **目标切换**：用分段按钮 `.seg`，只有模块有 2 个以上可生成的图片目标时才显示。切换目标后会清空结果区，但提示词会按新目标的默认值重写（如果用户改过提示词，则保留，见 3.2）。
 3. **范围开关**（只有图标类目标才有）：「只这一个 · {entry}」/「整套 · {n} 个」。选「整套」后，下方出现入口清单（可勾选，带「必交」标签和「全选 / 全不选」），点数也随之变为整套的价格。
-4. **款式卡**：所有图片目标统一用 5 个实物款式（glossy / flat / blackgold / festive / neon），预览图使用各模块自己的样图。模块图标额外有 4 个矢量款式（线性 / 面性 / 双色 / 渐变），排在后面，点了同样会填写提示词（需要补 4 条预设文案）。单选。
+4. **款式卡**：所有图片目标统一用 5 个实物款式（glossy / flat / blackgold / festive / neon），预览图使用各模块自己的样图。模块图标额外有 4 个矢量款式（线性 / 面性 / 双色 / 渐变），排在后面，点了同样会填写提示词（需要补 4 条预设文案）。单选。**Banner 例外**：这一行叫「Banner 主题」（`aig/bn-theme`），是 6 个主题卡（97×44 真实缩略图，一行 3 个），选主题会同时放参考图；业主上传自己的参考图时不选中任何主题（Figma G1-05 / 06）。
 5. **输入框**：完全沿用首页的结构 `.composer-lite > .c-box > .c-input + .c-tools`，不再使用旧的 `.ai-box`。
    - 参考图槽：用 `window.refSlot(st, 'aigRef')`，上传走 `refPick / refUpload`（带动画进度圈），格式统一为 `IMG_ACCEPT` + jpeg，大小 ≤ 10MB。
    - 上传完成后**统一做反推提示词**：调用 `window.aiRefRead`，把完整提示词写进输入框，并自动选中最接近的款式。识别期间输入框禁用，占位文字显示「AI 正在识别参考图…」。识别完成后提示行改为「提示词由 AI 看参考图写出，可以再改」。
@@ -98,7 +98,7 @@
 6. **余额不足**：输入框下方显示一行红字 `aig/low`「余额不足 · 去充值」。这时点击发送统一调用 `window.lowBalance(cost)`，不再直接跳到充值。
 
 ### 3.2 提示词被覆盖的保护
-如果用户手动改过提示词（`dirty=true`），再点款式卡时仍然会替换提示词，但提示行会出现「已按新款式改写提示词 · 还原」（`aig/prompt-replaced` + `aig/prompt-undo`），点「还原」恢复上一版。
+如果用户手动改过提示词（`dirty=true`），再点款式卡时仍然会替换提示词，但提示行会出现「已按新款式改写提示词 · 还原」（`aig/prompt-replaced` + `aig/prompt-undo`），点「还原」恢复上一版。Banner 用「已按新主题改写提示词」（`aig/bt-replaced`），「还原」连主题和参考图一起恢复（Figma G1-07 → G1-04）。
 
 ---
 
@@ -186,7 +186,7 @@ setup ──发送──▶ (cost>20 ? 确认框) ──▶ generating ──成
 
 | 模块 | 目标（targets） | 规格 | 款式 | 数量 | 点数 | 生成（generate，保持现有资源/算法） | 使用写入 E.D（apply，都在 commit 里） |
 |---|---|---|---|---|---|---|---|
-| banner | 「第 N 张轮播图」（默认是当前这一张，有多张时用下拉切换） | `BANNER[size]`：large 1500×680、general 1020×300、medium 1020×300、small 320×202；PC 画布为 1920×564 | 5 款，其中光泽 / 黑金 / 喜庆 / 霓虹使用 `assets/ai-banner/*.webp` 作为预览图 | general/medium 4，large/small 3（`candBase()`） | 20 | `candList` + `candScore`（原来按关键词排序，改为按款式 + 提示词 + 参考图排序） | `setAsset('slide'+i, {f,w,h})`，并加入 projAssets |
+| banner | 「第 N 张轮播图」（默认是当前这一张，有多张时用下拉切换） | `BANNER[size]`：large 1500×680、general 1020×300、medium 1020×300、small 320×202；PC 画布为 1920×564 | **Banner 主题**（不是风格，Waydon 11-27）：节日 / 宣传 / 推广 / 奖励 / 新人 / 赛事，主题卡是真实 AI 生成的 Banner（`assets/ai-banner/theme-<id>-th.webp`）；点主题 = 提示词换成 `aig/bt-p-<id>` + 参考图格放 `theme-<id>.webp`（可 ✕ / 换成自己的图），默认「宣传」 | general/medium 4，large/small 3（`candN()`） | 20 | 同一张主题图出候选：原色 + 换色调（`img:<图>#<滤镜>`，再生成轮换），按当前样式比例裁切；业主改过的提示词提到别的主题时按提示词的主题出 | `setAsset('slide'+i, {f,w,h})`，并加入 projAssets |
 | topbar | Logo、币种、搜索、侧边栏入口（只有开启 side 时才显示）、余额框币种（只在已登录且余额框开启时显示） | Logo 宽 330–600×100（显示 230×76）；币种 36×36；搜索 56×49；侧边栏入口 48×48；余额框币种 52×52 | 5 款 | Logo 4；图标 4（同一款式的 4 种色调 / 相邻款式变体） | 每个目标 20；范围「整套」= 币种 + 搜索（+ 侧边栏入口）= 40 / 60 | Logo 用 `LOGO_AI_F` 滤镜按轮次轮换；图标用 `assets/ai-tb/{cur,search}-<st>.png`，侧边栏入口用 `SIDE_AI(st)` | Logo：`tb.logoF=f; tbFitSet('logo',null)`；图标：`tbIconSet('cur'/'search', path)`、`tbIconSet('side','img:'+…)`；余额框币种：`balSet(b=>b.curImg=path)` |
 | midnav（帐户栏） | 入口图标（每个入口一个，范围可选只这一个 / 整套）；帐户布局下还有余额框币种 | 57×50；余额框币种 52×52 | 5 款 + 4 种矢量 | 单个 4；整套是样板 4 张加其余每个 1 张 | 20 / 每个入口 20 | `styleSrc / candSrc`（modpanels），余额框币种同 topbar | `items[i][f]=src`（沿用 iaAdopt）；余额框币种同 topbar |
 | notice | 入口图标（喇叭、信箱） | 喇叭 36×32、信箱 57×50（`NT_SPEC`） | 同上 | 同上 | 20 | 同上 | `items[i].img`；信箱 `defOn` 时同时写 `imgOn`（沿用 iaAdopt） |

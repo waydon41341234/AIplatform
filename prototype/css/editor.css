@@ -1268,10 +1268,10 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .aig-c .aig-two.is-btn > i { width: 20px; height: 10px; flex: none; }
 
 /* ---------- AIG QA 修正（Figma 04-AI 统一生成） ---------- */
-/* Banner 款式卡：迷你 Banner（标题字压在样图上，Figma G1-04） */
-.aig-st .pv .aig-bnt { position: absolute; left: 4px; right: 4px; top: 50%; transform: translateY(-50%); z-index: 1; display: flex; flex-direction: column; align-items: flex-start; color: #fff; font-weight: 700; line-height: 1.05; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); pointer-events: none; }
-.aig-st .pv .aig-bnt b { font-size: 9px; white-space: nowrap; }
-.aig-st .pv .aig-bnt i { font-style: normal; font-size: 7px; font-weight: 500; opacity: .9; white-space: nowrap; }
+/* Banner 主题卡（AIG/StyleTile Kind=主题）：97×44 真实 AI Banner 缩略图 + 名字，一行 3 个、两行（Figma G1-04 / M-03） */
+.aig-styles.is-theme { grid-template-columns: repeat(3, minmax(0, 97px)); }
+.aig-styles.is-theme .pv { aspect-ratio: 97 / 44; }
+.aig-styles.is-theme .aig-pvimg { background-position: center; }
 /* 生成中：骨架格中间写百分比 */
 .aig-cand.skeleton b { color: var(--text-2); }
 /* 范围分段：名字长（vi）时折成两行，不截断目标名 */

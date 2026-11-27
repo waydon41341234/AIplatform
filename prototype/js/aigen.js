@@ -11,7 +11,8 @@
  *   目标 tg = { id, label, kind: 'image' | 'icon', spec: [w, h] | (entry) => [w, h], count, cost, ratio, cols,
  *              group?: 组名（同组的图标目标可切「整套」）, scopeable?: 一个目标里含多个入口（帐户栏 / 公告栏 / 游戏菜单 / 底部导航）,
  *              entry?: 这个目标对应的入口 id（只这一个时生成它）, name?, setName?, pair?(入口) → [左, 右]（一组两张：未选 / 选中、未登录 / 已登录）, lr?: 候选标题写「左 / 右」 }
- *   实现 = { styles(tg, a) → [{ id, label, html }], preset(tg, st, a), refPrompt?(tg, res, a), where?(tg), entries?(tg) → [{ i, name, label?, req, def, thumb, pics, cost? }], sample?(tg) → 整套默认样板入口, usedName?(a, tg) → toast 里的名字, libName?(a, tg) → 素材库名字, lowWhat?(a, tg) → 余额不足正文前缀（「1 张轮播图」）,
+ *   实现 = { styles(tg, a) → [{ id, label, html }], preset(tg, st, a), refPrompt?(tg, res, a)（返回 style: null = 不选中任何款式）, where?(tg),
+ *           defStyle?(tg) → 默认款式, refOf?(tg, st, a) → { src, name }（点款式 = 同时把这张图放进参考图格，Banner 主题）, stLab? → 款式行标题 key, stGrid? → 款式格 class, replacedKey? → 「已按新…改写」文案 key, entries?(tg) → [{ i, name, label?, req, def, thumb, pics, cost? }], sample?(tg) → 整套默认样板入口, usedName?(a, tg) → toast 里的名字, libName?(a, tg) → 素材库名字, lowWhat?(a, tg) → 余额不足正文前缀（「1 张轮播图」）,
  *           gen(a, tg, i, n, base) → 候选数组, best?(a, tg, cands), tile(a, tg, i, c), old?(a, tg, i), preview?,
  *           apply(a, tg, i, c)（AIG 外面包 commit）, lib?(a, tg, i, c) → 素材值, pay(tg) → [kind, vars], onTarget?(tg) }
  * 依赖：core（refSlot / refPick / costConfirm / lowBalance / toast）、editor（window.EDX，运行时取）。 */
@@ -85,12 +86,12 @@
     let a = E.aigS[key];
     if (!a) {
       const m = impl(probe, tg); const sts = m.styles(tg, probe);
-      a = { aig: true, mod, id, tg: tg.id, idx: scope === 'one' ? idx : null, scope, key, style: sts[0].id, prompt: '', dirty: false, prev: null, replaced: false, refSt: {}, analyzing: false, fromRef: false, stage: 'setup', cands: [], pick: null, best: 0, pct: 0, round: 0, picks: {}, rows: {}, failed: {}, busy: {} };
+      a = { aig: true, mod, id, tg: tg.id, idx: scope === 'one' ? idx : null, scope, key, style: m.defStyle ? m.defStyle(tg) : sts[0].id, prompt: '', dirty: false, prev: null, replaced: false, refSt: {}, analyzing: false, fromRef: false, stage: 'setup', cands: [], pick: null, best: 0, pct: 0, round: 0, picks: {}, rows: {}, failed: {}, busy: {} };
       ents.forEach((e) => { a.picks[e.i] = scope === 'one' ? e.i === idx : !!(e.req || e.def); });
       if (scope === 'set' && !ents.some((e) => a.picks[e.i]) && ents[0]) a.picks[ents[0].i] = true;
       // 切目标 / 切范围时：用户改过的提示词、参考图和款式带过去，没改过就按新目标的默认值重写
-      if (prev && prev.mod === mod && (prev.dirty || prev.fromRef)) { a.prompt = prev.prompt; a.dirty = prev.dirty; a.fromRef = prev.fromRef; a.refSt = Object.assign({}, prev.refSt, { _tok: 0 }); if (sts.some((s) => s.id === prev.style)) a.style = prev.style; }
-      else a.prompt = m.preset(tg, a.style, a);
+      if (prev && prev.mod === mod && (prev.dirty || prev.fromRef)) { a.prompt = prev.prompt; a.dirty = prev.dirty; a.fromRef = prev.fromRef; a.refSt = Object.assign({}, prev.refSt, { _tok: 0 }); if (prev.style == null || sts.some((s) => s.id === prev.style)) a.style = prev.style; }
+      else { a.prompt = m.preset(tg, a.style, a); if (m.refOf) a.refSt = themeRef(m, tg, a.style, a); } // Banner：默认主题的样图先放在参考图格（Figma G1-04）
       E.aigS[key] = a;
     }
     if (scope === 'set' && o.idx != null && o.idx !== '' && ents.some((e) => e.i === String(o.idx))) a.pref = String(o.idx);
@@ -119,14 +120,20 @@
   };
 
   // ---------- 款式 / 提示词 / 参考图 / 模型 ----------
+  // 点主题（Banner）= 提示词换成这个主题的 + 参考图格放这个主题的真实样图（可 ✕ 去掉，或换成业主自己的图）
+  const themeRef = (m, tg, st, a) => Object.assign({ auto: st }, m.refOf(tg, st, a));
   A.aigStyle = (st) => {
-    const a = cur(); if (!a || busy(a) || a.analyzing) return false; const tg = tgOf(a);
-    const p = impl(a, tg).preset(tg, st, a);
-    // 业主改过（或 AI 看参考图写的）提示词被款式覆盖：给一个「还原」
-    if ((a.dirty || a.fromRef) && a.prompt.trim() && a.prompt !== p) { a.prev = a.prompt; a.replaced = true; } else a.replaced = false;
+    const a = cur(); if (!a || busy(a) || a.analyzing) return false; const tg = tgOf(a), m = impl(a, tg);
+    const p = m.preset(tg, st, a);
+    // 业主改过（或 AI 看参考图写的）提示词被款式覆盖：给一个「还原」；带参考图的主题连主题和参考图一起还原（Figma G1-07 → G1-04）
+    if ((a.dirty || a.fromRef) && a.prompt.trim() && a.prompt !== p) { a.prev = a.prompt; a.replaced = true; a.prevSt = m.refOf ? { style: a.style, refSt: a.refSt, fromRef: a.fromRef, dirty: a.dirty } : null; } else { a.replaced = false; a.prevSt = null; }
     a.style = st; a.prompt = p; a.dirty = false; a.fromRef = false;
+    if (m.refOf) { if (a.refSt.uploading) window.refCancel(a.refSt); a.refSt = themeRef(m, tg, st, a); }
   };
-  A.aigPromptUndo = () => { const a = cur(); if (!a || a.prev == null) return false; a.prompt = a.prev; a.prev = null; a.replaced = false; a.dirty = true; };
+  A.aigPromptUndo = () => {
+    const a = cur(); if (!a || a.prev == null) return false; a.prompt = a.prev; a.prev = null; a.replaced = false; a.dirty = true;
+    const s = a.prevSt; if (s) { a.style = s.style; a.refSt = s.refSt; a.fromRef = s.fromRef; a.dirty = s.dirty; a.prevSt = null; }
+  };
   I.aigPrompt = (v) => {
     const a = cur(); if (!a) return false;
     a.prompt = String(v).slice(0, 300); a.dirty = true;
@@ -138,19 +145,24 @@
   A.aigKey = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); const r = A.aigSend(); return r !== false; } };
   function analyze(a) {
     const tg = tgOf(a), m = impl(a, tg), src = a.refSt.src; if (!src) return;
+    delete a.refSt.auto; a.prevSt = null; // 业主自己的图换掉了主题样图
     a.analyzing = true; window.render();
     window.aiRefRead(src, m.where ? m.where(tg) : ['', ''], (res) => {
       if (X().E.aigS[a.key] !== a) return; a.analyzing = false;
       if (!res) { a.refSt = {}; window.toast(t('mp/icon-bad'), { info: true }); window.render(); return; }
       const r = m.refPrompt ? m.refPrompt(tg, res, a) : { prompt: res.prompt, style: res.style };
-      if (m.styles(tg, a).some((s) => s.id === r.style)) a.style = r.style;
+      if (r.style === null || m.styles(tg, a).some((s) => s.id === r.style)) a.style = r.style; // null：业主自己的参考图不选中任何主题（Figma G1-05 / G1-06）
       a.prompt = String(r.prompt || '').slice(0, 300); a.fromRef = true; a.dirty = false; a.replaced = false; a.prev = null;
       window.render();
     });
   }
   A.aigRefPick = () => { const a = cur(); if (!a || busy(a) || a.analyzing) return false; window.refPick(a.refSt, () => analyze(a)); return false; };
-  A.aigRefView = () => (X().mobileEd() ? A.aigRefPick() : false);
-  A.aigRefRm = () => { const a = cur(); if (!a) return false; a.refSt = {}; a.analyzing = false; if (a.fromRef) { const tg = tgOf(a); a.prompt = impl(a, tg).preset(tg, a.style, a); a.fromRef = false; } };
+  // 点已有的参考图：手机 = 换一张；电脑上点主题样图也是换成自己的图（业主自己的图悬停看大图）
+  A.aigRefView = () => { const a = cur(); return X().mobileEd() || (a && a.refSt.auto) ? A.aigRefPick() : false; };
+  A.aigRefRm = () => {
+    const a = cur(); if (!a) return false; a.refSt = {}; a.analyzing = false;
+    if (a.fromRef) { const tg = tgOf(a), m = impl(a, tg); if (a.style == null) a.style = m.defStyle ? m.defStyle(tg) : m.styles(tg, a)[0].id; a.prompt = m.preset(tg, a.style, a); a.fromRef = false; }
+  };
   A.aigRefCancel = () => { const a = cur(); if (!a) return false; window.refCancel(a.refSt); a.analyzing = false; };
   A.aigModel = (m) => { X().E.aigModel = m === 'gemini' ? 'gemini' : 'gpt'; S().menu = null; if (S().sheet === 'aigModel') S().sheet = null; };
   A.aigModelSheet = () => { S().sheet = 'aigModel'; S().menu = null; };
@@ -413,7 +425,7 @@
     const sts = m.styles(tg, a);
     // 整套出样板后：顶部栏（G2-09）和手机（M-11b）把款式区收起，样板候选紧跟输入框
     const foldSt = a.scope === 'set' && a.stage !== 'setup' && (adp(a).upfront || x.mobileEd());
-    const styles = a.stage === 'rest' || a.stage === 'list' || foldSt ? '' : sec(t('aig/style'), `<div class="aig-styles">${sts.map((s) => `<button class="aig-st ${a.style === s.id ? 'is-on' : ''}" data-act="aigStyle" data-arg="${s.id}" ${lock || a.analyzing ? 'disabled' : ''} title="${esc(s.label)}" aria-pressed="${a.style === s.id}"><span class="pv">${s.html}</span><small>${esc(s.label)}</small></button>`).join('')}</div>`);
+    const styles = a.stage === 'rest' || a.stage === 'list' || foldSt ? '' : sec(t(m.stLab || 'aig/style'), `<div class="aig-styles ${m.stGrid || ''}">${sts.map((s) => `<button class="aig-st ${a.style === s.id ? 'is-on' : ''}" data-act="aigStyle" data-arg="${s.id}" ${lock || a.analyzing ? 'disabled' : ''} title="${esc(s.label)}" aria-pressed="${a.style === s.id}"><span class="pv">${s.html}</span><small>${esc(s.label)}</small></button>`).join('')}</div>`);
     const cost = sendCost(a, tg), sp = specOf(a, tg), now = Date.now(), hintOn = now < (a.hintUntil || 0), shake = now < (a.shakeUntil || 0);
     const empty = !a.prompt.trim();
     const send = lock ? `<button class="send is-busy" disabled aria-label="${esc(t('aig/generating', { n: tg.count, p: a.pct }))}">${ic('sparkle-fill')}${cost}<i class="aig-spin" aria-hidden="true"></i></button>`
@@ -423,7 +435,7 @@
       <div class="c-tools">${modelPill(lock)}<span class="sb-spacer"></span>${send}</div></div>${hintOn ? `<div class="c-hint aig-hint" role="alert">${ic('warning-circle-fill', 'ic-16')}<span>${t('composer/empty-hint')}</span></div>` : ''}</div>`;
     const low = x.afford(cost) || lock || a.stage === 'list' ? '' : `<button class="aig-low" data-act="edTopup">${ic('warning-circle-fill', 'ic-16')}${t('aig/low')}</button>`;
     // 失败 / 余额不足时不显示「已按新款式改写 · 还原」（Figma G1-12 / G1-13）
-    const note = a.stage === 'failed' || low ? '' : a.replaced ? `<div class="aig-note">${ic('arrow-counter-clockwise', 'ic-16')}<span>${t('aig/prompt-replaced')}</span><button class="aig-link" data-act="aigPromptUndo">${t('aig/prompt-undo')}</button></div>`
+    const note = a.stage === 'failed' || low ? '' : a.replaced ? `<div class="aig-note">${ic('arrow-counter-clockwise', 'ic-16')}<span>${t(m.replacedKey || 'aig/prompt-replaced')}</span><button class="aig-link" data-act="aigPromptUndo">${t('aig/prompt-undo')}</button></div>`
       : a.fromRef && !a.analyzing ? `<div class="aig-note">${ic('sparkle-fill', 'ic-16')}<span>${t('aig/prompt-ref')}</span></div>` : '';
     return `<div class="aig" data-aig="${a.mod}">${hd}<div class="aig-body">${tgSw}${scope}${styles}${box}${low}${note}${resHtml(a, tg)}</div></div>`;
   }

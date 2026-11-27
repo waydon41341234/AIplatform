@@ -42,22 +42,8 @@
   const TB_SW = { bg: ['bg_2', 'bg_1', 'primary', 'lead'], side: ['lead', 'neutral_1', 'primary', 'bg_2'] };
   const TB_KEY = { bg: 'bs_topnav_bg', side: 'lead' };
   const SLIDE_F = ['none', 'hue-rotate(28deg) saturate(1.2)', 'hue-rotate(-38deg)'];
-  // Banner AI 候选 = Figma generate image 生成的 4 种默认风格（2026-11-26，assets/ai-banner/）
-  const CAND_W = ['glossy', 'blackgold', 'festive', 'neon'].map((k) => 'img:assets/ai-banner/' + k + '.webp');
-  // AI 候选也按当前样式出对应比例的图（大 1500×680、小 320×202，其它 1020×300）
-  // 每张候选图的风格标签（按图片内容标：大 = 真人蓝 / 黑金 / 体育霓虹，小 = 蓝光泽 / 黑金 / 红包喜庆）
-  const CAND_TAG = { large: [['glossy'], ['blackgold'], ['sport', 'neon']], small: [['glossy'], ['blackgold'], ['festive']], def: [['glossy'], ['blackgold'], ['festive'], ['neon']] };
-  const candBase = () => (E.D.banner.size === 'large' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/large-' + n + '.webp') : E.D.banner.size === 'small' ? [1, 2, 3].map((n) => 'img:assets/ai-banner/small-' + n + '.webp') : CAND_W);
-  const candTags = () => CAND_TAG[E.D.banner.size] || CAND_TAG.def;
-  // 生成时按款式 / 提示词 / 参考图给候选排序（最贴合的排第一）
-  const PROMPT_ST = [['festive', /春节|新年|喜庆|喜慶|节日|節日|红包|紅包|中秋|圣诞|聖誕|红色|紅色|festive|holiday|new year|red\b|lễ hội|tết/i], ['blackgold', /黑金|金色|奢华|奢華|尊享|vip|gold|luxur|sang trọng|vàng/i], ['neon', /霓虹|赛博|賽博|科技|neon|cyber|tech|công nghệ/i], ['sport', /体育|體育|足球|球员|球員|赛事|賽事|sport|football|thể thao/i], ['glossy', /3d|立体|立體|光泽|光澤|卡通|glossy|cartoon|nổi khối/i]];
-  function candScore(a) {
-    const w = {}; const add = (st, n) => { w[st] = (w[st] || 0) + n; };
-    add(a.style === 'flat' ? 'glossy' : a.style, a.fromRef ? 4 : 3);
-    PROMPT_ST.forEach(([st, re]) => { if (re.test(a.prompt || '')) add(st, 2); });
-    const sc = candTags().map((tg) => tg.reduce((n, st) => n + (w[st] || 0), 0));
-    return { order: sc.map((v, i) => i).sort((x, y) => sc[y] - sc[x] || x - y), best: Math.max(...sc) > 0 };
-  }
+  // Banner AI 候选张数跟当前样式走：大 / 小 Banner 3 张（1500×680、320×202），通用 / 中 4 张（1020×300）
+  const candN = () => (E.D.banner.size === 'large' || E.D.banner.size === 'small' ? 3 : 4);
   const BNAV_PX = { 98: 49, 110: 55, 120: 60, 140: 70 };
   const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
@@ -1771,15 +1757,28 @@
     // 规格跟当前 Banner 尺寸走（候选图就是这个尺寸的专用图，使用后写进去的也是这个尺寸）；PC 预览也一样，不再写 1920×564
     const bnSpec = () => BANNER[E.D.banner.size];
     const bnName = (n) => (E.D.banner.size === 'general' ? t('aig/n-slide', { n }) : t('aig/n-slide-sz', { s: t('ed/banner-' + E.D.banner.size), n }));
-    // Banner 款式卡：光泽 / 黑金 / 喜庆 / 霓虹用样图，扁平用光泽样图去饱和
-    const BN_PV = { glossy: 'glossy', flat: 'glossy', blackgold: 'blackgold', festive: 'festive', neon: 'neon' };
+    // Banner 主题（Waydon 2026-11-27「款式应该是 Banner 主题，不是风格」；Figma G1 / AIG/StyleTile Kind=主题）：
+    // 节日 / 宣传 / 推广 / 奖励 + 新人 / 赛事；每个主题一张真实 AI 生成的 Banner（assets/ai-banner/theme-*.webp，缩略图 *-th.webp）
+    const BN_TH = ['festival', 'brand', 'referral', 'reward', 'newbie', 'sports'];
+    const bnThSrc = (id, th) => 'assets/ai-banner/theme-' + id + (th ? '-th' : '') + '.webp';
+    // 业主自己写的提示词提到别的主题（「春节」「邀请好友」…）时，候选按提示词的主题出
+    const BN_TH_RE = { festival: /节日|節日|春节|春節|新年|喜庆|喜慶|圣诞|聖誕|中秋|端午|元宵|灯笼|燈籠|holiday|festiv|new year|christmas|lễ hội|tết/i, reward: /奖励|獎勵|优惠|優惠|宝箱|寶箱|红包|紅包|彩金|返水|bonus|reward|treasure|thưởng|ưu đãi/i, referral: /推广|推廣|邀请|邀請|好友|佣金|分享|referral|invite|friend|giới thiệu|mời/i, newbie: /新人|新手|首充|首存|欢迎|歡迎|welcome|newbie|new member|new player|người mới/i, sports: /体育|體育|赛事|賽事|足球|篮球|籃球|球场|球場|世界杯|世界盃|sport|match|football|basketball|thể thao|giải đấu/i, brand: /宣传|宣傳|品牌|标语|標語|brand|slogan|thương hiệu|quảng bá/i };
+    const bnTheme = (a) => {
+      const hit = a.dirty || a.fromRef ? BN_TH.filter((k) => BN_TH_RE[k].test(a.prompt || '')) : [];
+      return a.style && (!hit.length || hit.includes(a.style)) ? a.style : hit[0] || a.bnGuess || 'brand';
+    };
+    // 同一张主题图出几张候选：原色 + 换色调（再生成时轮换），尺寸不同时按样式比例裁切（背景 cover）
+    const BN_TINT = ['', 'hue-rotate(-24deg) saturate(1.15)', 'hue-rotate(28deg) brightness(1.04)', 'saturate(1.35) contrast(1.08)'];
     const BANNER_AI = {
-      // 款式卡 = 迷你 Banner：样图 + 「万人竞技 / 巅峰对决」标题（Figma G1-04）
-      styles: () => ST5.map((st) => ({ id: st, label: stName(st), html: `<i class="aig-pvimg" style="background-image:url(assets/ai-banner/${BN_PV[st]}.webp)${st === 'flat' ? ';filter:saturate(.45) brightness(1.18)' : st === 'blackgold' ? ';filter:brightness(1.35)' : ''}"></i><span class="aig-bnt"><b>${t('aig/bn-t1')}</b><i>${t('aig/bn-t2')}</i></span>` })),
-      preset: (tg, st) => t('aig/bn-p-' + st),
-      refPrompt: (tg, res) => { const sz = bnSpec(); return { style: res.style, prompt: t('ed/ai-ref-prompt', { w: sz.w, h: sz.h, hex: res.hex, style: t('ed/ai-st-' + res.style) }) }; },
-      // 候选张数 / 比例跟当前 Banner 规格走（大 Banner、小 Banner 各 3 张专用图）
-      gen: (a) => { const b = candBase(); return candScore(a).order.map((k) => b[k]); },
+      // 主题卡（97×66：97×44 真实缩略图 + 名字，一行 3 个）
+      styles: () => BN_TH.map((id) => ({ id, label: t('aig/bt-' + id), html: `<i class="aig-pvimg" style="background-image:url(${bnThSrc(id, true)})"></i>` })),
+      stLab: 'aig/bn-theme', stGrid: 'is-theme', replacedKey: 'aig/bt-replaced',
+      defStyle: () => 'brand', // Figma G1-04 默认选「宣传」
+      preset: (tg, st) => t('aig/bt-p-' + (st || 'brand')),
+      refOf: (tg, st) => ({ src: bnThSrc(st), name: t('aig/bt-' + st) }),
+      // 业主自己的参考图：不选中任何主题（Figma G1-05 / 06），候选按参考图大致风格对应一个主题
+      refPrompt: (tg, res, a) => { const sz = bnSpec(); a.bnGuess = { glossy: 'brand', flat: 'newbie', blackgold: 'reward', festive: 'festival', neon: 'sports' }[res.style]; return { style: null, prompt: t('ed/ai-ref-prompt', { w: sz.w, h: sz.h, hex: res.hex, style: t('ed/ai-st-' + res.style) }) }; },
+      gen: (a, tg, i, n) => { const src = 'img:' + bnThSrc(bnTheme(a)); return Array.from({ length: n }, (_, k) => { const f = BN_TINT[(k + a.round) % BN_TINT.length]; return f ? src + '#' + f : src; }); },
       tile: (a, tg, i, f) => `<i class="aig-img" style="${window.fxStyle(f)}"></i>`,
       lib: (a, tg, i, f) => f,
       name: (a, tg) => bnName(+tg.id.slice(5) + 1), // 「大 Banner 第 2 张」「小 Banner 第 2 张」（Figma G1-14a / 14b）
@@ -1791,7 +1790,7 @@
     };
     AIG.reg('banner', {
       // 小 Banner 3 列（98×62 格）；大 / 一般 / 中 2 列宽格
-      targets: () => { const sz = bnSpec(), small = E.D.banner.size === 'small'; return E.D.banner.slides.map((s, i) => ({ id: 'slide' + i, label: t('aig/t-slide', { n: i + 1 }), kind: 'image', spec: [sz.w, sz.h], count: candBase().length, cost: 20, ratio: sz.w / sz.h, cols: small ? 3 : 2 })); },
+      targets: () => { const sz = bnSpec(), small = E.D.banner.size === 'small'; return E.D.banner.slides.map((s, i) => ({ id: 'slide' + i, label: t('aig/t-slide', { n: i + 1 }), kind: 'image', spec: [sz.w, sz.h], count: candN(), cost: 20, ratio: sz.w / sz.h, cols: small ? 3 : 2 })); },
       defaultTarget: () => 'slide' + E.slide,
       impl: () => BANNER_AI,
     });
