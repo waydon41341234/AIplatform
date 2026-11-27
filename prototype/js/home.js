@@ -390,8 +390,8 @@
   // 项目列表存 LS：新建 / 重命名 / 删除（D 的页面直接改 window.PROJECTS 数组）刷新后保持一致
   let projSaved = '';
   window.AFTER_RENDER.push(() => { const s = JSON.stringify(window.PROJECTS); if (s !== projSaved) { projSaved = s; window.LS.set('projects', window.PROJECTS); } });
-  // 目前只开放 经典蓝 和 白金（western-white，名字已改为「白金 · 简约」）；其余版式只显示底板色 +「暂未开放」（Waydon 2026-11-26）
-  const TPL_OPEN = ['classic-blue', 'western-white'];
+  // 目前只开放「经典蓝白」（真实 UI，Waydon 2026-11-26 11:16）；其余版式（含白金）只显示平台底板色 + 兜底图标 +「暂未开放」
+  const TPL_OPEN = ['classic-blue']; // Waydon 2026-11-26 11:16：只开放真实的经典蓝白，其他（含白金）先显示暂不开放
   window.tplOpen = (k) => TPL_OPEN.includes(k);
   const soonToast = () => window.toast(t('tpl/soon-toast'), { info: true });
   A.tplSoon = () => { soonToast(); return false; };
@@ -417,7 +417,8 @@
   }
   window.kickThumbs = kickThumbs;
   // 卡片 HTML（D 的新页面复用）：extra 放进封面右上（例如「⋯」按钮）
-  window.projectCard = (p, extra = '') => { kickThumbs(); return `<div class="card" role="button" tabindex="0" data-act="openProject" data-arg="${esc(p.name)}">${cover('assets/thumbs/project-' + (p.tone || 'blue') + '.png', 'r-5x6', levelTag() + extra)}<div class="card-title"><span class="ellipsis" title="${esc(p.name)}">${esc(p.name)}</span><span class="pill-tag ${p.st === 'exported' ? 'is-ok' : ''}">${t('status/' + p.st)}</span></div><div class="caption faint">${p.timeText ? esc(p.timeText) : t(p.time)}</div></div>`; };
+  // 项目封面 = 所用模板的缩略图（Waydon 2026-11-26；目前只开放经典蓝白）
+  window.projectCard = (p, extra = '') => { kickThumbs(); return `<div class="card" role="button" tabindex="0" data-act="openProject" data-arg="${esc(p.name)}">${cover('assets/thumbs/tpl-' + (window.tplOpen && p.tpl && window.tplOpen(p.tpl) ? p.tpl : 'classic-blue') + '.png', 'r-5x6 is-tplcov', levelTag() + extra)}<div class="card-title"><span class="ellipsis" title="${esc(p.name)}">${esc(p.name)}</span><span class="pill-tag ${p.st === 'exported' ? 'is-ok' : ''}">${t('status/' + p.st)}</span></div><div class="caption faint">${p.timeText ? esc(p.timeText) : t(p.time)}</div></div>`; };
   window.templateCard = (x, extra = '') => { if (!window.tplOpen(x.k)) return `<div class="card is-soon" role="button" tabindex="0" data-act="tplSoon" data-arg="${x.k}"><div class="cover r-3x4 tpl-soon-cover"><span class="tpl-soon-ic">${ic('layout-fill', 'ic-40')}</span><span class="pill-tag is-gray tpl-soon-tag">${t('level/coming-soon')}</span>${extra}</div><div class="card-title"><span class="ellipsis">${t('template/' + x.k)}</span></div><div class="caption faint">${t('level/coming-soon')}</div></div>`; kickThumbs(); return `<div class="card" role="button" tabindex="0" data-act="openTplPreview" data-arg="${x.k}">${cover('assets/thumbs/tpl-' + x.k + '.png', 'r-3x4', extra)}<div class="card-title"><span class="ellipsis">${t('template/' + x.k)}</span></div><div class="caption faint">${t('template/meta-' + x.meta)}</div></div>`; };
   // role=button 的卡片支持回车 / 空格
   document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); } });
@@ -458,7 +459,9 @@
   function tplBody(mobile) {
     const x = TEMPLATES.find((q) => q.k === S.tplK) || { k: S.tplK, meta: 'standard', f: 'classic' };
     const tone = thumbTone(x), pal = PALETTES[tone] || MINI_PAL[tone] || PALETTES.blue;
-    const prev = `<div class="tpl-prev ${S.tplReady ? '' : 'skeleton'}" data-sk="tplprev">${S.tplReady ? window.miniH5(tone, true) : ''}</div>`;
+    // 经典蓝白：预览用真实首页（Figma 317:55528 未登录整页），其余版式仍用配色示意图
+    const real = x.k === 'classic-blue' ? `<img class="tpl-real" src="assets/classic/home-out.webp" alt="">` : '';
+    const prev = `<div class="tpl-prev ${S.tplReady ? '' : 'skeleton'}" data-sk="tplprev">${S.tplReady ? real || window.miniH5(tone, true) : ''}</div>`;
     const info = `<div class="tpl-info"><h3>${t('template/' + x.k)}</h3>
       <div class="tpl-meta"><span class="level-tag is-inline"><img src="assets/badge-tier${x.meta === 'pro' ? 2 : 1}.png" alt="">${t('level/' + (x.meta === 'pro' ? 'pro' : 'standard') + '-title')}</span><span class="caption muted">${t('template/meta-' + x.meta)}</span></div>
       <div class="dots tpl-dots">${pal.slice(0, 3).map((c) => `<i style="background:${c}"></i>`).join('')}</div>

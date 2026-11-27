@@ -50,16 +50,17 @@
 
 /* Banner：大 1200×545、通用 1200×353、小 3 × 386×244 并排 */
 .pc-banner { background: var(--o-bg_1); }
-.pc-banner .vp { position: relative; overflow: hidden; margin: 0 auto; background: var(--o-ext_ddt_bg, var(--o-border)); touch-action: pan-y; }
+.pc-banner .vp { position: relative; overflow: hidden; margin: 0 auto; background: var(--e-banner-placeholder, var(--o-ext_ddt_bg, var(--o-border))); touch-action: pan-y; }
 .pc-banner .track { display: flex; height: 100%; transition: transform .4s ease; }
 .pc-banner .slide { flex: 0 0 100%; height: 100%; background: center / cover url(../assets/hero-1440x480.jpg); }
 .pc-banner.is-small .vp { background: none; }
 .pc-banner.is-small .track { gap: 21px; }
 .pc-banner.is-small .slide { flex: 0 0 386px; background-color: var(--o-border); }
-.pc-ind { display: flex; justify-content: center; gap: 8px; padding: 12px 0 0; }
-.pc-ind i { width: 10px; height: 10px; border-radius: 50%; background: var(--o-neutral_3); cursor: pointer; }
+/* PC 指示器：跟 H5 同一套模块色（banner.indActive / indDef，默认 text_primary 白，未选中 50% 透明），叠在图片底部 */
+.pc-ind { position: absolute; left: 0; right: 0; bottom: 20px; display: flex; justify-content: center; gap: 8px; padding: 0; }
+.pc-ind i { width: 10px; height: 10px; border-radius: 50%; background: color-mix(in srgb, var(--e-banner-indDef, #fff) 50%, transparent); box-shadow: 0 0 0 1px #00000040; cursor: pointer; }
 .pc-ind.bars i { width: 24px; height: 4px; border-radius: 2px; }
-.pc-ind i.on { background: var(--o-primary); }
+.pc-ind i.on { background: var(--e-banner-indActive, #fff); box-shadow: 0 0 0 1px #00000080; }
 .pc-ind.dots i.on { width: 24px; border-radius: 5px; }
 
 /* 彩金池：1200 × 120 横条 */
@@ -77,6 +78,19 @@
 .pc-mid-wrap .acct { display: flex; align-items: center; gap: 16px; height: 56px; padding: 0 24px; margin-bottom: 16px; border-radius: 12px; background: var(--o-bg_1); color: var(--o-primary); font-weight: 600; font-size: 18px; }
 .pc-mid-wrap .acct .sp { flex: 1; }
 .pc-mid-wrap .acct .a { padding: 6px 18px; border-radius: 16px; background: var(--o-primary); color: var(--o-bg_2); font-size: 14px; }
+/* 帐户区（跟 H5 帐户栏同源）：未登录登录 / 注册按钮，颜色 midnav.btn / midnav.btnText；已登录用户名 + 余额框 */
+.pc-mid-wrap .acct.out .lg, .pc-mid-wrap .acct.out .rg { min-width: 96px; height: 36px; padding: 0 18px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 400; border: 1px solid var(--e-midnav-btn); color: var(--e-midnav-btn); }
+.pc-mid-wrap .acct.out .rg { background: var(--e-midnav-btn); color: var(--e-midnav-btnText); }
+.pc-mid-wrap .acct.in { color: var(--e-midnav-user); font-weight: 400; }
+.pc-mid-wrap .acct.in .u { font-size: 14px; display: inline-flex; }
+.pc-mid-wrap .acct.in .bxu { display: inline-flex; align-items: center; gap: 6px; font-size: inherit; }
+.pc-mid-wrap .acct.in .bxu .vip { height: 20px; }
+.pc-mid-wrap .acct.in .bxu :is(.cv, .act) { width: 14px; height: 14px; }
+.pc-mid-wrap .acct.in .b { font-size: 18px; display: inline-flex; }
+.pc-mid-wrap .acct.in .bx { height: 30px; font-size: inherit; border-radius: 15px; padding: 0 8px 0 4px; gap: 6px; }
+.pc-mid-wrap .acct.in .bx b { font-weight: 700; font-size: inherit; }
+.pc-mid .ib { position: relative; }
+.pc-mid .ib .bd { position: absolute; top: -8px; left: 60%; padding: 0 6px; border-radius: 10px; background: var(--o-accent_2); color: #fff; font-style: normal; font-size: 12px; line-height: 1.4; white-space: nowrap; }
 .pc-mid { display: grid; grid-template-columns: repeat(10, 1fr); }
 .pc-mid .it { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--e-midnav-text); font-size: 15px; min-width: 0; }
 .pc-mid .nm { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -102,7 +116,12 @@
 .pc-gc .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-gc .im { position: relative; aspect-ratio: 4 / 3; background: linear-gradient(135deg, #2a2a2e, #3a3a40); overflow: hidden; }
 .pc-gc .im.fb { background: var(--e-gamecards-placeholder); display: flex; align-items: center; justify-content: center; color: var(--e-gamecards-placeholderIcon); }
-.pc-gc .im.fb > .ic { width: 28%; height: 28%; }
+.pc-gc .im.fb .fbg { display: flex; width: 62%; height: 62%; }
+.pc-gc .im.fb .fbg .ic { width: 100%; height: 100%; }
+.pc-gc .im .fbimg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.pc-gc .im .rec { position: absolute; left: 0; top: 0; width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); border-radius: 0 0 14px 0; }
+.pc-gc .im .rec .ic { width: 18px; height: 18px; }
+.pc-gc .im .star { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; object-fit: contain; }
 .pc-gc .tg { position: absolute; left: 8px; top: 8px; padding: 0 8px; border-radius: 4px; background: var(--e-gamecards-label); color: var(--e-gamecards-labelText); font-size: 13px; line-height: 22px; }
 
 /* 页脚：通栏，链接一行 + 版权 */
@@ -148,3 +167,14 @@ body:has(.med-sheet) .pc-mfloat, body:has(.preview-full) .pc-mfloat { display: n
 .pc-top .bal.bal-solid .bplus { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.25); }
 .pc-top .bal.bal-solid .bplus .bi { width: 16px; height: 16px; }
 .pc-top .bal.bal-text { gap: 6px; padding: 0 4px; background: none; border: 0; }
+/* 经典蓝白素材 */
+.pc-top .lg img.lg-cl { width: auto; height: 34px; border-radius: 0; }
+.pc-gc .im.cl { position: relative; overflow: hidden; background: none; aspect-ratio: 1; }
+.pc-gc .im.cl.fb { background: var(--e-gamecards-placeholder); } /* 兜底封面底板 ddt_bg */
+.pc-gc .im.cl > img:first-child { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pc-gc .im.cl .wg { position: absolute; right: 4px; bottom: 4px; width: 36%; }
+.pc-mid .ib.cu img { width: 100%; height: 100%; object-fit: contain; }
+.pc-top .bx { height: 36px; gap: 6px; padding: 0 10px 0 6px; border-radius: 18px; font-size: 16px; }
+.pc-top .bx .cur { width: 24px; height: 24px; }
+.pc-top .bx .rf { width: 18px; height: 18px; }
+.pc-top .bx .xch { font-size: 16px; }

@@ -77,7 +77,7 @@
     const m = D.m;
     m.gamemenu.shape = lv === 0 ? 'square' : v.gmShape; m.gamemenu.style = v.gmStyle;
     m.jackpot.layout = v.jp; m.jackpot.corner = [0, 16, 32][lv]; m.jackpot.margin = [8, 16, 24][Math.floor(r() * 3)];
-    m.gamecards.corner = [0, 16, 32][lv]; m.gamecards.cols = v.cols; m.gamecards.gap = [16, 24, 32][Math.floor(r() * 3)];
+    m.gamecards.corner = [0, 20, 32][lv]; m.gamecards.cols = v.cols; m.gamecards.gap = [12, 20, 32][Math.floor(r() * 3)];
     m.footer.align = v.foot; m.bottomnav.style = v.bnav; m.bottomnav.h = v.bh; m.sidebar.style = v.side; m.midnav.per = v.per;
     // Banner：当前规格 3 张（滤镜模拟 AI 出图）
     const size = v.size, sz = x.BANNER[size];
@@ -92,10 +92,11 @@
     const jpInk = best(jpBg, [th.bg_2, th.lead, '#ffffff', '#111111']); put('jackpot.title', jpInk, th.bg_2); put('jackpot.amount', jpInk, th.bg_2);
     put('gamemenu.activeText', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
     put('sidebar.textActive', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
-    put('gamecards.labelText', best(th.accent_3, [th.bg_2, th.lead]), th.bg_2);
+    put('gamecards.labelText', best(th.accent_3, ['#ffffff', th.lead]), '#ffffff'); // 默认 labeltext_accent3 = 固定白
     const bnOn = vi === 1 ? (dark ? th.primary : mix(th.primary, th.lead, 0.25)) : th.primary;
     put('bottomnav.active', contrast(th.bg_2, bnOn) >= 3 ? bnOn : best(th.bg_2, [mix(th.primary, th.lead, 0.35), mix(th.primary, th.lead, 0.6), th.lead]), th.primary);
     if (contrast(th.bg_1, th.neutral_2) < 3.2) put('footer.text', best(th.bg_1, [th.neutral_1, mix(th.neutral_2, th.lead, 0.5)]), th.neutral_2);
+    if (dark) ec['key:home_bg'] = 'key:bg_1'; // 深色风格：首页背景改跟页面背景（home_bg 跟设计默认 #FFFFFF 是经典蓝白的，深色底上会整页发白）
     D.ec = ec; D.baseEc = Object.assign({}, ec);
     return D;
   }
@@ -498,7 +499,7 @@
     const x = X(), E = x.E;
     const st = E.D.style && ST[E.D.style] ? E.D.style : 'platinum';
     E.adp = { stage: 'idle', p: newParams({ style: st, ics: E.D.iconStyle || ST[st].ics, follow: !E.D.iconStyle }), sets: [], pick: null, progress: 0, seed: 0, kept: x.customCount() };
-    E.sel = null; E.keys = null; E.picker = null; E.ai = null; E.iconAi = null; S.menu = null;
+    E.sel = null; E.keys = null; E.picker = null; E.ai = null; S.menu = null;
     if (edMob()) E.mpanel = 'ad';
   };
   const P = () => X().E.adp;
@@ -656,7 +657,10 @@
   A.adBarX = () => { X().E.adBar = null; };
   A.adBarGo = () => {
     const E = X().E; const ics = E.adBar && E.adBar.ics; E.adBar = null; E.device = 'h5';
-    selMod0('midnav'); A.iaOpen('midnav'); if (E.iconAi && ics) E.iconAi.style = ics;
+    // 打开统一 AI 面板（帐户栏 · 整套入口图标），预选跟 AI 设计同一种图标风格（旧矢量款式映射到统一款式）
+    selMod0('midnav'); A.aigOpen('midnav|icons||set');
+    const st = { glass: 'glossy', metal: 'blackgold', '3d': 'festive' }[ics] || ics;
+    if (st && window.AIG && window.AIG.cur()) A.aigStyle(st);
     if (edMob()) E.mpanel = 'module';
   };
 
@@ -666,17 +670,23 @@
   function toolBtn(id, mobile) {
     const x = X(); const b = x.baseName(id); if (!SUP.includes(b)) return '';
     const busy = x.E.adMod && x.E.adMod.id === id;
+    // 「换样式」= 整模块重新配样式 / 配色，不是生成图片（生成图片走 ✦ AI 统一面板），图标用 shuffle 区分（docs/ai-unified.md 第 7 节）
     const label = t('ad/mod-regen', { c: AD_MOD_COST });
-    if (mobile) return `<button class="ibtn ibtn-sm ad-mbtn ${busy ? 'is-busy' : ''}" data-act="adMod" data-arg="${id}" title="${esc(label)}" aria-label="${esc(label)}">${ic('sparkle-fill')}</button>`;
-    return `<button class="ad-tool" data-act="adMod" data-arg="${id}" data-stop title="${esc(label)}">${ic('sparkle-fill')}AI · ${AD_MOD_COST}</button>`;
+    if (mobile) return `<button class="m-hbtn ad-mbtn ${busy ? 'is-busy' : ''}" data-act="adMod" data-arg="${id}" title="${esc(label)}">${ic('shuffle')}<span>${t('aig/restyle', { c: AD_MOD_COST })}</span></button>`; // 手机标题栏写出价钱（Figma M-01）
+    return `<button class="ad-tool" data-act="adMod" data-arg="${id}" data-stop title="${esc(label)}">${ic('shuffle')}${t('aig/restyle', { c: AD_MOD_COST })}</button>`;
   }
   function modMask(id) {
     const E = X().E; if (!E.adMod || E.adMod.id !== id) return '';
     return `<div class="ad-mask" data-act="adNoop" data-stop><i class="wb-spin"></i><span>${t('ad/mod-ing')}</span><button data-act="adModCancel" data-stop>${t('confirm/cancel')}</button></div>`;
   }
   A.adNoop = () => false;
+  // 花点数先说价钱：确认框（余额不足时确认框自己变「去充值」）
   A.adMod = (id) => {
     const x = X(), E = x.E; if (E.adMod) return false;
+    window.costConfirm({ title: t('aig/restyle-title'), body: t('aig/restyle-body'), cost: AD_MOD_COST, okLabel: t('aig/restyle-ok'), star: true, icon: 'shuffle', onOk: () => adModRun(id) }); // Figma G1-15 / M-14
+  };
+  function adModRun(id) {
+    const x = X(), E = x.E; if (E.adMod) return;
     if (!window.canAfford(AD_MOD_COST)) { window.lowBalance(AD_MOD_COST); return; }
     S.menu = null; if (edMob() && E.mpanel === 'module') E.mpanel = null; // 手机：收起模块面板，画布上能看到生成中和取消
     const tok = {}; E.adMod = { id, tok };
@@ -689,10 +699,10 @@
       x.commit(() => { modVariant(id, E.D); });
       x.fixSlide();
       x.pay(AD_MOD_COST, 'design-mod', { mod: name });
-      window.toast(t('ad/mod-done', { m: name }), x.undoOpt());
+      window.toast(t('ad/mod-done', { m: name, c: AD_MOD_COST }), x.undoOpt());
       window.render();
     }, 1600);
-  };
+  }
   A.adModCancel = () => { const E = X().E; if (!E.adMod) return false; E.adMod = null; window.toast(t('ad/mod-cancelled'), { info: true }); };
   // 沿用当前设计的风格 / 主色，只改该模块已有的样式 / 颜色参数（保证和原来不同）
   function modVariant(id, D) {
@@ -709,13 +719,13 @@
       const bg = pick([th.primary, th.accent_3, th.lead, mix(th.primary, th.lead, 0.4)], D.ec['jackpot.bg'] || th.primary);
       setEc('jackpot.bg', bg); const k = best(bg, [th.bg_2, th.lead, '#ffffff', '#111111']); setEc('jackpot.title', k); setEc('jackpot.amount', k);
     } else if (b === 'midnav') {
-      m.midnav.per = pick([4, 5], m.midnav.per); m.midnav.size = pick([80, 96, 112], m.midnav.size);
+      m.midnav.per = pick([4, 5], m.midnav.per); m.midnav.size = pick([48, 57, 68], m.midnav.size);
       setEc('midnav.icon', pick([th.primary, th.accent_3, th.lead], D.ec['midnav.icon'] || th.primary));
     } else if (b === 'gamemenu') {
       m.gamemenu.style = pick(['tabs', 'icons'], m.gamemenu.style); m.gamemenu.shape = pick(['pill', 'square'], m.gamemenu.shape);
       const a = pick([th.primary, th.accent_3, th.lead], D.ec['gamemenu.active'] || th.primary); setEc('gamemenu.active', a); setEc('gamemenu.activeText', best(a, [th.bg_2, th.lead]));
     } else if (b === 'gamecards') {
-      m.gamecards.cols = pick([2, 3, 4], m.gamecards.cols); m.gamecards.corner = pick([0, 16, 32], m.gamecards.corner); m.gamecards.gap = pick([16, 24, 32], m.gamecards.gap);
+      m.gamecards.cols = pick([2, 3, 4], m.gamecards.cols); m.gamecards.corner = pick([0, 20, 32], m.gamecards.corner); m.gamecards.gap = pick([12, 20, 32], m.gamecards.gap);
       const l = pick([th.accent_3, th.accent_2, th.primary], D.ec['gamecards.label'] || th.accent_3); setEc('gamecards.label', l); setEc('gamecards.labelText', best(l, [th.bg_2, th.lead]));
     } else if (b === 'footer') {
       m.footer.align = pick(['center', 'left'], m.footer.align);
@@ -724,10 +734,10 @@
       m.sidebar.style = pick(['list', 'grid'], m.sidebar.style); m.sidebar.width = pick([62, 75], m.sidebar.width);
       const a = pick([th.primary, th.accent_3, th.lead], D.ec['sidebar.itemActive'] || th.primary); setEc('sidebar.itemActive', a); setEc('sidebar.textActive', best(a, [th.bg_2, th.lead]));
     } else if (b === 'bottomnav') {
-      m.bottomnav.style = pick(['regular', 'raised'], m.bottomnav.style); m.bottomnav.h = pick([98, 110, 120], m.bottomnav.h);
+      m.bottomnav.style = pick(['regular', 'raised'], m.bottomnav.style); m.bottomnav.h = pick([98, 120, 140], m.bottomnav.h);
       setEc('bottomnav.active', pick([th.primary, th.accent_3, th.lead], D.ec['bottomnav.active'] || th.primary));
     } else if (b === 'topbar') {
-      D.tb.h = pick([88, 96, 112], D.tb.h);
+      D.tb.h = pick([80, 90, 100], D.tb.h); // 顶部栏高度规范 70–100
       const dark = lum(th.bg_1) < 0.2; const cur = D.tb.colors.bg ? (D.tb.colors.bg === th.primary ? 'brand' : 'deep') : 'plain';
       D.tb.colors = tbColors(pick(['plain', 'brand', 'deep'], cur), th, dark);
     }
@@ -755,7 +765,7 @@
     if (inPg(D, 'jackpot')) add('jackpot', t('mp/jp-bg'), 702, 160, 2, { k: 'jack' });
     if (inPg(D, 'midnav')) vis('midnav').forEach((it) => add('midnav', window.MP.nm(it), 160, 140, 2, { k: 'icon', it, f: 'img' }));
     if (inPg(D, 'gamemenu')) vis('gamemenu').forEach((it) => { add('gamemenu', window.MP.nm(it) + ' · Default', 200, 152, 2, { k: 'icon', it, f: 'img' }); add('gamemenu', window.MP.nm(it) + ' · Active', 200, 152, 2, { k: 'icon', it, f: 'imgOn', on: true }); });
-    if (inPg(D, 'gamecards')) add('gamecards', t('mp/gc-fallback'), 300, 225, 2, { k: 'glyph', i: 'image-fill' });
+    if (inPg(D, 'gamecards')) add('gamecards', t('mp/gc-fallback'), 260, 260, 2, { k: 'glyph', i: 'game-controller-fill' });
     if (!D.hidden.sidebar) { if (D.m.sidebar.headOn !== false) add('sidebar', t('mp/sd-head'), 540, 200, 2, { k: 'jack' }); vis('sidebar').forEach((it) => add('sidebar', window.MP.nm(it), 120, 120, 2, { k: 'icon', it, f: 'img' })); }
     if (!D.hidden.bottomnav) vis('bottomnav').forEach((it) => { add('bottomnav', window.MP.nm(it) + ' · Default', 140, 140, 2, { k: 'icon', it, f: 'img', off: true }); add('bottomnav', window.MP.nm(it) + ' · Active', 140, 140, 2, { k: 'icon', it, f: 'imgOn', on: true }); });
     return out;
@@ -799,7 +809,7 @@
   function slThumb(s, D) {
     const th = s.thumb;
     if (th.k === 'logo') return `<span class="ad-slt is-logo"><img src="assets/logo-orb.webp" alt="" style="filter:${D.tb.logoF || 'none'}">星河体育</span>`;
-    if (th.k === 'slide') return `<span class="ad-slt is-slide ${th.pc ? 'is-pc' : ''}" style="filter:${th.f || 'none'}"></span>`;
+    if (th.k === 'slide') return `<span class="ad-slt is-slide ${th.pc ? 'is-pc' : ''}" style="${window.fxStyle(th.f)}"></span>`;
     if (th.k === 'jack') return `<span class="ad-slt is-jack" style="background:linear-gradient(135deg,${D.ec['jackpot.bg'] || D.theme.primary},${mix(D.ec['jackpot.bg'] || D.theme.primary, D.theme.bg_1, 0.5)})"></span>`;
     if (th.k === 'icon') { const src = th.it[th.f] || (th.f === 'imgOn' ? th.it.img : null); return `<span class="ad-slt is-icon ics-${D.iconStyle || 'fill'}" style="--o-primary:${th.off ? D.theme.neutral_2 : D.theme.primary};--o-accent_3:${D.theme.accent_3}"><span class="ib">${src ? `<img src="${src}" alt="">` : ic(th.it.i || 'sparkle-fill')}</span></span>`; }
     return `<span class="ad-slt is-glyph">${ic(th.i)}</span>`;

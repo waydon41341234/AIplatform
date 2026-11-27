@@ -300,3 +300,9 @@
   .ad-composer .c-opts > .rel:has(> [data-arg="adColor"]), .ad-composer .c-opts > .rel:has(> [data-arg="model"]) { flex-shrink: 0; }
   .ad-composer .c-opts { flex-wrap: wrap; row-gap: 8px; } /* 放不下时换行（下拉菜单仍向下弹，不被裁） */
 }
+
+/* 色盘统一圆形（Waydon 2026-11-26） */
+.ad-sw { border-radius: 0; box-shadow: none; overflow: visible; }
+.ad-sw i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--bg-raised); margin-left: -4px; }
+.ad-sw i:first-child { margin-left: 0; }
+.menu .ad-sw i { width: 18px; height: 18px; }

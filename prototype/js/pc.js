@@ -9,11 +9,11 @@
   const PAGE_W = 1920, CONTENT_W = 1200;
   const LEVELS = [25, 50, 75, 100];
   // 与 editor.js 的 AI 候选滤镜一致（候选预览时画布实时显示）
-  const CAND_F = ['hue-rotate(10deg) saturate(1.4)', 'hue-rotate(-60deg) saturate(1.3)', 'hue-rotate(140deg) saturate(1.1)', 'hue-rotate(200deg) brightness(1.1)'];
   // PC Banner：通栏 1920×564（Waydon 2026-11-25 定），不随 H5 的大 / 一般 / 小规格变化
   const BAN_PC = { w: PAGE_W, h: 564 };
   const SMALL_GAP = (CONTENT_W - 3 * 386) / 2;
-  const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机', null, true], ['极速赛车'], ['德州扑克'], ['捕鱼达人'], ['龙虎斗'], ['21 点'], ['轮盘'], ['麻将胡了'], ['斗地主'], ['电竞竞猜']];
+  // 经典蓝白游戏（真实 UI 素材，assets/classic/gameN.webp）
+  const GAMES = [['炸金花', 0], ['通比牛牛', 1], ['龙虎斗', 2], ['百人牛牛', 3], ['奔驰宝马', 4], ['水浒传', 5], ['百家乐', 7], ['飞禽走兽', 8], ['红黑大战', 6]];
 
   // 缩放状态：zoom = 'fit' 或百分比数字；fit / mfit 为最近一次量到的适应比例
   const st = { zoom: 'fit', fit: 0.42, mfit: 0.18, mobile: false };
@@ -50,16 +50,16 @@
   function topbar() {
     const D = X().E.D, tb = D.tb || {}, it = tb.items || {};
     const nav = vis('gamemenu').slice(0, 6).map((x, i) => `<span class="${i ? '' : 'on'}">${esc(nm(x))}</span>`).join('');
-    const logo = it.logo !== false ? `<span class="lg" style="filter:${tb.logoF || 'none'}"><img src="assets/logo-orb.webp" alt="">星河体育</span>` : '';
-    const search = it.search !== false ? `<span class="srch">${ic('magnifying-glass')}<span>搜索游戏</span></span>` : '';
-    const auth = it.auth !== false ? (D.login ? `${window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>'}<span class="ava"></span>` : `<span class="login">登录</span><span class="reg">注册</span>`) : '';
+    const lgx = window.tbImg ? window.tbImg(tb.logoF, 'assets/classic/logo.png') : { src: 'assets/classic/logo.png', f: tb.logoF || 'none' }; // Logo 可能是上传 / AI 图（'img:'）或滤镜模拟
+    const fit = lgx.own && window.tbFitCss ? window.tbFitCss('logo') : ''; // 调整尺寸时选的裁切 / 留边
+    const logo = it.logo !== false ? `<span class="lg" style="filter:${lgx.f}"><img class="lg-cl" src="${lgx.src}" alt="GAMING"${fit ? ` style="${fit}"` : ''}></span>` : '';
+    const search = it.search !== false ? `<span class="srch">${ic('magnifying-glass')}<span>${t('pc/tb-search-games')}</span></span>` : '';
+    // 已登录只显示余额框，不放头像（Waydon 2026-11-26）；文案走多语言
+    const auth = D.login ? (window.balHtml ? window.balHtml() : '<span class="bal">¥ 1,280.00</span>') : `<span class="login">${t('auth/login')}</span><span class="reg">${t('auth/register')}</span>`;
     return `<div class="pc-top"><div class="in">${logo}<nav class="nv">${nav}</nav><span class="sp"></span>${search}${auth}</div></div>`;
   }
-  function slideF(i) {
-    const E = X().E;
-    if (E.ai && E.ai.cand != null && i === E.slide) return CAND_F[E.ai.cand] || 'none';
-    return (E.D.banner.slides[i] || {}).f || 'none';
-  }
+  // 编辑器没导出 slideStyle 时的退路（AI 候选预览走 EDX.slideStyle，跟 H5 同一张候选图）
+  const slideF = (i) => (X().E.D.banner.slides[i] || {}).f || 'none';
   const visIdx = () => X().E.D.banner.slides.map((s, i) => (s.hid ? -1 : i)).filter((i) => i >= 0);
   function bannerShift(n, size, i) {
     if (size !== 'small') return `translateX(${-i * 100}%)`;
@@ -70,9 +70,10 @@
     const E = X().E, B = E.D.banner;
     // 隐藏的轮播图不播放（ED-06），位置按可见序号算
     const v = visIdx(), n = v.length, pos = Math.max(0, v.indexOf(E.slide));
-    const slides = v.map((i) => `<div class="slide" style="filter:${slideF(i)}"></div>`).join('');
-    const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${B.ind}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
-    return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span></div>${ind}</div>`;
+    const x = X(); const slides = v.map((i) => `<div class="slide" style="${x.slideStyle ? x.slideStyle(i) : window.fxStyle(slideF(i), 'assets/classic/banner.webp')}"></div>`).join('');
+    const indC = { s1: 'dots', s2: 'dots', s3: 'dots', s4: 'bars' }[B.ind] || B.ind;
+    const ind = B.ind === 'none' ? '' : `<div class="pc-ind ${indC}">${v.map((i, k) => `<i class="${k === pos ? 'on' : ''}" data-act="slideTo" data-arg="${i}" data-stop></i>`).join('')}</div>`;
+    return `<div class="pc-banner" style="padding:${B.margin}px 0"><div class="vp" data-swipe style="width:${BAN_PC.w}px;height:${BAN_PC.h}px"><div class="track" data-pc-track data-n="${n}" data-size="pc" style="transform:translateX(${-pos * 100}%)">${slides}</div><span class="pc-spec">${BAN_PC.w}×${BAN_PC.h}</span>${ind}</div></div>`; // 指示器叠在图片底部（跟 H5 一致），颜色走模块色变量
   }
   function jackpot() {
     const m = M('jackpot');
@@ -80,19 +81,28 @@
     return `<div class="pc-sec" style="padding:${m.margin || 16}px 0"><div class="pc-jack ${m.layout || ''}" style="border-radius:${m.corner || 0}px;${bg}"><span class="tt">${ic('sparkle-fill')}${esc(m.title || '')}</span><b class="${m.anim === 'roll' ? 'roll' : ''}">¥ 88,888,888.88</b><span class="sd"></span></div></div>`;
   }
   function midnav() {
-    const m = M('midnav');
-    const acct = m.layout === 'account' ? `<div class="acct"><span>¥ 1,280.00</span><span class="sp"></span><span class="a">充值</span><span class="a">提现</span></div>` : '';
-    const items = vis('midnav').slice(0, 10).map((it) => `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'}">${it.img ? `<img src="${it.img}" alt="">` : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span></div>`).join('');
+    const m = M('midnav'), D = X().E.D, T = D.txt || {};
+    // 文字样式按 H5 字号等比换算到 PC（H5 默认 → PC 默认），粗细原样；颜色走模块色变量（跟 H5 同源）
+    const tx = (id, h5, pc) => { const v = T[id] || {}; return (v.s ? `font-size:${Math.round((v.s * pc) / h5)}px;` : '') + (v.w ? `font-weight:${v.w};` : '') + (v.c && id !== 'midnav.name' && id !== 'midnav.reg' ? `color:${v.c};` : ''); };
+    // 帐户区跟 H5 一致：未登录 = 登录 / 注册按钮，已登录 = 用户名 + 余额框（通用组件，顶部栏共用设置）
+    const acct = m.layout !== 'account' ? '' : D.login
+      ? `<div class="acct in"><span class="u" style="${tx('midnav.user', 11, 14)}">${window.balUser ? window.balUser() : ''}</span><span class="b" style="${tx('midnav.bal', 13, 18)}">${window.balBox ? window.balBox() : ''}</span><span class="sp"></span></div>`
+      : `<div class="acct out"><span class="lg" style="${tx('midnav.btn', 12, 14)}">${t('mp/acct-login')}</span><span class="rg" style="${tx('midnav.reg', 12, 14)}">${t('mp/acct-reg')}</span><span class="sp"></span></div>`;
+    const nst = tx('midnav.name', 11, 15), bst = tx('midnav.badge', 9, 12);
+    const items = vis('midnav').slice(0, 10).map((it) => `<div class="it"><span class="ib ${it.img || it.def ? 'cu' : it.i ? '' : 'ph'}">${it.img || it.def ? `<img src="${it.img || it.def}" alt="">` : ic(it.i || 'plus')}${D.login && it.badge ? `<i class="bd">${esc(it.badge)}</i>` : ''}</span><span class="nm" style="${nst}">${esc(nm(it))}</span></div>`).join('').replace(/class="bd"/g, `class="bd" style="${bst}"`);
     return `<div class="pc-mid-wrap"><div class="pc-sec">${acct}<div class="pc-mid">${items}</div></div></div>`;
   }
   function gamemenu() {
     const m = M('gamemenu');
     const icons = m.style === 'icons';
-    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${vis('gamemenu').map((it, i) => { const src = i ? it.img : it.imgOn || it.img; return `<span class="${i ? '' : 'on'}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
+    // 选中的分类跟 H5 一样按 m.active（被隐藏了退回第一个显示的）
+    const v = vis('gamemenu'), a = (m.items || [])[m.active | 0], act = a && a.on ? a : v[0];
+    return `<div class="pc-gm-wrap"><div class="pc-sec"><div class="pc-gm ${icons ? 'icons' : 'tabs'} ${m.shape || 'pill'}">${v.map((it) => { const on = it === act; const src = on ? it.imgOn || it.defOn || it.img || it.def : it.img || it.def; return `<span class="${on ? 'on' : ''}">${icons ? (src ? im(src) : it.i ? ic(it.i) : '') : ''}<em>${esc(nm(it))}</em></span>`; }).join('')}</div></div></div>`;
   }
   function gamecards() {
     const m = M('gamecards');
-    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, tg, fb]) => `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px;${fb && m.fallback ? `filter:${m.fallback}` : ''}">${fb ? ic('image-fill') : ''}${tg && m.tag ? `<span class="tg">${tg}</span>` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`).join('')}</div></div>`;
+    // 与 H5 一致：第 1 张推荐角标、第 8 张示意兜底封面（MP.gcFbInner）
+    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, g], j) => { const fb = j === 7 && window.MP.gcFbInner; return `<div class="c"><div class="im cl ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px">${fb ? window.MP.gcFbInner(m) : `<img src="assets/classic/game${g}.webp" alt="">`}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${m.fav !== false && window.MP.gcStarImg ? window.MP.gcStarImg(m, j ? 'starOff' : 'starSel', 'star') : ''}${m.tag && !fb ? '<img class="wg" src="assets/classic/wg.png" alt="">' : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`; }).join('')}</div></div>`;
   }
   function footer() {
     const m = M('footer');
@@ -124,7 +134,7 @@
     const D = X().E.D;
     const body = D.order.filter((id) => !D.hidden[id] && modHtml(id)).map((id) => wrap(id, modHtml(id))).join('');
     const top = D.hidden.topbar ? '' : wrap('topbar', topbar(), { top: true });
-    const side = D.hidden.sidebar ? '' : `<div class="pc-rail-pos ${D.side === 'right' ? 'right' : 'left'}">${wrap('sidebar', rail())}</div>`;
+    const side = D.hidden.sidebar || !(D.tb && D.tb.items && D.tb.items.side) ? '' : `<div class="pc-rail-pos ${D.side === 'right' ? 'right' : 'left'}">${wrap('sidebar', rail())}</div>`;
     return `<div class="pc pc-page ${D.iconStyle ? 'ics-' + D.iconStyle : ''}" data-pc-page style="${zStyle(z)};${themeStyle()}">${top}<div class="pc-body">${body}${side}</div></div>`;
   }
   function zoomBar() {

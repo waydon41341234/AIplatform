@@ -339,7 +339,7 @@
     const langName = (window.LANGS.find((l) => l.code === S.lang) || {}).name || S.lang;
     const langBody = window.LANGS.map((l) => `<button class="menu-item ${S.lang === l.code ? 'is-on' : ''}" data-act="setLang" data-arg="${l.code}">${l.name}</button>`).join('');
 
-    const sec1 = `<section class="pg-card pg-acct"><span class="avatar pg-av"></span><div class="pg-acct-i"><div class="pg-acct-n ellipsis">${t('account/name')}</div><div class="caption muted">${t('account/id', { n: '20488316' })}</div><span class="pg-badge"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span></div>
+    const sec1 = `<section class="pg-card pg-acct"><button class="pg-av-btn" data-act="avOpen" aria-label="${esc(t('me/av-title'))}" title="${esc(t('me/av-title'))}"><span class="avatar pg-av"></span><span class="pg-av-edit">${ic('pencil-simple')}</span></button><div class="pg-acct-i"><div class="pg-acct-n ellipsis">${t('account/name')}</div><div class="caption muted">${t('account/id', { n: '20488316' })}</div><span class="pg-badge"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span></div>
       <button class="btn btn-secondary btn-sm" data-act="soon">${t('me/edit-profile')}</button></section>`;
     const sec2 = `<section class="pg-card"><h2 class="pg-sec-t">${t('me/balance')}</h2>
       <div class="pg-bal ${low ? 'is-low' : ''}">${ic('sparkle-fill', 'ic-24')}<b>${num(S.credits || 0)}</b><span class="muted">${t('credit/unit')}</span></div>
@@ -370,6 +370,55 @@
   };
   A.pgLogout = () => { S.menu = null; if (mob()) S.sheet = 'pg-logout'; else S.dialog = 'pg-logout'; };
   A.pgLogoutOk = () => { S.dialog = null; S.sheet = null; window.toast(t('toast/logged-out'), { info: true }); };
+
+  // ---------- 头像（11-27）：8 个 AI 默认头像 a1~a8 + 上传；按账号存，新账号默认 a1 ----------
+  // 全站 .avatar（顶部栏、账户弹层、我的）都读根节点 CSS 变量 --av-img，所以只在这里设一次，不改各处模板
+  const AVS = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'];
+  const avAcct = () => (S.auth && S.auth.key) || 'default';
+  const avCur = () => (window.LS.get('avatar', {}) || {})[avAcct()] || 'a1';
+  const avSrc = (v) => (AVS.includes(v) ? `assets/avatars/${v}.webp` : v); // 给 <img src>：单文件版由 build-single 的 innerHTML 钩子换成内嵌数据
+  const avCss = (v) => (AVS.includes(v) ? (window.A_ && window.A_[`avatars/${v}.webp`]) || new URL(avSrc(v), location.href).href : v); // CSS 变量里要绝对地址
+  let avLast = null;
+  function applyAvatar() {
+    const v = avCur(); if (v === avLast) return; avLast = v;
+    document.documentElement.style.setProperty('--av-img', `url("${avCss(v)}")`);
+  }
+  window.AFTER_RENDER.push(applyAvatar);
+  applyAvatar();
+  window.avatarOf = avCur; // 其他模块要用当前头像时读它：'a1'~'a8' 或业主上传的 dataURL
+  A.avOpen = () => { S.menu = null; S.pg.avSel = avCur(); if (mob()) S.sheet = 'pg-av'; else S.dialog = 'pg-av'; };
+  A.avPick = (k) => { if (AVS.includes(k)) S.pg.avSel = k; };
+  A.avUpload = () => {
+    window.pickImage({ accept: 'image/png,image/jpeg,image/webp', maxMB: 2 }, (src) => {
+      // 居中裁成正方形、缩到 256，存得下也显示得快
+      const im = new Image();
+      im.onload = () => {
+        const s = Math.min(im.naturalWidth, im.naturalHeight), c = document.createElement('canvas'); c.width = c.height = 256;
+        const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 256, 256);
+        x.drawImage(im, (im.naturalWidth - s) / 2, (im.naturalHeight - s) / 2, s, s, 0, 0, 256, 256);
+        try { S.pg.avSel = c.toDataURL('image/jpeg', 0.86); } catch (e) { S.pg.avSel = src; }
+        window.render();
+      };
+      im.onerror = () => window.toast(t('composer/ref-bad-type'), { info: true });
+      im.src = src;
+    });
+    return false;
+  };
+  A.avSave = () => {
+    const v = S.pg.avSel;
+    if (!v || v === avCur()) return false; // 没换：「保存」是灰的，点了不动
+    S.dialog = null; S.sheet = null;
+    const m = window.LS.get('avatar', {}) || {}; m[avAcct()] = v; window.LS.set('avatar', m);
+    applyAvatar(); window.toast(t('me/av-saved'));
+  };
+  function avBody() {
+    const sel = S.pg.avSel || avCur(), changed = sel !== avCur(), m = mob();
+    const opt = (k, i) => `<button class="av-opt ${sel === k ? 'is-on' : ''}" data-act="avPick" data-arg="${k}" aria-pressed="${sel === k}" aria-label="${esc(t('me/av-n', { n: i + 1 }))}"><img src="assets/avatars/${k}.webp" alt="">${sel === k ? `<span class="av-ck">${ic('check')}</span>` : ''}</button>`;
+    return `<div class="dialog-head sheet-head av-head"><h3>${t('me/av-title')}</h3><button class="ibtn ibtn-sm ibtn-secondary" data-act="closeAll" aria-label="${esc(t('common/close'))}">${ic('x', 'ic-16')}</button></div>
+      <div class="av-cur"><img class="av-pv" src="${esc(avSrc(sel))}" alt=""><div class="av-cur-t"><p>${t('me/av-hint')}</p><p class="caption faint">${t('me/av-rule')}</p></div></div>
+      <div class="av-grid">${AVS.map(opt).join('')}</div>
+      <div class="av-foot ${m ? 'is-m' : ''}"><button class="btn btn-secondary" data-act="avUpload">${ic('upload-simple', 'ic-16')}${t(m ? 'me/av-upload-m' : 'me/av-upload')}</button>${m ? '' : `<span class="av-sp"></span><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button>`}<button class="btn btn-primary ${changed ? '' : 'is-disabled'}" data-act="avSave" aria-disabled="${!changed}">${t('proj/save')}</button></div>`;
+  }
 
   // ======================================================================
   // NP-05 充值（模拟）
@@ -451,6 +500,8 @@
     if (S.dialog === 'pg-del' || S.sheet === 'pg-del') {
       h += wrap('pg-del', `<h3>${t('proj/delete-q')}</h3><p class="muted pg-dp">${t('proj/delete-d')}</p><div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="pgDelOk">${t('proj/delete')}</button></div>`);
     }
+    if (S.dialog === 'pg-av') h += window.dialog(avBody(), 'av-dlg');
+    if (S.sheet === 'pg-av') h += window.sheet(avBody(), 'av-dlg');
     if (S.dialog === 'pg-logout' || S.sheet === 'pg-logout') {
       h += wrap('pg-logout', `<h3>${t('account/logout-q')}</h3><div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="pgLogoutOk">${t('account/logout')}</button></div>`);
     }

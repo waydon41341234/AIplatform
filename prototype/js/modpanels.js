@@ -9,65 +9,114 @@
   const S = () => window.S;
 
   // ---------- 默认数据 ----------
-  const MID = [['体育', null], ['真人', null], ['电子', 'game-controller'], ['彩票', 'squares-four-fill'], ['棋牌', 'stack-fill'], ['捕鱼', 'sparkle-fill'], ['电竞', 'toolbox-fill'], ['优惠', 'heart-fill'], ['VIP', 'user-circle'], ['客服', 'bell-fill']];
-  // 游戏菜单 = 游戏类型菜单，13 个类型（名称按当前语言取 mp/gm-n-*，改名后存原文）
+  // 经典蓝白（Waydon 2026-11-26 真实 UI，Figma 03 组件 317:55525）：默认素材放 assets/classic/，存在 def / defOn / defOut 里，
+  // 业主上传的图仍写 img / imgOn（重置 = 清掉 img 回到默认素材），所以「改过几个图标」的计数不受默认素材影响。
+  const CL = 'assets/classic/';
+  // 帐户栏入口：名称按当前语言取 mp/mn-n-*（改名后存原文到 n），跟底部导航 / 游戏菜单一样
+  const MID = [['dep', 'wallet-fill', 'mid0'], ['vip', 'crown-fill', 'mid1', '12'], ['share', 'gift-fill', 'mid2', '1,888.8'], ['more', 'squares-four-fill', 'mid3']];
+  const MID_OLD = { mid0: '利息宝', mid1: 'VIP', mid2: '分享赚钱', mid3: '更多' }; // 旧存档写死的中文默认名
+  // 游戏菜单 = 游戏类型菜单，13 个类型（名称按当前语言取 mp/gm-n-*，改名后存原文）；经典蓝白显示前 9 个
   const GM = ['sparkle-fill', 'stack-fill', 'fish-fill', 'game-controller-fill', 'cube-fill', 'user-circle-fill', 'trophy-fill', 'ticket-fill', 'headset-fill', 'bird-fill', 'clock-counter-clockwise', 'heart-fill', 'play-circle-fill'];
-  const GAMES = [['星河足球', '热门'], ['百家乐', '新'], ['幸运老虎机', null, true], ['极速赛车'], ['德州扑克'], ['捕鱼达人']];
-  const BN = [['首页', 'house-fill', true], ['优惠', 'sparkle-fill'], ['消息', 'bell-fill'], ['充值', 'wallet-fill'], ['我的', 'user-circle', true]];
+  const GM_ORDER = [1, 2, 3, 6, 4, 7, 9, 8, 10, 5, 11, 12, 13]; // 热门 棋牌 捕鱼 真人 电子 体育 电竞 彩票 斗鸡 | 区块链 最近 收藏 试玩（后 4 个默认关）
+  const GAMES = [['炸金花', 0], ['通比牛牛', 1], ['龙虎斗', 2], ['百人牛牛', 3], ['奔驰宝马', 4], ['水浒传', 5], ['百家乐', 7], ['飞禽走兽', 8], ['红黑大战', 6]];
+  // 底部导航：第 4 个未登录显示「注册」，登录后显示「存款」；中间「分享赚钱」凸起大图标
+  // 名称按当前语言取 mp/bn-n-*（改名后存原文到 n / 未登录名称 nOut）
+  const BN = [['home', 'house-fill', true, 'bi0'], ['promo', 'gift-fill', false, 'bi1', 'bo1'], ['share', 'gift-fill', false, 'bi2', 'bo2'], ['dep', 'wallet-fill', false, 'bi3', 'bo3', 'reg'], ['mine', 'user-circle', true, 'bi4', 'bo4']];
   const SIDE = [['首页', 'house-fill'], ['优惠活动', 'gift-fill'], ['VIP 特权', 'crown-fill'], ['在线客服', 'headset-fill'], ['个人中心', 'user-circle']];
   const FOOT = ['关于我们', '帮助中心', '隐私政策'];
   const items = (arr) => arr.map((x) => ({ n: x[0], i: x[1] || null, req: !!x[2], on: true }));
+  const NOTICE = '恭喜玩家在“龙虎斗”游戏【中级场】房间赢得18888元彩金，祝您好运连连！'; // Figma 317:55675：“引号”红、【中级场】绿、数字橙
   const defaults = () => {
-    const bn = items(BN); bn[0].onBuiltin = true; // 首页选中态图标内置
+    const bn = BN.map(([k, i, req, def, defOut, outK]) => Object.assign({ n: '', k: 'mp/bn-n-' + k, i, req, on: true, def: CL + def + '.png' }, defOut ? { defOut: CL + defOut + '.png' } : {}, outK ? { outK: 'mp/bn-n-' + outK } : {}));
+    bn[0].onBuiltin = true; bn[0].defOn = CL + 'bi0.png'; // 首页选中态图标内置
+    // 凸起样式落在「分享赚钱」上（Figma 存款动效 120×120），不再按显示个数取中间；未登录「优惠」是 100×100 动效礼盒（bigOut）
+    bn[2].raised = true; bn[1].bigOut = true;
     return {
       jackpot: { title: '彩金池', anim: 'roll', layout: 'flow', margin: 16, corner: 16, bg: null, bgOn: true },
-      midnav: { mode: 'conf', items: items(MID), layout: 'row', per: 5, size: 96 },
-      gamemenu: { items: GM.map((i, k) => ({ n: '', k: 'mp/gm-n-' + (k + 1), i, req: false, on: true })), style: 'tabs', shape: 'pill' },
-      gamecards: { name: true, tag: true, fallback: null, cols: 3, corner: 16, gap: 16 },
+      notice: { text: NOTICE, mail: true, speed: 'normal', items: [{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] },
+      midnav: { mode: 'conf', items: MID.map(([k, i, def, badge]) => ({ n: '', k: 'mp/mn-n-' + k, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 57 },
+      // active = 选中的分类（下标，不再固定第一个）；btnOff / btnSel = 业主上传 / AI 的按钮底图（空 = 效果图默认底图）
+      gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill', active: 0, btnOff: null, btnSel: null },
+      // 游戏卡片（Figma 317:55739）：tag = 平台角标 WG；rec = 推荐角标（第 1 张）；title = 下一分类标题行；fallback = 兜底封面；starOff / starSel = 收藏星（未收藏 / 已收藏）
+      // 圆角 20（Figma r20）、卡片间距 20（行列同一个值，750 稿）
+      gamecards: { name: true, tag: true, fav: true, rec: true, title: true, fallback: null, starOff: null, starSel: null, cols: 3, corner: 20, gap: 20 },
       footer: { items: items(FOOT.map((n) => [n])), copy: '© 2026 星河体育 版权所有', align: 'center' },
       sidebar: { items: items(SIDE), style: 'list', width: 62, head: null, headOn: true },
-      bottomnav: { mode: 'fixed', items: bn, style: 'regular', h: 110 },
+      bottomnav: { mode: 'fixed', items: bn, style: 'raised', h: 140 }, // Figma 底栏 750×140
     };
   };
   const nm = (it) => it.n || (it.k ? t(it.k) : '');
   // 入口图标规格（逻辑尺寸，PNG 交付 @2x）
-  const ICON_SPEC = { midnav: [80, 70], bottomnav: [70, 70], gamemenu: [100, 76], sidebar: [60, 60] };
+  // 帐户栏入口图标 Figma 317:55709：57×50（750 稿）
+  const ICON_SPEC = { notice: [57, 50], midnav: [57, 50], bottomnav: [50, 50], gamemenu: [100, 76], sidebar: [60, 60] };
+  // 公告栏两个图标尺寸不同（Figma 317:55673）：喇叭 36×32、信箱 57×50
+  const NT_SPEC = { 'mp/nt-i-spk': [36, 32], 'mp/nt-i-mail': [57, 50] };
+  // 游戏菜单竖排图标位 Figma 317:55796：58×58 框内 58×44；横向「图标分类」仍按 100×76
+  const GM_SPEC = { side: [58, 44], icons: [100, 76], tabs: [100, 76] };
+  // 底部导航（Figma 317:55538）：普通图标位 50×50、中间凸起 120×120、未登录「优惠」动效礼盒 100×100
+  const specOf = (b, i, f) => (b === 'bottomnav' ? bnSpec(i, f) : null) || (b === 'notice' && M(b).items[i] && NT_SPEC[M(b).items[i].k]) || (b === 'gamemenu' && GM_SPEC[M(b).style]) || ICON_SPEC[b] || [96, 96];
 
   // 元素颜色：[元素 ID, 默认取的基础色 Key]
   const EL = {
+    // Banner（Figma 317:55531）：占位底 = ddt_bg（兜底图底板），指示器选中 / 未选中 = text_primary（Figma 固定 #FFFFFF，未选中叠 50% 透明度）
+    banner: [['banner.placeholder', 'ddt_bg'], ['banner.indActive', 'text_primary'], ['banner.indDef', 'text_primary']],
     jackpot: [['jackpot.bg', 'primary'], ['jackpot.title', 'bg_2'], ['jackpot.amount', 'bg_2']],
-    midnav: [['midnav.bg', 'bg_2'], ['midnav.text', 'lead'], ['midnav.icon', 'primary']],
-    gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'neutral_1'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'bg_2']],
-    gamecards: [['gamecards.placeholder', 'border'], ['gamecards.placeholderIcon', 'neutral_3'], ['gamecards.text', 'lead'], ['gamecards.label', 'accent_3'], ['gamecards.labelText', 'bg_2']],
+    // 公告栏（Figma 317:55673）：自身无填充 = 透出首页底 home_bg；喇叭和正文 neutral_1；“引号”accent_2、【中级场】accent_1、数字 accent_3；
+    // 已登录信箱未读数底 accent_2（数字固定白，在「文字样式」里改）
+    notice: [['notice.bg', 'home_bg'], ['notice.icon', 'neutral_1'], ['notice.text', 'neutral_1'], ['notice.hl', 'accent_2'], ['notice.g', 'accent_1'], ['notice.num', 'accent_3'], ['notice.badge', 'accent_2']],
+    // 帐户栏（Figma 317:55705）：自身无填充 = 透出首页底 home_bg；入口名 neutral_1、用户名 lead；登录框 / 注册底 primary、注册字 text_primary；
+    // 入口图标是位图（颜色在图里），midnav.icon 只给没有图片的入口兜底线性图标用
+    midnav: [['midnav.bg', 'home_bg'], ['midnav.text', 'neutral_1'], ['midnav.user', 'lead'], ['midnav.btn', 'primary'], ['midnav.btnText', 'text_primary'], ['midnav.icon', 'primary']],
+    // 游戏菜单（Figma 317:55764）：未选中文字 leftnav_def、选中文字 leftnav_active（固定白）；按钮底默认是效果图位图（btn_zc1_1/2），
+    // 选了颜色才换成 bg_2 / primary 纯色；投影 Figma 写死 #729FFF 15%（规范 Key web_left_bg_shadow = #0000001F，待设计确认，可在颜色页签切过去）；
+    // 分类图标是位图（Figma icon_tg_q→icon_tg_z 渐变画在图里），gamemenu.icon 只给没有图片的分类兜底线性图标用
+    gamemenu: [['gamemenu.bg', 'bg_2'], ['gamemenu.text', 'leftnav_def'], ['gamemenu.active', 'primary'], ['gamemenu.activeText', 'leftnav_active'], ['gamemenu.shadow', '#729FFF26'], ['gamemenu.icon', 'icon_tg_z']],
+    // 游戏卡片（Figma 317:55739）：未选中页签 lead；游戏名称 cards_text（经典卡片分支 = neutral_1，cards_text 第一分支是欧美卡片白字，所以默认直接写 neutral_1）；
+    // 兜底封面底板 ddt_bg、图形 ddt_icon；推荐角标 label_accent3 / labeltext_accent3（Figma 角标是位图未绑定，取最近的扩展 Key）
+    gamecards: [['gamecards.tab', 'lead'], ['gamecards.text', 'neutral_1'], ['gamecards.placeholder', 'ddt_bg'], ['gamecards.placeholderIcon', 'ddt_icon'], ['gamecards.label', 'label_accent3'], ['gamecards.labelText', 'labeltext_accent3']],
     footer: [['footer.bg', 'bg_1'], ['footer.text', 'neutral_2'], ['footer.link', 'neutral_1']],
     sidebar: [['sidebar.bg', 'bg_2'], ['sidebar.item', 'bg_1'], ['sidebar.itemActive', 'primary'], ['sidebar.text', 'lead'], ['sidebar.textActive', 'bg_2']],
-    bottomnav: [['bottomnav.bg', 'bg_2'], ['bottomnav.def', 'neutral_2'], ['bottomnav.active', 'primary']],
+    // 底部导航（Figma 317:55538）：底色 web_btmnav_db、未选中文字 / 图标 btmnav_def、选中文字 btmnav_active（都是「跟设计」Key）；
+    // 默认图标是位图（颜色在图里），bottomnav.def / active 只给文字和没有图片时的兜底线性图标用
+    bottomnav: [['bottomnav.bg', 'web_btmnav_db'], ['bottomnav.def', 'btmnav_def'], ['bottomnav.active', 'btmnav_active']],
   };
   const ALT = ['primary', 'lead', 'bg_2', 'accent_3', 'bg_1', 'neutral_2', 'accent_1'];
   const cssVar = (id) => '--e-' + id.replace('.', '-');
   function vars(th, ec) {
     let s = '';
-    for (const b in EL) for (const [id, k] of EL[b]) s += `;${cssVar(id)}:${ec[id] || th[k]}`;
+    // 元素色可存十六进制，或 'key:<名>' 引用 68 Key（换整页配色时跟着变）；默认 Key 也可以是扩展 Key（如 ddt_bg）
+    const kv = (k) => (k[0] === '#' ? k : th[k] != null ? th[k] : resolveKey(k, th, ec)); // 默认值也可以直接是 Figma 写死的色值
+    for (const b in EL) for (const [id, k] of EL[b]) { const v = ec[id]; s += `;${cssVar(id)}:${v && v.startsWith('key:') ? kv(v.slice(4)) : v || kv(k)}`; }
+    // H5 首页整页底色 = home_bg（Figma 317:55529 / 变量 ext/home_bg VariableID:2:65；Waydon 2026-11-27「首页背景色home_bg」）
+    s += `;--o-home_bg:${resolveKey('home_bg', th, ec)}`;
     return s;
   }
   const M = (b) => X().E.D.m[b];
+  // 公告栏图标（喇叭 / 信箱）可替换或 AI 生成（Waydon 2026-11-26）；旧存档没有 items 时补上
+  // 已登录信箱是另一张图（Figma 317:55690 主色渐变），旧存档补上默认图
+  const ntItems = () => { const m = M('notice'); if (!m.items) m.items = defaults().notice.items; const ml = m.items.find((x) => x.k === 'mp/nt-i-mail'); if (ml && !ml.defOn) ml.defOn = CL + 'mail-on.png'; return m.items; };
   const set = (b, k, v) => { const x = X(); x.commit(() => { x.E.D.m[b][k] = v; }); };
 
   // ---------- 面板零件 ----------
   const seg = (opts, cur, act) => X().segBtns(opts, String(cur), act);
   const sec = (lab, body, v) => `<div class="p-sec"><div class="lab">${lab}${v != null ? `<span class="v">${v}</span>` : ''}</div>${body}</div>`;
   const note = (k, p) => `<div class="p-note">${t(k, p)}</div>`;
-  const px = (b, k, vals, labels) => sec(labels.title, seg(vals.map((v, i) => ({ v: String(v), label: labels.opts ? labels.opts[i] : v + (labels.unit || ' px') })), M(b)[k], `mpSet_${b}_${k}`), M(b)[k] + (labels.unit || ' px'));
+  // 列表标题右侧显示「显示中 / 总数」（壳层整理）
+  const cnt = (b) => { const its = (M(b) && M(b).items) || []; return `${its.filter((x) => x.on).length} / ${its.length}`; };
+  // 每个档位参数都带「自定义」输入（范围按参数）
+  const PX_RNG = { margin: [0, 64], corner: [0, 60], per: [3, 6], size: [40, 80], gap: [0, 64], width: [40, 90], h: [80, 160], cols: [2, 5] };
+  const px = (b, k, vals, labels) => { const u = labels.unit == null ? 'px' : labels.unit.trim(); const r = PX_RNG[k] || [0, 200]; return sec(labels.title, seg(vals.map((v, i) => ({ v: String(v), label: labels.opts ? labels.opts[i] : v + (labels.unit || ' px') })), M(b)[k], `mpSet_${b}_${k}`) + X().pxCustom(vals, M(b)[k], `mpSet_${b}_${k}`, [r[0], r[1], u]), M(b)[k] + (labels.unit || ' px')); };
   const toggle = (on, act, arg, label) => `<button class="tg-row" data-act="${act}" data-arg="${arg}"><span>${label}</span><span class="switch ${on ? 'is-on' : ''}"><i></i></span></button>`;
   function list(b, render) {
     const R = X().E.rn;
-    return `<div class="mp-list" data-drag-list="${b}">${M(b).items.map((it, i) => `<div class="lrow ${it.on ? '' : 'is-hidden'} ${R && R.b === b && R.i === i ? 'is-editing' : ''}" data-row="${i}"><span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>${render ? render(it, i) : nameCell(b, i)}${it.req && M(b).mode === 'fixed' ? `<span class="req">${t('mp/required')}</span><span class="eye is-off">${ic('lock-fill', 'ic-16')}</span>` : `<button class="eye" data-act="mpItem" data-arg="${b}|${i}">${ic(it.on ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`}</div>`).join('')}</div><div class="p-note">${t('mp/drag-hint')}</div>`;
+    return `<div class="mp-list" data-drag-list="${b}">${M(b).items.map((it, i) => `<div class="lrow ${it.on ? '' : 'is-hidden'} ${R && R.b === b && R.i === i ? 'is-editing' : ''}" data-row="${i}"><span class="grip" data-grip="${i}">${ic('dots-six-vertical', 'ic-16')}</span>${render ? render(it, i) : nameCell(b, i)}${it.req && M(b).mode === 'fixed' ? `${b === 'bottomnav' ? '' : `<span class="req">${t('mp/required')}</span>`}<span class="eye is-off" title="${esc(t('mp/bn-locked'))}" aria-label="${esc(t('mp/bn-locked'))}">${ic('lock-fill', 'ic-16')}</span>` : `<button class="eye" data-act="mpItem" data-arg="${b}|${i}">${ic(it.on ? 'eye-fill' : 'eye-slash-fill', 'ic-16')}</button>`}</div>`).join('')}</div>`;
   }
   // 入口名：点铅笔或双击名称改名（ED-19）
   function nameCell(b, i) {
     const it = M(b).items[i]; const R = X().E.rn;
     if (R && R.b === b && R.i === i) return `<span class="rn-wrap"><input class="input rn-in ${R.err ? 'is-err' : ''}" data-input="rnIn" data-key="rnKey" value="${esc(R.v)}" data-autofocus aria-label="${esc(t('mp/rename'))}">${R.err ? `<span class="rn-err">${t('mp/name-max')}</span>` : ''}</span>`;
-    return `<span class="nm" data-rn="${b}|${i}" title="${esc(nm(it))}">${esc(nm(it))}</span><button class="ib-s rn-btn" data-act="rnStart" data-arg="${b}|${i}" title="${esc(t('mp/rename'))}">${ic('pencil-simple', 'ic-16')}</button>`;
+    const lab = b === 'bottomnav' ? bnName(it) : nm(it); // 底部导航未登录「注册」单独存名称（nOut）
+    return `<span class="nm" data-rn="${b}|${i}" title="${esc(lab)}">${esc(lab)}</span><button class="ib-s rn-btn" data-act="rnStart" data-arg="${b}|${i}" title="${esc(t('mp/rename'))}">${ic('pencil-simple', 'ic-16')}</button>`;
   }
   function asset(b, field, name, spec, thumb) {
     const slot = `mp-${b}-${field}`; const on = M(b)[field + 'On'] !== false;
@@ -75,19 +124,46 @@
       <div class="acts"><div class="r2"><button class="btn btn-secondary btn-sm" data-act="amUpload" data-arg="${slot}">${ic('upload-simple', 'ic-16')}${t('ed/upload')}</button><button class="btn btn-outline btn-sm" data-act="openLib" data-arg="${slot}">${ic('stack-fill', 'ic-16')}${t('ed/library')}</button></div></div></div>${X().uploadUI(slot)}`;
   }
   const modeSeg = (b) => sec(t('mp/nav-mode'), seg([{ v: 'conf', label: t('mp/mode-conf') }, { v: 'fixed', label: t('mp/mode-fixed') }], M(b).mode, `mpSet_${b}_mode`) + `<div class="p-note">${t(M(b).mode === 'conf' ? 'mp/mode-conf-help' : 'mp/mode-fixed-help')}</div>`);
-  const iconBtns = (b) => `<div class="r2" style="margin-top:10px"><button class="btn btn-primary btn-sm" data-act="iaOpen" data-arg="${b}">${ic('magic-wand', 'ic-16')}${t('mp/ai-icons')}</button><button class="btn btn-secondary btn-sm" data-act="bxOpen" data-arg="${b}">${ic('upload-simple', 'ic-16')}${t('mp/upload-icons')}</button></div>`;
+  // 入口图标：每行末尾 ✦ = 统一 AI 面板（只这一个 / 整套），工具条 ✦ AI 默认整套；这里只留批量上传（Figma G3-01：「用 AI 生成一套图标」大按钮删除）
+  const iconBtns = (b) => `<div class="r2" style="margin-top:10px"><button class="btn btn-secondary btn-sm" data-act="bxOpen" data-arg="${b}">${ic('upload-simple', 'ic-16')}${t('mp/upload-icons')}</button></div>`;
+  const aiBtn = (arg, tip = 'aig/entry-tip') => `<button class="ib-s tb-ai" data-act="aigOpen" data-arg="${arg}" data-stop title="${esc(t(tip))}" aria-label="${esc(t(tip))}">${ic('sparkle-fill', 'ic-16')}</button>`;
+  const icAi = (b, i) => aiBtn(b + '|icons|' + i, b === 'gamemenu' ? 'aig/entry-tip-ic' : b === 'bottomnav' || b === 'sidebar' ? 'aig/entry-tip-ent' : 'aig/entry-tip');
   // 入口图标可上传替换（缩略图右下角上传角标；画布上点图标也能替换）
   const img = (src) => `<img class="cu" src="${src}" alt="">`;
-  const upThumb = (b, i, f, icon, cls = '', title = '') => { const src = M(b).items[i][f]; return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
+  const defSrc = (it, f, b) => (f === 'imgOn' ? it.defOn || (b === 'gamemenu' ? it.img || it.def : null) : it.def) || null; // 游戏菜单没有选中图时用未选中图
+  const upThumb = (b, i, f, icon, cls = '', title = '') => { const it0 = M(b).items[i]; const src = it0[f] || defSrc(it0, f, b); return `<button class="thumb sq up ${cls} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="${b}|${i}|${f}" title="${esc((title ? title + ' · ' : '') + t('mp/icon-replace'))}">${src ? img(src) : ic(icon)}<span class="ub">${ic('upload-simple')}</span></button>`; };
   const resetBtn = (b, i) => { const it = M(b).items[i]; return it.img || it.imgOn ? `<button class="ib-s" data-act="mpIconReset" data-arg="${b}|${i}" title="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''; };
 
+  // 色块行右侧的 Key 标签（同文字样式 .tx-key，Waydon 2026-11-27）：默认 = 绑定的 Key，选了色块 = 那个 Key，自定义色 = 「自定义」
+  // defLab：默认值不是颜色（游戏菜单侧边样式的底色默认是按钮图）时，没覆盖就显示这个文字
+  const keyTag = (v, key, defLab) => {
+    if (!v && defLab) return `<span class="tx-key is-custom" title="${esc(defLab)}">${esc(defLab)}</span>`;
+    const kn = v ? (v.startsWith('key:') ? v.slice(4) : null) : key || null; // 默认值是 Figma 写死的色值（如游戏菜单投影）时直接显示色值
+    return `<span class="tx-key ${kn ? '' : 'is-custom'}" title="${esc(kn ? keyLabel(kn) : t('tx/c-custom'))}">${kn ? esc(kn) : t('tx/key-custom')}</span>`;
+  };
+  // 颜色行色块（Figma G6/ColorRow 424:548184；Waydon 11-27「默认选中默认的颜色，不是默认按钮」）：
+  // [默认色块][其它色块][彩虹 = 自定义][Key 标签]。第一个色块 = 这一行绑定的默认 Key 的颜色，没有覆盖时选中；
+  // 点别的色块选中圈移过去，再点回第一个 = 恢复默认（去掉覆盖）。其它色块里和默认 Key 相同的不重复列。
+  // o = { act, id, v, key, sws, kv, pk, pickAct, pickArg, rainbow, tag, defCss, defTip, defLab }
+  //   act/id：点色块 data-act / data-arg 前缀（data-arg = id|key:<名>，默认色块 = id|）
+  //   rainbow：自带的彩虹（余额框用 <input type=color>），不给就用 pickAct / pickArg 的按钮
+  //   defCss / defTip / defLab：默认值不是 Key 颜色（游戏菜单按钮图）时色块里那张图的样式（滤镜只加在图上，不染选中圈）、提示和 Key 标签文字
+  // 正在用彩虹取色（取色器开着，画布已实时预览）时同「自定义」：只有彩虹带圈，Key 标签写「自定义」
+  const swRow = (o) => {
+    const v = o.v || null, img = !!o.defCss, pk = !!o.pk, onDef = !pk && (!v || (!img && v === 'key:' + o.key));
+    const sws = (img ? o.sws : o.sws.filter((k) => k !== o.key));
+    const defTip = o.defTip || `${t('mp/c-default')} · ${keyLabel(o.key)}`;
+    const btn = (on, style, tip, arg, cls = '', inner = '') => `<button class="sw-btn ${cls} ${on ? 'is-on' : ''}" style="${style}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${on}" data-act="${o.act}" data-arg="${o.id}|${arg}">${inner}</button>`;
+    const rb = o.rainbow || `<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="${o.pickAct || 'bnPick'}" data-arg="${o.pickArg}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>`;
+    return `<div class="tx-colors cr-sw">${img ? btn(onDef, '', defTip, '', 'sw-def sw-img', `<i style="${o.defCss}"></i>`) : btn(onDef, `background:${o.kv(o.key)}`, defTip, '', 'sw-def')}${sws.map((k) => btn(!pk && v === 'key:' + k, `background:${o.kv(k)}`, keyLabel(k), 'key:' + k)).join('')}${rb}${keyTag(pk ? 'custom' : onDef && !img ? null : v, o.tag || o.key, o.defLab)}</div>`;
+  };
   function colors(b) {
     const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker;
     return EL[b].map(([id, k]) => {
-      const cur = (ec[id] || th[k]).toLowerCase();
-      const sw = [th[k], ...ALT.filter((a) => a !== k).map((a) => th[a])].map((c) => c.toLowerCase()).filter((c, i, a) => a.indexOf(c) === i).slice(0, 4);
-      return `<div class="crow"><div class="k">${t('mp/c-' + id.replace('.', '-'))}${ec[id] ? '' : ` · <span class="faint">${t('mp/c-default')}</span>`}</div><div class="sws">${sw.map((c) => `<button class="sw-btn ${cur === c ? 'is-on' : ''}" style="background:${c}" data-act="mpColor" data-arg="${id}|${c}"></button>`).join('')}<button class="rainbow ${P && P.elRow === id ? 'is-on' : ''}" data-act="mpPick" data-arg="${id}|${k}"></button></div>${P && P.elRow === id ? x.pickerHtml('in-panel', t('mp/c-' + id.replace('.', '-'))) : ''}</div>`;
-    }).join('') + note('mp/c-note');
+      // 同其它模块的颜色行：第一个色块 = 绑定的 Key（默认选中），色块存 'key:<名>'，彩虹 = 自定义，右侧 Key 标签
+      const v = ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = P && P.elRow === id;
+      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key: k, sws: ALT.filter((a) => a !== k).slice(0, 4), kv: (a) => (th[a] != null ? th[a] : resolveKey(a, th, ec)), pk, pickArg: `${id}|${k}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    }).join('');
   }
 
   // ---------- 各模块面板 ----------
@@ -96,25 +172,74 @@
       content: () => sec(t('mp/jp-title'), `<input class="input" data-input="mpJpTitle" value="${esc(M('jackpot').title)}" maxlength="12">`)
         + sec(t('mp/jp-amount'), seg([{ v: 'roll', label: t('mp/jp-roll') }, { v: 'static', label: t('mp/jp-static') }], M('jackpot').anim, 'mpSet_jackpot_anim'))
         + sec(t('mp/jp-bg'), asset('jackpot', 'bg', t('mp/jp-bg'), t('mp/jp-bg-spec'), `<span class="thumb" style="background:${M('jackpot').bg ? 'linear-gradient(135deg,#f6c445,#c9963b)' : 'var(--e-jackpot-bg, #1678ff)'};filter:${M('jackpot').bg || 'none'}"></span>`)),
-      layout: () => sec(t('mp/style'), seg([{ v: 'flow', label: t('mp/lay-flow') }, { v: 'compact', label: t('mp/lay-compact') }], M('jackpot').layout, 'mpSet_jackpot_layout'))
-        + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }) + note('ed/unit-750'),
+      layout: () => sec(t('mp/style-jackpot'), seg([{ v: 'flow', label: t('mp/lay-flow') }, { v: 'compact', label: t('mp/lay-compact') }], M('jackpot').layout, 'mpSet_jackpot_layout'))
+        + px('jackpot', 'margin', [8, 16, 24], { title: t('ed/margin') }) + px('jackpot', 'corner', [0, 16, 32], { title: t('ed/corner') }),
+    },
+    notice: {
+      // 顺序：公告内容 → 文字样式（紧跟文字）→ 图标（喇叭；信箱开关紧挨信箱）→ AI 生成
+      content: () => {
+        const m = M('notice'), its = ntItems(), x = X();
+        const sp = (i) => specOf('notice', i).join('×');
+        const spk = `<div class="nt-ic-row">${upThumb('notice', 0, 'img', its[0].i)}<span class="tx"><b>${esc(nm(its[0]))}</b><small>${sp(0)}</small></span>${resetBtn('notice', 0)}${icAi('notice', 0)}</div>`;
+        const mail = `<div class="nt-ic-row ${m.mail ? '' : 'is-off'}">${upThumb('notice', 1, 'img', its[1].i, 'st2', t('ed/signed-out'))}${upThumb('notice', 1, 'imgOn', its[1].i, 'st2', t('mp/nt-st-in'))}<span class="tx"><b>${esc(nm(its[1]))}</b><small>${sp(1)} · ${t('mp/nt-two')}</small></span>${resetBtn('notice', 1)}${m.mail ? icAi('notice', 1) : ''}</div>`;
+        return sec(t('mp/nt-text'), `<textarea class="input" rows="3" style="width:100%;height:auto;min-height:84px;padding:8px 12px;line-height:1.5;resize:vertical" data-input="mpNtText" maxlength="80">${esc(m.text)}</textarea>`) + note('mp/nt-hl')
+          + (x.txtSec ? x.txtSec('notice') : '')
+          + sec(t('mp/nt-icons'), spk + toggle(m.mail, 'mpFlag', 'notice|mail', t('mp/nt-mail')) + mail + (m.mail ? '' : note('mp/nt-mail-off')));
+      },
+      layout: () => sec(t('mp/nt-speed'), seg(['slow', 'normal', 'fast'].map((v) => ({ v, label: t('mp/nt-' + v) })), M('notice').speed, 'mpSet_notice_speed')) + note('mp/nt-speed-note') + note('mp/nt-size'),
+      color: () => ntColor(),
     },
     midnav: {
-      content: () => modeSeg('midnav') + sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}`) + note('mp/icon-hint') + iconBtns('midnav')),
-      layout: () => sec(t('mp/style'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], M('midnav').layout, 'mpSet_midnav_layout'))
-        + px('midnav', 'per', [4, 5], { title: t('mp/per-row'), unit: '' }) + px('midnav', 'size', [80, 96, 112], { title: t('mp/icon-size') }) + note('ed/unit-750'),
+      // 顺序（2026-11-26 整理）：登录态 → 入口（图标上传 / AI）→ 入口角标 → 帐户区（登录注册 / 余额框）→ 文字样式 → 入口模式（后台概念，放最后）
+      content: () => {
+        const x = X(), D = x.E.D, m = M('midnav'), acct = m.layout === 'account';
+        const state = sec(t('ed/tb-state2'), seg([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], D.login ? 'in' : 'out', 'setLogin') + note(D.login ? 'mp/mn-note-in' : 'mp/mn-note-out'));
+        const ents = sec(t('mp/entries'), list('midnav', (it, i) => `${upThumb('midnav', i, 'img', it.i || 'plus')}${nameCell('midnav', i)}${resetBtn('midnav', i)}${icAi('midnav', i)}`) + note('mp/mn-icon-spec', { s: specOf('midnav').join('×') }) + iconBtns('midnav'), cnt('midnav'));
+        const bds = sec(t('mp/mn-badges'), `<div class="mn-bds">${m.items.map((it, i) => `<label class="mn-bd ${it.on ? '' : 'is-hidden'}"><span class="ellipsis">${esc(nm(it))}</span><input class="input" data-input="mpMidBadge" data-i="${i}" value="${esc(it.badge || '')}" maxlength="9" placeholder="${esc(t('mp/mn-badge-ph'))}"></label>`).join('')}</div>` + note('mp/mn-badge-note'));
+        const area = !acct ? sec(t('mp/mn-acct'), note('mp/mn-acct-row') + `<button class="btn btn-secondary btn-sm" data-act="mpSet_midnav_layout" data-arg="account">${t('mp/mn-acct-on')}</button>`)
+          : D.login ? (x.balSec ? x.balSec(true) : '') : sec(t('mp/mn-acct'), note('mp/mn-btn-note'));
+        return state + ents + bds + area + (x.txtSec ? x.txtSec('midnav') : '') + modeSeg('midnav');
+      },
+      // 每行个数只在「单行」样式生效（带账户区时入口全部排在右侧一行）；图标大小 = 图标宽度（750 稿，Figma 57）
+      layout: () => {
+        const m = M('midnav');
+        return sec(t('mp/style-midnav'), seg([{ v: 'row', label: t('mp/mid-row') }, { v: 'account', label: t('mp/mid-account') }], m.layout, 'mpSet_midnav_layout'))
+          + (m.layout === 'row' ? px('midnav', 'per', [4, 5], { title: t('mp/per-row'), unit: '' }) : note('mp/mn-per-acct'))
+          + px('midnav', 'size', [48, 57, 68], { title: t('mp/mn-icon-w') });
+      },
+      color: () => mnColor(),
     },
     gamemenu: {
-      content: () => sec(t('mp/gm-cats'), list('gamemenu', (it, i) => `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on', t('mp/state-act'))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}`)
-        + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec')}</div>` + note('mp/gm-scroll') + note('mp/gm-first') + iconBtns('gamemenu')),
-      layout: () => sec(t('mp/style'), seg([{ v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
-        + sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')) + note('mp/gm-scroll'),
+      // 顺序（2026-11-26 整理）：分类（未选中 / 选中图标 · 名称 · 选中哪个）→ 图标 AI / 批量上传 → 按钮底图（竖排）→ 文字样式
+      content: () => {
+        const x = X(), m = M('gamemenu'), side = m.style === 'side', ai = gmAct(), sp = specOf('gamemenu');
+        const hd = `<div class="gm-hd"><span class="c1" title="${esc(t('mp/state-def'))}">${t('mp/gm-h-off')}</span><span class="c1" title="${esc(t('mp/state-act'))}">${t('mp/gm-h-on')}</span><span class="c2">${t('mp/gm-h-name')}</span><span class="c3">${t('mp/gm-h-sel')}</span></div>`;
+        const rows = list('gamemenu', (it, i) => {
+          const on = i === ai, same = !it.imgOn && !it.defOn; // 没有单独的选中图 = 跟未选中同一张（虚线框提示）
+          return `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on' + (same ? ' is-same' : ''), t('mp/state-act') + (same ? ' · ' + t('mp/gm-same') : ''))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}${icAi('gamemenu', i)}<button class="gm-rad ${on ? 'is-on' : ''}" data-act="mpGmActive" data-arg="${i}" ${it.on ? '' : 'disabled'} role="radio" aria-checked="${on}" title="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}" aria-label="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}"><i></i></button>`;
+        });
+        const cats = sec(t('mp/gm-cats') + x.tipI('mp/gm-first2'), hd + rows + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec2', { w: sp[0], h: sp[1], w2: sp[0] * 2, h2: sp[1] * 2 })}</div>` + iconBtns('gamemenu'), cnt('gamemenu'));
+        return cats + (side ? gmBtnSec() : '') + (x.txtSec ? x.txtSec('gamemenu') : '');
+      },
+      layout: () => sec(t('mp/style-gamemenu'), seg([{ v: 'side', label: t('mp/gm-side') }, { v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
+        + (M('gamemenu').style === 'side' ? note('mp/gm-side-note') : sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')).replace('</div>', X().tipI('mp/gm-scroll') + '</div>')),
+      color: () => gmColor(),
     },
     gamecards: {
-      content: () => sec(t('mp/gc-show'), toggle(M('gamecards').name, 'mpFlag', 'gamecards|name', t('mp/gc-name')) + toggle(M('gamecards').tag, 'mpFlag', 'gamecards|tag', t('mp/gc-tag')))
-        + sec(t('mp/gc-fallback'), asset('gamecards', 'fallback', t('mp/gc-fallback'), t('mp/gc-fallback-spec'), `<span class="thumb fb" style="filter:${M('gamecards').fallback || 'none'}">${ic('image-fill')}</span>`)),
-      layout: () => sec(t('mp/cols'), seg([2, 3, 4].map((n) => ({ v: String(n), label: t('mp/cols-n', { n }) })), M('gamecards').cols, 'mpSet_gamecards_cols'))
-        + px('gamecards', 'corner', [0, 16, 32], { title: t('ed/corner') }) + px('gamecards', 'gap', [16, 24, 32], { title: t('mp/gap') }) + note('ed/unit-750'),
+      // 顺序（2026-11-26 整理）：显示内容 → 卡片图片（兜底封面 / 收藏星：上传 · AI · 恢复）→ 文字样式
+      content: () => {
+        const x = X(), m = M('gamecards');
+        const show = sec(t('mp/gc-show'), toggle(m.name, 'mpFlag', 'gamecards|name', t('mp/gc-name')) + toggle(m.tag, 'mpFlag', 'gamecards|tag', t('mp/gc-plat')) + toggle(m.fav !== false, 'gcFlag', 'fav', t('mp/gc-fav'))
+          + toggle(m.rec !== false, 'gcFlag', 'rec', t('mp/gc-rec')) + toggle(m.title !== false, 'gcFlag', 'title', t('mp/gc-title')) + note('mp/gc-data-note'));
+        return show + gcImgSec() + (x.txtSec ? x.txtSec('gamecards') : '');
+      },
+      // 卡片挨着竖排游戏菜单时最多 3 列（4 列太挤，名字放不下）
+      layout: () => {
+        const m = M('gamecards'), side = gcSide();
+        return sec(t('mp/cols'), seg((side ? [2, 3] : [2, 3, 4]).map((n) => ({ v: String(n), label: t('mp/cols-n', { n }) })), gcCols(m, side), 'mpSet_gamecards_cols') + (side ? note('mp/gc-cols-side') : ''))
+          + px('gamecards', 'corner', [0, 20, 32], { title: t('ed/corner') }) + px('gamecards', 'gap', [12, 20, 32], { title: t('mp/gc-gap') }) + note('mp/gc-gap-note');
+      },
+      color: () => gcColor(),
     },
     footer: {
       content: () => sec(t('mp/ft-links'), list('footer')) + sec(t('mp/ft-copy'), `<input class="input" data-input="mpFtCopy" value="${esc(M('footer').copy)}" maxlength="40">`),
@@ -123,20 +248,200 @@
     sidebar: {
       content: () => {
         const D = X().E.D;
-        return sec(t('ed/side-pos'), seg([{ v: 'left', label: t('ed/side-left') }, { v: 'right', label: t('ed/side-right') }], D.side, 'setSide'))
-          + sec(t('mp/sd-head'), asset('sidebar', 'head', t('mp/sd-head'), t('mp/sd-head-spec'), `<span class="thumb" style="filter:${M('sidebar').head || 'none'}"></span>`))
-          + sec(t('mp/entries'), list('sidebar', (it, i) => `${upThumb('sidebar', i, 'img', it.i)}${nameCell('sidebar', i)}${resetBtn('sidebar', i)}`) + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/sd-icon-spec')}</div>`);
+        return sec(t('mp/sd-head'), asset('sidebar', 'head', t('mp/sd-head'), t('mp/sd-head-spec'), `<span class="thumb" style="filter:${M('sidebar').head || 'none'}"></span>`))
+          + sec(t('mp/entries'), list('sidebar', (it, i) => `${upThumb('sidebar', i, 'img', it.i)}${nameCell('sidebar', i)}${resetBtn('sidebar', i)}${icAi('sidebar', i)}`) + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/sd-icon-spec')}</div>`, cnt('sidebar'));
       },
-      layout: () => sec(t('mp/style'), seg([{ v: 'list', label: t('mp/sd-list') }, { v: 'grid', label: t('mp/sd-grid') }], M('sidebar').style, 'mpSet_sidebar_style'))
+      layout: () => sec(t('ed/side-pos'), seg([{ v: 'left', label: t('ed/side-left') }, { v: 'right', label: t('ed/side-right') }], X().E.D.side, 'setSide'))
+        + sec(t('mp/style-sidebar'), seg([{ v: 'list', label: t('mp/sd-list') }, { v: 'grid', label: t('mp/sd-grid') }], M('sidebar').style, 'mpSet_sidebar_style'))
         + px('sidebar', 'width', [62, 75], { title: t('mp/width'), unit: '%' }),
     },
     bottomnav: {
-      content: () => modeSeg('bottomnav') + sec(t('mp/entries'), list('bottomnav', (it, i) => `${upThumb('bottomnav', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('bottomnav', i, 'imgOn', it.i, 'st2 on', t('mp/state-act'))}${nameCell('bottomnav', i)}${resetBtn('bottomnav', i)}`) + `<div class="p-note">${t('mp/bn-icons-note')}</div>` + note('mp/icon-hint') + iconBtns('bottomnav')),
-      layout: () => sec(t('mp/style'), seg([{ v: 'regular', label: t('mp/bn-regular') }, { v: 'raised', label: t('mp/bn-raised') }], M('bottomnav').style, 'mpSet_bottomnav_style'))
-        + px('bottomnav', 'h', [98, 110, 120], { title: t('mp/height') }) + note('ed/unit-750'),
+      // 顺序（2026-11-26 整理）：登录态（未登录「优惠」「注册」图和名称不同）→ 入口（未选中 / 选中图标：上传 · AI · 恢复）→ 文字样式；
+      // 去掉「入口模式」：底部导航固定 5 个入口，首页 / 我的必交（锁），其它可隐藏
+      content: () => {
+        const x = X(), login = !!x.E.D.login;
+        const state = sec(t('ed/tb-state2'), seg([{ v: 'out', label: t('ed/signed-out') }, { v: 'in', label: t('ed/signed-in') }], login ? 'in' : 'out', 'setLogin') + note(login ? 'mp/bn-note-in' : 'mp/bn-note-out'));
+        const hd = `<div class="gm-hd bn-hd"><span class="c1" title="${esc(t('mp/state-def'))}">${t('mp/gm-h-off')}</span><span class="c1" title="${esc(t('mp/state-act'))}">${t('mp/gm-h-on')}</span><span class="c2">${t('mp/gm-h-name')}</span></div>`;
+        const rows = list('bottomnav', (it, i) => `${bnThumb(i, bnOffF(it, login))}${bnThumb(i, 'imgOn')}${nameCell('bottomnav', i)}${icAi('bottomnav', i)}`);
+        const r = M('bottomnav').style === 'raised';
+        // 画布预览哪个入口是选中态：面板里直接点选（手机上导航文字小、紧挨图标，不好点）
+        const ai = bnAct(), pv = `<div class="p-sec"><div class="lab">${t('mp/bn-pv')}</div><div class="bn-pv">${vis('bottomnav').map((it) => { const i = M('bottomnav').items.indexOf(it); return `<button class="chip ${i === ai ? 'is-on' : ''}" data-act="bnAct" data-arg="${i}">${esc(bnName(it, login))}</button>`; }).join('')}</div></div>`;
+        const spec = `<div class="p-note">${ic('frame-corners', 'ic-16')}${t(r ? 'mp/bn-spec-r' : 'mp/bn-spec')}${login ? '' : ' · ' + t('mp/bn-spec-out')}</div>`;
+        return state + sec(t('mp/entries'), hd + rows + spec + note('mp/bn-hint') + iconBtns('bottomnav'), cnt('bottomnav')) + pv + (x.txtSec ? x.txtSec('bottomnav') : '');
+      },
+      layout: () => sec(t('mp/style-bottomnav'), seg([{ v: 'regular', label: t('mp/bn-regular') }, { v: 'raised', label: t('mp/bn-raised') }], M('bottomnav').style, 'mpSet_bottomnav_style') + note(M('bottomnav').style === 'raised' ? 'mp/bn-raised-note' : 'mp/bn-regular-note'))
+        + px('bottomnav', 'h', [98, 120, 140], { title: t('mp/height') }),
+      color: () => bnColor(),
     },
   };
-  function panel(b, tab) { if (tab === 'color') return colors(b); return (P[b][tab] || P[b].content)(); }
+  // 公告栏颜色：同 Banner 的做法，色块存 'key:<名>' 引用 68 Key（换整页配色跟着变），「默认」= Figma 绑定的 Key，彩虹 = 自定义
+  const NT_SW = { 'notice.bg': ['bg_1', 'border', 'primary', 'lead'], 'notice.icon': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'notice.hl': ['accent_2', 'accent_3', 'accent_1', 'primary'], 'notice.g': ['accent_1', 'accent_2', 'accent_3', 'primary'], 'notice.num': ['accent_3', 'accent_2', 'accent_1', 'primary'], 'notice.badge': ['accent_2', 'accent_3', 'primary', 'lead'] };
+  function ntColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('notice'), its = ntItems();
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const row = (id) => {
+      const key = EL.notice.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: NT_SW[id], kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const spkUp = !!its[0].img, badge = D.login && m.mail;
+    return `<div class="p-sec">${row('notice.bg')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/nt-c-text')}</div>${row('notice.text')}${row('notice.hl')}${row('notice.g')}${row('notice.num')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/nt-icons')}</div>${spkUp ? note('mp/nt-c-spk-up') : row('notice.icon')}${badge ? row('notice.badge') : note(m.mail ? 'mp/nt-c-badge-out' : 'mp/nt-c-badge-nomail')}</div>`;
+  }
+  // 帐户栏颜色：同公告栏做法（'key:<名>' 引用 68 Key）；余额框颜色（顶部栏共用）和固定跟 Key 的小图标也放这里
+  const MN_SW = { 'midnav.bg': ['bg_1', 'bg_2', 'border', 'primary'], 'midnav.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'midnav.user': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'midnav.btn': ['primary', 'lead', 'accent_3', 'accent_1'], 'midnav.btnText': ['text_primary', 'bg_2', 'lead', 'primary'], 'midnav.icon': ['primary', 'lead', 'neutral_1', 'accent_3'] };
+  const BD_SW = ['accent_2', 'accent_1', 'accent_3', 'primary'];
+  const bdId = (it, i) => 'midnav.bd-' + (baseOf(it.def) || 'mid' + i);
+  const bdKey = (it) => ({ mid2: 'accent_1' })[baseOf(it.def)] || 'accent_2'; // Figma：VIP 角标 accent_2、分享赚钱角标 accent_1
+  function mnColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('midnav'), acct = m.layout === 'account';
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const row = (id, key, sws, lab) => {
+      const v = D.ec[id] || null, pk = E.picker && E.picker.elRow === id;
+      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws, kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const elRow = (id) => row(id, EL.midnav.find((r) => r[0] === id)[1], MN_SW[id], t('mp/c-' + id.replace('.', '-')));
+    // 跟 Key 走、不单独设置的颜色：点「去改」打开整页配色
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const toIn = `<button class="warn-link" data-act="setLogin" data-arg="in">${t('ed/signed-in')}</button>`;
+    const vis0 = m.items.filter((it) => it.on), fallback = vis0.some((it) => !it.img && !it.def);
+    const bdItems = vis0.filter((it) => it.badge);
+    const cfg = x.balCfg ? x.balCfg() : {};
+    let h = `<div class="p-sec">${elRow('midnav.bg')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/mn-c-text')}</div>${elRow('midnav.text')}${acct && D.login ? elRow('midnav.user') : ''}</div>`;
+    if (acct && !D.login) h += `<div class="p-sec"><div class="lab">${t('mp/mn-c-btns')}</div>${elRow('midnav.btn')}${elRow('midnav.btnText')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/mn-badges')}</div>${D.login ? (bdItems.length ? bdItems.map((it) => { const i = m.items.indexOf(it); return row(bdId(it, i), bdKey(it), BD_SW, t('mp/mn-c-bd', { n: esc(nm(it)) })); }).join('') : note('mp/mn-c-bd-none')) : `<div class="p-note">${t('mp/mn-c-out')} ${toIn}</div>`}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/entries')}</div>${fallback ? elRow('midnav.icon') : ''}${note('mp/mn-c-icons')}</div>`;
+    if (acct && D.login) {
+      h += `<div class="p-sec bx-sec"><div class="lab">${t('ed/bal-title')}</div>${x.balColorRows ? x.balColorRows() : ''}
+        ${cfg.caretImg ? '' : link(t('ed/bal-i-caret'), 'neutral_2')}${cfg.act !== 'none' && !cfg[cfg.act === 'copy' ? 'copyImg' : 'swImg'] ? link(t('ed/bal-act-' + cfg.act), 'primary') : ''}${cfg.mode === 'switch' && !cfg.curImg ? link(t('ed/bal-i-cur'), 'accent_3') : ''}</div>`;
+    } else if (acct) h += `<div class="p-note">${t('mp/mn-c-bal-out')} ${toIn}</div>`;
+    return h;
+  }
+  // ---------- 游戏菜单：选中分类、按钮底图、颜色 ----------
+  // 选中的分类：m.active（下标）；它被隐藏了就退回第一个显示的分类
+  const gmAct = () => { const m = M('gamemenu'), its = m.items, a = its[m.active | 0]; return a && a.on ? m.active | 0 : its.findIndex((x) => x.on); };
+  A.mpGmActive = (i) => { const x = X(), m = M('gamemenu'); if (!m.items[+i] || !m.items[+i].on || gmAct() === +i) return false; x.commit(() => { x.E.D.m.gamemenu.active = +i; }); };
+  // 按钮底图：业主上传 / AI 的图（'img:' 开头或滤镜模拟值）> 效果图默认底图；颜色页签选了底色就换纯色（不删图，点「按钮图」回来）
+  const GM_BTN = { btnOff: 'assets/cl-catbtn.png', btnSel: 'assets/cl-catbtn-on.png' };
+  const GM_BTN_EC = { btnOff: 'gamemenu.bg', btnSel: 'gamemenu.active' };
+  const gmBtnCss = (f) => window.fxStyle(M('gamemenu')[f] || 'none', GM_BTN[f]);
+  // AI 生成按钮底图（原型：按款式画两张 SVG，未选中 + 选中一套；正式版按提示词出图）
+  const GMB_ST = ['glossy', 'flat', 'blackgold', 'festive', 'neon'];
+  function gmBtnSvg(st, on, pc) {
+    const P = {
+      glossy: on ? [lighten(pc, 0.3), pc, '#ffffff66'] : ['#ffffff', '#eef4ff', '#ffffff'],
+      flat: on ? [pc, pc, null] : ['#f5f7fa', '#f5f7fa', '#e3e8f0'],
+      blackgold: on ? ['#f6dc96', '#b8892f', '#fff3c4'] : ['#3a3a3a', '#1c1c1c', '#c9a55a'],
+      festive: on ? ['#ff6a50', '#d81e1e', '#ffd37a'] : ['#fff8ea', '#ffeccc', '#f2b55a'],
+      neon: on ? ['#a27bff', '#5a2dff', '#e0d0ff'] : ['#241c4f', '#16112f', '#8a5cff'],
+    }[st];
+    const [c1, c2, line] = P;
+    const hl = st === 'glossy' || st === 'blackgold' ? `<path d="M6 4h138a4 4 0 0 1 4 4v14Q75 34 2 22V8a4 4 0 0 1 4-4z" fill="#fff" fill-opacity="${on ? 0.22 : 0.6}"/>` : '';
+    const glow = st === 'neon' ? `<rect x="2.5" y="2.5" width="145" height="65" rx="11" fill="none" stroke="${line}" stroke-opacity=".45" stroke-width="5"/>` : '';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 70" width="300" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect x="1" y="1" width="148" height="68" rx="12" fill="url(#g)"/>${hl}${glow}${line ? `<rect x="1.5" y="1.5" width="147" height="67" rx="11.5" fill="none" stroke="${line}" stroke-width="${st === 'festive' || st === 'blackgold' ? 2 : 1}"/>` : ''}</svg>`;
+    return 'img:data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg).replace(/\(/g, '%28').replace(/\)/g, '%29'); // 括号也转义，放进 CSS url() 才不会断
+  }
+  // 按钮底图两行：缩略图（点一下上传）· 名称 / 规格 · ✦ AI · 恢复 · ⋯
+  function gmBtnSec() {
+    const x = X(), m = M('gamemenu'), ec = x.E.D.ec || {};
+    const row = (f) => {
+      const slot = 'mp-gamemenu-' + f, own = !!m[f], col = !!ec[GM_BTN_EC[f]];
+      const sub = col ? t('mp/gm-btn-col') : own ? t('ed/tb-own') : t('mp/gm-btn-def');
+      return `<div class="tb-item"><button class="thumb gm-bthumb" data-act="amUpload" data-arg="${slot}" title="${esc(t('ed/am-upload'))}" aria-label="${esc(t('ed/am-upload'))}"><i style="${gmBtnCss(f)}"></i></button><span class="tx"><b class="ellipsis">${t(f === 'btnOff' ? 'mp/gm-btn-off' : 'mp/gm-btn-on')}</b><small class="ellipsis">150×70 · ${sub}</small></span>${aiBtn('gamemenu|btn')}${own ? `<button class="ib-s" data-act="amReset" data-arg="${slot}" title="${esc(t('ed/am-reset'))}" aria-label="${esc(t('ed/am-reset'))}">${ic('arrow-counter-clockwise', 'ic-16')}</button>` : ''}${x.moreBtn(slot)}</div>`;
+    };
+    const anyCol = ec['gamemenu.bg'] || ec['gamemenu.active'];
+    return `<div class="p-sec"><div class="lab">${t('mp/gm-btn')}${m.btnOff || m.btnSel ? `<span class="tbai-hd"><button class="tx-reset" data-act="gmBtnReset">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button></span>` : ''}</div><div class="tb-group">${row('btnOff')}${row('btnSel')}</div>${x.uploadUI('mp-gamemenu-btnOff')}${x.uploadUI('mp-gamemenu-btnSel')}
+      <div class="p-note">${t(anyCol ? 'mp/gm-btn-colnote' : 'mp/gm-btn-note')}</div></div>`;
+  }
+  const GM_SW = { 'gamemenu.bg': ['bg_2', 'bg_1', 'border', 'primary'], 'gamemenu.active': ['primary', 'accent_3', 'accent_1', 'lead'], 'gamemenu.text': ['leftnav_def', 'neutral_1', 'lead', 'primary'], 'gamemenu.activeText': ['leftnav_active', 'bg_2', 'lead', 'primary'], 'gamemenu.shadow': ['web_left_bg_shadow'], 'gamemenu.icon': ['icon_tg_z', 'neutral_2', 'lead', 'primary'] };
+  function gmColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamemenu'), side = m.style === 'side';
+    const kv = (k) => (k[0] === '#' ? k : th[k] != null ? th[k] : resolveKey(k, th, ec));
+    // 第一个色块 = 默认：底色两行（侧边样式）默认是按钮图，色块显示按钮图、Key 标签写「按钮图」，Key 色块单独列在后面；其它是 Figma 绑定的 Key
+    const row = (id, imgF) => {
+      const key = EL.gamemenu.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      const sws = GM_SW[id].filter((k) => k !== key);
+      if (imgF) sws.unshift(key); // 底色行：默认 = 图，Key 色块单独列出
+      const img = imgF ? { defCss: gmBtnCss(imgF), defTip: `${t('mp/c-default')} · ${t('mp/gm-c-img-tip')}`, defLab: t('mp/gm-c-img') } : {};
+      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws, kv, pk, pickArg: `${id}|${key[0] === '#' ? 'primary' : key}`, ...img })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const fallback = vis('gamemenu').some((it) => !it.img && !it.imgOn && !it.def);
+    let h = '';
+    if (side) h += `<div class="p-sec"><div class="lab">${t('mp/gm-btn')}</div>${row('gamemenu.bg', 'btnOff')}${row('gamemenu.active', 'btnSel')}${row('gamemenu.shadow')}</div>`;
+    else h += `<div class="p-sec"><div class="lab">${t('mp/gm-tab-c')}</div>${row('gamemenu.bg')}${row('gamemenu.active')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-text')}</div>${row('gamemenu.text')}${row('gamemenu.activeText')}</div>`;
+    if (side || m.style === 'icons') h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-icons')}</div>${fallback ? row('gamemenu.icon') : note('mp/gm-c-icons-note')}</div>`;
+    return h;
+  }
+  // ---------- 游戏卡片（经典蓝白 Figma 317:55739 / 317:55742）：兜底封面、收藏星、推荐角标、颜色 ----------
+  const GC_STAR = { starOff: CL + 'star.png', starSel: CL + 'star-on.png' };
+  const GC_FB = 7; // 画布第 8 张示意兜底封面（Figma 已登录变体同一位置）
+  // 卡片是否紧挨竖排游戏菜单（editor.js 把两者并排放进 .cl-games）
+  const gcSide = (id) => {
+    const D = X().E.D; if (!D.m.gamemenu || D.m.gamemenu.style !== 'side') return false;
+    const v = D.order.filter((o) => !D.hidden[o]), me = id || v.find((o) => o.split('~')[0] === 'gamecards'), i = v.indexOf(me);
+    return i > 0 && v[i - 1].split('~')[0] === 'gamemenu';
+  };
+  const gcCols = (m, side) => (side ? Math.min(m.cols, 3) : m.cols);
+  // 元素色当前值（面板缩略图用；画布用 CSS 变量）
+  const gcCol = (id) => { const { th, ec } = X().liveTheme(), v = ec[id], k = v && v.startsWith('key:') ? v.slice(4) : v ? null : EL.gamecards.find((r) => r[0] === id)[1]; return k ? (th[k] != null ? th[k] : resolveKey(k, th, ec)) : v; };
+  // 兜底封面里层：上传 / AI 图（'img:'）铺满；默认 = 手柄图形（ddt_icon）；素材库模拟值 = 滤镜；隐藏 = 只剩底板
+  const gcFbInner = (m) => { const v = m.fallback; if (m.fallbackOn === false) return ''; return v && v.startsWith('img:') ? `<i class="fbimg" style="${window.fxStyle(v)}"></i>` : `<span class="fbg" style="filter:${v || 'none'}">${ic('game-controller-fill')}</span>`; };
+  // 收藏星：上传 / AI 图（'img:'）> 效果图默认 PNG
+  const gcStarSrc = (m, f) => { const v = m[f]; return v && v.startsWith('img:') ? v.slice(4) : GC_STAR[f]; };
+  const gcStarImg = (m, f, cls = '') => { const v = m[f]; return `<img class="${cls}" src="${gcStarSrc(m, f)}" style="${v && !v.startsWith('img:') ? 'filter:' + v : ''}" alt="">`; }; // 素材库模拟值 = 滤镜
+  A.gcCvMenu = (arg) => {
+    const [id, f, j] = arg.split('|'), x = X(), E = x.E, key = 'gccv:' + id + '|' + f + '|' + j;
+    if (E.sel !== id) { E.ai = null; E.picker = null; }
+    E.sel = id; E.tab = 'content';
+    if (x.mobileEd()) { S().menu = 'am:mp-gamecards-' + f; return; } // 手机：底部菜单（amSheet）
+    S().menu = S().menu === key ? null : key;
+  };
+  A.gcFlag = (k) => { const x = X(); x.commit(() => { const m = x.E.D.m.gamecards; m[k] = m[k] === false; }); };
+  A.gcStarReset = () => { const x = X(), m = M('gamecards'); if (!m.starOff && !m.starSel) return false; x.commit(() => { const g = x.E.D.m.gamecards; g.starOff = null; g.starSel = null; }); window.toast(t('ed/reset-toast'), x.undoOpt()); };
+  // AI 生成（原型：按款式画 SVG；正式版按提示词出图）。target = fallback（兜底封面 260×260）| star（收藏星两张 36×36）
+  const GC_ST = ['glossy', 'flat', 'blackgold', 'festive', 'neon'];
+  const svgUrl = (svg) => 'img:data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg).replace(/\(/g, '%28').replace(/\)/g, '%29');
+  function gcFbSvg(st, pc) {
+    const [c1, c2, g, line] = { glossy: [lighten(pc, 0.86), lighten(pc, 0.7), '#ffffff', null], flat: ['#e3e3e3', '#e3e3e3', '#f1f1f1', null], blackgold: ['#2e2a24', '#121212', '#c9a55a', '#c9a55a'], festive: ['#ff6a50', '#c81e1e', '#ffd37a', '#ffd37a'], neon: ['#2a1f5c', '#120c2e', '#a27bff', '#8a5cff'] }[st];
+    const glow = st === 'neon' ? `<g transform="translate(66 66) scale(.5)" fill="none" stroke="${g}" stroke-opacity=".5" stroke-width="18">${window.PH['game-controller-fill']}</g>` : '';
+    return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" width="260" height="260"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="260" height="260" fill="url(#g)"/>${line ? `<rect x="6" y="6" width="248" height="248" rx="18" fill="none" stroke="${line}" stroke-opacity=".55" stroke-width="3"/>` : ''}${glow}<g transform="translate(66 66) scale(.5)" fill="${g}">${window.PH['game-controller-fill']}</g>${st === 'glossy' ? '<path d="M0 0h260v90Q130 130 0 90z" fill="#fff" fill-opacity=".35"/>' : ''}</svg>`);
+  }
+  function gcStarSvg(st, on, pc) {
+    const [bg, off, onc, edge] = { glossy: ['#ffffff80', '#0000004d', '#ffe227', '#ffd427'], flat: ['#00000033', '#ffffff', pc, null], blackgold: ['#1c1c1cb3', '#8a7440', '#f6dc96', '#b8892f'], festive: ['#d81e1e99', '#ffd9c0', '#ffd37a', '#fff3c4'], neon: ['#16112fb3', '#6b5ab0', '#e0d0ff', '#a27bff'] }[st];
+    const c = on ? onc : off;
+    return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="72" height="72"><circle cx="18" cy="18" r="17" fill="${bg}"/><g transform="translate(7 6.5) scale(.0859)" fill="${c}" ${on && edge ? `stroke="${edge}" stroke-width="14"` : ''}>${window.PH['star-fill']}</g></svg>`);
+  }
+  // 卡片图片两行：兜底封面（上传 · 素材库 · AI · 恢复 · 隐藏）、收藏星（未收藏 / 已收藏两张：上传 · AI · 恢复）
+  function gcImgSec() {
+    const x = X(), m = M('gamecards'), fbOwn = !!m.fallback, fbOn = m.fallbackOn !== false, stOwn = !!(m.starOff || m.starSel);
+    const ib = (act, arg, icon, tip, cls = '') => `<button class="ib-s ${cls}" data-act="${act}" ${arg ? `data-arg="${arg}"` : ''} title="${esc(tip)}" aria-label="${esc(tip)}">${ic(icon, 'ic-16')}</button>`;
+    const fb = `<div class="tb-item ${fbOn ? '' : 'is-hidden'}"><button class="thumb gc-fthumb" data-act="amUpload" data-arg="mp-gamecards-fallback" title="${esc(t('ed/am-upload'))}" aria-label="${esc(t('ed/am-upload'))}" style="background:${gcCol('gamecards.placeholder')};color:${gcCol('gamecards.placeholderIcon')}">${gcFbInner(m)}</button><span class="tx"><b class="ellipsis">${t('mp/gc-fallback')}</b><small class="ellipsis">260×260 · ${fbOn ? t(fbOwn ? 'ed/tb-own' : 'mp/gc-def') : t('mp/gc-fb-off')}</small></span>${aiBtn('gamecards|fallback', 'aig/entry-tip-fb')}${fbOwn ? ib('amReset', 'mp-gamecards-fallback', 'arrow-counter-clockwise', t('ed/am-reset')) : ''}${x.moreBtn('mp-gamecards-fallback')}</div>`;
+    const sth = (f) => `<button class="thumb gc-sthumb" data-act="amUpload" data-arg="mp-gamecards-${f}" title="${esc(t(f === 'starSel' ? 'mp/gc-star-on' : 'mp/gc-star-off') + ' · ' + t('ed/am-upload'))}" aria-label="${esc(t(f === 'starSel' ? 'mp/gc-star-on' : 'mp/gc-star-off'))}">${gcStarImg(m, f)}</button>`;
+    const star = m.fav !== false ? `<div class="tb-item">${sth('starOff')}${sth('starSel')}<span class="tx"><b class="ellipsis">${t('mp/gc-fav')}</b><small class="ellipsis">36×36 · ${t(stOwn ? 'ed/tb-own' : 'mp/gc-def')}</small></span>${aiBtn('gamecards|star')}${stOwn ? ib('gcStarReset', '', 'arrow-counter-clockwise', t('ed/am-reset')) : ''}</div>` : '';
+    return `<div class="p-sec"><div class="lab">${t('mp/gc-imgs')}</div><div class="tb-group">${fb}${star}</div>${x.uploadUI('mp-gamecards-fallback')}${x.uploadUI('mp-gamecards-starOff')}${x.uploadUI('mp-gamecards-starSel')}
+      <div class="p-note">${t('mp/gc-img-note')}</div></div>`;
+  }
+  // 颜色：同游戏菜单做法（'key:<名>' 引用 68 Key），「默认」= Figma 绑定的 Key；选中页签 / 分隔线 / 展开 固定跟 Key，点「去改」进整页配色
+  const GC_SW = { 'gamecards.tab': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'gamecards.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'gamecards.placeholder': ['ddt_bg', 'bg_1', 'neutral_3', 'primary'], 'gamecards.placeholderIcon': ['ddt_icon', 'bg_1', 'neutral_3', 'neutral_2'], 'gamecards.label': ['label_accent3', 'accent_2', 'accent_1', 'primary'], 'gamecards.labelText': ['labeltext_accent3', 'lead', 'accent_3', 'primary'] };
+  const GC_CAP = { 'gamecards.text': 'cards_text' }; // Key 标签显示的 Key 名（游戏名称 = cards_text 经典卡片分支）
+  function gcColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamecards');
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const row = (id) => {
+      const key = EL.gamecards.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: GC_SW[id], kv, pk, pickArg: `${id}|${key}`, tag: GC_CAP[id] })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const link = (lab, key) => `<div class="crow tb-link"><div class="k">${lab}</div><div class="tb-link-r"><span class="sw-dot" style="background:${kv(key)}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
+    const fbImg = m.fallback && m.fallback.startsWith('img:');
+    let h = `<div class="p-sec"><div class="lab">${t('mp/gc-c-text')}</div>${row('gamecards.tab')}${m.name ? row('gamecards.text') : ''}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/gc-fallback')}</div>${m.fallbackOn === false ? note('mp/gc-c-fb-off') : row('gamecards.placeholder') + (fbImg ? note('mp/gc-c-fb-img') : row('gamecards.placeholderIcon'))}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/gc-rec')}</div>${m.rec !== false ? row('gamecards.label') + row('gamecards.labelText') : note('mp/gc-c-rec-off')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link(t('mp/gc-c-on'), 'primary')}${link(t('mp/gc-c-line'), 'border')}</div>`;
+    return h;
+  }
+  function panel(b, tab) { if (tab === 'color') return P[b].color ? P[b].color() : colors(b); return (P[b][tab] || P[b].content)(); }
 
   // ---------- 画布 ----------
   const vis = (b) => M(b).items.filter((x) => x.on);
@@ -147,27 +452,143 @@
       const bg = m.bg && m.bgOn ? `background-image:linear-gradient(135deg,#f6c445,#c9963b);filter:${m.bg}` : '';
       return `<div class="h5-jack ${m.layout}" style="margin:${m.margin / 2}px 12px;border-radius:${m.corner / 2}px;${bg}"><span class="tt">${esc(m.title)}</span>${amt}</div>`;
     }
+    if (b === 'notice') {
+      // 信箱：未登录 = 位图、无未读数；已登录 = 主色渐变图标 + 红色未读数（Figma 317:55672 / 317:55684）
+      // 喇叭默认图用遮罩着色（跟 notice.icon = neutral_1）；上传 / AI 的图按原图显示
+      const its = ntItems(), login = X().E.D.login;
+      const gi = (i, cls) => {
+        const it = its[i], f = i === 1 && login ? 'imgOn' : 'img', up = it[f], src = up || (f === 'imgOn' ? it.defOn || it.def : it.def), on = S().menu === 'icon:notice|' + i;
+        const pic = i === 0 && !up ? `<i class="spk-def" style="-webkit-mask-image:url(${it.def});mask-image:url(${it.def})"></i>` : `<img src="${src}" alt="">`;
+        return `<span class="${cls} ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'notice'}|notice|${i}|${f}" data-stop>${pic}${i === 1 && login ? '<i class="bd">99</i>' : ''}</span>${on ? iconMenu('notice', i, f) : ''}`;
+      };
+      // 跑马灯文字：“引号”= accent_2、【方括号】= accent_1（括号不显示）、数字 = accent_3
+      const tx = esc(m.text || '').replace(/【([^】]*)】/g, '<em class="g">$1</em>').replace(/“([^”]*)”/g, '<em class="hl">“$1”</em>').replace(/(\d[\d,.]*)/g, '<em class="num">$1</em>');
+      // 滚动一圈的时间按文字长度算（字越多越久），速度档位只改每秒移动的距离
+      const w = [...(m.text || '')].reduce((a, c) => a + (/[\u0000-ɏ]/.test(c) ? 0.55 : 1), 0) * 13 + 40;
+      const dur = Math.max(4, w / ({ slow: 28, normal: 42, fast: 64 }[m.speed] || 42)).toFixed(1);
+      return `<div class="cl-notice sp-${m.speed || 'normal'}">${gi(0, 'spk')}<div class="mq"><span style="animation-duration:${dur}s">${tx}</span></div>${m.mail ? gi(1, 'mail') : ''}</div>`;
+    }
     if (b === 'midnav') {
-      const sz = m.size / 2.4;
-      const acct = m.layout === 'account' ? `<div class="acct"><span>¥ 1,280.00</span><span class="sp"></span><span class="a">充值</span><span class="a">提现</span></div>` : '';
-      return `<div class="h5-mid-wrap">${acct}<div class="h5-mid" style="grid-template-columns:repeat(${m.per},1fr)">${vis('midnav').map((it) => { const i = m.items.indexOf(it); return `<div class="it"><span class="ib ${it.img ? 'cu' : it.i ? '' : 'ph'} ${S().menu === 'icon:midnav|' + i ? 'is-focus' : ''}" style="width:${sz + 8}px;height:${sz}px" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${it.img ? img(it.img) : ic(it.i || 'plus')}</span>${esc(nm(it))}${S().menu === 'icon:midnav|' + i ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
+      // 帐户栏（经典蓝白）：左边 未登录=登录/注册，已登录=VIP·用户名·余额；右边 4 个入口
+      const login = X().E.D.login; const v = vis('midnav');
+      const acct = m.layout === 'account' ? (login
+        ? `<div class="cl-user">${window.balUser ? window.balUser() : ''}${window.balBox ? window.balBox() : ''}</div>`
+        : `<div class="cl-user out"><span class="lg">${t('mp/acct-login')}</span><span class="rg">${t('mp/acct-reg')}</span></div>`) : '';
+      // 图标宽 = size（750 稿）÷ 2，高按 57:50；旧存档的 80/96/112 档位回到 57
+      const sz = m.size >= 40 && m.size <= 80 ? m.size : 57, ibs = `width:${sz / 2}px;height:${(sz / 2 * 50 / 57).toFixed(1)}px`;
+      // 角标底色按入口存（'midnav.bd-<默认图名>'，可是 'key:<名>' 或十六进制），不再按位置写死
+      const { th, ec } = X().liveTheme();
+      const bdc = (it, i) => { const v = ec[bdId(it, i)]; const k = v && v.startsWith('key:') ? v.slice(4) : v ? null : bdKey(it); return k ? (th[k] != null ? th[k] : resolveKey(k, th, ec)) : v; };
+      return `<div class="cl-acct ${acct ? '' : 'no-acct'}">${acct}<div class="cl-ent" style="grid-template-columns:repeat(${acct ? v.length : m.per},1fr)">${v.map((it) => { const i = m.items.indexOf(it); const src = it.img || it.def; const focus = S().menu === 'icon:midnav|' + i; return `<div class="it"><span class="ib ${src ? 'cu' : it.i ? '' : 'ph'} ${focus ? 'is-focus' : ''}" style="${ibs}" data-act="mpIconMenu" data-arg="${id || 'midnav'}|midnav|${i}" data-stop>${src ? img(src) : ic(it.i || 'plus')}${login && it.badge ? `<i class="bd" style="background:${bdc(it, i)}">${esc(it.badge)}</i>` : ''}</span><span class="nm">${esc(nm(it))}</span>${focus ? iconMenu('midnav', i, 'img') : ''}</div>`; }).join('')}</div></div>`;
     }
     if (b === 'gamemenu') {
+      const v = vis('gamemenu'), ai = gmAct();
+      // 选中的分类按 m.active（不再固定第一个）；选中态图标 imgOn → 默认选中图 defOn → 未选中图
+      const gi = (it, i, on) => { const f = on ? 'imgOn' : 'img', fo = S().menu === 'icon:gamemenu|' + i; const src = on ? it.imgOn || it.defOn || it.img || it.def : it.img || it.def; return [f, fo, src]; };
+      if (m.style === 'side') {
+        // 竖排分类（经典蓝白 Figma 317:55764）：放在游戏卡片左侧；按钮底默认是效果图底图（可上传 / AI），颜色页签选了底色才换纯色
+        const ec = X().E.D.ec || {};
+        return `<div class="cl-gm">${v.map((it) => {
+          const i = m.items.indexOf(it), on = i === ai, [f, fo, src] = gi(it, i, on);
+          const bg = ec[on ? 'gamemenu.active' : 'gamemenu.bg'] ? '' : `<i class="bgi" style="${gmBtnCss(on ? 'btnSel' : 'btnOff')}"></i>`;
+          return `<span class="${on ? 'on' : ''} ${bg ? 'has-img' : ''}">${bg}<span class="gi ${fo ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><b>${esc(nm(it))}</b>${fo ? iconMenu('gamemenu', i, f) : ''}</span>`;
+        }).join('')}</div>`;
+      }
       // 13 个入口放不下时横向滚动，右侧渐隐提示可滑
-      const v = vis('gamemenu');
-      return `<div class="h5-gm-wrap"><div class="h5-gm ${m.style} ${m.shape}" data-sk="gm-${id || b}">${v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:gamemenu|' + i; const icon = m.style === 'icons' ? `<span class="gi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${it[f] || (k === 0 && it.img) ? img(it[f] || it.img) : ic(it.i)}</span>` : ''; return `<span class="${k ? '' : 'on'}">${icon}${esc(nm(it))}${on ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;
+      return `<div class="h5-gm-wrap"><div class="h5-gm ${m.style} ${m.shape}" data-sk="gm-${id || b}">${v.map((it) => { const i = m.items.indexOf(it), on = i === ai, [f, fo, src] = gi(it, i, on); const icon = m.style === 'icons' ? `<span class="gi ${fo ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span>` : ''; return `<span class="${on ? 'on' : ''}">${icon}${esc(nm(it))}${fo ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;
     }
     if (b === 'gamecards') {
-      return `<div class="h5-gc" style="grid-template-columns:repeat(${m.cols},1fr);gap:${m.gap / 2}px">${GAMES.map(([n, tg, fb]) => `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px;${fb && m.fallback ? `filter:${m.fallback}` : ''}">${fb ? ic('image-fill') : ''}${tg && m.tag ? `<span class="tg">${tg}</span>` : ''}</div>${m.name ? esc(n) : ''}</div>`).join('')}</div>`;
+      // 游戏卡片（经典蓝白 Figma 317:55739）：上方 热门/最近/收藏 页签；方图 + 收藏星 + 平台角标 + 名称；第 1 张推荐角标、第 8 张示意兜底封面；
+      // 底部「另有 N 款游戏 展开」+ 分隔线 + 下一个分类的标题行（图标 · 名称 · 全部）
+      const side = gcSide(id), cols = gcCols(m, side);
+      const tabs = [1, 11, 12].map((k, j) => `<span class="${j ? '' : 'on'}">${t('mp/gm-n-' + k)}</span>`).join('');
+      // 只显示整行（2 / 4 列显示 8 张、3 列 9 张），最后一行不会剩一张孤零零的卡；剩下的算进「另有 N 款」
+      const shown = Math.max(cols, Math.floor(GAMES.length / cols) * cols), mid = id || b;
+      // 画布上点兜底封面 / 收藏星：出 上传 / AI / 恢复 菜单（同面板「⋯」）
+      const cvm = (f, j) => (S().menu === 'gccv:' + mid + '|' + f + '|' + j && !X().mobileEd() && X().assetMenuItems ? `<div class="menu icon-menu am-menu gc-cv-menu ${j % cols >= cols / 2 ? 'r' : ''}" data-stop>${X().assetMenuItems('mp-gamecards-' + f)}</div>` : '');
+      const cards = GAMES.slice(0, shown).map(([n, g], j) => {
+        const fb = j === GC_FB, cover = fb ? gcFbInner(m) : `<img src="${CL}game${g}.webp" alt="">`, sf = j ? 'starOff' : 'starSel';
+        const star = m.fav !== false ? `<span class="star" data-act="gcCvMenu" data-arg="${mid}|${sf}|${j}" data-stop>${gcStarImg(m, sf)}</span>` : '';
+        return `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px" ${fb ? `data-act="gcCvMenu" data-arg="${mid}|fallback|${j}" data-stop` : ''}>${cover}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${star}${m.tag && !fb ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}${cvm('fallback', j)}${cvm(sf, j)}</div>`;
+      }).join('');
+      // 标题行 = 当前选中分类的下一个分类（Figma「棋牌游戏」），图标跟游戏菜单的未选中图
+      let hd = '';
+      if (m.title !== false) {
+        const gv = vis('gamemenu'), ai = gmAct(), cur = gv.indexOf(M('gamemenu').items[ai]), nx = gv[(cur + 1) % Math.max(gv.length, 1)];
+        if (nx) { const src = nx.img || nx.def; hd = `<div class="hd"><span class="hi">${src ? img(src) : ic(nx.i)}</span><b>${esc(t('mp/gc-cat-title', { n: nm(nx) }))}</b><small>${t('mp/gc-all')}</small></div>`; }
+      }
+      return `<div class="cl-gc"><div class="tabs">${tabs}</div><div class="grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr));gap:${m.gap / 2}px">${cards}</div><div class="more">${t('mp/gc-more-n', { n: `<em>${14 + GAMES.length - shown}</em>` })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
     }
     if (b === 'footer') return `<div class="h5-foot" style="text-align:${m.align}"><div class="ln">${vis('footer').map((x) => esc(nm(x))).join(' · ')}</div><div>${esc(m.copy)}</div></div>`;
     return '';
   }
+  // ---------- 底部导航（经典蓝白 Figma 317:55538）：未登录图 / 名称、凸起项、预览选中、颜色 ----------
+  // 凸起样式只落在「分享赚钱」（raised），未登录「优惠」是 100×100 动效礼盒（bigOut）；旧存档没有标记时按默认图名认
+  const bnRaised = (it) => !!(it.raised || (it.raised == null && baseOf(it.def) === 'bi2'));
+  const bnBig = (it) => !!(it.bigOut || (it.bigOut == null && baseOf(it.defOut) === 'bo1'));
+  // 未登录跟已登录图不一样的入口（「优惠」礼盒、「注册」）：未登录图单独存 imgOut，上传已登录图不会把它换掉
+  const bnHasOut = (it) => !!(it.defOut && (it.outN || it.outK || bnBig(it)));
+  const bnLogin = () => !!X().E.D.login;
+  const bnOffF = (it, login = bnLogin()) => (!login && bnHasOut(it) ? 'imgOut' : 'img'); // 当前登录态下「未选中」图存哪个字段
+  const bnName = (it, login = bnLogin()) => (!login && (it.outN || it.outK) ? it.nOut || it.outN || t(it.outK) : nm(it)); // outN = 旧存档写死的中文
+  // 某个字段当前显示的图：未选中 = 上传图 > 默认图（未登录用未登录默认图）；选中 = 上传选中图 > 默认选中图 > 沿用未选中图
+  function bnSrc(it, f, login = bnLogin()) {
+    if (f === 'imgOn') return it.imgOn || it.defOn || bnSrc(it, bnOffF(it, login), login);
+    if (f === 'imgOut') return it.imgOut || it.defOut || it.img || it.def;
+    return it.img || (!login && it.defOut) || it.def || null;
+  }
+  function bnSpec(i, f) { const it = M('bottomnav').items[i]; if (!it) return null; if (f === 'imgOut' && bnBig(it)) return [100, 100]; return bnRaised(it) && M('bottomnav').style === 'raised' ? [120, 120] : [50, 50]; }
+  // 画布预览哪个入口是选中态（编辑器状态，不进设计数据）：点画布上的导航名称切换；隐藏了就退回第一个
+  const bnAct = () => { const E = X().E, its = M('bottomnav').items, a = its[E.bnAct | 0]; return a && a.on ? E.bnAct | 0 : its.findIndex((x) => x.on); };
+  A.bnAct = (i) => { const E = X().E; if (E.sel !== 'bottomnav') A.selMod('bottomnav'); E.bnAct = +i; S().menu = null; };
+  // 面板缩略图：点一下上传；有上传图时右上角小按钮恢复这一张（跟画布图标菜单一样按状态恢复）
+  function bnThumb(i, f) {
+    const it = M('bottomnav').items[i], src = bnSrc(it, f), same = f === 'imgOn' && !it.imgOn && !it.defOn;
+    const lab = t(f === 'imgOn' ? 'mp/state-act' : 'mp/state-def') + (f === 'imgOut' ? ' · ' + t('ed/signed-out') : '') + (same ? ' · ' + t('mp/gm-same') : '');
+    const rb = it[f] ? `<button class="rb" data-act="mpIconReset" data-arg="bottomnav|${i}|${f}" title="${esc(t('mp/icon-reset'))}" aria-label="${esc(t('mp/icon-reset'))}">${ic('arrow-counter-clockwise')}</button>` : '';
+    return `<span class="bn-th"><button class="thumb sq up st2 ${f === 'imgOn' ? 'on' : ''} ${same ? 'is-same' : ''} ${src ? 'is-cu' : ''}" data-act="mpIcon" data-arg="bottomnav|${i}|${f}" title="${esc(lab + ' · ' + t('mp/icon-replace'))}" aria-label="${esc(lab)}">${src ? img(src) : ic(it.i)}<span class="ub">${ic('upload-simple')}</span></button>${rb}</span>`;
+  }
   function bnav() {
-    const m = M('bottomnav'); const v = vis('bottomnav'); const mid = Math.floor(v.length / 2);
-    return v.map((it, k) => { const i = m.items.indexOf(it), f = k ? 'img' : 'imgOn', on = S().menu === 'icon:bottomnav|' + i; return `<span class="it ${k ? '' : 'on'} ${m.style === 'raised' && k === mid ? 'raised' : ''}"><span class="bi ${on ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="bottomnav|bottomnav|${i}|${f}" data-stop>${it[f] ? img(it[f]) : ic(it.i)}</span>${esc(nm(it))}${on ? iconMenu('bottomnav', i, f) : ''}</span>`; }).join('');
+    // 第 4 个未登录=注册、已登录=存款；优惠未登录用动效礼盒；「分享赚钱」凸起大图标
+    const m = M('bottomnav'), v = vis('bottomnav'), login = bnLogin(), ai = bnAct();
+    return v.map((it) => {
+      const i = m.items.indexOf(it), act = i === ai, off = bnOffF(it, login), f = act ? 'imgOn' : off, foc = S().menu === 'icon:bottomnav|' + i;
+      const src = bnSrc(it, f, login), big = off === 'imgOut' && bnBig(it) && src === bnSrc(it, off, login) ? 'big' : '';
+      return `<span class="it ${act ? 'on' : ''} ${m.style === 'raised' && bnRaised(it) ? 'raised' : ''}" data-act="bnAct" data-arg="${i}"><span class="bi ${big} ${foc ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="bottomnav|bottomnav|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><span class="lb">${esc(bnName(it, login))}</span>${foc ? iconMenu('bottomnav', i, f) : ''}</span>`;
+    }).join('');
+  }
+  // 颜色：同游戏菜单做法（'key:<名>' 引用 68 Key），「默认」= Figma 绑定的 Key（跟设计：web_btmnav_db / btmnav_def / btmnav_active）
+  const BN_SW = { 'bottomnav.bg': ['web_btmnav_db', 'bg_2', 'bg_1', 'lead'], 'bottomnav.def': ['btmnav_def', 'neutral_2', 'neutral_1', 'lead'], 'bottomnav.active': ['btmnav_active', 'primary', 'accent_3', 'lead'] };
+  function bnColor() {
+    const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D;
+    const kv = (k) => (th[k] != null ? th[k] : resolveKey(k, th, ec));
+    const row = (id) => {
+      const key = EL.bottomnav.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      return `<div class="crow"><div class="k">${lab}</div>${swRow({ act: 'bnColor', id, v, key, sws: BN_SW[id], kv, pk, pickArg: `${id}|${key}` })}${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
+    };
+    const fallback = vis('bottomnav').some((it) => !bnSrc(it, bnOffF(it)));
+    return `<div class="p-sec">${row('bottomnav.bg')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/bn-c-text')}</div>${row('bottomnav.def')}${row('bottomnav.active')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/entries')}</div>${note(fallback ? 'mp/bn-c-icons-fb' : 'mp/bn-c-icons')}</div>`;
   }
   const bnavCls = () => `h-${M('bottomnav').h}`;
+  // 导航文字放不下（字号调大 / 越南文长名 / 98 矮栏）时不掉出导航栏：改成一行，字号在画布上最多缩到设定的 75%（不小于 8px），
+  // 还放不下就省略号；鼠标悬停看全名。只改画布显示，面板里的字号设定不变
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('.h5-bnav').forEach((bar) => {
+      const bb = bar.getBoundingClientRect(); if (!bb.height) return;
+      const s = bb.height / bar.offsetHeight || 1;
+      bar.querySelectorAll('.lb').forEach((lb) => {
+        lb.removeAttribute('style'); lb.removeAttribute('title');
+        const over = () => lb.getBoundingClientRect().bottom > bb.bottom + 0.5 * s;
+        if (!over()) return;
+        Object.assign(lb.style, { display: 'block', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }); lb.title = lb.textContent;
+        const fs0 = parseFloat(getComputedStyle(lb).fontSize), min = Math.max(8, Math.floor(fs0 * 0.75)); let fs = fs0;
+        while ((over() || lb.scrollWidth > lb.clientWidth) && fs > min) { fs -= 1; lb.style.fontSize = fs + 'px'; }
+        while (over() && fs > 8) { fs -= 1; lb.style.fontSize = fs + 'px'; }
+      });
+    });
+  });
   function side() {
     const m = M('sidebar');
     const head = m.head && m.headOn ? `<div class="hd" style="filter:${m.head}"></div>` : '';
@@ -175,7 +596,7 @@
   }
 
   // ---------- 动作 ----------
-  for (const [b, keys] of Object.entries({ jackpot: ['anim', 'layout', 'margin', 'corner'], midnav: ['mode', 'layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['mode', 'style', 'h'] })) {
+  for (const [b, keys] of Object.entries({ notice: ['speed'], jackpot: ['anim', 'layout', 'margin', 'corner'], midnav: ['mode', 'layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['mode', 'style', 'h'] })) {
     for (const k of keys) A[`mpSet_${b}_${k}`] = (v) => { const cur = M(b)[k]; set(b, k, typeof cur === 'number' ? +v : v); };
   }
   A.mpItem = (arg) => { const [b, i] = arg.split('|'); const x = X(); x.commit(() => { const it = x.E.D.m[b].items[+i]; it.on = !it.on; }); };
@@ -190,11 +611,15 @@
   const typeText = (b, k) => (v) => { const x = X(); if (typing !== b + k) { x.commit(() => {}); typing = b + k; } x.E.D.m[b][k] = v; x.save(); return true; };
   I.mpJpTitle = typeText('jackpot', 'title');
   I.mpFtCopy = typeText('footer', 'copy');
+  I.mpNtText = typeText('notice', 'text');
+  // 帐户栏入口角标文字（空 = 不显示角标）
+  I.mpMidBadge = (v, el) => { const x = X(), i = +el.dataset.i; if (typing !== 'midbd' + i) { x.commit(() => {}); typing = 'midbd' + i; } x.E.D.m.midnav.items[i].badge = v.trim() ? v.slice(0, 9) : null; x.save(); return true; };
   document.addEventListener('click', () => { typing = null; }, true);
 
   // ---------- 改名（ED-19）：上限中文 6 字 / 12 个字符 ----------
   const wlen = (s) => [...s].reduce((a, c) => a + (/[\u0000-ɏ]/.test(c) ? 1 : 2), 0);
-  A.rnStart = (arg) => { const [b, i] = arg.split('|'); const it = M(b).items[+i]; X().E.rn = { b, i: +i, v: nm(it), err: false }; S().menu = null; };
+  // 底部导航未登录时改「注册」改的是未登录名称 nOut（已登录「存款」不受影响）
+  A.rnStart = (arg) => { const [b, i] = arg.split('|'); const it = M(b).items[+i]; const out = b === 'bottomnav' && !bnLogin() && (it.outN || it.outK); X().E.rn = { b, i: +i, v: out ? bnName(it) : nm(it), f: out ? 'nOut' : 'n', err: false }; S().menu = null; };
   I.rnIn = (v) => { const R = X().E.rn; if (!R) return; R.v = v; const err = wlen(v.trim()) > 12; if (err !== R.err) { R.err = err; return true; } };
   function rnSave() {
     const x = X(); const R = x.E.rn; if (!R) return;
@@ -202,8 +627,8 @@
     if (R.err) return; // 超长阻止保存
     const it = x.E.D.m[R.b].items[R.i];
     x.E.rn = null;
-    if (!v || v === nm(it)) return;
-    x.commit(() => { x.E.D.m[R.b].items[R.i].n = v; });
+    if (!v || v === (R.f === 'nOut' ? bnName(it) : nm(it))) return;
+    x.commit(() => { x.E.D.m[R.b].items[R.i][R.f || 'n'] = v; });
     window.toast(t('toast/renamed'), x.undoOpt());
   }
   A.rnKey = (e) => {
@@ -220,24 +645,27 @@
   // ---------- 图标上传替换 ----------
   function iconMenu(b, i, f) {
     const has = !!M(b).items[i][f];
-    const [w, h] = ICON_SPEC[b] || [96, 96];
-    return `<div class="menu icon-menu" data-stop><button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button><button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
+    const [w, h] = specOf(b, i, f);
+    // 「✦ AI 生成」排第一（跟素材 ⋯ 菜单一致），打开统一面板「只这一个」
+    const ai = b !== 'footer' && window.AIG && window.AIG.can(b) ? `<button class="menu-item" data-act="aigOpen" data-arg="${b}|icons|${i}" data-stop>${ic('sparkle-fill')}${t('aig/menu')}</button>` : '';
+    return `<div class="menu icon-menu" data-stop>${ai}<button class="menu-item" data-act="mpIcon" data-arg="${b}|${i}|${f}" data-stop>${ic('upload-simple')}<span class="tx"><span>${t('mp/icon-replace')}</span><span class="sub">${t('mp/icon-spec')} · ${w}×${h}</span></span></button><button class="menu-item" data-act="mpIconReset" data-arg="${b}|${i}|${f}" data-stop ${has ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('mp/icon-reset')}</button></div>`;
   }
   let fileIn = null, target = null;
   function pickIcon(b, i, f) {
     target = { b, i: +i, f };
     if (!fileIn) {
-      fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = 'image/png,image/svg+xml,image/webp,image/jpeg'; fileIn.style.display = 'none'; fileIn.setAttribute('data-icon-file', '');
+      fileIn = document.createElement('input'); fileIn.type = 'file'; fileIn.accept = window.IMG_ACCEPT; fileIn.style.display = 'none'; fileIn.setAttribute('data-icon-file', '');
       document.body.appendChild(fileIn);
       fileIn.addEventListener('change', () => {
         const file = fileIn.files[0]; fileIn.value = ''; if (!file || !target) return;
-        if (!/^image\//.test(file.type)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
+        if (!window.imgOk(file)) { window.toast(t('mp/icon-bad'), { info: true }); return; }
         const rd = new FileReader();
         rd.onload = () => {
           const { b: mb, i: mi, f: mf } = target; const x = X();
           x.commit(() => { x.E.D.m[mb].items[mi][mf] = rd.result; });
           if (x.E.mpanel === 'iconmenu') x.E.mpanel = 'module';
-          window.toast(t('mp/icon-replaced', { n: nm(x.E.D.m[mb].items[mi]) }), x.undoOpt(4000));
+          const mit = x.E.D.m[mb].items[mi];
+          window.toast(t('mp/icon-replaced', { n: mb === 'bottomnav' ? bnName(mit, mf === 'imgOut' ? false : bnLogin()) : nm(mit) }), x.undoOpt(4000));
           window.render();
         };
         rd.readAsDataURL(file);
@@ -248,14 +676,14 @@
   A.mpIcon = (arg) => { const [b, i, f] = arg.split('|'); S().menu = null; pickIcon(b, i, f || 'img'); window.render(); return false; };
   A.mpIconReset = (arg) => {
     const [b, i, f] = arg.split('|'); const x = X(); const it = x.E.D.m[b].items[+i];
-    if (f ? !it[f] : !(it.img || it.imgOn)) return false;
-    x.commit(() => { const it2 = x.E.D.m[b].items[+i]; if (f) delete it2[f]; else { delete it2.img; delete it2.imgOn; } });
+    if (f ? !it[f] : !(it.img || it.imgOn || it.imgOut)) return false;
+    x.commit(() => { const it2 = x.E.D.m[b].items[+i]; if (f) delete it2[f]; else { delete it2.img; delete it2.imgOn; delete it2.imgOut; } });
     S().menu = null; if (x.E.mpanel === 'iconmenu') x.E.mpanel = 'module';
     window.toast(t('mp/icon-reset-toast'), x.undoOpt(4000));
   };
   A.mpIconMenu = (arg) => {
     const [id, b, i, f] = arg.split('|'); const x = X(); const E = x.E;
-    if (E.sel !== id) { E.tab = 'content'; E.ai = null; E.picker = null; E.iconAi = null; }
+    if (E.sel !== id) { E.tab = 'content'; E.ai = null; E.picker = null; }
     E.sel = id; E.h5side = b === 'sidebar'; if (E.tab !== 'content') E.tab = 'content';
     if (x.mobileEd()) { E.iconMenu = { b, i: +i, f: f || 'img' }; E.mpanel = 'iconmenu'; S().menu = null; }
     else S().menu = S().menu === 'icon:' + b + '|' + i ? null : 'icon:' + b + '|' + i;
@@ -263,22 +691,60 @@
   function iconSheet() {
     const m = X().E.iconMenu; if (!m) return '';
     const it = M(m.b).items[m.i];
-    return `<div class="icon-sheet-hd">${it[m.f] ? img(it[m.f]) : ic(it.i || 'plus')}<b>${esc(nm(it))}</b></div>${iconMenu(m.b, m.i, m.f).replace('menu icon-menu', 'icon-sheet-list')}`;
+    const src = m.b === 'bottomnav' ? bnSrc(it, m.f) : it[m.f] || defSrc(it, m.f, m.b);
+    return `<div class="icon-sheet-hd">${src ? img(src) : ic(it.i || 'plus')}<b>${esc(m.b === 'bottomnav' ? bnName(it) : nm(it))}</b></div>${iconMenu(m.b, m.i, m.f).replace('menu icon-menu', 'icon-sheet-list')}`;
   }
   // 画布里的图标菜单：fixed 定位到图标正下方（放不下就往上）
   window.AFTER_RENDER.push(() => {
-    document.querySelectorAll('body > .icon-menu').forEach((n) => n.remove());
+    document.querySelectorAll('body > .icon-menu, body > .tb-ic-menu').forEach((n) => n.remove());
     const m = document.querySelector('#app .icon-menu'); if (!m) return;
     const f = m.parentElement.querySelector('.is-focus'); if (!f) return;
     // 画布有缩放（transform），fixed 会相对画布定位，所以把菜单移到 body 下
     const r = f.getBoundingClientRect();
     document.body.appendChild(m);
-    m.style.position = 'fixed'; m.style.left = Math.max(8, Math.min(r.left - 4, window.innerWidth - 248)) + 'px';
-    const h = m.offsetHeight; m.style.top = (r.bottom + 6 + h > window.innerHeight - 8 ? r.top - 6 - h : r.bottom + 6) + 'px';
+    // 菜单不超出手机画布边框（Waydon 2026-11-26 19:13）：左右、上下都限制在 .h5 范围内；画布比菜单窄时靠画布左边
+    const fr = (f.closest('.h5') || document.querySelector('.ed-canvas .h5') || document.body).getBoundingClientRect();
+    m.style.position = 'fixed'; m.style.width = Math.min(240, Math.floor(fr.width - 8)) + 'px';
+    const mw = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = Math.max(fr.left + 4, Math.min(r.left - 4, fr.right - 4 - mw)) + 'px';
+    const below = r.bottom + 6, above = r.top - 6 - h;
+    m.style.top = (below + h <= fr.bottom - 4 ? below : Math.max(fr.top + 4, above)) + 'px';
+  });
+
+  // 画布里其它锚定菜单（游戏卡片封面、顶部栏图标）：同样移到 body、限制在手机画布边框内
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('#app .ed-canvas .gc-cv-menu, #app .ed-canvas .tb-ic-menu').forEach((m) => {
+      const anc = m.parentElement; const fr = (anc.closest('.h5') || document.body).getBoundingClientRect(); const r = anc.getBoundingClientRect();
+      document.body.appendChild(m); m.classList.remove('r');
+      m.style.position = 'fixed'; m.style.right = 'auto'; m.style.margin = '0'; m.style.zIndex = '60'; m.style.width = Math.min(240, Math.floor(fr.width - 8)) + 'px';
+      const mw = m.offsetWidth, h = m.offsetHeight;
+      m.style.left = Math.max(fr.left + 4, Math.min(r.left, fr.right - 4 - mw)) + 'px';
+      const below = r.bottom + 4, above = r.top - 4 - h;
+      m.style.top = (below + h <= fr.bottom - 4 ? below : Math.max(fr.top + 4, above)) + 'px';
+    });
   });
 
   // ---------- AI 生成一套图标（ED-04） ----------
-  const STYLES = ['glass', 'flat', '3d', 'line', 'fill', 'duotone', 'metal', 'gradient']; // 后 4 种：AI 首页设计的图标风格（AD）
+  const VSTYLES = ['glass', 'flat', '3d', 'line', 'fill', 'duotone', 'metal', 'gradient']; // 矢量款式（AI 首页设计 AD 也用）
+  // 默认款式（Waydon 2026-11-26）：用 Figma generate image 生成的 5 种真实风格图，放 assets/ai-*/；面板只显示这 5 种 + 4 种矢量款式
+  const RSTY = ['glossy', 'flat', 'blackgold', 'festive', 'neon'];
+  const R_FALL = { glossy: ['glass', null], flat: ['flat', null], blackgold: ['metal', '#C9A55A'], festive: ['3d', '#E83A30'], neon: ['line', '#8A5CFF'] };
+  const baseOf = (p) => (p ? String(p).split('/').pop().replace(/\.\w+$/, '') : '');
+  const RMAP = {
+    notice: (it) => ({ 'mp/nt-i-spk': 'ai-notice/spk', 'mp/nt-i-mail': 'ai-notice/mail' })[it.k],
+    midnav: (it) => ({ mid0: 'ai-acct/dep', mid1: 'ai-acct/vip', mid2: 'ai-acct/share', mid3: 'ai-acct/more' })[baseOf(it.def)],
+    bottomnav: (it, f) => (baseOf(it.def) === 'bi3' && f !== 'imgOut' && (f === 'img' || bnLogin()) ? null : { bi0: 'ai-bnav/home', bi1: 'ai-bnav/promo', bi2: 'ai-bnav/bonus', bi3: 'ai-bnav/invite', bi4: 'ai-bnav/mine' }[baseOf(it.def)]),
+    gamemenu: (it) => { const m = /^mp\/gm-n-(\d+)$/.exec(it.k || ''); return m ? 'ai-gm/g' + m[1] : null; },
+  };
+  // 某个入口在某款式下的图：有真实风格图就用图（底部导航默认态用 -off 灰图），没有就用对应矢量款式画
+  function styleSrc(b, it, style, color, f) {
+    if (/^r-/.test(style)) {
+      const st = style.slice(2); const r = RMAP[b] && RMAP[b](it, f);
+      if (r) return 'assets/' + r + '-' + st + (b === 'bottomnav' && (f === 'img' || (f === 'imgOut' && !bnBig(it))) ? '-off' : '') + '.webp';
+      const [vs, c] = R_FALL[st]; return aiSvg(it.i || 'sparkle-fill', vs, c || color);
+    }
+    return aiSvg(it.i || 'sparkle-fill', style, color);
+  }
   const tType = (b) => (b === 'gamemenu' ? 'gametype' : b); // 流水里的类型名
   function lighten(hex, k) { const n = parseInt(hex.slice(1, 7), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * k)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); }
   // 模拟 AI 结果：按款式把 Phosphor 图标画成 SVG dataURL
@@ -296,145 +762,136 @@
     else fg = color;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">${bg}<g transform="translate(24 22) scale(.1875)" fill="${fg}">${path}</g></svg>`);
   }
-  const perEntry = (b) => (b === 'bottomnav' || b === 'gamemenu' ? ['img', 'imgOn'] : ['img']).slice(0, b === 'bottomnav' ? 2 : 1);
-  const isReq = (b, it) => (b === 'midnav' ? M(b).mode === 'conf' || it.req : b === 'bottomnav' ? it.req : false);
-  const jobs = (ia) => { const out = []; M(ia.b).items.forEach((it, i) => { if (ia.picks[i]) perEntry(ia.b).forEach((f) => out.push(i + '|' + f)); }); return out; };
-  const modTitle = (b) => t({ midnav: 'mod/midnav', bottomnav: 'mod/bottomnav', gamemenu: 'mod/gamemenu' }[b]);
-  function candColor(ia, f) { const th = X().E.D.theme; const pal = [th.primary, th.accent_3, th.accent_1, th.accent_2, '#7b4dff']; return f === 'img' && ia.b === 'bottomnav' ? th.neutral_2 : pal[ia.attempt % pal.length]; }
-  function candSrc(ia, key) { const c = ia.cands[key]; if (!c) return ''; const [i] = key.split('|'); return aiSvg(M(ia.b).items[+i].i || 'sparkle-fill', c.style, c.color); }
-  A.iaOpen = (b) => {
-    const x = X(); const its = M(b).items;
-    x.E.iconAi = { b, style: 'glass', extra: '', picks: its.map((it) => isReq(b, it) || b === 'gamemenu' || (b === 'midnav' && M(b).mode === 'conf')), stage: 'setup', pct: 0, cands: {}, failed: {}, busy: {}, done: 0, attempt: 0 };
-    x.E.picker = null; S().menu = null; if (x.mobileEd()) x.E.mpanel = 'module';
-  };
-  const iaStop = () => { const ia = X().E.iconAi; if (ia && ia.timer) { clearInterval(ia.timer); clearTimeout(ia.timer); ia.timer = null; } };
-  A.iaClose = () => { iaStop(); X().E.iconAi = null; };
-  A.iaStyle = (s) => { X().E.iconAi.style = s; };
-  I.iaExtra = (v) => { X().E.iconAi.extra = v; };
-  // 全选 / 全不选（必交项始终保留）
-  A.iaAll = (v) => { const ia = X().E.iconAi; if (!ia) return false; M(ia.b).items.forEach((it, i) => { ia.picks[i] = v === '1' || isReq(ia.b, it); }); };
-  A.iaPick = (i) => { const ia = X().E.iconAi; const it = M(ia.b).items[+i]; if (isReq(ia.b, it)) return false; ia.picks[+i] = !ia.picks[+i]; };
-  A.iaSample = () => {
-    const x = X(); const ia = x.E.iconAi; if (!ia) return false;
-    if (!jobs(ia).length) return false;
-    if (!x.afford(20)) { x.topup(); return false; }
-    iaStop(); ia.stage = 'sample'; ia.pct = 0; ia.attempt++;
-    ia.timer = setInterval(() => {
-      if (X().E.iconAi !== ia) { clearInterval(ia.timer); return; }
-      ia.pct = Math.min(100, ia.pct + 8);
-      const n = document.querySelector('[data-ia-pct]'); if (n) n.textContent = ia.pct + '%';
-      if (ia.pct >= 100) {
-        clearInterval(ia.timer); ia.timer = null;
-        if (x.fail()) { ia.stage = 'failed'; x.notice({ kind: 'failed', cat: 'editor', title: t('mp/ai-title', { mod: modTitle(ia.b) }), body: t('mp/ai-failed') }); }
-        else { x.pay(20, 'iconset', { type: tType(ia.b) }); const k0 = jobs(ia)[0]; ia.cands = { [k0]: { style: ia.style, color: candColor(ia, k0.split('|')[1]) } }; ia.failed = {}; ia.stage = 'sampleOk'; }
-        window.render();
-      }
-    }, 120);
-  };
-  function runJobs(ia, list) {
-    iaStop(); ia.stage = 'rest'; ia.run = list.slice(); ia.done = 0; ia.okN = 0;
-    const failSet = X().fail() ? new Set([list[Math.min(1, list.length - 1)], list[Math.min(4, list.length - 1)]]) : new Set();
-    list.forEach((k) => { delete ia.cands[k]; delete ia.failed[k]; });
-    ia.timer = setInterval(() => {
-      if (X().E.iconAi !== ia) { clearInterval(ia.timer); return; }
-      const k = list[ia.done];
-      if (failSet.has(k)) ia.failed[k] = true; else { ia.cands[k] = { style: ia.style, color: candColor(ia, k.split('|')[1]) }; ia.okN++; }
-      ia.done++;
-      if (ia.done >= list.length) iaFinish(ia);
-      window.render();
-    }, 320);
+  // 游戏菜单：每个分类出未选中图，选中的那个分类再多出一张选中图（其它分类选中时沿用未选中图）
+  // 底部导航：当前登录态下的未选中图（未登录「优惠」「注册」= imgOut）+ 选中图
+  const perEntry = (b, i) => (b === 'bottomnav' ? [bnOffF(M(b).items[i]), 'imgOn'] : b === 'gamemenu' && i === gmAct() ? ['img', 'imgOn'] : ['img']);
+  const isReq = (b, it) => (b === 'notice' ? it.k !== 'mp/nt-i-mail' || M(b).mail : b === 'midnav' ? M(b).mode === 'conf' || it.req : b === 'bottomnav' ? it.req : false);
+  const modTitle = (b) => t({ notice: 'mod/notice', midnav: 'mod/midnav', bottomnav: 'mod/bottomnav', gamemenu: 'mod/gamemenu', sidebar: 'mod/sidebar' }[b]);
+  // 矢量款式的颜色：底部导航未选中 btmnav_def、选中第一次 btmnav_active；游戏菜单未选中 = 左侧栏图标 Key icon_tg_z（Figma 317:52363 等）；其余按 k 换色
+  function candColor(b, f, k) {
+    const x = X(), th = x.E.D.theme, lt = x.liveTheme(); const pal = [th.primary, th.accent_3, th.accent_1, th.accent_2, '#7b4dff'];
+    if (f === 'img' && b === 'gamemenu') return resolveKey('icon_tg_z', lt.th, lt.ec).slice(0, 7);
+    if (b === 'bottomnav') { if (f !== 'imgOn') return resolveKey('btmnav_def', lt.th, lt.ec).slice(0, 7); if (!k) return resolveKey('btmnav_active', lt.th, lt.ec).slice(0, 7); }
+    return pal[(k || 0) % pal.length];
   }
-  function iaFinish(ia) {
-    const x = X(); clearInterval(ia.timer); ia.timer = null;
-    if (ia.okN) x.pay(ia.okN * 20, 'iconset', { type: tType(ia.b) });
-    ia.stage = 'adopt';
-    const nf = Object.keys(ia.failed).length;
-    x.notice({ kind: nf ? 'partial' : 'done', cat: 'editor', title: t('mp/ai-title', { mod: modTitle(ia.b) }), body: nf ? t('rec/partial', { d: jobs(ia).length - nf, n: jobs(ia).length, f: nf }) : t('mp/ai-adopted', { n: Object.keys(ia.cands).length }) });
+  // 底部导航：名称和缩略图跟当前登录态走（未登录第 4 个是「注册」、优惠是动效礼盒）
+  const iaNm = (b, it) => (b === 'bottomnav' ? bnName(it) : nm(it));
+  const iaTh = (b, it) => (b === 'bottomnav' ? bnSrc(it, bnOffF(it)) : it.img || it.def);
+  const thHtml = (b, it) => { const s0 = iaTh(b, it); return s0 ? img(s0) : ic(it.i || 'plus'); };
+
+  // ---------- AI 生成统一面板：模块图标 / 按钮底图 / 卡片图片适配器（docs/ai-unified.md 第 6 节；Figma 04-AI 统一生成 G3 / G4） ----------
+  // 面板、扣点、状态机都在 aigen.js；这里只管「有哪些图、怎么出候选、怎么写进 E.D」。editor.js 调 MP.aigReg(余额框目标) 注册。
+  // 款式 id 跟顶部栏同一套（glossy… 实物 5 种 + line… 矢量 4 种），styleSrc 用的 'r-' 前缀在这里转换
+  const STY = RSTY.concat(['line', 'fill', 'duotone', 'gradient']);
+  const sOf = (st) => (RSTY.includes(st) ? 'r-' + st : st);
+  // 一个入口的一组图（未选 / 选中一起生成；公告栏信箱 = 未登录 / 已登录）：候选 c = { st, k }，k = 换色序号
+  // 游戏菜单分类图标 AI 只出一张（Figma G4-02「4 张 · 58×44」「候选 · 挑一张」），选中态图在使用时按同款式一起换
+  const perAi = (b, i) => { const it = M(b).items[+i]; return b === 'notice' && it && it.defOn ? ['img', 'imgOn'] : b === 'gamemenu' ? ['img'] : perEntry(b, +i); };
+  const entSrcs = (b, i, c) => { const it = M(b).items[+i]; return perAi(b, i).map((f) => [f, styleSrc(b, it, sOf(c.st), candColor(b, f, c.k), f)]); };
+  const pairHtml = (srcs) => (srcs.length > 1 ? `<span class="aig-two">${srcs.map(([, src]) => `<img src="${src}" alt="">`).join('')}</span>` : `<img src="${srcs[0][1]}" alt="">`);
+  // 帐户栏 / 公告栏 / 游戏菜单 / 底部导航 / 侧边栏：名字、提示词、整套名（Figma 标题「AI 生成 · 利息宝图标」「整套帐户栏图标」「分类图标 · 热门」「底部导航 · 优惠」）
+  const IC_NAME = { notice: 'aig/n-ic', midnav: 'aig/n-ic', gamemenu: 'aig/n-gm', bottomnav: 'aig/n-bn', sidebar: 'aig/n-sd' };
+  const IC_USED = { bottomnav: 'aig/u-bn', sidebar: 'aig/u-sd' };
+  const IC_UNIT = { notice: 'aig/unit-notice', midnav: 'aig/unit-midnav', gamemenu: 'aig/unit-gamemenu', bottomnav: 'aig/unit-bottomnav', sidebar: 'aig/unit-sidebar' };
+  const icPrompt = (b, st, a) => {
+    const one = a && a.scope === 'one' && M(b).items[+a.idx], it = one;
+    const what = it ? t(IC_NAME[b], { n: iaNm(b, it) }) : t(IC_UNIT[b]);
+    const pr = it ? perAi(b, +a.idx) : null;
+    return t('aig/ic-p2', { adj: t('aig/adj-' + st), name: what, look: t('aig/look-' + st) }) + (pr && pr.length > 1 ? t('aig/p-pair', pairLab(b)) : '');
+  };
+  const pairLab = (b) => (b === 'notice' ? { a: t('ed/signed-out'), b: t('ed/signed-in') } : { a: t('aig/s-off'), b: t('aig/s-on') }); // 「未选 / 选中」（Figma G4-07 / G4-09）
+  // 整套里哪些入口必交：帐户栏只有样板「利息宝」（M-11），公告栏喇叭 + 信箱都必交（G3-15a），底部导航 / 游戏菜单没有（G4-13 / G4-14）
+  const aiReq = (b, it, i) => (b === 'notice' ? isReq(b, it) : b === 'midnav' ? i === 0 : false);
+  const ICON_AI = (b) => ({
+    // 游戏菜单只算显示着的分类（Figma「整套 · 9 个」，隐藏的区块链 / 最近 / 收藏 / 试玩不在里面）
+    entries: () => M(b).items.map((it, i) => ({ i, name: iaNm(b, it), label: b === 'notice' && perAi(b, i).length > 1 ? iaNm(b, it) + t('aig/pair-note', { name: '', a: pairLab(b).a, b: pairLab(b).b }) : '', thumb: thHtml(b, it), req: aiReq(b, it, i), def: isReq(b, it) || ((b === 'gamemenu' || b === 'sidebar') && !!it.on) || (b === 'midnav' && M(b).mode === 'conf') || b === 'bottomnav', pics: perAi(b, i).length, cost: b === 'notice' && perAi(b, i).length > 1 ? 40 : 0, on: b !== 'gamemenu' || !!it.on })).filter((e) => (b !== 'notice' || e.i !== 1 || M(b).mail) && e.on),
+    // 底部导航整套的样板默认「优惠」（首页是内置图标，Figma G4-14C）
+    sample: () => (b === 'bottomnav' ? 1 : 0),
+    styles: (tg, a) => { const its = M(b).items, pv = (a && a.scope === 'one' && its[+a.idx]) || its[0]; return STY.map((st) => ({ id: st, label: t('aig/st-' + st), html: `<img src="${styleSrc(b, pv, sOf(st), X().E.D.theme.primary, 'imgOn')}" alt="">` })); },
+    preset: (tg, st, a) => icPrompt(b, st, a),
+    where: () => [0, 1].map(() => t('mp/ai-where', { m: modTitle(b) })),
+    refPrompt: (tg, res, a) => ({ style: res.style, prompt: icPrompt(b, res.style, a) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
+    // 4 张候选：实物款式 = 选中的款式 + 相邻 3 种；矢量款式 = 同款式 4 种配色。整套的其余入口按样板（base）出 1 张
+    gen: (a, tg, i, n, base) => (base ? [{ st: base.st, k: base.redo ? base.redo % 5 : base.k }] : RSTY.includes(a.style) ? window.AIG.rot(RSTY, a.style, n).map((st) => ({ st, k: 0 })) : Array.from({ length: n }, (v, k) => ({ st: a.style, k: (k + a.round) % 5 }))),
+    tile: (a, tg, i, c) => pairHtml(entSrcs(b, i, c)),
+    old: (a, tg, i) => thHtml(b, M(b).items[+i]),
+    lib: (a, tg, i, c) => 'img:' + entSrcs(b, i, c).slice(-1)[0][1],
+    name: (a) => t(IC_NAME[b], { n: iaNm(b, M(b).items[+a.idx] || {}) }),
+    usedName: (a) => t(IC_USED[b] || IC_NAME[b], { n: iaNm(b, M(b).items[+a.idx] || {}) }),
+    apply: (a, tg, i, c) => { const it = X().E.D.m[b].items[+i]; entSrcs(b, i, c).forEach(([f, src]) => { it[f] = src; }); if (b === 'gamemenu' && perEntry(b, +i).includes('imgOn')) it.imgOn = styleSrc(b, it, sOf(c.st), candColor(b, 'imgOn', c.k), 'imgOn'); },
+    pay: () => ['iconset', { type: tType(b) }],
+  });
+  const icTarget = (b) => ({
+    id: 'icons', label: t(b === 'gamemenu' ? 'aig/t-gm-icons' : b === 'midnav' ? 'aig/t-mn-icons' : 'aig/t-icons'), kind: 'icon', spec: (i) => specOf(b, +(i || 0), 'img'), count: 4, cost: 20, ratio: 1, cols: 4,
+    scopeable: b !== 'sidebar', unit: t(IC_UNIT[b]), setName: t('aig/n-set', { name: t(IC_UNIT[b]) }),
+    pair: (i) => (i != null && M(b).items[+i] && perAi(b, +i).length > 1 ? [pairLab(b).a, pairLab(b).b] : null), lr: b === 'notice',
+  });
+  // 游戏菜单按钮底图（竖排才有）：未选中 + 选中两张一起出
+  const pc = () => X().liveTheme().th.primary;
+  const btnPair = (st) => `<span class="aig-two is-btn"><i style="${window.fxStyle(gmBtnSvg(st, false, pc()))}"></i><i style="${window.fxStyle(gmBtnSvg(st, true, pc()))}"></i></span>`;
+  const GM_BTN_AI = {
+    styles: () => GMB_ST.map((st) => ({ id: st, label: t('aig/st-' + st), html: btnPair(st) })),
+    preset: (tg, st) => t('mp/gm-bai-p-' + st),
+    refPrompt: (tg, res) => { const st = GMB_ST.includes(res.style) ? res.style : 'glossy'; return { style: st, prompt: t('mp/gm-bai-p-' + st) + t('mp/gm-bai-ref-c', { hex: res.hex }) }; },
+    gen: (a, tg, i, n) => window.AIG.rot(GMB_ST, a.style, n).map((st) => ({ st })),
+    tile: (a, tg, i, c) => btnPair(c.st),
+    name: () => t('mp/gm-btn'),
+    apply: (a, tg, i, c) => { const x = X(), m = x.E.D.m.gamemenu, p0 = pc(); m.btnOff = gmBtnSvg(c.st, false, p0); m.btnSel = gmBtnSvg(c.st, true, p0); delete x.E.D.ec['gamemenu.bg']; delete x.E.D.ec['gamemenu.active']; },
+    lib: (a, tg, i, c) => gmBtnSvg(c.st, true, pc()),
+    pay: () => ['iconset', { type: t('mp/gm-btn') }],
+  };
+  // 游戏卡片：兜底封面 260×260 / 收藏星（未收藏 + 已收藏两张 36×36）；✦10（业主定：保持现价）
+  const gcP = (tg, st) => t('mp/gc-ai-p-' + (tg.id === 'star' ? 'star' : 'fb'), { s: t('aig/st-' + st) });
+  const starPair = (st) => `<span class="aig-two"><i style="${window.fxStyle(gcStarSvg(st, false, pc()))}"></i><i style="${window.fxStyle(gcStarSvg(st, true, pc()))}"></i></span>`;
+  const GC_AI = {
+    styles: (tg) => GC_ST.map((st) => ({ id: st, label: t('aig/st-' + st), html: tg.id === 'star' ? starPair(st) : `<i class="aig-pvimg" style="${window.fxStyle(gcFbSvg(st, pc()))}"></i>` })),
+    preset: gcP,
+    refPrompt: (tg, res) => { const st = GC_ST.includes(res.style) ? res.style : 'glossy'; return { style: st, prompt: gcP(tg, st) + t('mp/gm-bai-ref-c', { hex: res.hex }) }; },
+    gen: (a, tg, i, n) => window.AIG.rot(GC_ST, a.style, n).map((st) => ({ st })),
+    tile: (a, tg, i, c) => (tg.id === 'star' ? starPair(c.st) : `<i class="aig-img" style="${window.fxStyle(gcFbSvg(c.st, pc()))}"></i>`),
+    name: (a, tg) => tg.label,
+    lib: (a, tg, i, c) => (tg.id === 'star' ? null : gcFbSvg(c.st, pc())),
+    apply: (a, tg, i, c) => { const m = X().E.D.m.gamecards, p0 = pc(); if (tg.id === 'star') { m.starOff = gcStarSvg(c.st, false, p0); m.starSel = gcStarSvg(c.st, true, p0); m.fav = true; } else { m.fallback = gcFbSvg(c.st, p0); m.fallbackOn = true; } },
+    pay: (tg) => ['iconset', { type: t(tg.id === 'star' ? 'mp/gc-fav' : 'mp/gc-fallback') }],
+  };
+  // bal = { target(), impl }：帐户栏（带帐户区、已登录、余额框开着）多一个目标「余额框币种」，跟顶部栏同一个实现
+  function aigReg(bal) {
+    const AIG = window.AIG; if (!AIG) return;
+    ['notice', 'midnav', 'gamemenu', 'bottomnav', 'sidebar'].forEach((b) => {
+      const IC = ICON_AI(b);
+      AIG.reg(b, {
+        targets: () => {
+          const o = [icTarget(b)];
+          if (b === 'gamemenu' && M('gamemenu').style === 'side') o.push({ id: 'btn', label: t('mp/gm-btn'), kind: 'image', spec: [150, 70], count: 4, cost: 20, ratio: 1, cols: 4, pair: () => [t('aig/s-off'), t('aig/s-on')], lr: true });
+          if (b === 'midnav' && M('midnav').layout === 'account' && bal) { const bt = bal.target(); if (bt) o.push(bt); }
+          return o;
+        },
+        defaultTarget: () => 'icons',
+        cntSample: b !== 'midnav' && b !== 'notice', // G3 只算其余（已生成 3/3 · 样板 1 + 其余 3）；G4 连样板一起算（9/9）
+        rowTags: b === 'notice', // 「喇叭（样板）」「信箱 ×2」（Figma G3-15e）
+        impl: (tg) => (tg.id === 'btn' ? GM_BTN_AI : tg.id === 'bal' ? bal.impl : IC),
+      });
+    });
+    AIG.reg('gamecards', {
+      targets: () => [{ id: 'fallback', label: t('aig/t-fb'), kind: 'image', spec: [260, 260], count: 4, cost: 10, ratio: 1, cols: 4 }].concat(M('gamecards').fav !== false ? [{ id: 'star', label: t('mp/gc-fav'), kind: 'image', spec: [36, 36], count: 4, cost: 10, ratio: 1, cols: 4, pair: () => [t('aig/s-off'), t('aig/s-on')] }] : []),
+      defaultTarget: () => 'fallback',
+      impl: () => GC_AI,
+    });
   }
-  A.iaRest = () => {
-    const x = X(); const ia = x.E.iconAi; const rest = jobs(ia).slice(1); const m = rest.length;
-    if (!m) { ia.stage = 'adopt'; return; }
-    const go = () => { if (X().E.iconAi === ia) { runJobs(ia, rest); window.render(); } };
-    if (window.costConfirm) window.costConfirm({ title: t('rec/approve-title', { m }), body: t('rec/approve-body'), cost: m * 20, okLabel: t('rec/approve-ok', { m }), onOk: go });
-    else if (x.afford(m * 20)) go(); else x.topup();
-  };
-  A.iaCancel = () => {
-    const x = X(); const ia = x.E.iconAi; if (!ia) return;
-    if (ia.stage === 'sample') { iaStop(); ia.stage = 'setup'; return; }
-    if (ia.stage === 'rest') { iaStop(); ia.run.slice(ia.done).forEach((k) => { ia.failed[k] = true; }); if (ia.okN) x.pay(ia.okN * 20, 'iconset', { type: tType(ia.b) }); ia.stage = 'adopt'; window.toast(t('ed/ia-cancelled'), { info: true }); }
-  };
-  A.iaFill = () => { const x = X(); const ia = x.E.iconAi; const list = Object.keys(ia.failed); if (!list.length) return false; if (!x.afford(list.length * 20)) { x.topup(); return false; } runJobs(ia, list); };
-  A.iaRedo = (key) => {
-    const x = X(); const ia = x.E.iconAi; if (ia.busy[key]) return false;
-    if (!x.afford(20)) { x.topup(); return false; }
-    ia.busy[key] = true;
-    setTimeout(() => { if (X().E.iconAi !== ia) return; delete ia.busy[key]; if (x.fail()) { window.toast(t('mp/ai-failed'), { info: true }); } else { ia.attempt++; ia.cands[key] = { style: ia.style, color: candColor(ia, key.split('|')[1]) }; delete ia.failed[key]; x.pay(20, 'iconset', { type: tType(ia.b) }); } window.render(); }, 900);
-  };
-  A.iaAdopt = () => {
-    const x = X(); const ia = x.E.iconAi; const keys = Object.keys(ia.cands); if (!keys.length) return false;
-    const srcs = keys.map((k) => [k, candSrc(ia, k)]);
-    x.commit(() => { srcs.forEach(([k, src]) => { const [i, f] = k.split('|'); x.E.D.m[ia.b].items[+i][f] = src; }); });
-    const n = new Set(keys.map((k) => k.split('|')[0])).size;
-    iaStop(); x.E.iconAi = null; x.E.tab = 'content';
-    window.toast(t('mp/ai-adopted', { n }), x.undoOpt());
-  };
-  const failTile = (cls = '') => `<div class="ia-fail ${cls}">${ic('x-circle-fill')}</div>`;
-  function aiPanel() {
-    const x = X(); const ia = x.E.iconAi; const b = ia.b; const its = M(b).items; const all = jobs(ia); const m = Math.max(0, all.length - 1);
-    const head = `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="iaClose" title="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button><span class="ellipsis">${t('mp/ai-title', { mod: modTitle(b) })}</span></h2>`;
-    const credits = `<div class="ia-bal">${t('confirm/balance-label')} · ${t('confirm/points', { n: window.num(S().credits || 0) })}</div>`;
-    let body = '', foot = '';
-    if (ia.stage === 'setup') {
-      const r = its.filter((it) => isReq(b, it)).length, o = its.filter((it, i) => !isReq(b, it) && ia.picks[i]).length;
-      body = sec(t('mp/ai-style'), `<div class="ia-styles">${STYLES.map((s) => `<button class="ia-st ${ia.style === s ? 'is-on' : ''}" data-act="iaStyle" data-arg="${s}"><img src="${aiSvg(its[0].i || 'sparkle-fill', s, x.E.D.theme.primary)}" alt=""><span>${window.I18N['mp/ai-st-' + s] ? t('mp/ai-st-' + s) : t('ad/ics-' + s)}</span></button>`).join('')}</div>`)
-        + sec(t('mp/ai-extra'), `<input class="input" data-input="iaExtra" value="${esc(ia.extra)}" placeholder="${esc(t('mp/ai-extra-ph'))}" maxlength="60">`)
-        + `<div class="p-sec"><div class="lab">${t('mp/ai-entries')}<span class="v">${t('mp/ai-count', { r, o })}</span></div>${(() => { const allOn = its.every((it, i) => ia.picks[i]); const noneOpt = its.every((it, i) => isReq(b, it) || !ia.picks[i]); return `<div class="ia-bulk"><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="1" ${allOn ? 'disabled' : ''}>${ic('check-square-fill', 'ic-16')}${t('mp/ai-all')}</button><button class="btn btn-ghost btn-sm" data-act="iaAll" data-arg="0" ${noneOpt ? 'disabled' : ''}>${ic('minus-square-fill', 'ic-16')}${t('mp/ai-none')}</button></div>`; })()}<div class="ia-list">${its.map((it, i) => { const req = isReq(b, it); return `<button class="ia-row ${req ? 'is-req' : ''}" data-act="iaPick" data-arg="${i}"><span class="check ${ia.picks[i] ? 'is-on' : ''}">${ia.picks[i] ? ic('check', 'ic-16') : ''}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span><span class="nm">${esc(nm(it))}</span>${req ? `<span class="req">${t('mp/required')}</span>` : ''}</button>`; }).join('')}</div></div>`
-        + `<div class="ia-cost">${ic('sparkle-fill', 'ic-16')}<div>${t('mp/ai-cost', { m, c: m * 20 })}${credits}</div></div>`;
-      foot = x.afford(20) ? `<button class="btn btn-primary btn-block ${all.length ? '' : 'is-disabled'}" data-act="iaSample">${ic('sparkle-fill', 'ic-16')}${t('mp/ai-gen-sample')}</button>`
-        : `<div class="ia-low">${t('ed/ai-low')}</div><button class="btn btn-primary btn-block" data-act="edTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`;
-    } else if (ia.stage === 'sample') {
-      body = `<div class="ia-big"><div class="ia-sample skeleton"><b data-ia-pct>${ia.pct}%</b></div><div class="p-note" style="justify-content:center">${t('mp/ai-sample-ing')}</div></div>`;
-      foot = `<button class="btn btn-ghost btn-block" data-act="iaCancel">${t('confirm/cancel')}</button>`;
-    } else if (ia.stage === 'failed') {
-      body = `<div class="ia-big">${failTile('ia-sample')}<div class="ia-msg is-err">${ic('warning-circle-fill', 'ic-16')}${t('mp/ai-failed')}</div></div>`;
-      foot = `<button class="btn btn-primary btn-block" data-act="iaSample">${t('rec/retry', { c: 20 })}</button><button class="btn btn-secondary btn-block" data-act="iaClose">${t('ed/tpl-back')}</button>`;
-    } else if (ia.stage === 'sampleOk') {
-      const k0 = all[0]; const it0 = its[+k0.split('|')[0]];
-      body = `<div class="ia-big"><img class="ia-sample" src="${candSrc(ia, k0)}" alt=""><b>${esc(nm(it0))}</b><span class="caption faint">${t('rec/sample-tag', { n: all.length })}</span></div><div class="p-note">${t('rec/sample-ready', { m, c: m * 20 })}</div>${credits}`;
-      foot = `<button class="btn btn-primary btn-block" data-act="iaRest">${t('rec/continue', { m })}</button><button class="btn btn-secondary btn-block" data-act="iaSample">${t('rec/redo-sample-cost', { c: 20 })}</button>`;
-    } else {
-      const rows = [...new Set(all.map((k) => k.split('|')[0]))].map((i) => {
-        const it = its[+i]; const ks = all.filter((k) => k.split('|')[0] === i);
-        const cell = (k) => ia.cands[k] ? `<span class="ia-c ${ia.busy[k] ? 'skeleton' : ''}">${ia.busy[k] ? '' : `<img src="${candSrc(ia, k)}" alt="">`}</span>` : ia.failed[k] ? `<span class="ia-c is-fail">${ic('x-circle-fill')}</span>` : `<span class="ia-c skeleton"></span>`;
-        const redo = ia.stage === 'adopt' ? ks.filter((k) => ia.cands[k] || ia.failed[k]).map((k) => `<button class="btn btn-ghost btn-sm" data-act="iaRedo" data-arg="${k}">${t('mp/ai-redo')}</button>`).slice(0, 1).join('') : '';
-        return `<div class="ia-res"><span class="nm">${esc(nm(it))}</span><span class="thumb sq">${it.img ? img(it.img) : ic(it.i || 'plus')}</span>${ic('arrow-right', 'ic-16 faint')}${ks.map(cell).join('')}${redo}</div>`;
-      }).join('');
-      const nf = Object.keys(ia.failed).length;
-      if (ia.stage === 'rest') {
-        const tot = ia.run.length;
-        body = `<div class="ia-prog"><div class="r">${t('mp/ai-rest-ing', { m: tot, d: ia.done })}</div><div class="progress"><i style="width:${(ia.done / tot) * 100}%"></i></div></div><div class="ia-list">${rows}</div>`;
-        foot = `<button class="btn btn-secondary btn-block" data-act="iaCancel">${ic('x', 'ic-16')}${t('confirm/cancel')}</button>`;
-      } else {
-        body = `${nf ? `<div class="notice is-err" style="margin-bottom:10px">${ic('x-circle-fill')}<div>${t('rec/partial', { d: all.length - nf, n: all.length, f: nf })}</div></div>` : ''}<div class="ia-list">${rows}</div>${credits}`;
-        foot = `${nf ? `<button class="btn btn-secondary btn-block" data-act="iaFill">${t('rec/fill-missing', { f: nf, c: nf * 20 })}</button>` : ''}<button class="btn btn-primary btn-block ${Object.keys(ia.cands).length ? '' : 'is-disabled'}" data-act="iaAdopt">${t('mp/ai-adopt-all')}</button><button class="btn btn-ghost btn-block" data-act="iaClose">${t('mp/ai-skip')}</button>`;
-      }
-    }
-    return `${head}<div class="ia-body">${body}</div><div class="ia-foot">${foot}</div>`;
-  }
+
 
   // ---------- 批量上传图标（ED-05） ----------
   let bxIn = null, bxB = null;
   A.bxOpen = (b) => {
     bxB = b; S().menu = null;
     if (!bxIn) {
-      bxIn = document.createElement('input'); bxIn.type = 'file'; bxIn.multiple = true; bxIn.accept = 'image/png,image/svg+xml,image/webp'; bxIn.style.display = 'none'; bxIn.setAttribute('data-batch-file', '');
+      bxIn = document.createElement('input'); bxIn.type = 'file'; bxIn.multiple = true; bxIn.accept = window.IMG_ACCEPT; bxIn.style.display = 'none'; bxIn.setAttribute('data-batch-file', '');
       document.body.appendChild(bxIn);
       bxIn.addEventListener('change', () => { const files = [...bxIn.files]; bxIn.value = ''; if (files.length) bxRead(bxB, files); });
     }
     bxIn.click(); return false;
   };
-  function bxMatch(b, base) {
-    const its = M(b).items; const names = its.map(nm);
+  function bxMatch(b, base, names = M(b).items.map(nm)) {
     let i = names.indexOf(base);
     if (i < 0) i = names.findIndex((n) => n.toLowerCase() === base.toLowerCase());
     if (i < 0) i = names.findIndex((n) => n && (base.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(base.toLowerCase())));
@@ -444,32 +901,40 @@
     const rows = []; let left = files.length;
     const doneOne = () => { if (--left === 0) { X().E.bx = { b, rows, ing: null, pick: null }; X().E.dlg = 'batch'; window.render(); } };
     files.forEach((file, k) => {
-      const row = { name: file.name, src: '', w: 0, h: 0, bad: !/^image\/(png|svg\+xml|webp)$/.test(file.type), target: -1, f: 'img' };
+      const row = { name: file.name, src: '', w: 0, h: 0, bad: !window.imgOk(file), target: -1, f: 'img' };
       rows[k] = row;
       let base = file.name.replace(/\.[^.]+$/, '');
       const on = /(_选中|_active|_on)$/i.test(base); base = base.replace(/(_选中|_active|_on)$/i, '');
       if (on && (b === 'bottomnav' || b === 'gamemenu')) row.f = 'imgOn';
       if (row.bad) { doneOne(); return; }
       row.target = bxMatch(b, base);
+      if (b === 'bottomnav') {
+        // 底部导航：先按当前登录态的名称配（未登录「注册」→ 未登录图 imgOut），再按另一种状态的名称配
+        const its = M(b).items, login = bnLogin(), outNm = (it) => (bnHasOut(it) && (it.outN || it.outK) ? bnName(it, false) : '');
+        const first = login ? its.map(nm) : its.map((it) => outNm(it) || nm(it)), other = login ? its.map(outNm) : its.map((it) => (outNm(it) ? nm(it) : ''));
+        let i = bxMatch(b, base, first), out = !login && i >= 0 && bnOffF(its[i], false) === 'imgOut';
+        if (i < 0) { i = bxMatch(b, base, other); out = login && i >= 0; }
+        row.target = i; if (i >= 0 && out && row.f === 'img') row.f = 'imgOut';
+      }
       const rd = new FileReader();
       rd.onload = () => { row.src = rd.result; const im = new Image(); im.onload = () => { row.w = im.naturalWidth; row.h = im.naturalHeight; doneOne(); }; im.onerror = () => { row.bad = true; row.target = -1; doneOne(); }; im.src = rd.result; };
       rd.onerror = () => { row.bad = true; doneOne(); };
       rd.readAsDataURL(file);
     });
   }
-  const bxPad = (b, r) => { const [tw, th] = ICON_SPEC[b]; return r.w && r.h && Math.abs(r.w / r.h - tw / th) > 0.03; };
+  const bxPad = (b, r) => { const [tw, th] = specOf(b, r.target >= 0 ? r.target : 0); return r.w && r.h && Math.abs(r.w / r.h - tw / th) > 0.03; };
   function bxSum(bx) { const n = bx.rows.filter((r) => !r.bad && r.target >= 0).length, u = bx.rows.filter((r) => !r.bad && r.target < 0).length, bad = bx.rows.filter((r) => r.bad).length; return { n, u, b: bad }; }
-  function bxTargetLabel(bx, r) { if (r.target < 0) return t('mp/batch-skip'); const it = M(bx.b).items[r.target]; return nm(it) + (r.f === 'imgOn' ? ' · ' + t('mp/state-act') : ''); }
+  function bxTargetLabel(bx, r) { if (r.target < 0) return t('mp/batch-skip'); const it = M(bx.b).items[r.target]; return (r.f === 'imgOut' ? bnName(it, false) : nm(it)) + (r.f === 'imgOn' ? ' · ' + t('mp/state-act') : r.f === 'imgOut' ? ' · ' + t('ed/signed-out') : ''); }
   function bxOptions(bx, k) {
     const its = M(bx.b).items; const two = bx.b === 'bottomnav' || bx.b === 'gamemenu';
     const opts = [];
-    its.forEach((it, i) => { opts.push([i + '|img', nm(it) + (two ? ' · ' + t('mp/state-def') : '')]); if (two) opts.push([i + '|imgOn', nm(it) + ' · ' + t('mp/state-act')]); });
+    its.forEach((it, i) => { opts.push([i + '|img', nm(it) + (two ? ' · ' + t('mp/state-def') : '')]); if (two) opts.push([i + '|imgOn', nm(it) + ' · ' + t('mp/state-act')]); if (bx.b === 'bottomnav' && bnHasOut(it)) opts.push([i + '|imgOut', bnName(it, false) + ' · ' + t('ed/signed-out')]); });
     opts.push(['-1|img', t('mp/batch-skip')]);
     const r = bx.rows[k]; const cur = r.target + '|' + (r.target < 0 ? 'img' : r.f);
     return opts.map(([v, l]) => `<button class="menu-item ${v === cur ? 'is-on' : ''}" data-act="bxSet" data-arg="${k}|${v}">${esc(l)}</button>`).join('');
   }
   function batchBody(mobile) {
-    const bx = X().E.bx; const [tw, th] = ICON_SPEC[bx.b]; const s = bxSum(bx);
+    const bx = X().E.bx; const [tw, th] = specOf(bx.b, 0); const s = bxSum(bx);
     const rows = bx.rows.map((r, k) => {
       let st;
       if (r.bad) st = `<span class="pill-tag is-err">${t('mp/batch-bad')}</span>`;
@@ -572,13 +1037,16 @@
     ],
   };
   // 「跟设计」Key 的值来自版式模板（不默认等于 primary）
-  const DESIGN_DEF = { home_bg: '#F4F6FA', home_db: '#FFFFFF', btmnav_def: '#8A8F99', btmnav_active: '#0F6FFF', bs_topnav_bg: '#FFFFFF', web_bs_yj_bg: '#1C2033', web_btmnav_db: '#FFFFFF' };
+  // home_bg：Figma 经典蓝白首页底 = #FFFFFF（317:55529，公告栏透出的就是它）
+  const DESIGN_DEF = { home_bg: '#FFFFFF', home_db: '#FFFFFF', btmnav_def: '#999999', btmnav_active: '#1678FF', bs_topnav_bg: '#FFFFFF', web_bs_yj_bg: '#1C2033', web_btmnav_db: '#FFFFFF' };
   const EXT = Object.fromEntries(KEYS68.ext.map((e) => [e[0], e]));
   const BASE = Object.fromEntries(KEYS68.base);
-  const keyLabel = (k) => (BASE[k] ? t('ed/key-' + k) : EXT[k] ? EXT[k][3] : k);
+  // 扩展 Key 有翻译就用翻译（i18n-editor.js 的 ed/key-<名>），没有才用规范表里的中文说明
+  const keyLabel = (k) => (BASE[k] || window.I18N['ed/key-' + k] ? t('ed/key-' + k) : EXT[k] ? EXT[k][3] : k);
   function resolveKey(k, th, ec, d = 0) {
     if (d > 8) return '#000000';
-    if (ec['key:' + k]) return ec['key:' + k];
+    const own = ec['key:' + k];
+    if (own) return own.startsWith('key:') ? resolveKey(own.slice(4), th, ec, d + 1) : own; // 业主改绑另一个 Key（如首页背景 → bg_1）或自定义色
     if (BASE[k]) return th[k];
     const e = EXT[k]; if (!e) return '#000000';
     if (e[1] === 'fixed') return e[2];
@@ -607,6 +1075,7 @@
     const col = resolveKey(k, th, ec); const custom = kind !== 'base' && !!ec['key:' + k];
     let cap = '';
     if (kind === 'base') cap = `<span class="mono">${col.toUpperCase()}</span>`;
+    else if (custom && ec['key:' + k].startsWith('key:')) cap = t('ed/keys-follow', { name: keyLabel(ec['key:' + k].slice(4)) });
     else if (custom) cap = `<span class="kc-custom">${t('ed/keys-custom')}</span>`;
     else if (kind === 'ref') { const [tk, al] = Array.isArray(arg) ? arg : [arg, null]; cap = t('ed/keys-follow', { name: keyLabel(tk) }) + (al != null ? ` · ${Math.round(al * 100)}%` : ''); }
     else if (kind === 'fixed') cap = t('ed/keys-fixed', { hex: arg });
@@ -636,13 +1105,49 @@
   // 菜单往下弹；面板可滚动，保证菜单可见
   window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu, .bx-menu, .ed-right .am-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
 
+  // ---------- 整页设置 · 首页背景（Figma 04-2 面板 424:433220）：KeyRow（home_bg）+ 快捷选项 跟设计 / 同页面背景 / 同卡片底 / 自定义 ----------
+  // 存在 E.D.ec['key:home_bg']：空 = 跟设计（经典蓝白 #FFFFFF）；'key:bg_1' / 'key:bg_2' = 引用该 Key；十六进制 = 自定义
+  const HB = 'key:home_bg';
+  function homeBgSec(mobile) {
+    const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker; const v = x.E.D.ec[HB] || null;
+    const col = resolveKey('home_bg', th, ec); const pk = P && P.elRow === HB && P.where === 'home';
+    const src = !v ? t('ed/hb-src-design', { hex: DESIGN_DEF.home_bg }) : v.startsWith('key:') ? t('ed/keys-follow', { name: keyLabel(v.slice(4)) }) : `${t('tx/c-custom')} · <span class="mono">${esc(v.toUpperCase())}</span>`;
+    // 快捷选项照 Figma 424:433232：左侧 72 标签列「快捷选项」+ 28 色块（色盘统一圆形），自定义 = 虚线空色块；名字放 title / aria-label
+    const opt = (val, c, lab) => `<button class="sw-btn ${(v || '') === val ? 'is-on' : ''}" style="background:${c}" title="${esc(lab)}" aria-label="${esc(lab)}" data-act="homeBg" data-arg="${val}"></button>`;
+    const custom = `<button class="sw-btn hb-custom ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" ${v && !v.startsWith('key:') ? `style="background:${esc(v)}"` : ''} title="${esc(t('ed/hb-custom'))}" aria-label="${esc(t('ed/hb-custom'))}" data-act="homeBgPick"></button>`;
+    const own = v && !(x.E.D.baseEc && x.E.D.baseEc[HB] === v); // AI 风格给的不算业主自改
+    return `<div class="p-sec hb-sec" data-sec="home_bg"><div class="lab">${t('ed/home-bg')}</div>
+      <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap">${src}</span><span class="kk mono">home_bg</span></span>${own ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
+      <div class="bc-row hb-opts"><span class="k">${t('ed/hb-quick')}</span><div class="sws">${opt('', DESIGN_DEF.home_bg, t('ed/hb-design'))}${opt('key:bg_1', th.bg_1, t('ed/hb-bg1'))}${opt('key:bg_2', th.bg_2, t('ed/hb-bg2'))}${custom}</div></div>
+      ${pk && !mobile ? x.pickerHtml('in-panel', t('ed/home-bg')) : ''}</div>`;
+  }
+  A.homeBg = (val) => {
+    const x = X(); const v = val || null; x.E.picker = null;
+    if ((x.E.D.ec[HB] || null) === v) return false;
+    x.commit(() => { if (v) x.E.D.ec[HB] = v; else delete x.E.D.ec[HB]; });
+    window.toast(t('ed/toast-color', { k: t('ed/home-bg') }), x.undoOpt(4000));
+  };
+  A.homeBgPick = () => {
+    const x = X(); if (x.E.picker && x.E.picker.elRow === HB) { x.E.picker = null; return; }
+    const { th, ec } = x.liveTheme(); const cur = resolveKey('home_bg', th, ec).slice(0, 7);
+    x.E.picker = { key: 'primary', elRow: HB, label: t('ed/home-bg'), orig: cur, value: cur, where: 'home' };
+    if (x.mobileEd()) { x.E.picker.back = x.E.mpanel || null; x.E.mpanel = 'picker'; }
+  };
+
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {
-    defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aiPanel, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
-    resolveKey, EL, aiSvg, // AD：导出结构预览 / AI 首页设计用
+    defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
+    resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
+    keyTag, swRow,
+    elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },
-    setAsset: (slot, v) => { const [b, f] = slotOf(slot); X().E.D.m[b][f] = v; },
+    // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）
+    setAsset: (slot, v) => { const [b, f] = slotOf(slot); const D = X().E.D; D.m[b][f] = v; if (b === 'gamemenu' && v && GM_BTN_EC[f] && D.ec) delete D.ec[GM_BTN_EC[f]]; },
+    gcFbInner: (m) => gcFbInner(m),
+    gcStarImg: (m, f, cls) => gcStarImg(m, f, cls), // PC 卡片也显示收藏星（含上传 / AI 图）
+    // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
+    migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); },
     toggleAsset: (slot) => { const [b, f] = slotOf(slot); set(b, f + 'On', M(b)[f + 'On'] === false); },
   };
 })();

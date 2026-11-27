@@ -81,7 +81,7 @@ Object.assign(window.I18N, { /* A */
   'composer/empty-hint': ['先描述一下想要的风格', '先描述一下想要的風格', 'Describe the style you want first', 'Hãy mô tả phong cách bạn muốn trước'],
   'tpl/use': ['用这个模板新建', '用這個模板新建', 'Use this template', 'Dùng mẫu này'],
   'tpl/close': ['关闭', '關閉', 'Close', 'Đóng'],
-  'tpl/desc': ['包含首页 9 个模块和一套品牌配色，进入后都可以修改', '包含首頁 9 個模組和一套品牌配色，進入後都可以修改', 'Includes 9 home modules and a brand palette. You can change everything later.', 'Gồm 9 mô-đun trang chủ và bảng màu thương hiệu, có thể sửa sau.'],
+  'tpl/desc': ['包含首页 7 个模块和一套品牌配色，进入后都可以修改', '包含首頁 7 個模組和一套品牌配色，進入後都可以修改', 'Includes 7 home modules and a brand palette. You can change everything later.', 'Gồm 7 mô-đun trang chủ và bảng màu thương hiệu, có thể sửa sau.'],
   'newproj/title': ['新建项目', '新建專案', 'New project', 'Dự án mới'],
   'newproj/name': ['项目名', '專案名稱', 'Project name', 'Tên dự án'],
   'newproj/default-name': ['未命名项目 {n}', '未命名專案 {n}', 'Untitled project {n}', 'Dự án chưa đặt tên {n}'],

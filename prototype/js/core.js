@@ -276,6 +276,11 @@
   A.demoToggle = (k) => { S.demo[k] = !S.demo[k]; };
 
   // ---------- 选图 ----------
+  // 模块图片（图标 / Banner / 卡片封面等）统一支持的格式（Waydon 2026-11-26）
+  window.IMG_ACCEPT = 'image/png,image/svg+xml,image/apng,image/avif,image/webp';
+  // 图片素材值：'img:<地址>' = 业主上传 / AI 生成的真实图片；'img:<地址>#<CSS 滤镜>' = 同一张图换个色调（AI Banner 候选模拟）；其余 = 在默认图上叠的 CSS 滤镜（原型模拟换图）
+  window.fxStyle = (f, def) => { if (!/^img:/.test(f || '')) return `${def ? `background-image:url(${def});` : ''}filter:${f || 'none'}`; const k = f.indexOf('#'); return k < 0 ? `background-image:url(${f.slice(4)});filter:none` : `background-image:url(${f.slice(4, k)});filter:${f.slice(k + 1)}`; };
+  window.imgOk = (f) => !!f && /^image\/(png|svg\+xml|apng|avif|webp)$/.test(f.type);
   // pickImage({accept, maxMB, multiple}, cb)：单选 cb(dataURL, file)；多选 cb([{src, name, file}])。类型 / 大小不合规自己 toast，不回调
   window.pickImage = function (opts, cb) {
     opts = Object.assign({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10, multiple: false }, opts || {});
@@ -287,7 +292,7 @@
       const files = Array.from(inp.files || []); inp.remove();
       if (!files.length) return;
       const bad = files.filter((f) => !ok(f)), big = files.filter((f) => ok(f) && f.size > opts.maxMB * 1048576);
-      if (bad.length) window.toast(t('composer/ref-bad-type'), { info: true });
+      if (bad.length) window.toast(t(opts.accept === window.IMG_ACCEPT ? 'mp/icon-bad' : 'composer/ref-bad-type'), { info: true }); // 提示跟实际支持的格式一致
       if (big.length) window.toast(opts.maxMB === 10 ? t('composer/ref-too-big') : t('common/file-too-big', { n: opts.maxMB }), { info: true });
       const good = files.filter((f) => ok(f) && f.size <= opts.maxMB * 1048576);
       if (!good.length) return;
@@ -309,7 +314,7 @@
     return `<button class="refslot" data-act="${act}Pick" aria-label="${esc(t('composer/ref-slot'))}">${ic('plus')}<span>${t('composer/ref-slot')}</span><span class="tip">${t('composer/ref-hint')}</span></button>`;
   };
   window.refPick = function (st, done) {
-    window.pickImage({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10 }, (src, file) => window.refUpload(st, src, file ? file.name : '', done));
+    window.pickImage({ accept: 'image/png,image/jpeg,image/webp,image/avif,image/apng', maxMB: 10 }, (src, file) => window.refUpload(st, src, file ? file.name : '', done));
   };
   // 模拟上传约 1 秒
   window.refUpload = function (st, src, name, done) {
@@ -337,9 +342,17 @@
   };
   // 单个生成余额不足时直接弹的版本
   window.lowBalance = (n) => window.costConfirm({ title: t('confirm/low-title'), body: t('confirm/low-one', { n }), cost: n });
+  // star: true → AI 生成统一面板的写法（Figma AIG/CostConfirm）：顶部 48 图标块，金额写 ✦，「本次约消耗 / 当前余额 / 还差 ✦N」
   function costBody() {
     const o = S.cost || {};
     const ok = window.canAfford(o.cost), short = (o.cost || 0) - S.credits;
+    if (o.star) {
+      return `<div class="cc-star">${o.icon ? `<span class="cc-ic">${ic(ok ? o.icon : 'wallet-fill')}</span>` : ''}<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted cc-body">${esc(o.body)}</p>` : ''}
+      <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label-s')}</span><b class="cc-cost">✦${num(o.cost || 0)}</b></div>
+        <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>✦${num(S.credits)}</span></div></div>
+      ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by-s', { n: num(short) })}</div>`}
+      <div class="dialog-foot cc-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div></div>`;
+    }
     return `<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
       <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
         <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: num(S.credits) })}</span></div></div>
