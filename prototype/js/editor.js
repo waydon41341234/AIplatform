@@ -1006,7 +1006,7 @@
       <div class="pk-h" data-drag="hue"><span class="pk-dot" data-pk-hdot style="left:${(hsv.h / 360) * 100}%;background:hsl(${hsv.h},100%,50%)"></span></div>
       <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"><button type="button" class="pk-copy" data-act="copyHex" data-arg="picker" title="${esc(t('ed/hex-copy', { hex: p.value.toUpperCase() }))}" aria-label="${esc(t('ed/hex-copy', { hex: p.value.toUpperCase() }))}">${ic('copy', 'hc-ic hc-cp')}${ic('check', 'hc-ic hc-ok')}</button></label>
       <div class="caption muted" style="margin-top:8px">${t('ed/pick-suggest')}</div>
-      <div class="pk-sug">${SUGGEST.map((c) => `<button style="background:${c}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
+      <div class="pk-sug">${SUGGEST.map((c) => `<button style="background:${c}" title="${c.toUpperCase()}" aria-label="${c.toUpperCase()}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
       <div class="caption faint" style="margin-bottom:10px">${t(p.tbRow ? 'ed/pick-sync-tb' : p.elRow && !p.elRow.startsWith('key:') ? 'ed/pick-sync-el' : 'ed/pick-sync')}</div>
       <div class="pk-foot"><button class="btn btn-secondary btn-sm" data-act="pkCancel">${t('confirm/cancel')}</button><button class="btn btn-primary btn-sm" data-act="pkApply">${t('ed/pick-apply')}</button></div></div>`;
   }
@@ -1693,7 +1693,7 @@
     const th = liveTheme().th;
     const pal = E.palOpen
       ? `<div class="fpal-x"><div class="hd">${ic('paint-brush-fill', 'ic-16')}${t('ed/palette')}<span class="sb-spacer"></span><button class="ibtn ibtn-sm" data-act="togglePal">${ic('caret-down', 'ic-16')}</button></div>
-          ${[['ed/grp-primary', ['primary', 'lead']], ['ed/grp-text', ['neutral_1', 'neutral_2', 'neutral_3']], ['ed/grp-bg', ['bg_1', 'bg_2', 'border']], ['ed/grp-accent', ['accent_1', 'accent_2', 'accent_3']]].map(([g, ks]) => `<div class="lab">${t(g)}</div><div class="sws">${ks.map((k) => `<button class="sw-btn ${E.picker && E.picker.key === k && E.picker.where === 'float' ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" data-act="pick" data-arg="${k}|float"></button>`).join('')}</div>`).join('')}
+          ${[['ed/grp-primary', ['primary', 'lead']], ['ed/grp-text', ['neutral_1', 'neutral_2', 'neutral_3']], ['ed/grp-bg', ['bg_1', 'bg_2', 'border']], ['ed/grp-accent', ['accent_1', 'accent_2', 'accent_3']]].map(([g, ks]) => `<div class="lab">${t(g)}</div><div class="sws">${ks.map((k) => `<button class="sw-btn ${E.picker && E.picker.key === k && E.picker.where === 'float' ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-label="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" data-act="pick" data-arg="${k}|float"></button>`).join('')}</div>`).join('')}
           <div class="caption faint" style="margin-top:8px">${t('ed/palette-hint')}</div></div>`
       : `<button class="fpal" data-act="togglePal" title="${esc(t('ed/palette'))}">${ic('paint-brush-fill', 'ic-16')}${['primary', 'lead', 'neutral_1', 'bg_2', 'accent_1'].map((k) => `<span class="sw" style="background:${th[k]}"></span>`).join('')}${ic('caret-up', 'ic-16')}</button>`;
     const picker = E.picker && E.picker.where === 'float' ? pickerHtml() : '';

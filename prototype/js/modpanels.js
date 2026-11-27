@@ -1330,9 +1330,9 @@
   const GROUPS = [['base', 'ed/keys-g-base'], ['ref', 'ed/keys-g-ref'], ['fixed', 'ed/keys-g-fixed'], ['design', 'ed/keys-g-design'], ['cond', 'ed/keys-g-cond']];
   function keysPanel(mobile) {
     const x = X(); const K = x.E.keys; const { th, ec } = x.liveTheme(); const P = x.E.picker; const q = (K.q || '').trim().toLowerCase();
-    // 搜索也能直接打色值（「0a84」「#0A84FF」）：只比对显示色值胶囊的行（基础 / 引用 / 固定），跟设计、条件规则没有胶囊不比对
+    // 搜索也能直接打色值（「0a84」「#0A84FF」）：只比对显示色值胶囊的行（基础 / 引用 / 固定 / 已单独设置），跟设计待确认、条件规则没有胶囊不比对
     const qh = /^#?[0-9a-f]+$/.test(q) && q.replace('#', '').length >= (q[0] === '#' ? 1 : 3) ? q.replace('#', '') : '';
-    const hexHit = (e) => qh && HC_KIND[e[1]] && (hexOf(resolveKey(e[0], th, ec)) || { hex: '' }).hex.toLowerCase().includes(qh);
+    const hexHit = (e) => qh && hasHc(e[1], e[0], ec) && (hexOf(resolveKey(e[0], th, ec)) || { hex: '' }).hex.toLowerCase().includes(qh);
     const rowsOf = (g) => (g === 'base' ? KEYS68.base.map(([k, l]) => [k, 'base', null, l]) : KEYS68.ext.filter((e) => e[1] === g))
       .filter((e) => !q || e[0].toLowerCase().includes(q) || e[3].toLowerCase().includes(q) || keyLabel(e[0]).toLowerCase().includes(q) || hexHit(e));
     let total = 0;
@@ -1345,6 +1345,8 @@
     return `${tools}<div class="klist">${total ? groups : `<div class="empty is-sm"><div class="ico">${ic('magnifying-glass', 'ic-24')}</div><h3>${esc(t('ed/keys-none', { q: K.q }))}</h3></div>`}</div>`;
   }
   const HC_KIND = { base: 1, ref: 1, fixed: 1 }; // 68 Key 清单里显示色值胶囊的行（Figma KeyRow 229:115018；跟设计待确认、条件规则不显示）
+  // 跟设计的 Key 业主单独设置过 = Figma KeyRow「State=已单独设置」（229:115009，带胶囊）：不再是待确认，也显示色值胶囊
+  const hasHc = (kind, k, ec) => !!HC_KIND[kind] || (kind !== 'base' && kind !== 'cond' && !!ec['key:' + k]);
   function keyRow(e, th, ec, P, K, mobile) {
     const [k, kind, arg, usage] = e;
     const col = resolveKey(k, th, ec); const custom = kind !== 'base' && !!ec['key:' + k];
@@ -1361,7 +1363,7 @@
     const menu = open && kind !== 'base' && kind !== 'cond' ? `<div class="menu km-menu"><button class="menu-item" data-act="keyDetach" data-arg="${k}">${ic('paint-brush-fill')}${t('ed/keys-detach')}</button><button class="menu-item" data-act="keyRestore" data-arg="${k}" ${custom ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/keys-restore')}</button></div>` : '';
     const showPick = !mobile && P && P.where === 'keys' && (kind === 'base' ? !P.elRow && P.key === k : P.elRow === 'key:' + k);
     // 右侧一列：上 = 色值胶囊，下 = Key 标签。胶囊是按钮，不能套在行按钮里：放在行外（绝对定位到行右上），行里留出同高的空位
-    const hc = HC_KIND[kind] ? hexChip(col, showPick) : '';
+    const hc = hasHc(kind, k, ec) ? hexChip(col, showPick) : '';
     return `<div class="krow-w ${hc ? 'has-hc' : ''}"><button class="krow ${open ? 'is-open' : ''}" data-act="keyRow" data-arg="${k}|${kind}"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${esc(label)}</span><span class="kcap">${cap}</span></span><span class="kr-r">${hc ? hexGhost(col) : ''}<span class="kk">${k}</span></span>${ic('caret-right', 'kchev')}</button>${hc}${menu}${showPick ? X().pickerHtml('in-panel', label) : ''}</div>`;
   }
   A.keysGrp = (g) => { const K = X().E.keys; K.closed[g] = !K.closed[g]; };

@@ -55,7 +55,7 @@ html[data-theme="light"] .ed-canvas { background: var(--bg-sunken); }
 .zb span { min-width: 44px; text-align: center; font-size: var(--fs-body-sm); font-weight: 500; }
 .fpal { border-radius: var(--radius-full); background: var(--bg-raised); border: var(--stroke-thin) solid var(--border-glass); box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 6px 0 10px; }
 .fpal .sw { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ffffff33; }
-.fpal-x { width: 200px; border-radius: var(--radius-lg); background: var(--bg-raised); border: var(--stroke-thin) solid var(--border-glass); box-shadow: var(--shadow-md); padding: var(--space-12); }
+.fpal-x { width: 200px; border-radius: var(--radius-lg); background: var(--bg-raised); border: var(--stroke-thin) solid var(--border-glass); box-shadow: var(--shadow-md); padding: var(--space-12); --cr-gap: var(--bg-raised); } /* 浮动换色板在 bg-raised 上：选中圈间隙用它（全局选中规则），深色下不多一圈深色 */
 .fpal-x .hd { display: flex; align-items: center; gap: 6px; font-weight: 500; margin-bottom: 8px; }
 .fpal-x .hd .ic { color: var(--icon); }
 .fpal-x .lab { font-size: var(--fs-caption); color: var(--text-2); margin: 6px 0 4px; }
