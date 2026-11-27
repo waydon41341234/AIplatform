@@ -62,8 +62,8 @@
     else c = st.prim[(i + (seed || 0)) % 3];
     return jit ? shift(c, jit) : c;
   }
-  // 按 风格 + 第 i 套 + 种子 生成一份完整设计数据（结构同 E.D）
-  function buildDesign(p, i, seed, from) {
+  // 旧算法（风格预设 + 主色推算 + 种子扰动）：只在某个风格没有 AI 模版时兜底
+  function buildDesign0(p, i, seed, from) {
     const x = X(); const st = ST[p.style] || ST.platinum; const r = rng(((seed || 0) + 1) * 977 + i * 131 + STYLES.indexOf(p.style) * 17);
     const vi = (i + (seed || 0)) % 3, v = V[vi];
     const D = x.defaultDesign('classic-blue', st.preset);
@@ -84,8 +84,11 @@
     D.banner = Object.assign(D.banner, { size, corner: [0, 8, 16][lv], ind: v.ind, slides: [0, 1, 2].map((j) => ({ f: `${st.bf} hue-rotate(${((i * 14 + j * 9 - 9 + (seed || 0) * 5) % 40) - 10}deg)`, w: sz.w, h: sz.h })) });
     // 顶部栏
     D.tb.colors = tbColors(v.tb, th, dark);
-    // 元素颜色（保证色块上的字看得清）
-    const jpBg = [th.primary, th.accent_3, th.lead][v.jpBg];
+    D.ec = autoEc(th, dark, [th.primary, th.accent_3, th.lead][v.jpBg], vi === 1); D.baseEc = Object.assign({}, D.ec);
+    return D;
+  }
+  // 元素颜色（保证色块上的字看得清）；alt = 底部导航选中色往深色收一点（凸起款）
+  function autoEc(th, dark, jpBg, alt) {
     const ec = {};
     const put = (id, c, def) => { if (c && c.toLowerCase() !== String(def).toLowerCase()) ec[id] = c; };
     put('jackpot.bg', jpBg, th.primary);
@@ -93,12 +96,11 @@
     put('gamemenu.activeText', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
     put('sidebar.textActive', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
     put('gamecards.labelText', best(th.accent_3, ['#ffffff', th.lead]), '#ffffff'); // 默认 labeltext_accent3 = 固定白
-    const bnOn = vi === 1 ? (dark ? th.primary : mix(th.primary, th.lead, 0.25)) : th.primary;
+    const bnOn = alt ? (dark ? th.primary : mix(th.primary, th.lead, 0.25)) : th.primary;
     put('bottomnav.active', contrast(th.bg_2, bnOn) >= 3 ? bnOn : best(th.bg_2, [mix(th.primary, th.lead, 0.35), mix(th.primary, th.lead, 0.6), th.lead]), th.primary);
     if (contrast(th.bg_1, th.neutral_2) < 3.2) put('footer.text', best(th.bg_1, [th.neutral_1, mix(th.neutral_2, th.lead, 0.5)]), th.neutral_2);
     if (dark) ec['key:home_bg'] = 'key:bg_1'; // 深色风格：首页背景改跟页面背景（home_bg 跟设计默认 #FFFFFF 是经典蓝白的，深色底上会整页发白）
-    D.ec = ec; D.baseEc = Object.assign({}, ec);
-    return D;
+    return ec;
   }
   function tbColors(mode, th, dark) {
     let c;
@@ -131,6 +133,91 @@
     D.banner.slides = D.banner.slides.map((s, j) => Object.assign({}, s, { f: C.banner.slides[j % C.banner.slides.length].f, w: sz.w, h: sz.h, fit: undefined }));
     D.style = C.style; D.iconStyle = C.iconStyle; D.aiDesign = C.aiDesign; D.tone = C.tone;
     return { D, kept };
+  }
+
+  // ---------- AI 页面风格模版（Waydon 11-27 第 5 条）----------
+  // 21 套 = 7 种页面风格 × 3，来自 assets/ai-tpl/<id>/manifest.json（build-ai-templates.py 烤进 js/ai-templates.js）：
+  // 主题 11 色 + 模块选项 + 真实 AI 素材（Banner 3 张 + 帐户栏 4 + 底部导航 6 + 游戏分类 9 = 22 张）+ Logo
+  const TPLS = window.AI_TPL || [];
+  const TPL_BY = {}; TPLS.forEach((T) => { TPL_BY[T.id] = T; });
+  const tplsOf = (k) => TPLS.filter((T) => T.style === k);
+  const tplName = (T) => t('ad/tpl-n-' + T.id);
+  const MID_A = { mid0: 'acct-dep', mid1: 'acct-vip', mid2: 'acct-share', mid3: 'acct-more' };
+  const BN_A = { bi0: 'home', bi1: 'promo', bi2: 'share', bi3: 'dep', bi4: 'mine' };
+  const GM_K = [1, 2, 3, 6, 4, 7, 9, 8, 10];
+  const TPL_N = 3 + Object.keys(MID_A).length + 6 + GM_K.length; // 会替换的图：Banner 3 + 帐户栏 4 + 底部导航 6（含未登录「注册」）+ 游戏分类 9 = 22
+  const bse = (v) => (v ? String(v).split('/').pop().replace(/\.\w+$/, '') : '');
+  // 白金 / 黑金 6 套 UI 还没生成素材（generate_image 被权限拦了，manifest 的 assets 为空）：先用昨天生成的黑金风格图标代替，Banner 用风格滤镜模拟
+  const STAND = 'blackgold';
+  const STAND_A = { 'acct-dep': 'ai-acct/dep', 'acct-vip': 'ai-acct/vip', 'acct-share': 'ai-acct/share', 'acct-more': 'ai-acct/more', 'bn-home': 'ai-bnav/home', 'bn-promo': 'ai-bnav/promo', 'bn-share': 'ai-bnav/bonus', 'bn-mine': 'ai-bnav/mine', 'bn-reg': 'ai-bnav/invite' };
+  function tplAssets(T) {
+    if (T.a) return T.a;
+    const a = {};
+    Object.keys(STAND_A).forEach((k) => { a[k] = `assets/${STAND_A[k]}-${STAND}.webp`; if (k.startsWith('bn-')) a[k + '-off'] = `assets/${STAND_A[k]}-${STAND}-off.webp`; });
+    GM_K.forEach((n) => { a['gm-' + n] = `assets/ai-gm/g${n}-${STAND}.webp`; });
+    return a;
+  }
+  // 素材放进模块槽位（按入口身份对应，不按顺序）：底部导航 选中 = bn-X、未选中 = bn-X-off，未登录「优惠」礼盒 = bn-promo、未登录「注册」= bn-reg-off；
+  // 游戏分类 一张图（选中态沿用）；模版没有的图 = 清掉，回到默认图。槽位里的图之后照样能换、能恢复
+  function putTplAssets(D, a) {
+    const set = (it, f, src) => { if (src) it[f] = src; else delete it[f]; };
+    ((D.m.midnav || {}).items || []).forEach((it) => { const k = MID_A[bse(it.def)]; if (k) set(it, 'img', a[k]); });
+    ((D.m.bottomnav || {}).items || []).forEach((it) => {
+      const k = BN_A[bse(it.def)]; if (!k) return;
+      set(it, 'imgOn', a['bn-' + k]); set(it, 'img', a['bn-' + k + '-off']);
+      if (k === 'promo') set(it, 'imgOut', a['bn-promo']);
+      if (k === 'dep') set(it, 'imgOut', a['bn-reg-off']);
+    });
+    ((D.m.gamemenu || {}).items || []).forEach((it) => { const m = /^mp\/gm-n-(\d+)$/.exec(it.k || ''); if (!m) return; set(it, 'img', a['gm-' + m[1]]); delete it.imgOn; });
+  }
+  const tplSlides = (T, sz) => [1, 2, 3].map((j) => ({ f: T.a ? 'img:' + T.a['banner-' + j] : `${ST[T.style].bf} hue-rotate(${(j - 2) * 9}deg)`, w: sz.w, h: sz.h }));
+  // 一套模版 → 完整设计数据（结构同 E.D）；pri = 自定义主色（只换主题色，素材不变）；ics = 自己选的图标风格（空 = 跟模版）
+  function tplDesign(T, pri, ics, from) {
+    const x = X(); const st = ST[T.style] || ST.platinum; const o = T.m;
+    const D = x.defaultDesign('classic-blue', st.preset);
+    const th = {}; x.KEYS.forEach((k) => { th[k] = T.th[k]; }); if (pri) th.primary = pri;
+    D.theme = th; D.baseTheme = Object.assign({}, th); D.palette = 'ad'; D.basePreset = st.preset; D.template = st.tpl; D.tone = st.tone;
+    D.style = T.style; D.iconStyle = ics || o.icon_style; D.aiDesign = { from: from || 'workbench', tpl: T.id };
+    D.order = ['banner', 'notice', 'midnav', 'jackpot', 'gamemenu', 'gamecards', 'footer'];
+    const m = D.m;
+    m.gamemenu.style = o.gm_style; m.gamemenu.shape = o.gm_shape;
+    m.jackpot.layout = o.jp_layout; m.jackpot.corner = o.jp_corner; m.jackpot.margin = o.jp_margin;
+    m.gamecards.cols = o.gc_cols; m.gamecards.corner = o.gc_corner; m.gamecards.gap = o.gc_gap;
+    m.footer.align = o.footer_align; m.bottomnav.style = o.bn_style; m.sidebar.style = o.sd_style;
+    const size = x.BANNER[o.banner_size] ? o.banner_size : 'general';
+    D.banner = Object.assign(D.banner, { size, corner: o.banner_corner, ind: o.banner_ind, slides: tplSlides(T, x.BANNER[size]) });
+    D.tb.colors = tbColors(o.tb_mode, th, T.dark);
+    if (T.logo) D.tb.logoF = 'img:' + T.logo;
+    putTplAssets(D, tplAssets(T));
+    const ec = autoEc(th, T.dark, th[o.jp_bg] || th.primary, o.bn_style === 'raised');
+    // 游戏菜单按钮跟模版配色（默认按钮位图是经典蓝白的）；深色模版底部导航底色跟 bg_2（设计 Key 默认白底）——同 Figma 模版画面
+    ec['gamemenu.bg'] = 'key:bg_2'; ec['gamemenu.active'] = 'key:primary';
+    if (T.dark) ec['key:web_btmnav_db'] = 'key:bg_2';
+    D.ec = Object.assign(ec, T.ec); D.baseEc = Object.assign({}, D.ec);
+    return D;
+  }
+  // 套到当前项目：先按原规则合并（模块、内容不变；自己锁定的颜色不覆盖），再换 Banner 规格 + 3 张图、22 张入口图标；
+  // Logo 只在还是默认 / 上次 AI 模版的 Logo 时换（业主自己上传的 Logo 不动）
+  function mergeTpl(D0, C) {
+    const x = X(); const T = TPL_BY[C.aiDesign.tpl]; const r = mergeInto(D0, C); const D = r.D;
+    const sz = x.BANNER[C.banner.size];
+    D.banner.size = C.banner.size;
+    D.banner.slides = (D0.banner.slides.length ? D0.banner.slides : C.banner.slides).map((s, j) => ({ f: C.banner.slides[j % C.banner.slides.length].f, w: sz.w, h: sz.h, hid: s.hid }));
+    if (T) putTplAssets(D, tplAssets(T));
+    const lf = D0.tb.logoF || 'none';
+    if (C.tb.logoF && C.tb.logoF !== 'none' && (lf === 'none' || /ai-logo\//.test(lf))) { D.tb.logoF = C.tb.logoF; if (D.tb.fit) { delete D.tb.fit.logo; if (!Object.keys(D.tb.fit).length) delete D.tb.fit; } }
+    return r;
+  }
+  const mergeAny = (D0, C) => (C.aiDesign && C.aiDesign.tpl && TPL_BY[C.aiDesign.tpl] ? mergeTpl(D0, C) : mergeInto(D0, C));
+  // 模版的主色：风格默认 = 模版自己的；推荐色 / 自定义 = 选的那个色；从效果图取色 = 第一个取到的色
+  const tplPri = (q) => (q.colorMode === 'ref' && q.ref && q.ref.length ? q.ref[0] : (q.colorMode === 'hex' || q.colorMode === 'custom') && q.hex ? q.hex : null);
+  // 按 风格 + 第 i 套 + 种子 出一份设计：3 套结果 = 这个风格的 3 套 AI 模版（种子轮换顺序）；主色选「风格默认」时用模版自己的主色
+  function buildDesign(p, i, seed, from) {
+    const list = tplsOf(p.style); if (!list.length) return buildDesign0(p, i, seed, from);
+    const T = list[(i + (seed || 0)) % list.length];
+    const pri = p.colorMode === 'ref' && p.ref && p.ref.length ? primaryOf(p, ST[p.style], i, 0) : tplPri(p);
+    const D = tplDesign(T, pri, p.follow === false ? p.ics : null, from); D.aiDesign.set = i + 1;
+    return D;
   }
 
   // ---------- 迷你预览（真实渲染：编辑器 h5 + 该套参数）----------
@@ -503,7 +590,7 @@
     if (edMob()) E.mpanel = 'ad';
   };
   const P = () => X().E.adp;
-  A.adEStyle = (k) => { const q = P().p; if (!ST[k]) return false; q.style = k; if (q.follow) q.ics = ST[k].ics; };
+  A.adEStyle = (k) => { const a = P(), q = a.p; if (!ST[k]) return false; if (q.style !== k && a.pick && a.pick.src === 'tpl') a.pick = null; q.style = k; if (q.follow) q.ics = ST[k].ics; };
   A.adEIcs = (k) => { const q = P().p; if (k === 'follow') { q.follow = true; q.ics = ST[q.style].ics; } else { q.follow = false; q.ics = k; } };
   A.adEMode = (m) => { const q = P().p; if (m === 'ref' && !(q.ref && q.ref.length)) { window.toast(t('ad/c-ref-none'), { info: true }); return false; } q.colorMode = m; q.colorTouched = true; };
   A.adEHex = (c) => { const q = P().p; q.colorMode = 'hex'; q.hex = c; q.colorTouched = true; };
@@ -519,6 +606,8 @@
     window.costConfirm({ title: t('ad/confirm-title'), body: t('ad/confirm-body-ed', { style: stName(p.style), ics: icsName(p.ics) }), cost: AD_COST, okLabel: t('ad/confirm-ok'), onOk: () => edStart(a, p, true) });
   };
   let edTimer = null;
+  // 一套生成结果：套到当前项目上的设计 + 用的是哪套模版（显示提示词用）；预览中（a.real）按真实设计合并
+  function genSet(p, i, seed) { const a = P(), C = buildDesign(p, i, seed, 'editor'); return { st: 'ok', D: mergeAny((a && a.real) || X().E.D, C).D, tid: C.aiDesign.tpl || null }; }
   function edStart(a, p, useFlag) {
     const x = X(); if (x.E.adp !== a) return;
     a.stage = 'gen'; a.pick = null; a.progress = 0; a.fail = failMode(p.prompt, useFlag); a.seed = (a.seed || 0) + (a.sets.length ? 1 : 0); a.gp = p; a.charged = 0;
@@ -529,7 +618,7 @@
       if (X().E.adp !== a || a.stage !== 'gen') { clearInterval(edTimer); return; }
       a.progress = Math.min(100, Math.round(((Date.now() - start) / 4500) * 100));
       let ch = false;
-      TH.forEach((th, i) => { if (a.progress >= th && a.sets[i].st === 'pend') { ch = true; if (a.fail === 'all' || (a.fail === 'part' && i === 1)) a.sets[i].st = 'fail'; else a.sets[i] = { st: 'ok', D: mergeInto(X().E.D, buildDesign(p, i, a.seed, 'editor')).D }; } });
+      TH.forEach((th, i) => { if (a.progress >= th && a.sets[i].st === 'pend') { ch = true; if (a.fail === 'all' || (a.fail === 'part' && i === 1)) a.sets[i].st = 'fail'; else a.sets[i] = genSet(p, i, a.seed); } });
       document.querySelectorAll('[data-adeprog]').forEach((n) => { n.textContent = t('ad/gen-ing', { p: a.progress }); });
       document.querySelectorAll('[data-adebar]').forEach((n) => { n.style.width = a.progress + '%'; });
       if (a.progress >= 100) { clearInterval(edTimer); edFinish(a); ch = true; }
@@ -568,18 +657,85 @@
   A.adERetry = (i) => {
     const a = P(); if (!a || !a.sets[+i] || a.sets[+i].st !== 'fail') return false;
     const willFail = window.takeFail(''); a.sets[+i] = { st: 'gen' };
-    setTimeout(() => { if (P() !== a || a.sets[+i].st !== 'gen') return; a.sets[+i] = willFail ? { st: 'fail' } : { st: 'ok', D: mergeInto(X().E.D, buildDesign(a.gp, +i, a.seed, 'editor')).D }; window.toast(willFail ? t('ad/retry-fail') : t('ad/retry-ok', { i: +i + 1 }), { info: willFail }); window.render(); }, 1800);
+    setTimeout(() => { if (P() !== a || a.sets[+i].st !== 'gen') return; a.sets[+i] = willFail ? { st: 'fail' } : genSet(a.gp, +i, a.seed); window.toast(willFail ? t('ad/retry-fail') : t('ad/retry-ok', { i: +i + 1 }), { info: willFail }); window.render(); }, 1800);
   };
-  // 点候选 → 画布实时预览（不进撤销）；再点一次取消预览
-  A.adEPick = (i) => { const a = P(); if (!a || !a.sets[+i] || a.sets[+i].st !== 'ok') return false; a.pick = a.pick === +i ? null : +i; };
-  A.adEPreview = () => { const a = P(); if (!a || a.pick == null) return false; X().E.preview = true; };
+  // 点候选 → 画布实时预览（不进撤销）；再点一次取消预览。pick = { src: 'gen', i }（生成结果）/ { src: 'tpl', id }（风格模版，套用免费）
+  const pickIs = (a, src, v) => !!(a && a.pick && a.pick.src === src && (src === 'tpl' ? a.pick.id === v : a.pick.i === +v));
+  A.adEPick = (i) => { const a = P(); if (!a || !a.sets[+i] || a.sets[+i].st !== 'ok') return false; a.pick = pickIs(a, 'gen', i) ? null : { src: 'gen', i: +i }; a.more = false; };
+  A.adETpl = (id) => {
+    const a = P(); const T = TPL_BY[id]; if (!a || !T || a.stage === 'gen') return false;
+    if (tplLoad(T).st === 'fail') return false;
+    a.pick = pickIs(a, 'tpl', id) ? null : { src: 'tpl', id }; a.more = false;
+  };
+  A.adEPreview = () => { const a = P(); if (!pickD(a)) return false; X().E.preview = true; };
+  // 应用 = 一次提交（主题 + 模块选项 + 素材一起进撤销）；之后各模块照常可改、素材照常可换
   A.adEApply = () => {
-    const x = X(), E = x.E, a = E.adp; if (!a || a.pick == null || !a.sets[a.pick] || !a.sets[a.pick].D) return false;
-    const nd = clone(a.sets[a.pick].D);
+    const x = X(), E = x.E, a = E.adp; const D = pickD(a); if (!D) return false;
+    const T = a.pick.src === 'tpl' ? TPL_BY[a.pick.id] : null;
+    const nd = clone(D);
     x.commit(() => { E.D = nd; });
     x.fixSlide(); E.adp = null; E.adBar = { ics: nd.iconStyle }; if (E.mpanel === 'ad') E.mpanel = null;
     clearInterval(edTimer);
-    window.toast(t('ad/applied'), x.undoOpt());
+    window.toast(T ? t('ad/tpl-applied', { name: tplName(T) }) : t('ad/applied'), x.undoOpt());
+  };
+  // ---------- 风格模版：合并预览缓存 / 素材预加载 / 提示词 ----------
+  const TM = new Map();
+  function tplMerged(a, id) {
+    const T = TPL_BY[id]; const q = a.p, base = a.real || X().E.D, pri = tplPri(q), ics = q.follow ? null : q.ics;
+    const key = id + '|' + (pri || '') + '|' + (ics || '') + '|' + JSON.stringify(base);
+    let D = TM.get(key);
+    if (!D) { if (TM.size > 30) TM.clear(); D = mergeTpl(base, tplDesign(T, pri, ics, 'editor')).D; TM.set(key, D); }
+    return D;
+  }
+  function pickD(a) { const k = a && a.pick; if (!k) return null; if (k.src === 'tpl') return TPL_BY[k.id] ? tplMerged(a, k.id) : null; const s = a.sets[k.i]; return s && s.st === 'ok' ? s.D : null; }
+  // 预加载一套模版的图（单文件版走 window.A_ 内联图）；有一张失败 = 这套显示「图片加载失败 · 重试」
+  const TL = {}, FAIL = new Set(); let tlRr = 0;
+  const srcOf = (p) => (window.A_ && p.startsWith('assets/') && window.A_[p.slice(7)]) || p;
+  function tplLoad(T) {
+    let L = TL[T.id]; if (L) return L;
+    L = TL[T.id] = { st: 'loading' };
+    const list = Object.values(tplAssets(T)).concat(T.logo ? [T.logo] : []);
+    const bad = FAIL.delete(T.id); let left = list.length;
+    const done = (ok) => {
+      if (TL[T.id] !== L) return;
+      left--; if (!ok) L.st = 'fail'; else if (left <= 0 && L.st === 'loading') L.st = 'ok';
+      if (left <= 0) { clearTimeout(tlRr); tlRr = setTimeout(() => { if (window.S.route === 'editor' && X().E.adp) window.render(); }, 30); }
+    };
+    if (!left) L.st = 'ok';
+    list.forEach((p, k) => { const im = new Image(); im.onload = () => done(true); im.onerror = () => done(false); im.src = bad && !k ? 'data:image/webp;base64,AAAA' : srcOf(p); });
+    return L;
+  }
+  A.adETplRetry = (id) => { delete TL[id]; const T = TPL_BY[id]; if (T) tplLoad(T); };
+  // 提示词：模版的 prompt（当前语言）；生成结果再带上自己补充的描述；主色跟模版不同时写上实际主色
+  function promptText(a) {
+    const k = a && a.pick; if (!k) return '';
+    const tid = k.src === 'tpl' ? k.id : a.sets[k.i] && a.sets[k.i].tid; const T = TPL_BY[tid]; if (!T) return '';
+    const out = [t('ad/tpl-p-' + tid)];
+    const q = k.src === 'gen' ? a.gp || a.p : null; if (q && q.prompt) out.push(t('ad/tpl-extra', { t: q.prompt }));
+    const D = pickD(a); if (D && D.theme.primary.toLowerCase() !== T.th.primary.toLowerCase()) out.push(t('ad/tpl-main', { hex: D.theme.primary.toUpperCase() }));
+    return out.join('\n');
+  }
+  A.adEMore = () => { const a = P(); if (!a) return false; a.more = !a.more; };
+  A.adECopy = () => {
+    const tx = promptText(P()); if (!tx) return false;
+    const ok = () => window.toast(t('ad/tpl-copied'));
+    const fallback = () => {
+      let done = false;
+      try { const ta = document.createElement('textarea'); ta.value = tx; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); done = document.execCommand('copy'); ta.remove(); } catch (e) { done = false; }
+      if (done) { ok(); return; }
+      // 复制不了：选中提示词文字，让用户自己复制
+      window.toast(t('ad/tpl-copy-fail'), { info: true });
+      const el = document.querySelector('[data-tptx]'); if (el) { const sel = window.getSelection(); sel.removeAllRanges(); const r = document.createRange(); r.selectNodeContents(el); sel.addRange(r); }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) navigator.clipboard.writeText(tx).then(ok, fallback); else fallback();
+    return false;
+  };
+  // 改写后生成：提示词填进「补充描述」，风格同步成这套的风格，滚到输入框
+  A.adERewrite = () => {
+    const a = P(); const tx = promptText(a); if (!tx) return false;
+    const k = a.pick, tid = k.src === 'tpl' ? k.id : a.sets[k.i].tid, T = TPL_BY[tid];
+    a.p.prompt = tx; if (T && a.p.style !== T.style) { a.p.style = T.style; if (a.p.follow) a.p.ics = ST[T.style].ics; }
+    setTimeout(() => { const el = document.querySelector('.ad-eprompt'); if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); try { el.focus({ preventScroll: true }); el.setSelectionRange(el.value.length, el.value.length); } catch (e) { /* 旧浏览器 */ } }, 40);
   };
   A.adEDiscard = () => { const E = X().E; clearInterval(edTimer); const had = E.adp && E.adp.pick != null; E.adp = null; if (E.mpanel === 'ad') E.mpanel = null; if (had) window.toast(t('ad/discarded'), { info: true }); };
   A.adEClose = () => { const a = P(); if (a && a.stage === 'gen') { const ok = a.sets.filter((s) => s.st === 'ok').length; if (ok) { X().E.dlg = 'adcancel'; return; } edCancelNow(a); } A.adEDiscard(); };
@@ -603,7 +759,7 @@
     let res = '';
     if (a.stage !== 'idle' || a.sets.length) {
       const cards = a.sets.map((s, i) => {
-        if (s.st === 'ok') return `<button class="ad-cand ${a.pick === i ? 'is-on' : ''}" data-act="adEPick" data-arg="${i}" aria-label="${esc(t('ad/set-n', { i: i + 1 }))}">${mini(s.D, mobile ? 0.28 : 0.24)}<span class="ad-no">${i + 1}</span>${a.pick === i ? `<span class="ad-ck">${ic('eye-fill', 'ic-16')}</span>` : ''}</button>`;
+        if (s.st === 'ok') return `<button class="ad-cand ${pickIs(a, 'gen', i) ? 'is-on' : ''}" data-act="adEPick" data-arg="${i}" aria-label="${esc(t('ad/set-n', { i: i + 1 }))}">${mini(s.D, mobile ? 0.28 : 0.24)}<span class="ad-no">${i + 1}</span>${pickIs(a, 'gen', i) ? `<span class="ad-ck">${ic('eye-fill', 'ic-16')}</span>` : ''}</button>`;
         if (s.st === 'fail') return `<div class="ad-cand is-fail">${ic('x-circle-fill', 'ic-24')}<button class="btn btn-secondary btn-sm" data-act="adERetry" data-arg="${i}">${t('ad/retry-free')}</button></div>`;
         if (s.st === 'cancel') return `<div class="ad-cand is-void">${ic('stop-circle-fill', 'ic-24')}</div>`;
         return `<div class="ad-cand skeleton">${s.st === 'gen' ? '<i class="wb-spin"></i>' : ''}</div>`;
@@ -614,13 +770,40 @@
       else if (a.stage === 'failed') st = `<div class="notice is-err">${ic('x-circle-fill')}<div>${t('ad/failed-all')}</div></div>`;
       else {
         st = f ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${t('ad/partial-n', { d: ok, f, c: AD_COST })}</div></div>` : a.cancelN ? `<div class="notice">${ic('stop-circle-fill')}<div>${t('ad/cancelled-paid', { d: a.cancelN, c: AD_COST })}</div></div>` : '';
-        st += `<div class="p-note">${t(a.pick == null ? 'ad/pick-hint' : 'ad/previewing', { i: (a.pick || 0) + 1 })}</div>`;
-        st += `<div class="ad-eacts"><button class="btn btn-primary ${a.pick == null ? 'is-disabled' : ''}" data-act="adEApply">${t('ad/apply')}</button>${mobile ? `<button class="btn btn-secondary ${a.pick == null ? 'is-disabled' : ''}" data-act="adEPreview">${ic('eye-fill', 'ic-16')}${t('ad/full-preview')}</button>` : ''}<button class="btn btn-secondary" data-act="adEDiscard">${t('ad/discard')}</button></div>`;
+        // 生成结果自己的选中（正在预览风格模版时，这里按没选处理）
+        const gi = a.pick && a.pick.src === 'gen' ? a.pick.i : null;
+        st += `<div class="p-note">${t(gi == null ? 'ad/pick-hint' : 'ad/previewing', { i: (gi || 0) + 1 })}</div>`;
+        if (gi != null) st += promptBlock(a);
+        st += `<div class="ad-eacts"><button class="btn btn-primary ${gi == null ? 'is-disabled' : ''}" data-act="adEApply">${t('ad/apply')}</button>${mobile ? `<button class="btn btn-secondary ${gi == null ? 'is-disabled' : ''}" data-act="adEPreview">${ic('eye-fill', 'ic-16')}${t('ad/full-preview')}</button>` : ''}<button class="btn btn-secondary" data-act="adEDiscard">${t('ad/discard')}</button></div>`;
       }
       res = `<div class="p-sec ad-eres"><div class="lab">${t('ad/e-results')}</div><div class="ad-cands">${cards}</div>${st}</div>`;
     }
-    return `${head}<div class="ad-epanel">${res}${refSec}${styles}${icsSec}${colorSec}${promptSec}${kept}<div class="ad-egen">${genBtn}<div class="caption faint">${t('ad/e-cost', { c: AD_COST, b: num(S.credits) })}</div></div></div>`;
+    return `${head}<div class="ad-epanel">${res}${styles}${tplSec(a, mobile)}${refSec}${icsSec}${colorSec}${promptSec}${kept}<div class="ad-egen">${genBtn}<div class="caption faint">${t('ad/e-cost', { c: AD_COST, b: num(S.credits) })}</div></div></div>`;
   }
+  // 提示词块（Figma 「生成这套模版的提示词」）：默认 4 行，「展开」看全部；复制 / 改写后生成
+  function promptBlock(a) {
+    const tx = promptText(a); if (!tx) return '';
+    return `<div class="ad-tprompt ${a.more ? 'is-open' : ''}"><div class="ad-tp-hd">${ic('sparkle-fill', 'ic-16')}<b>${t('ad/tpl-prompt')}</b></div><div class="ad-tp-tx" data-tptx>${esc(tx)}</div>
+      <div class="ad-tp-ft"><button class="ad-tp-btn" data-act="adECopy">${t('ad/tpl-copy')}</button><button class="ad-tp-btn" data-act="adERewrite">${ic('pencil-simple', 'ic-16')}${t('ad/tpl-rewrite')}</button><button class="ad-tp-more" data-act="adEMore">${t(a.more ? 'ad/less' : 'ad/more')}${ic(a.more ? 'caret-up' : 'caret-down', 'ic-12')}</button></div></div>`;
+  }
+  // 「{风格} · 3 套模版」（Figma 440:334066 / 手机 440:335401）：点一套 = 画布预览，套用免费；选中后出提示词 + 应用 / 放弃
+  function tplSec(a, mobile) {
+    const q = a.p, list = tplsOf(q.style); if (!list.length) return '';
+    const gen = a.stage === 'gen';
+    const cards = list.map((T, k) => {
+      const on = pickIs(a, 'tpl', T.id), L = tplLoad(T);
+      const pv = L.st === 'fail' ? `<span class="ad-tfail">${ic('image-broken-fill', 'ic-24')}<span>${t('ad/tpl-img-fail')}</span><button class="ad-tp-btn" data-act="adETplRetry" data-arg="${T.id}">${t('ad/tpl-retry')}</button></span>`
+        : L.st === 'loading' ? '<span class="ad-tskel skeleton"></span>' : mini(tplMerged(a, T.id), 0.25);
+      return `<div class="ad-tcard ${on ? 'is-on' : ''} ${gen ? 'is-dis' : ''} ${L.st === 'fail' ? 'is-fail' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-act="adETpl" data-arg="${T.id}" aria-label="${esc(tplName(T))}"><span class="ad-tpv">${pv}<span class="ad-tno">${k + 1}</span>${on ? `<span class="ad-tck">${ic('eye-fill')}</span>` : ''}</span><b class="ellipsis">${esc(tplName(T))}</b></div>`;
+    }).join('');
+    const on = a.pick && a.pick.src === 'tpl';
+    const acts = on ? `${promptBlock(a)}<div class="ad-tnote">${ic('info-fill', 'ic-16')}<span>${t('ad/tpl-replace-note', { n: TPL_N })}</span></div>
+      <div class="ad-eacts ad-tacts"><button class="btn btn-primary" data-act="adEApply">${t('ad/apply')}</button>${mobile ? `<button class="btn btn-secondary" data-act="adEPreview">${ic('eye-fill', 'ic-16')}${t('ad/full-preview')}</button>` : ''}<button class="btn btn-secondary" data-act="adEDiscard">${t('ad/discard')}</button></div>` : '';
+    return `<div class="p-sec ad-tsec" data-sk="adtpl"><div class="lab">${esc(t('ad/tpl-title', { style: stName(q.style) }))}<span class="pill-tag ad-tfree">${t('ad/tpl-free')}</span></div><div class="ad-thint">${t('ad/tpl-hint')}</div><div class="ad-tcards">${cards}</div>${acts}</div>`;
+  }
+  // 模版卡片缩略按卡片实际宽度缩放（375 宽的页面缩到卡片宽）
+  const fitTpl = () => document.querySelectorAll('.ad-tpv > .ad-mini').forEach((m) => { const w = m.parentElement.clientWidth; if (w) m.style.setProperty('--k', (w / 375).toFixed(4)); });
+  window.AFTER_RENDER.push(fitTpl); window.addEventListener('resize', fitTpl);
   function mSheet() {
     return `<div class="scrim" data-act="adEClose"></div><div class="sheet med-sheet is-full ad-msheet" data-sk="admsheet"><div class="sheet-head"><h3>${ic('sparkle-fill', 'ic-16 is-brand')} ${t('ad/e-title')}</h3><button class="ibtn ibtn-sm" data-act="adEClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div><div class="ad-mbody">${edPanel(true)}</div></div>`;
   }
@@ -628,8 +811,9 @@
   const view0 = window.VIEWS.editor;
   window.VIEWS.editor = function () {
     const x = X(), E = x.E, a = E.adp;
-    if (!E.loading && a && a.pick != null && a.sets[a.pick] && a.sets[a.pick].D) {
-      const real = E.D; a.real = real; E.D = a.sets[a.pick].D;
+    const pd = !E.loading && a ? pickD(a) : null;
+    if (pd) {
+      const real = E.D; a.real = real; E.D = pd;
       try { return view0(); } finally { E.D = real; a.real = null; }
     }
     return view0();
@@ -863,5 +1047,8 @@
   window.AD = {
     composer, recordView, doneIdx: okIdx, tile, openViewer, entryCard, edPanel: () => edPanel(false), mSheet, edBar, toolBtn, modMask,
     figIncl, figViewBtn, checks, dlgs: { adfig: figBody, adcancel: edCancelBody }, ST, buildDesign, mergeInto, slices, comps, counts,
+    TPLS, tplsOf, tplDesign, mergeAny, TPL_N,
+    failTpl: (id) => { FAIL.add(id); delete TL[id]; }, // 测试用：下一次加载这套模版的图时模拟失败
+
   };
 })();

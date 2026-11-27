@@ -1,0 +1,142 @@
+{
+ "style": "minimal",
+ "n": 1,
+ "id": "minimal-1",
+ "name": "墨白",
+ "style_zh": "极简灰",
+ "dark": false,
+ "prompt_zh": "【极简灰 · 墨白】浅色底 #F5F5F5，主色 #222222，点缀 #F59E0B。整体：黑白几何、留白与单一强调色。Banner 3 张（通用 · 圆角 0，1020×300）：首存豪礼 / 赛事狂欢 / VIP 尊享，标题在左、主体物在右。图标 线性描边，帐户栏 4 个、底部导航 6 个、游戏分类 9 个同一套光影。布局：游戏菜单左侧栏·方角，游戏卡片 3 列圆角 0，底部导航平铺，顶部栏白底。",
+ "theme": {
+  "primary": "#222222",
+  "lead": "#111111",
+  "neutral_1": "#555555",
+  "neutral_2": "#888888",
+  "neutral_3": "#BBBBBB",
+  "border": "#E4E4E4",
+  "bg_1": "#F5F5F5",
+  "bg_2": "#FFFFFF",
+  "accent_1": "#2FA66A",
+  "accent_2": "#E5484D",
+  "accent_3": "#F59E0B"
+ },
+ "ec": {
+  "key:home_bg": "key:bg_1"
+ },
+ "modules": {
+  "banner_size": "general",
+  "banner_corner": 0,
+  "banner_ind": "s4",
+  "gm_style": "side",
+  "gm_shape": "square",
+  "jp_layout": "flow",
+  "jp_corner": 0,
+  "jp_margin": 16,
+  "jp_bg": "primary",
+  "gc_cols": 3,
+  "gc_corner": 0,
+  "gc_gap": 12,
+  "footer_align": "left",
+  "bn_style": "regular",
+  "sd_style": "list",
+  "tb_mode": "plain",
+  "icon_style": "line"
+ },
+ "logo": "assets/ai-logo/xinghe.png",
+ "assets": {
+  "banner-1": "assets/ai-tpl/minimal-1/banner-1.webp",
+  "banner-2": "assets/ai-tpl/minimal-1/banner-2.webp",
+  "banner-3": "assets/ai-tpl/minimal-1/banner-3.webp",
+  "acct-dep": "assets/ai-tpl/minimal-1/acct-dep.webp",
+  "acct-vip": "assets/ai-tpl/minimal-1/acct-vip.webp",
+  "acct-share": "assets/ai-tpl/minimal-1/acct-share.webp",
+  "acct-more": "assets/ai-tpl/minimal-1/acct-more.webp",
+  "bn-home": "assets/ai-tpl/minimal-1/bn-home.webp",
+  "bn-promo": "assets/ai-tpl/minimal-1/bn-promo.webp",
+  "bn-share": "assets/ai-tpl/minimal-1/bn-share.webp",
+  "bn-dep": "assets/ai-tpl/minimal-1/bn-dep.webp",
+  "bn-mine": "assets/ai-tpl/minimal-1/bn-mine.webp",
+  "bn-reg": "assets/ai-tpl/minimal-1/bn-reg.webp",
+  "bn-home-off": "assets/ai-tpl/minimal-1/bn-home-off.webp",
+  "bn-promo-off": "assets/ai-tpl/minimal-1/bn-promo-off.webp",
+  "bn-share-off": "assets/ai-tpl/minimal-1/bn-share-off.webp",
+  "bn-dep-off": "assets/ai-tpl/minimal-1/bn-dep-off.webp",
+  "bn-mine-off": "assets/ai-tpl/minimal-1/bn-mine-off.webp",
+  "bn-reg-off": "assets/ai-tpl/minimal-1/bn-reg-off.webp",
+  "gm-1": "assets/ai-tpl/minimal-1/gm-1.webp",
+  "gm-2": "assets/ai-tpl/minimal-1/gm-2.webp",
+  "gm-3": "assets/ai-tpl/minimal-1/gm-3.webp",
+  "gm-6": "assets/ai-tpl/minimal-1/gm-6.webp",
+  "gm-4": "assets/ai-tpl/minimal-1/gm-4.webp",
+  "gm-7": "assets/ai-tpl/minimal-1/gm-7.webp",
+  "gm-9": "assets/ai-tpl/minimal-1/gm-9.webp",
+  "gm-8": "assets/ai-tpl/minimal-1/gm-8.webp",
+  "gm-10": "assets/ai-tpl/minimal-1/gm-10.webp"
+ },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
+ "thumb": "assets/ai-tpl/minimal-1/thumb.webp",
+ "bytes_webp": 157230,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "fadb80a35f755110132b81bd60191a6dfe0400d1",
+   "attempts": 1
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "0dfbec0f8a65b46ef651b2a99d61bbc80b4e11d5",
+   "attempts": 1
+  },
+  "time": "2026-11-27",
+  "regenerated": [],
+  "prompt_additions": {
+   "banner_sheet": "+ one sentence asking for a distinct panel tone per banner (clean gutters for slicing)"
+  },
+  "keying": "gm-2,gm-6,gm-7,gm-8 peer keyer; rest halo-free keyer"
+ },
+ "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
+ "figmaPage": "430:619174",
+ "figmaSection": "441:227189",
+ "figmaNode": "441:232641",
+ "figmaCaption": "441:232771",
+ "figmaSlotPanel": "441:232821",
+ "figmaSheets": {
+  "banner_sheet": "441:233420",
+  "icon_sheet": "441:233419"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on light module backgrounds use DARKEN blend + image filter highlights +1 so the sheet background disappears; slots on primary backgrounds (active game-menu item, raised bottom-nav) stay NORMAL; -off slots use a saturation -1 image filter"
+}

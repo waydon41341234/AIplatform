@@ -164,6 +164,44 @@
 .ad-mbody { flex: 1; min-height: 0; overflow: auto; padding-bottom: var(--space-16); }
 .ad-msheet .ad-cand { min-height: calc(667px * .28); }
 .ad-msheet .ad-egen { bottom: 0; }
+/* AI 一键设计 · 页面风格模版（Waydon 11-27 第 5 条；Figma 440:334066 电脑 / 440:335401 手机） */
+.ad-tsec .lab { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ad-tfree { flex: none; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+.ad-thint { margin: -4px 0 8px; font-size: 12px; line-height: 18px; color: var(--text-3); }
+.ad-tcards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ad-tcard { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 4px 4px 6px; border-radius: 12px; background: var(--fill-3); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer; text-align: center; }
+.ad-tcard:hover { box-shadow: inset 0 0 0 1px var(--brand); }
+.ad-tcard.is-on { background: var(--brand-subtle); box-shadow: inset 0 0 0 1.5px var(--brand); }
+.ad-tcard.is-on > b { color: var(--brand); }
+.ad-tcard.is-dis { opacity: .6; pointer-events: none; }
+.ad-tcard > b { font-size: 12px; line-height: 18px; font-weight: 500; color: var(--text); }
+.ad-tpv { position: relative; display: block; border-radius: 8px; overflow: hidden; background: var(--fill-2); }
+.ad-tpv .ad-mini { border-radius: 0; }
+.ad-tskel, .ad-tfail { display: flex; width: 100%; aspect-ratio: 375 / 667; }
+.ad-tfail { flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 6px; color: var(--text-3); font-size: 11px; line-height: 16px; }
+.ad-tno { position: absolute; left: 5px; top: 5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #000000a6; color: #fff; font-size: 10px; line-height: 18px; font-weight: 600; text-align: center; }
+.ad-tck { position: absolute; right: 5px; top: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.ad-tck .ic { width: 12px; height: 12px; }
+.ad-tprompt { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--fill-3); }
+.ad-eres .ad-tprompt { background: var(--fill-2); }
+.ad-tp-hd { display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 20px; }
+.ad-tp-hd .ic { color: var(--brand); }
+.ad-tp-tx { font-size: 12px; line-height: 18px; color: var(--text-2); white-space: pre-line; word-break: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; user-select: text; }
+.ad-tprompt.is-open .ad-tp-tx { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: visible; }
+.ad-tp-ft { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ad-tp-btn { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--fill-2); color: var(--text); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.ad-tp-btn:hover { background: var(--bg-hover); }
+.ad-tp-btn .ic { width: 14px; height: 14px; }
+.ad-tp-more { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--brand); white-space: nowrap; }
+.ad-tp-more .ic { width: 12px; height: 12px; }
+.ad-tnote { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12px; line-height: 18px; color: var(--text-3); }
+.ad-tnote .ic { flex: none; margin-top: 1px; }
+.ad-tacts { flex-wrap: nowrap; }
+.ad-tacts .btn { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; height: auto; min-height: 40px; white-space: normal; line-height: 16px; text-align: center; }
+.ad-msheet .ad-tno { min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; line-height: 20px; }
+.ad-msheet .ad-tck { width: 22px; height: 22px; }
+.ad-msheet .ad-tck .ic { width: 14px; height: 14px; }
+.ad-msheet .ad-tacts .btn { padding-left: 10px; padding-right: 10px; }
 .ad-ecancel h3 { margin: 0; }
 
 /* 已应用提示条 */

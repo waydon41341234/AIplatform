@@ -1,0 +1,138 @@
+{
+ "style": "festive",
+ "n": 3,
+ "id": "festive-3",
+ "name": "红金夜宴",
+ "style_zh": "节日红金",
+ "dark": true,
+ "prompt_zh": "【节日红金 · 红金夜宴】深色底 #3A0D0B，主色 #E8541E，点缀 #F2C14E。整体：深红夜色、烟花与金色舞狮。Banner 3 张（通用 · 圆角 16，1020×300）：首存豪礼 / 赛事狂欢 / VIP 尊享，标题在左、主体物在右。图标 渐变，帐户栏 4 个、底部导航 6 个、游戏分类 9 个同一套光影。布局：游戏菜单顶部页签·胶囊，游戏卡片 3 列圆角 20，底部导航中间凸起，顶部栏深色底。",
+ "theme": {
+  "primary": "#E8541E",
+  "lead": "#FFE9C7",
+  "neutral_1": "#E3BF98",
+  "neutral_2": "#B28B6A",
+  "neutral_3": "#7A5040",
+  "border": "#5E2A20",
+  "bg_1": "#3A0D0B",
+  "bg_2": "#521512",
+  "accent_1": "#2E9B4F",
+  "accent_2": "#FF5A4E",
+  "accent_3": "#F2C14E"
+ },
+ "ec": {
+  "key:home_bg": "key:bg_1"
+ },
+ "modules": {
+  "banner_size": "general",
+  "banner_corner": 16,
+  "banner_ind": "s4",
+  "gm_style": "tabs",
+  "gm_shape": "pill",
+  "jp_layout": "flow",
+  "jp_corner": 16,
+  "jp_margin": 8,
+  "jp_bg": "accent_3",
+  "gc_cols": 3,
+  "gc_corner": 20,
+  "gc_gap": 12,
+  "footer_align": "left",
+  "bn_style": "raised",
+  "sd_style": "list",
+  "tb_mode": "deep",
+  "icon_style": "gradient"
+ },
+ "logo": "assets/ai-logo/hongyun.png",
+ "assets": {
+  "banner-1": "assets/ai-tpl/festive-3/banner-1.webp",
+  "banner-2": "assets/ai-tpl/festive-3/banner-2.webp",
+  "banner-3": "assets/ai-tpl/festive-3/banner-3.webp",
+  "acct-dep": "assets/ai-tpl/festive-3/acct-dep.webp",
+  "acct-vip": "assets/ai-tpl/festive-3/acct-vip.webp",
+  "acct-share": "assets/ai-tpl/festive-3/acct-share.webp",
+  "acct-more": "assets/ai-tpl/festive-3/acct-more.webp",
+  "bn-home": "assets/ai-tpl/festive-3/bn-home.webp",
+  "bn-promo": "assets/ai-tpl/festive-3/bn-promo.webp",
+  "bn-share": "assets/ai-tpl/festive-3/bn-share.webp",
+  "bn-dep": "assets/ai-tpl/festive-3/bn-dep.webp",
+  "bn-mine": "assets/ai-tpl/festive-3/bn-mine.webp",
+  "bn-reg": "assets/ai-tpl/festive-3/bn-reg.webp",
+  "bn-home-off": "assets/ai-tpl/festive-3/bn-home-off.webp",
+  "bn-promo-off": "assets/ai-tpl/festive-3/bn-promo-off.webp",
+  "bn-share-off": "assets/ai-tpl/festive-3/bn-share-off.webp",
+  "bn-dep-off": "assets/ai-tpl/festive-3/bn-dep-off.webp",
+  "bn-mine-off": "assets/ai-tpl/festive-3/bn-mine-off.webp",
+  "bn-reg-off": "assets/ai-tpl/festive-3/bn-reg-off.webp",
+  "gm-1": "assets/ai-tpl/festive-3/gm-1.webp",
+  "gm-2": "assets/ai-tpl/festive-3/gm-2.webp",
+  "gm-3": "assets/ai-tpl/festive-3/gm-3.webp",
+  "gm-6": "assets/ai-tpl/festive-3/gm-6.webp",
+  "gm-4": "assets/ai-tpl/festive-3/gm-4.webp",
+  "gm-7": "assets/ai-tpl/festive-3/gm-7.webp",
+  "gm-9": "assets/ai-tpl/festive-3/gm-9.webp",
+  "gm-8": "assets/ai-tpl/festive-3/gm-8.webp",
+  "gm-10": "assets/ai-tpl/festive-3/gm-10.webp"
+ },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
+ "thumb": "assets/ai-tpl/festive-3/thumb.webp",
+ "bytes_webp": 277514,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "1431dbf8151c92a323d6340fc157db197afe601e",
+   "attempts": 1
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "2e767c556ed8c61edf8da715e0f5ab5d9539c635",
+   "attempts": 1
+  },
+  "time": "2026-11-27",
+  "regenerated": []
+ },
+ "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
+ "figmaPage": "430:619174",
+ "figmaSection": "440:635495",
+ "figmaNode": "441:225993",
+ "figmaCaption": "441:226115",
+ "figmaSlotPanel": "441:226165",
+ "figmaSheets": {
+  "banner_sheet": "441:241750",
+  "icon_sheet": "441:242051"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on non-primary backgrounds use LIGHTEN (dark) / DARKEN (light) blend to hide the sheet background; -off slots use a saturation -1 / exposure -0.2 image filter"
+}

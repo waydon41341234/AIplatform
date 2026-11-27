@@ -1,0 +1,138 @@
+{
+ "style": "fresh",
+ "n": 1,
+ "id": "fresh-1",
+ "name": "薄荷清晨",
+ "style_zh": "清新明亮",
+ "dark": false,
+ "prompt_zh": "【清新明亮 · 薄荷清晨】浅色底 #F2FAF6，主色 #14B87A，点缀 #FFA61A。整体：薄荷绿叶、露珠与晨光草地。Banner 3 张（通用 · 圆角 16，1020×300）：首存豪礼 / 赛事狂欢 / VIP 尊享，标题在左、主体物在右。图标 面性填充，帐户栏 4 个、底部导航 6 个、游戏分类 9 个同一套光影。布局：游戏菜单左侧栏·胶囊，游戏卡片 3 列圆角 32，底部导航中间凸起，顶部栏白底。",
+ "theme": {
+  "primary": "#14B87A",
+  "lead": "#1F2D27",
+  "neutral_1": "#4F625A",
+  "neutral_2": "#82958D",
+  "neutral_3": "#B8C7C0",
+  "border": "#DCEBE4",
+  "bg_1": "#F2FAF6",
+  "bg_2": "#FFFFFF",
+  "accent_1": "#0AA5B5",
+  "accent_2": "#EF4A4A",
+  "accent_3": "#FFA61A"
+ },
+ "ec": {
+  "key:home_bg": "key:bg_1"
+ },
+ "modules": {
+  "banner_size": "general",
+  "banner_corner": 16,
+  "banner_ind": "s1",
+  "gm_style": "side",
+  "gm_shape": "pill",
+  "jp_layout": "flow",
+  "jp_corner": 32,
+  "jp_margin": 16,
+  "jp_bg": "primary",
+  "gc_cols": 3,
+  "gc_corner": 32,
+  "gc_gap": 20,
+  "footer_align": "center",
+  "bn_style": "raised",
+  "sd_style": "list",
+  "tb_mode": "plain",
+  "icon_style": "fill"
+ },
+ "logo": "assets/ai-logo/lucky-gem.png",
+ "assets": {
+  "banner-1": "assets/ai-tpl/fresh-1/banner-1.webp",
+  "banner-2": "assets/ai-tpl/fresh-1/banner-2.webp",
+  "banner-3": "assets/ai-tpl/fresh-1/banner-3.webp",
+  "acct-dep": "assets/ai-tpl/fresh-1/acct-dep.webp",
+  "acct-vip": "assets/ai-tpl/fresh-1/acct-vip.webp",
+  "acct-share": "assets/ai-tpl/fresh-1/acct-share.webp",
+  "acct-more": "assets/ai-tpl/fresh-1/acct-more.webp",
+  "bn-home": "assets/ai-tpl/fresh-1/bn-home.webp",
+  "bn-promo": "assets/ai-tpl/fresh-1/bn-promo.webp",
+  "bn-share": "assets/ai-tpl/fresh-1/bn-share.webp",
+  "bn-dep": "assets/ai-tpl/fresh-1/bn-dep.webp",
+  "bn-mine": "assets/ai-tpl/fresh-1/bn-mine.webp",
+  "bn-reg": "assets/ai-tpl/fresh-1/bn-reg.webp",
+  "bn-home-off": "assets/ai-tpl/fresh-1/bn-home-off.webp",
+  "bn-promo-off": "assets/ai-tpl/fresh-1/bn-promo-off.webp",
+  "bn-share-off": "assets/ai-tpl/fresh-1/bn-share-off.webp",
+  "bn-dep-off": "assets/ai-tpl/fresh-1/bn-dep-off.webp",
+  "bn-mine-off": "assets/ai-tpl/fresh-1/bn-mine-off.webp",
+  "bn-reg-off": "assets/ai-tpl/fresh-1/bn-reg-off.webp",
+  "gm-1": "assets/ai-tpl/fresh-1/gm-1.webp",
+  "gm-2": "assets/ai-tpl/fresh-1/gm-2.webp",
+  "gm-3": "assets/ai-tpl/fresh-1/gm-3.webp",
+  "gm-6": "assets/ai-tpl/fresh-1/gm-6.webp",
+  "gm-4": "assets/ai-tpl/fresh-1/gm-4.webp",
+  "gm-7": "assets/ai-tpl/fresh-1/gm-7.webp",
+  "gm-9": "assets/ai-tpl/fresh-1/gm-9.webp",
+  "gm-8": "assets/ai-tpl/fresh-1/gm-8.webp",
+  "gm-10": "assets/ai-tpl/fresh-1/gm-10.webp"
+ },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
+ "thumb": "assets/ai-tpl/fresh-1/thumb.webp",
+ "bytes_webp": 210286,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "08ca315d07b7cf7c75498ed802cfef0d0b7ee869",
+   "attempts": 1
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "b0a5a053f03c3264031d5c9791935069d1ef943c",
+   "attempts": 1
+  },
+  "time": "2026-11-27",
+  "regenerated": []
+ },
+ "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
+ "figmaPage": "430:619174",
+ "figmaSection": "434:449514",
+ "figmaNode": "439:292018",
+ "figmaCaption": "439:292149",
+ "figmaSlotPanel": "439:292199",
+ "figmaSheets": {
+  "banner_sheet": "438:221955",
+  "icon_sheet": "438:221956"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on non-primary backgrounds use LIGHTEN (dark) / DARKEN (light) blend to hide the sheet background; -off slots use a saturation -1 / exposure -0.2 image filter"
+}
