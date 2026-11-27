@@ -231,7 +231,7 @@ window.I18N = {
   'ed/template': ['版式', '版式', 'Template', 'Mẫu bố cục'],
   'ed/page-height': ['页面高度', '頁面高度', 'Page height', 'Chiều cao trang'],
   'ed/height-note': ['px · 宽 750 · 内容需要 1480', 'px · 寬 750 · 內容需要 1480', 'px · width 750 · content needs 1480', 'px · rộng 750 · nội dung cần 1480'],
-  'ed/page-settings': ['整页设置', '整頁設定', 'Page settings', 'Cài đặt trang'],
+  'ed/page-settings': ['页面设置', '頁面設定', 'Page settings', 'Cài đặt trang'],
   'ed/page-hint': ['点画布中的区域，或点左侧模块列表，即可编辑该模块', '點畫布中的區域，或點左側模組列表，即可編輯該模組', 'Click an area on the canvas, or a module in the left list, to edit it', 'Nhấp vào vùng trên khung hoặc mô-đun ở danh sách bên trái để chỉnh sửa'],
   'ed/signed-out': ['未登录', '未登入', 'Signed out', 'Chưa đăng nhập'],
   'ed/signed-in': ['已登录', '已登入', 'Signed in', 'Đã đăng nhập'],

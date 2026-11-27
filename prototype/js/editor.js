@@ -575,7 +575,7 @@
       <div class="p-note">${ic('frame-corners', 'ic-16')}${t('ed/unit-750')}</div>`;
   }
   const keysHead = () => (mobileEd() ? '' : `<h2 class="p-title"><button class="ibtn ibtn-sm" data-act="keysBack" title="${esc(t('ed/tpl-back'))}">${ic('caret-left')}</button>${t('ed/keys-title', { n: 68 })}</h2>`);
-  A.openKeys = () => { E.keys = { q: '', showKey: S.lang === 'en' || S.lang === 'vi', closed: {} }; E.picker = null; S.menu = null; if (mobileEd()) E.mpanel = 'keys'; };
+  A.openKeys = () => { E.keys = { q: '', closed: {} }; E.picker = null; S.menu = null; if (mobileEd()) E.mpanel = 'keys'; };
   A.keysBack = () => { E.keys = null; E.picker = null; if (E.mpanel === 'keys') E.mpanel = null; };
   // 页面高度：回车或失焦生效，越界纠正（ED-13）
   I.pageHeight = () => {};
@@ -661,7 +661,7 @@
     return `${bad.length ? `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${esc(bad[0].text)}<div class="caption faint">Banner</div></div></div>` : ''}
       <div class="p-sec"><div class="lab">${t('ed/banner-style')}</div>${bannerStyles(B.size)}<div class="p-note">${t('ed/spec-line2', BANNER[B.size])}</div></div>
       <div class="p-sec"><div class="lab">${t('ed/banner-images', { n: B.slides.length })}${tipI('ed/slide-hint')}<span class="v">${sz.w}×${sz.h}</span></div><div data-drag-list="banner" class="slide-list">${slides}</div>
-        ${B.slides.length < 5 ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" data-act="addSlide">${ic('plus', 'ic-16')}${t('ed/add-slide')}</button>` : ''}<div class="p-note">${ic('info-fill', 'ic-16')}${t('ed/slide-text-note')}</div></div>
+        ${B.slides.length < 5 ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" data-act="addSlide">${ic('plus', 'ic-16')}${t('ed/add-slide')}</button>` : ''}</div>
       <div class="p-sec"><div class="lab">${t('ed/indicator')}</div><div class="ind-opts">${IND.map((v) => `<button class="ind-opt ${indOf(B.ind) === v ? 'is-on' : ''}" data-act="bannerInd" data-arg="${v}"><span class="ind-prev ${v === 'none' ? '' : 'on-ind'}">${v === 'none' ? `<small>${t('ed/ind-none')}</small>` : `<span class="h5-ind ${v}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k === 2 ? 'on' : ''}"></i>`).join('')}</span>`}</span></button>`).join('')}</div><div class="p-note">${t('ed/ind-note')}</div></div>`;
   }
   function pxSeg(vals, cur, act, labels, rng) {
@@ -957,7 +957,7 @@
     // AD-04：侧边栏在电脑画布上没有浮动工具条，「AI 重新生成」放在面板标题右侧（测试修复）
     const sdAi = window.AIG && window.AIG.has(b) ? `<button class="ibtn ibtn-sm" data-act="aigOpen" data-arg="${id}" title="${esc(t('aig/menu'))}" aria-label="${esc(t('aig/menu'))}">${ic('sparkle-fill')}</button>` : '';
     const adBtn = b === 'sidebar' && !mobileEd() ? `<span style="flex:1"></span>${sdAi}${window.AD ? window.AD.toolBtn(id, true) : ''}` : '';
-    // 电脑：标题左边「‹」回到整页设置，标题下一行说明这个模块是什么（手机底部面板用右上角关闭返回，不加）
+    // 电脑：标题左边「‹」回到页面设置，标题下一行说明这个模块是什么（手机底部面板用右上角关闭返回，不加）
     const back = mobileEd() ? '' : `<button class="ibtn ibtn-sm p-back" data-act="selMod" data-arg="" title="${esc(t('ed/back-page'))}" aria-label="${esc(t('ed/back-page'))}">${ic('caret-left')}</button>`;
     const head = `<h2 class="p-title">${back}<span class="ellipsis">${esc(modName(id))}</span>${adBtn}</h2>${mobileEd() || !window.I18N['ed/desc-' + b] ? '' : `<p class="p-sub">${t('ed/desc-' + b)}</p>`}`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';

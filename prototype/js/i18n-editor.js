@@ -6,7 +6,6 @@ Object.assign(window.I18N, {
   // ED-02 全部颜色用途
   'ed/keys-title': ['全部颜色用途 · {n}', '全部顏色用途 · {n}', 'All color uses · {n}', 'Mọi công dụng màu · {n}'],
   'ed/keys-search': ['搜索用途或 Key', '搜尋用途或 Key', 'Search use or key', 'Tìm công dụng hoặc key'],
-  'ed/keys-show-key': ['显示 Key 名', '顯示 Key 名稱', 'Show key names', 'Hiện tên key'],
   'ed/keys-g-base': ['基础色', '基礎色', 'Base colors', 'Màu cơ bản'],
   'ed/keys-g-ref': ['引用基础色', '引用基礎色', 'Linked to base', 'Liên kết màu cơ bản'],
   'ed/keys-g-fixed': ['固定色', '固定色', 'Fixed', 'Cố định'],
@@ -15,7 +14,7 @@ Object.assign(window.I18N, {
   'ed/keys-follow': ['跟随 {name}', '跟隨 {name}', 'Follows {name}', 'Theo {name}'],
   'ed/keys-fixed': ['固定 {hex}', '固定 {hex}', 'Fixed {hex}', 'Cố định {hex}'],
   'ed/keys-pending': ['跟设计 · 待确认', '跟設計 · 待確認', 'From design · to confirm', 'Theo thiết kế · chờ xác nhận'],
-  // 整页设置 · 首页背景（home_bg，Figma 424:433220，Waydon 2026-11-27）
+  // 页面设置 · 首页背景（home_bg，Figma 424:433220，Waydon 2026-11-27）
   'ed/home-bg': ['首页背景', '首頁背景', 'Home background', 'Nền trang chủ'],
   'ed/hb-src-design': ['跟设计 · 经典蓝白默认 {hex}', '跟設計 · 經典藍白預設 {hex}', 'From design · Classic default {hex}', 'Theo thiết kế · Mặc định cổ điển {hex}'],
   'ed/hb-design': ['跟设计', '跟設計', 'Design', 'Thiết kế'],
@@ -211,7 +210,6 @@ Object.assign(window.I18N, {
   'ed/pick-sync-el': ['画布已实时预览，只改这个模块', '畫布已即時預覽，只改這個模組', 'Previewing live. Applies to this module only.', 'Đang xem trước, chỉ áp dụng cho mô-đun này.'],
   'ed/slide-edit': ['编辑', '編輯', 'Edit', 'Sửa'],
   'ed/slide-hint': ['拖动排序；眼睛控制是否显示，至少保留 1 张', '拖動排序；眼睛控制是否顯示，至少保留 1 張', 'Drag to reorder. The eye shows or hides a slide; keep at least 1.', 'Kéo để sắp xếp. Biểu tượng mắt ẩn/hiện ảnh; giữ ít nhất 1 ảnh.'],
-  'ed/slide-text-note': ['Banner 上的标题文字是图片的一部分，改文字请重新上传或用 AI 生成', 'Banner 上的標題文字是圖片的一部分，改文字請重新上傳或用 AI 生成', 'Text on a banner is part of the image. To change it, upload a new image or generate one with AI.', 'Chữ trên banner là một phần của ảnh. Muốn đổi chữ, hãy tải ảnh mới hoặc tạo bằng AI.'],
   // Banner AI 参考图反推提示词 / 候选排序（QA 2026-11-26）
   'ed/ai-ref-prompt': ['首页 Banner，{w}×{h} 横幅，参考图主色约 {hex}，{style}；左侧留出标题文字区，右侧放主视觉，光效点缀', '首頁 Banner，{w}×{h} 橫幅，參考圖主色約 {hex}，{style}；左側留出標題文字區，右側放主視覺，光效點綴', 'Homepage banner, {w}×{h}, main color from the reference about {hex}, {style}; title space on the left, hero visual on the right, light accents', 'Banner trang chủ, {w}×{h}, màu chính theo ảnh tham khảo khoảng {hex}, {style}; chừa vùng tiêu đề bên trái, hình chủ đạo bên phải, điểm sáng'],
   'ed/ai-st-glossy': ['3D 光泽卡通风格', '3D 光澤卡通風格', 'glossy 3D cartoon style', 'phong cách 3D bóng hoạt hình'],
@@ -366,7 +364,7 @@ Object.assign(window.I18N, {
   'ed/st-check-n': ['{n} 项待处理', '{n} 項待處理', '{n} to fix', '{n} mục cần xử lý'],
   'ed/st-hidden': ['已隐藏', '已隱藏', 'Hidden', 'Đã ẩn'],
   'ed/drag-tip': ['拖动调整顺序', '拖曳調整順序', 'Drag to reorder', 'Kéo để sắp xếp'],
-  'ed/back-page': ['返回整页设置', '返回整頁設定', 'Back to page settings', 'Quay lại cài đặt trang'],
+  'ed/back-page': ['返回页面设置', '返回頁面設定', 'Back to page settings', 'Quay lại cài đặt trang'],
   'ed/desc-topbar': ['Logo、币种 / 余额、搜索和侧边栏入口', 'Logo、幣種 / 餘額、搜尋和側邊欄入口', 'Logo, currency / balance, search and menu button', 'Logo, tiền tệ / số dư, tìm kiếm và nút menu'],
   'ed/desc-bottomnav': ['页面底部固定的 5 个导航入口', '頁面底部固定的 5 個導覽入口', 'The 5 fixed tabs at the bottom', '5 mục điều hướng cố định ở cuối trang'],
   'ed/color-reset': ['恢复默认颜色', '恢復預設顏色', 'Reset colors to default', 'Khôi phục màu mặc định'],

@@ -1264,7 +1264,7 @@
       const closed = K.closed[g] && !q;
       return `<div class="kg"><button class="kg-hd" data-act="keysGrp" data-arg="${g}">${ic(closed ? 'caret-right' : 'caret-down', 'ic-16')}<span>${t(lk)}</span><span class="n">${rows.length}</span></button>${closed ? '' : rows.map((e) => keyRow(e, th, ec, P, K, mobile)).join('')}</div>`;
     }).join('');
-    const tools = `<div class="kt"><label class="kt-s">${ic('magnifying-glass', 'ic-16')}<input data-input="keysQ" value="${esc(K.q || '')}" placeholder="${esc(t('ed/keys-search'))}"></label>${toggle(K.showKey, 'keysShowKey', '', t('ed/keys-show-key'))}</div>`;
+    const tools = `<div class="kt"><label class="kt-s">${ic('magnifying-glass', 'ic-16')}<input data-input="keysQ" value="${esc(K.q || '')}" placeholder="${esc(t('ed/keys-search'))}"></label></div>`;
     return `${tools}<div class="klist">${total ? groups : `<div class="empty is-sm"><div class="ico">${ic('magnifying-glass', 'ic-24')}</div><h3>${esc(t('ed/keys-none', { q: K.q }))}</h3></div>`}</div>`;
   }
   function keyRow(e, th, ec, P, K, mobile) {
@@ -1282,10 +1282,9 @@
     const open = S().menu === 'km:' + k;
     const menu = open && kind !== 'base' && kind !== 'cond' ? `<div class="menu km-menu"><button class="menu-item" data-act="keyDetach" data-arg="${k}">${ic('paint-brush-fill')}${t('ed/keys-detach')}</button><button class="menu-item" data-act="keyRestore" data-arg="${k}" ${custom ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}${t('ed/keys-restore')}</button></div>` : '';
     const showPick = !mobile && P && P.where === 'keys' && (kind === 'base' ? !P.elRow && P.key === k : P.elRow === 'key:' + k);
-    return `<div class="krow-w"><button class="krow ${open ? 'is-open' : ''}" data-act="keyRow" data-arg="${k}|${kind}"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${esc(label)}</span><span class="kcap">${cap}</span></span>${K.showKey ? `<span class="kk mono">${k}</span>` : ''}${custom ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}</button>${menu}${showPick ? X().pickerHtml('in-panel', label) : ''}</div>`;
+    return `<div class="krow-w"><button class="krow ${open ? 'is-open' : ''}" data-act="keyRow" data-arg="${k}|${kind}"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${esc(label)}</span><span class="kcap">${cap}</span></span><span class="kk">${k}</span>${ic('caret-right', 'kchev')}</button>${menu}${showPick ? X().pickerHtml('in-panel', label) : ''}</div>`;
   }
   A.keysGrp = (g) => { const K = X().E.keys; K.closed[g] = !K.closed[g]; };
-  A.keysShowKey = () => { const K = X().E.keys; K.showKey = !K.showKey; };
   I.keysQ = (v) => { X().E.keys.q = v; return true; };
   A.keyRow = (arg) => {
     const [k, kind] = arg.split('|'); const x = X();
@@ -1302,7 +1301,7 @@
   // 菜单往下弹；面板可滚动，保证菜单可见
   window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu, .bx-menu, .ed-right .am-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
 
-  // ---------- 整页设置 · 首页背景（Figma 04-2 面板 424:433220）：KeyRow（home_bg）+ 快捷选项 跟设计 / 同页面背景 / 同卡片底 / 自定义 ----------
+  // ---------- 页面设置 · 首页背景（Figma 04-2 面板 424:433220）：KeyRow（home_bg）+ 快捷选项 跟设计 / 同页面背景 / 同卡片底 / 自定义 ----------
   // 存在 E.D.ec['key:home_bg']：空 = 跟设计（经典蓝白 #FFFFFF）；'key:bg_1' / 'key:bg_2' = 引用该 Key；十六进制 = 自定义
   const HB = 'key:home_bg';
   function homeBgSec(mobile) {
