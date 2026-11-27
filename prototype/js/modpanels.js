@@ -350,10 +350,10 @@
     };
     const fallback = vis('gamemenu').some((it) => !it.img && !it.imgOn && !it.def);
     let h = '';
-    if (side) h += `<div class="p-sec"><div class="lab">${t('mp/gm-btn')}</div>${row('gamemenu.bg', 'btnOff')}${row('gamemenu.active', 'btnSel')}${row('gamemenu.shadow')}${note('mp/gm-c-btn-note')}</div>`;
+    if (side) h += `<div class="p-sec"><div class="lab">${t('mp/gm-btn')}</div>${row('gamemenu.bg', 'btnOff')}${row('gamemenu.active', 'btnSel')}${row('gamemenu.shadow')}</div>`;
     else h += `<div class="p-sec"><div class="lab">${t('mp/gm-tab-c')}</div>${row('gamemenu.bg')}${row('gamemenu.active')}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-text')}</div>${row('gamemenu.text')}${row('gamemenu.activeText')}</div>`;
-    if (side || m.style === 'icons') h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-icons')}</div>${fallback ? row('gamemenu.icon') : ''}${note('mp/gm-c-icons-note')}</div>`;
+    if (side || m.style === 'icons') h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-icons')}</div>${fallback ? row('gamemenu.icon') : note('mp/gm-c-icons-note')}</div>`;
     return h;
   }
   // ---------- 游戏卡片（经典蓝白 Figma 317:55739 / 317:55742）：兜底封面、收藏星、推荐角标、颜色 ----------
@@ -549,8 +549,8 @@
       return `<div class="crow"><div class="k">${lab}</div><div class="tx-colors"><button class="tx-auto ${v ? '' : 'is-on'}" data-act="bnColor" data-arg="${id}|" title="${esc(t('ed/bn-c-def'))}">${t('mp/c-default')}</button>${BN_SW[id].filter((k) => k !== key).map((k) => `<button class="sw-btn ${v === 'key:' + k ? 'is-on' : ''}" style="background:${kv(k)}" title="${esc(keyLabel(k))}" aria-label="${esc(keyLabel(k))}" data-act="bnColor" data-arg="${id}|key:${k}"></button>`).join('')}<button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" data-act="bnPick" data-arg="${id}|${key}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}"></button>${keyTag(v, key)}</div>${pk ? x.pickerHtml('in-panel', lab) : ''}</div>`;
     };
     const fallback = vis('bottomnav').some((it) => !bnSrc(it, bnOffF(it)));
-    return `<div class="p-sec">${row('bottomnav.bg')}${note('mp/bn-c-shadow')}</div>
-      <div class="p-sec"><div class="lab">${t('mp/bn-c-text')}</div>${row('bottomnav.def')}${row('bottomnav.active')}${note('mp/bn-c-act')}</div>
+    return `<div class="p-sec">${row('bottomnav.bg')}</div>
+      <div class="p-sec"><div class="lab">${t('mp/bn-c-text')}</div>${row('bottomnav.def')}${row('bottomnav.active')}</div>
       <div class="p-sec"><div class="lab">${t('mp/entries')}</div>${note(fallback ? 'mp/bn-c-icons-fb' : 'mp/bn-c-icons')}</div>`;
   }
   const bnavCls = () => `h-${M('bottomnav').h}`;
