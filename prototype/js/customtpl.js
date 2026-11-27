@@ -484,11 +484,13 @@
     if (!c.sub) return base;
     return base + ' · ' + (c.sub[0] === '=' ? c.sub.slice(1) : t('ct/sub-' + c.sub));
   }
+  // 成品大图只在根节点挂一次（CSS 变量），切片引用变量：单文件版不用每次渲染都把 1MB 的内嵌图写进 DOM
+  ['A', 'B', 'C', 'D'].forEach((x) => { const k = 'custom-tpl/result-' + x + '.jpg'; document.documentElement.style.setProperty('--ct-res-' + x, `url(${(window.A_ && window.A_[k]) || 'assets/' + k})`); });
   // 画布切片：750 稿 → 画布 375（÷2）
   function ctSlice(D, id) {
     const c = D.ct && D.ct.b[id]; if (!c) return null;
     const [y0, y1] = c.y, [x0, x1] = c.xr || [0, 750];
-    return `<div class="ct-slice" style="width:${(x1 - x0) / 2}px;height:${(y1 - y0) / 2}px;background-image:url(assets/custom-tpl/result-${D.ct.x}.jpg);background-position:${-x0 / 2}px ${-y0 / 2}px"></div>`;
+    return `<div class="ct-slice" style="width:${(x1 - x0) / 2}px;height:${(y1 - y0) / 2}px;background-image:var(--ct-res-${D.ct.x});background-position:${-x0 / 2}px ${-y0 / 2}px"></div>`;
   }
   // 右栏「页面」：AI 成品已纳入编辑器（Figma D-05 panel-right · 已采用）
   function edPanel(D) {
