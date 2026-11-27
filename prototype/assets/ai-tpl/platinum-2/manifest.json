@@ -42,9 +42,7 @@
   "icon_style": "metal"
  },
  "logo": "assets/ai-logo/royal88.png",
- "assets": {},
- "assets_status": "pending: Figma generate_image was denied by the permission system on 2026-11-27, so no banner/icon files exist yet. The Figma template has named slot layers (slot/<name>) with placeholder gradient fills; fill them, then export to the planned paths below.",
- "assets_planned": {
+ "assets": {
   "banner-1": "assets/ai-tpl/platinum-2/banner-1.webp",
   "banner-2": "assets/ai-tpl/platinum-2/banner-2.webp",
   "banner-3": "assets/ai-tpl/platinum-2/banner-3.webp",
@@ -74,13 +72,74 @@
   "gm-8": "assets/ai-tpl/platinum-2/gm-8.webp",
   "gm-10": "assets/ai-tpl/platinum-2/gm-10.webp"
  },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
  "thumb": "assets/ai-tpl/platinum-2/thumb.webp",
- "thumb_note": "375-wide screenshot of the Figma template frame; layout + theme are final, AI slots are placeholder gradients",
+ "bytes_webp": 210226,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "7e984f43a74d213939c0438c319d680fdcdb4a93",
+   "attempts": 1,
+   "note": "09:37 and 12:27 KL calls were denied by the session permission classifier; Waydon approved generation 14:34 KL; generated 14:36-14:41 KL"
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "7edbcb2fc4ce6489c07d43c22ead406c196f8719",
+   "attempts": 1,
+   "note": "09:37 and 12:27 KL calls were denied by the session permission classifier; Waydon approved generation 14:34 KL; generated 14:36-14:41 KL"
+  },
+  "time": "2026-11-27",
+  "regenerated": [],
+  "prompt_additions": {
+   "banner_sheet": "+ Each banner is a full-width panel with its own background tone (blush-ivory gradient or rose-taupe), clearly distinct from the flat gutters so the three banners are easy to separate.",
+   "icon_sheet": "+ Icons float on the flat background with no cast shadow or ground shadow beneath them."
+  },
+  "keying": "light-on-light keyer (slice_icons_pl2.py + ovr2-platinum-2.json): object = ground distance > 6 (sheet ground noise < 3); the 1px near-white sharpening halo outside every edge is peeled; faint haze / sharpening specks are dropped; enclosed ground-coloured regions are kept opaque (pearl / silver / card-face highlights) except checked see-through gaps: acct-vip (1), gm-3 (1), gm-8 (6), gm-10 (1); edge alpha = projection onto the local foreground colour, edge colour = local foreground (no ground fringe); no tiles, no shadows in the sheet; bn-*-off = luminance mapped to grey 60..200"
+ },
  "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
  "figmaPage": "430:619174",
  "figmaSection": "430:654090",
  "figmaNode": "433:493531",
  "figmaCaption": "433:493647",
  "figmaSlotPanel": "433:493697",
- "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame"
+ "figmaSheets": {
+  "banner_sheet": "478:4",
+  "icon_sheet": "478:5"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on light module backgrounds use DARKEN blend + image filter highlights +1 so the sheet background disappears; slots on primary backgrounds (active game-menu item, raised bottom-nav) stay NORMAL; -off slots use a saturation -1 image filter"
 }

@@ -1,7 +1,7 @@
 """把 21 套 AI 模版（assets/ai-tpl/<id>/manifest.json）烘成 js/ai-templates.js（单文件原型没有 fetch，只能内嵌）。
 
 用法：python3 prototype/build-ai-templates.py  → 生成 prototype/js/ai-templates.js
-- 数据：window.AI_TPL = [{ id, style, n, dark, th, ec, m, logo, a }]，a = 素材路径（manifest.assets，空 = UI 还没生成素材）
+- 数据：window.AI_TPL = [{ id, style, n, dark, th, ec, m, logo, a }]，a = 素材路径（manifest.assets；11-27 起 21 套都有，空 = 素材还没出，aidesign.js 兜底）
 - 文案：模版名 ad/tpl-n-<id>、提示词 ad/tpl-p-<id> 四语。简体 = manifest.prompt_zh 原文；繁 / 英 / 越按同一句式拼（句式与
   Figma 06 文案 ad/tpl-p-blackgold-2 一致），只有「整体」一句和名称逐套翻译（下面 TR 表）。
 规格：team/day-1127-spec.md §1 §3；Figma 04-AI 模版 11-27（430:619174）。
@@ -105,7 +105,7 @@ def main():
             i18n[f'ad/tpl-n-{tid}'] = [d['name']] + names
             i18n[f'ad/tpl-p-{tid}'] = prompts(tid, d['prompt_zh'])
     js = ['/* 自动生成，勿手改：python3 prototype/build-ai-templates.py（来源 assets/ai-tpl/<id>/manifest.json，规格 team/day-1127-spec.md）。',
-          ' * 21 套 AI 页面风格模版：设计参数 + 真实 AI 素材路径（a 为空 = UI 还没生成素材，aidesign.js 用昨天的同风格素材代替）。 */',
+          ' * 21 套 AI 页面风格模版：设计参数 + 真实 AI 素材路径（21 套都有；a 为空 = 素材还没出，aidesign.js 兜底用 11-26 黑金风格图标 + 滤镜 Banner）。 */',
           'window.AI_TPL = [']
     js += ['  ' + json.dumps(x, ensure_ascii=False, separators=(',', ':')) + ',' for x in tpls]
     js += ['];', '// 模版名 / 生成提示词：[简, 繁, 英, 越]', 'Object.assign(window.I18N, {']

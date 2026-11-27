@@ -97,7 +97,10 @@
     put('sidebar.textActive', best(th.primary, [th.bg_2, th.lead]), th.bg_2);
     put('gamecards.labelText', best(th.accent_3, ['#ffffff', th.lead]), '#ffffff'); // 默认 labeltext_accent3 = 固定白
     const bnOn = alt ? (dark ? th.primary : mix(th.primary, th.lead, 0.25)) : th.primary;
-    put('bottomnav.active', contrast(th.bg_2, bnOn) >= 3 ? bnOn : best(th.bg_2, [mix(th.primary, th.lead, 0.35), mix(th.primary, th.lead, 0.6), th.lead]), th.primary);
+    // 底部导航选中文字：默认 Key btmnav_active 是「跟设计」（DESIGN_DEF #1678FF 经典蓝），不是 primary——等于主色时也要写明 key:primary，
+    // 否则黑金 / 霓虹 / 极简等 12 套的「首页」字是蓝的（Figma TPL 帧都是主色）
+    const bnA = contrast(th.bg_2, bnOn) >= 3 ? bnOn : best(th.bg_2, [mix(th.primary, th.lead, 0.35), mix(th.primary, th.lead, 0.6), th.lead]);
+    ec['bottomnav.active'] = bnA.toLowerCase() === th.primary.toLowerCase() ? 'key:primary' : bnA;
     if (contrast(th.bg_1, th.neutral_2) < 3.2) put('footer.text', best(th.bg_1, [th.neutral_1, mix(th.neutral_2, th.lead, 0.5)]), th.neutral_2);
     if (dark) ec['key:home_bg'] = 'key:bg_1'; // 深色风格：首页背景改跟页面背景（home_bg 跟设计默认 #FFFFFF 是经典蓝白的，深色底上会整页发白）
     return ec;
@@ -153,11 +156,12 @@
   const GM_K = [1, 2, 3, 6, 4, 7, 9, 8, 10];
   const TPL_N = 3 + Object.keys(MID_A).length + 6 + GM_K.length; // 会替换的图：Banner 3 + 帐户栏 4 + 底部导航 6（含未登录「注册」）+ 游戏分类 9 = 22
   const bse = (v) => (v ? String(v).split('/').pop().replace(/\.\w+$/, '') : '');
-  // 白金 / 黑金 6 套 UI 还没生成素材（generate_image 被权限拦了，manifest 的 assets 为空）：先用昨天生成的黑金风格图标代替，Banner 用风格滤镜模拟
+  // 兜底（现在 21 套都走不到）：manifest 没有 assets 的模版（T.a 为空 = 素材还没出）才用 11-26 黑金风格图标代替，Banner 用风格滤镜模拟。
+  // 11-27 白金 / 黑金 6 套原来走这里；14:34 Waydon 选「現在補生成」后 6 套都有了真 AI 素材，同其余 15 套。留着给以后新加、素材还没出的模版
   const STAND = 'blackgold';
-  // 底部导航「存款」昨天没出单独的图：用帐户栏「存款」黑金图（-off = 同图去色，ai-acct/dep-blackgold-off.webp）
+  // 底部导航「存款」11-26 没出单独的图：用帐户栏「存款」黑金图（-off = 同图去色，ai-acct/dep-blackgold-off.webp）
   const STAND_A = { 'acct-dep': 'ai-acct/dep', 'acct-vip': 'ai-acct/vip', 'acct-share': 'ai-acct/share', 'acct-more': 'ai-acct/more', 'bn-home': 'ai-bnav/home', 'bn-promo': 'ai-bnav/promo', 'bn-share': 'ai-bnav/bonus', 'bn-dep': 'ai-acct/dep', 'bn-mine': 'ai-bnav/mine', 'bn-reg': 'ai-bnav/invite' };
-  const isStand = (T) => !T.a; // 还在用代替素材（Banner = 风格滤镜，图标 = 昨天的黑金图）
+  const isStand = (T) => !T.a; // 兜底：这套没有专属素材（Banner = 风格滤镜，图标 = 11-26 的黑金图）；21 套现在都是 false
   function tplAssets(T) {
     if (T.a) return T.a;
     const a = {};
@@ -180,6 +184,7 @@
     });
     ((D.m.gamemenu || {}).items || []).forEach((it) => { const m = /^mp\/gm-n-(\d+)$/.exec(it.k || ''); if (!m) return; set(it, 'img', a['gm-' + m[1]]); delete it.imgOn; });
   }
+  // Banner 3 张 = 模版的 AI 图；没有素材的模版（兜底）才用风格滤镜
   const tplSlides = (T, sz) => [1, 2, 3].map((j) => ({ f: T.a ? 'img:' + T.a['banner-' + j] : `${ST[T.style].bf} hue-rotate(${(j - 2) * 9}deg)`, w: sz.w, h: sz.h }));
   // 一套模版 → 完整设计数据（结构同 E.D）；pri = 自定义主色（只换主题色，素材不变）；ics = 自己选的图标风格（空 = 跟模版）
   function tplDesign(T, pri, ics, from) {
@@ -828,7 +833,7 @@
       return `<div class="ad-tcard ${on ? 'is-on' : ''} ${gen ? 'is-dis' : ''} ${L.st === 'fail' ? 'is-fail' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-act="adETpl" data-arg="${T.id}" aria-label="${esc(tplName(T))}"><span class="ad-tpv">${pv}<span class="ad-tno">${k + 1}</span>${on ? `<span class="ad-tck">${ic('eye-fill')}</span>` : ''}</span><b class="ellipsis">${esc(tplName(T))}</b></div>`;
     }).join('');
     const on = a.pick && a.pick.src === 'tpl', T0 = on && TPL_BY[a.pick.id];
-    // 还在用代替素材的模版（白金 / 黑金）：照实说明替换的是什么（入口图标 19 张，Banner 是滤镜模拟）
+    // 21 套都有专属素材 = 「替换 22 张」；没有素材的模版（兜底）才照实说明换的是代替图（入口图标 19 张，Banner 是滤镜模拟）
     const note = T0 && isStand(T0) ? t('ad/tpl-stand-note', { n: TPL_N - 3 }) : t('ad/tpl-replace-note', { n: TPL_N });
     const acts = on ? `${promptBlock(a)}<div class="ad-tnote">${ic('info-fill', 'ic-16')}<span>${note}</span></div>${actRow('tpl', false, mobile, 'ad-tacts')}` : '';
     return `<div class="p-sec ad-tsec" data-sk="adtpl"><div class="lab">${esc(t('ad/tpl-title', { style: stName(q.style) }))}<span class="pill-tag ad-tfree">${t('ad/tpl-free')}</span></div><div class="ad-thint">${t('ad/tpl-hint')}</div><div class="ad-tcards">${cards}</div>${acts}</div>`;

@@ -42,9 +42,7 @@
   "icon_style": "metal"
  },
  "logo": "assets/ai-logo/royal88.png",
- "assets": {},
- "assets_status": "pending: Figma generate_image was denied by the permission system on 2026-11-27, so no banner/icon files exist yet. The Figma template has named slot layers (slot/<name>) with placeholder gradient fills; fill them, then export to the planned paths below.",
- "assets_planned": {
+ "assets": {
   "banner-1": "assets/ai-tpl/blackgold-1/banner-1.webp",
   "banner-2": "assets/ai-tpl/blackgold-1/banner-2.webp",
   "banner-3": "assets/ai-tpl/blackgold-1/banner-3.webp",
@@ -74,13 +72,70 @@
   "gm-8": "assets/ai-tpl/blackgold-1/gm-8.webp",
   "gm-10": "assets/ai-tpl/blackgold-1/gm-10.webp"
  },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
  "thumb": "assets/ai-tpl/blackgold-1/thumb.webp",
- "thumb_note": "375-wide screenshot of the Figma template frame; layout + theme are final, AI slots are placeholder gradients",
+ "bytes_webp": 216672,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "e450dad190c134ca84703533b6acd0d0df6e9a4b",
+   "attempts": 1,
+   "note": "09:37 and 12:27 KL calls were denied by the session permission classifier; Waydon approved generation 14:34 KL; generated 14:39 KL"
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "4e3b1cbceb14746d05c5d468f3d2889b0194ed54",
+   "attempts": 1,
+   "note": "09:37 and 12:27 KL calls were denied by the session permission classifier; Waydon approved generation 14:34 KL; generated 14:40 KL"
+  },
+  "time": "2026-11-27",
+  "regenerated": [],
+  "keying": "pedestal keyer (bg_key.py pedestal): icons stand on a gold-rimmed black pedestal under a spotlight cone; background = flood from the cell border through smooth low-gradient pixels (page, cone, warm haze, coin halos, floor reflection), so black velvet / leather parts stay opaque; pedestal kept on all 19 (crisp designed base, same treatment as festive / neon / techblue); its unlit base band is trimmed on every icon along an elliptical fit of the gold rim's lower edge (no end-cap stubs); gm-10's separate pedestal piece gets its velvet top back from a fitted back arc (was flattened by the convex hull); loose confetti discs / bokeh orbs dropped, detached coins >= 600 px2 kept (acct-dep, acct-share, bn-share)"
+ },
  "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
  "figmaPage": "430:619174",
  "figmaSection": "430:654091",
  "figmaNode": "433:493782",
  "figmaCaption": "433:493913",
  "figmaSlotPanel": "433:493963",
- "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame"
+ "figmaSheets": {
+  "banner_sheet": "478:8",
+  "icon_sheet": "478:9"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on non-primary backgrounds use LIGHTEN (dark) / DARKEN (light) blend to hide the sheet background; -off slots use a saturation -1 / exposure -0.2 image filter"
 }
