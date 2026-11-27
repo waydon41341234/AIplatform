@@ -1285,7 +1285,8 @@
   A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); }); };
   ['h', 'pad', 'gap'].forEach((k) => { A['tbLayout_' + k] = (v) => { commit(() => { E.D.tb[k] = +v; }); }; });
   // PC 未开放（PC_OPEN = false）：点 PC 不切换画面，只弹「暂未开放」（level/coming-soon，同 Figma Toast 434:448499）
-  const pcLocked = (v) => { if (v !== 'pc' || pcOpen()) return false; window.toast(t('level/coming-soon'), { info: true }); return true; };
+  // 连点只保留一条（先去掉同文案的旧提示再弹，重新计时 2.4 秒），不叠成一串（Figma 434:448788 第 2 条）
+  const pcLocked = (v) => { if (v !== 'pc' || pcOpen()) return false; const m = t('level/coming-soon'); S.toasts = S.toasts.filter((x) => x.msg !== m); window.toast(m, { info: true }); return true; };
   // PC 按钮右上角的锁徽标（Figma IconSegOption State=Locked 434:441762）
   const pcLockBadge = () => `<span class="pc-lock" aria-hidden="true">${ic('lock-fill')}</span>`;
   A.setDevice = (v) => { if (pcLocked(v)) return false; E.device = v; E.ai = null; E.picker = null; };
