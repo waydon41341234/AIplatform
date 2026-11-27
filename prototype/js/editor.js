@@ -22,6 +22,8 @@
     topbar: { key: 'mod/topbar', fixed: true }, banner: { key: 'mod/banner' }, notice: { key: 'mod/notice' }, jackpot: { key: 'cat/jackpot' },
     midnav: { key: 'mod/account' }, gamemenu: { key: 'mod/gamemenu' }, gamecards: { key: 'mod/gamecards' },
     footer: { key: 'cat/footer' }, sidebar: { key: 'mod/sidebar' }, bottomnav: { key: 'mod/bottomnav', fixed: true },
+    // 自定义模版采用后的成品模块（只在 E.D.ct 设计里出现，不进「添加模块」）
+    search: { key: 'ct/m-search' }, promo: { key: 'ct/m-promo' }, rank: { key: 'ct/m-rank' },
   };
   // Banner 规格（照真实组件「H5 / Banner 画布（750）」317:55632）：dw/dh = 750 稿显示尺寸，cw/ch = 画布 CSS 尺寸；w/h = 交付图尺寸
   // Waydon 2026-11-26：规格只是前端显示尺寸不同，后台上传统一 1020×300
@@ -47,7 +49,7 @@
   const BNAV_PX = { 98: 49, 110: 55, 120: 60, 140: 70 };
   const DV = 8; // 设计数据版本（LS 里旧数据不兼容时丢弃）
   const baseName = (id) => id.split('~')[0];
-  const modName = (id) => { const b = baseName(id); const n = id.includes('~') ? ' ' + (+id.split('~')[1] + 1) : ''; return t((MODS[b] || MODS.banner).key) + n; };
+  const modName = (id) => { const cn = E.D && E.D.ct && window.CT ? window.CT.ctName(E.D, id) : null; if (cn) return cn; const b = baseName(id); const n = id.includes('~') ? ' ' + (+id.split('~')[1] + 1) : ''; return t((MODS[b] || MODS.banner).key) + n; };
 
   // ---------- 模板（ED-23）：版式 + 配色 + 默认素材整套 ----------
   const ORDER9 = ['banner', 'jackpot', 'midnav', 'gamemenu', 'gamecards', 'footer'];
@@ -136,6 +138,7 @@
       if (opts.name) E.name = opts.name;
       const d = !opts.template && LS.get('ed.d.' + E.name, null);
       E.D = d && d.v === DV ? migrate(d) : defaultDesign(opts.template, opts.palette);
+      if (opts.ct && window.CT) E.D = window.CT.ctDesign(E.D, opts.ct); // 自定义模版：采用的成品纳入编辑器
       if (opts.design) { E.D = JSON.parse(JSON.stringify(opts.design)); E.D.v = DV; persist(); } // AD：AI 首页设计作为初始设计
       E.past = []; E.future = []; E.checksPassed = false; clearTimeout(expTimer); E.exp.stage = 'ready'; E.exp.dl = {}; E.exp.failed = {};
       const pj = Array.isArray(window.PROJECTS) && window.PROJECTS.find((p) => p.name === E.name);
@@ -458,14 +461,20 @@
     // 竖排游戏分类紧挨着游戏卡片时，两个模块左右并排（经典蓝白）
     const vis0 = D.order.filter((id) => !D.hidden[id] && MODS[baseName(id)]);
     let body = '';
+    const ct = D.ct && window.CT ? D.ct : null;
+    // 成品切片：Banner 换过图就改用编辑器的 Banner 组件显示新图
+    const ctMod = (id) => { if (!ct || !ct.b[id]) return null; if (baseName(id) === 'banner' && (D.banner.slides[0] || {}).f !== ct.bf) return null; return window.CT.ctSlice(D, id); };
     for (let k = 0; k < vis0.length; k++) {
       const id = vis0[k], nx = vis0[k + 1];
+      if (ct && ct.b[id] && ct.b[id].xr && nx && ct.b[nx] && ct.b[nx].xr) { body += `<div class="ct-hsplit">${modWrap(id, ctMod(id))}${modWrap(nx, ctMod(nx))}</div>`; k++; continue; }
+      if (ctMod(id) != null) { body += modWrap(id, ctMod(id)); continue; }
       if (baseName(id) === 'gamemenu' && D.m.gamemenu.style === 'side' && nx && baseName(nx) === 'gamecards') { body += `<div class="cl-games">${modWrap(id, modHtml(id))}${modWrap(nx, modHtml(nx))}</div>`; k++; continue; }
       body += modWrap(id, modHtml(id));
     }
-    const topPx = D.hidden.topbar ? 0 : D.tb.h / 2, bnPx = D.hidden.bottomnav ? 0 : BNAV_PX[D.m.bottomnav.h] || (+D.m.bottomnav.h / 2) || 55;
-    const top = D.hidden.topbar ? '' : modWrap('topbar', h5Topbar(), { top: true });
-    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" style="height:${bnPx}px" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
+    const ctBn = ct ? (ct.b.bottomnav.y[1] - ct.b.bottomnav.y[0]) / 2 : 0;
+    const topPx = D.hidden.topbar ? 0 : D.tb.h / 2, bnPx = D.hidden.bottomnav ? 0 : ct ? ctBn : BNAV_PX[D.m.bottomnav.h] || (+D.m.bottomnav.h / 2) || 55;
+    const top = D.hidden.topbar ? '' : modWrap('topbar', ct ? window.CT.ctSlice(D, 'topbar') : h5Topbar(), { top: true });
+    const bnav = D.hidden.bottomnav ? '' : `<div class="h5-bnav mod ${ct ? 'is-ct' : window.MP.bnavCls()} ${E.sel === 'bottomnav' ? 'is-sel' : ''}" style="height:${bnPx}px" data-mod="bottomnav" data-act="selMod" data-arg="bottomnav">${ct ? window.CT.ctSlice(D, 'bottomnav') : window.MP.bnav()}${E.sel === 'bottomnav' && !mobileEd() ? `<span class="sel-label">${esc(modName('bottomnav'))}</span>${selToolbar('bottomnav')}` : ''}${window.AD ? window.AD.modMask('bottomnav') : ''}</div>`;
     const side = E.h5side && !D.hidden.sidebar ? `<div class="h5-side ${D.side}" data-act="h5SideClose" data-stop>${window.MP.side()}${window.AD ? window.AD.modMask('sidebar') : ''}</div>` : '';
     // ED-13：画布按页面高度显示（默认一屏 1334，Waydon 2026-11-26），内容超出在页面内滚动；加高后 1334 处画首屏线
     const minBody = Math.max(0, D.height / 2 - topPx - bnPx);
@@ -567,6 +576,7 @@
     return `<div class="tpl-row">${tplThumb(E.D.template)}<span class="tx"><b class="ellipsis">${t('template/' + E.D.template)}</b><span class="caption faint">${t('template/meta-' + tplMeta(E.D.template))}</span></span><button class="btn btn-secondary btn-sm" data-act="edOpenTpl">${t('ed/tpl-switch')}</button></div>`;
   }
   function pageSettings(mode) {
+    if (E.D.ct && window.CT && !mode && !E.keys) return window.CT.edPanel(E.D); // 自定义模版成品：右栏「AI 成品 · 已纳入编辑器」（Figma D-05）
     if (E.keys && mode !== 'colors-only') return keysHead() + window.MP.keysPanel(mobileEd());
     const th = liveTheme().th;
     const groups = [['ed/grp-primary', ['primary', 'lead']], ['ed/grp-text', ['neutral_1', 'neutral_2', 'neutral_3']], ['ed/grp-bg', ['bg_1', 'bg_2', 'border']], ['ed/grp-accent', ['accent_1', 'accent_2', 'accent_3']]];

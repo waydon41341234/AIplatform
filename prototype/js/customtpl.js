@@ -453,7 +453,55 @@
     const art = `<div class="ct-entry-art" aria-hidden="true"><i></i><i class="b"></i><span><i></i><i></i><i></i><i></i></span><span><i></i><i></i><i></i><i></i></span></div>`;
     return `<div class="ct-entry">${art}<div class="ct-entry-t"><h3>${esc(t('ct/entry-title'))}<span class="pill-tag">${esc(t('ct/new'))}</span></h3><p class="muted">${esc(t('ct/entry-desc'))}</p></div><button class="btn btn-primary btn-sm" data-act="ctOpen">${ic('layout-fill', 'ic-16')}${esc(t('ct/entry-btn'))}</button></div>`;
   }
-  window.CT = { entry, pseg, match: (d, s) => match(d || C.doc, s || C.style), startDoc };
+  // ---------- 采用后纳入编辑器（Figma 03 页 D-05 / D-06 / M-05 / M-06，2026-11-27 晚）----------
+  // 成品按模块切片（750 稿 y 坐标）：画布显示的就是采用的那张成品，左栏按成品模块列出，可选中 / 隐藏 / 排序；
+  // 第 4 项 = 分区名（游戏分区 · 热门…），第 5 项 = [x0, x1] 横向切（D 左侧竖向分类栏 + 右侧游戏）
+  const BANDS = {
+    A: { top: [0, 90], bn: [6110, 6299], m: [['banner', 90, 378], ['notice', 378, 456], ['midnav', 456, 636], ['gamemenu', 636, 796], ['gamecards', 796, 1400, 'hot'], ['promo', 1400, 1620], ['gamecards~1', 1620, 2215, 'fish'], ['gamecards~2', 2215, 3050, 'live'], ['gamecards~3', 3050, 3590, 'chess'], ['jackpot', 3590, 4040], ['rank', 4040, 4600], ['footer', 4600, 6110]] },
+    B: { top: [0, 90], bn: [3370, 3572], m: [['banner', 90, 440], ['midnav', 440, 600], ['jackpot', 600, 700], ['notice', 700, 765], ['gamemenu', 765, 1100], ['gamecards', 1100, 1600, 'rec'], ['footer', 1600, 3370]] },
+    C: { top: [0, 90], bn: [5590, 5779], m: [['banner', 90, 455], ['notice', 455, 525], ['search', 525, 610], ['gamemenu', 610, 700], ['gamecards', 700, 1110, '=Hot'], ['gamecards~1', 1110, 1520, '=Nổ Hũ'], ['gamecards~2', 1520, 1910, '=Game Bài'], ['gamecards~3', 1910, 2300, '=Bàn Cá'], ['gamecards~4', 2300, 3020, '=Casino'], ['gamecards~5', 3020, 3410, '=Thể Thao'], ['gamecards~6', 3410, 3810, '=Blockchain'], ['footer', 3810, 5590]] },
+    D: { top: [0, 90], bn: [4040, 4235], m: [['banner', 90, 420], ['notice', 420, 490], ['midnav', 490, 610], ['gamemenu', 610, 2005, 'side', [0, 122]], ['gamecards', 610, 2005, null, [122, 750]], ['footer', 2005, 4040]] },
+  };
+  // 采用：在编辑器默认设计上挂成品（D.ct），模块顺序 = 成品模块
+  function ctDesign(D, x) {
+    const bd = BANDS[x]; if (!bd) return D;
+    D.ct = { x, s: STYLE_OF[x], b: {} };
+    bd.m.forEach((r) => { D.ct.b[r[0]] = { y: [r[1], r[2]], sub: r[3] || null, xr: r[4] || null }; });
+    D.ct.b.topbar = { y: bd.top }; D.ct.b.bottomnav = { y: bd.bn };
+    D.order = bd.m.map((r) => r[0]); D.hidden = {};
+    D.tb.items.side = false; D.tb.h = bd.top[1] - bd.top[0];
+    // Banner 面板里的轮播图 = 成品自己的 Banner（换图 / AI 生成后画布改用编辑器的 Banner 组件显示新图）
+    const bf = 'img:assets/custom-tpl/banner-' + x + '.jpg';
+    D.banner.size = 'medium'; D.banner.slides = [0, 1, 2].map(() => ({ f: bf, w: 1020, h: 300 }));
+    D.ct.bf = bf;
+    return D;
+  }
+  // 模块名：游戏分区带分区名
+  function ctName(D, id) {
+    const c = D && D.ct && D.ct.b[id]; if (!c) return null;
+    const b = id.split('~')[0];
+    const base = t({ banner: 'mod/banner', notice: 'mod/notice', jackpot: 'cat/jackpot', midnav: 'mod/account', gamemenu: 'mod/gamemenu', gamecards: 'mod/gamecards', footer: 'cat/footer', topbar: 'mod/topbar', bottomnav: 'mod/bottomnav', search: 'ct/m-search', promo: 'ct/m-promo', rank: 'ct/m-rank' }[b] || 'mod/banner');
+    if (!c.sub) return base;
+    return base + ' · ' + (c.sub[0] === '=' ? c.sub.slice(1) : t('ct/sub-' + c.sub));
+  }
+  // 画布切片：750 稿 → 画布 375（÷2）
+  function ctSlice(D, id) {
+    const c = D.ct && D.ct.b[id]; if (!c) return null;
+    const [y0, y1] = c.y, [x0, x1] = c.xr || [0, 750];
+    return `<div class="ct-slice" style="width:${(x1 - x0) / 2}px;height:${(y1 - y0) / 2}px;background-image:url(assets/custom-tpl/result-${D.ct.x}.jpg);background-position:${-x0 / 2}px ${-y0 / 2}px"></div>`;
+  }
+  // 右栏「页面」：AI 成品已纳入编辑器（Figma D-05 panel-right · 已采用）
+  function edPanel(D) {
+    const k = D.ct.s;
+    return `<h2 class="p-title"><span class="ellipsis">${esc(t('ct/ed-title'))}</span></h2>
+      <div class="ct-edcard"><div class="row"><b>${esc(t('ct/s-' + k))} · ${esc(t('ct/ed-adopted'))}</b>${swDots(k)}</div><span class="caption muted">${esc(t('ct/plan', { x: D.ct.x }))} · ${esc(t('ct/ed-cost', { n: COST }))}</span></div>
+      <p class="caption muted ct-eddesc">${esc(t('ct/ed-desc', { n: Object.keys(D.ct.b).filter((x) => x !== 'topbar' && x !== 'bottomnav').length }))}</p>
+      <button class="btn btn-secondary btn-block" data-act="ctEdBack">${ic('palette-fill', 'ic-16')}${esc(t('ct/ed-back'))}</button>
+      <button class="btn btn-outline btn-block" data-act="ctEdUndo">${esc(t('ct/ed-undo'))}</button>`;
+  }
+  A.ctEdBack = () => { C.stage = 'edit'; C.sel = null; C.pane = null; C.dlg = null; window.go('custom'); return false; };
+  A.ctEdUndo = () => { if (C.res) { C.stage = 'result'; C.dlg = null; } window.go('custom'); return false; };
+  window.CT = { entry, pseg, match: (d, s) => match(d || C.doc, s || C.style), startDoc, ctDesign, ctName, ctSlice, edPanel };
 
   // ======================================================================
   // 动作
@@ -582,7 +630,7 @@
       if (Array.isArray(window.PROJECTS)) window.PROJECTS.unshift({ name, st: 'designing', time: 'time/just', tone: pal, template: 'classic-blue' });
       C.stage = 'edit'; C.dlg = null;
       try { ['ed.d.', 'ed.st.', 'ed.x.'].forEach((k) => localStorage.removeItem('proto.' + k + name)); } catch (e) { /* 隐私模式 */ }
-      window.openEditor({ name, template: 'classic-blue', palette: pal, status: 'designing' });
+      window.openEditor({ name, template: 'classic-blue', palette: pal, status: 'designing', ct: r.x });
       // 编辑器先显示约 1.5 秒加载步骤，加载完再提示
       const t0 = Date.now();
       const wait = () => { if (window.E && window.E.loading && Date.now() - t0 < 8000) { setTimeout(wait, 150); return; } window.toast(t('ct/adopted', { s: t('ct/s-' + STYLE_OF[r.x]) }), { ms: 5000, action: () => { window.go('custom'); }, actionLabel: t('ct/back-wf') }); };
