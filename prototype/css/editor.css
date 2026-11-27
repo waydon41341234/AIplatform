@@ -218,7 +218,7 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .preview-full .h5 { width: min(100%, 430px); }
 
 /* ---------- H5 预览：业主主题 ---------- */
-.h5 { --o-primary: #1678ff; width: 375px; background: var(--o-bg_1); color: var(--o-lead); font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; font-size: 12px; line-height: 1.4; box-shadow: 0 0 0 1px #0000001a, var(--shadow-md); position: relative; flex: none; }
+.h5 { --o-primary: #1678ff; width: 375px; background: var(--o-home_bg, var(--o-bg_1)); color: var(--o-lead); font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; font-size: 12px; line-height: 1.4; box-shadow: 0 0 0 1px #0000001a, var(--shadow-md); position: relative; flex: none; }
 .h5 * { box-sizing: border-box; }
 .h5-top { display: flex; align-items: center; background: var(--tb-bg, var(--o-bg_2)); color: var(--tb-text, var(--o-lead)); }
 .h5-top .lg { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; }
@@ -1327,3 +1327,13 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 /* 手机 Banner ⋯ 弹层：标题「第 2 张」，「✦ AI 生成」在最下面（Figma M-02） */
 .am-sheet .am-title { padding: var(--space-8) var(--space-12) var(--space-4); font-size: 16px; font-weight: 600; }
 .am-sheet .menu-item.is-ai { color: var(--brand); }
+
+/* 整页设置 · 首页背景（home_bg，Figma 424:433220）：KeyRow + 快捷选项（跟设计 / 同页面背景 / 同卡片底 / 自定义） */
+.hb-sec .krow { border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; }
+.hb-sec .krow .kt2 .kk { max-width: none; font-size: 12px; color: var(--text-3); }
+.hb-sec .krow > .ic-16, .hb-sec .krow > svg { flex: none; color: var(--text-3); }
+.hb-opts { margin-top: 12px; }
+.hb-opts .tx-colors { gap: 8px; align-items: flex-start; }
+.hb-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; text-align: center; }
+.hb-opt .sw-btn, .hb-opt .rainbow { width: 28px; height: 28px; }
+.hb-opt small { font-size: 11px; line-height: 14px; color: var(--text-3); overflow-wrap: anywhere; }

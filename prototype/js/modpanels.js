@@ -87,6 +87,8 @@
     // 元素色可存十六进制，或 'key:<名>' 引用 68 Key（换整页配色时跟着变）；默认 Key 也可以是扩展 Key（如 ddt_bg）
     const kv = (k) => (k[0] === '#' ? k : th[k] != null ? th[k] : resolveKey(k, th, ec)); // 默认值也可以直接是 Figma 写死的色值
     for (const b in EL) for (const [id, k] of EL[b]) { const v = ec[id]; s += `;${cssVar(id)}:${v && v.startsWith('key:') ? kv(v.slice(4)) : v || kv(k)}`; }
+    // H5 首页整页底色 = home_bg（Figma 317:55529 / 变量 ext/home_bg VariableID:2:65；Waydon 2026-11-27「首页背景色home_bg」）
+    s += `;--o-home_bg:${resolveKey('home_bg', th, ec)}`;
     return s;
   }
   const M = (b) => X().E.D.m[b];
@@ -1033,7 +1035,8 @@
   const keyLabel = (k) => (BASE[k] || window.I18N['ed/key-' + k] ? t('ed/key-' + k) : EXT[k] ? EXT[k][3] : k);
   function resolveKey(k, th, ec, d = 0) {
     if (d > 8) return '#000000';
-    if (ec['key:' + k]) return ec['key:' + k];
+    const own = ec['key:' + k];
+    if (own) return own.startsWith('key:') ? resolveKey(own.slice(4), th, ec, d + 1) : own; // 业主改绑另一个 Key（如首页背景 → bg_1）或自定义色
     if (BASE[k]) return th[k];
     const e = EXT[k]; if (!e) return '#000000';
     if (e[1] === 'fixed') return e[2];
@@ -1062,6 +1065,7 @@
     const col = resolveKey(k, th, ec); const custom = kind !== 'base' && !!ec['key:' + k];
     let cap = '';
     if (kind === 'base') cap = `<span class="mono">${col.toUpperCase()}</span>`;
+    else if (custom && ec['key:' + k].startsWith('key:')) cap = t('ed/keys-follow', { name: keyLabel(ec['key:' + k].slice(4)) });
     else if (custom) cap = `<span class="kc-custom">${t('ed/keys-custom')}</span>`;
     else if (kind === 'ref') { const [tk, al] = Array.isArray(arg) ? arg : [arg, null]; cap = t('ed/keys-follow', { name: keyLabel(tk) }) + (al != null ? ` · ${Math.round(al * 100)}%` : ''); }
     else if (kind === 'fixed') cap = t('ed/keys-fixed', { hex: arg });
@@ -1091,10 +1095,37 @@
   // 菜单往下弹；面板可滚动，保证菜单可见
   window.AFTER_RENDER.push(() => { const m = document.querySelector('.km-menu, .bx-menu, .ed-right .am-menu'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); });
 
+  // ---------- 整页设置 · 首页背景（Figma 04-2 面板 424:433220）：KeyRow（home_bg）+ 快捷选项 跟设计 / 同页面背景 / 同卡片底 / 自定义 ----------
+  // 存在 E.D.ec['key:home_bg']：空 = 跟设计（经典蓝白 #FFFFFF）；'key:bg_1' / 'key:bg_2' = 引用该 Key；十六进制 = 自定义
+  const HB = 'key:home_bg';
+  function homeBgSec(mobile) {
+    const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker; const v = x.E.D.ec[HB] || null;
+    const col = resolveKey('home_bg', th, ec); const pk = P && P.elRow === HB && P.where === 'home';
+    const src = !v ? t('ed/hb-src-design', { hex: DESIGN_DEF.home_bg }) : v.startsWith('key:') ? t('ed/keys-follow', { name: keyLabel(v.slice(4)) }) : `${t('tx/c-custom')} · <span class="mono">${esc(v.toUpperCase())}</span>`;
+    const opt = (val, c, lab, cls = '') => `<span class="hb-opt"><button class="sw-btn ${cls} ${(v || '') === val ? 'is-on' : ''}" style="background:${c}" title="${esc(lab)}" aria-label="${esc(lab)}" data-act="homeBg" data-arg="${val}"></button><small>${esc(lab)}</small></span>`;
+    const custom = `<span class="hb-opt"><button class="rainbow ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" title="${esc(t('tx/c-custom'))}" aria-label="${esc(t('tx/c-custom'))}" data-act="homeBgPick"></button><small>${esc(t('ed/hb-custom'))}</small></span>`;
+    return `<div class="p-sec hb-sec" data-sec="home_bg"><div class="lab">${t('ed/home-bg')}</div>
+      <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap">${src}</span><span class="kk mono">home_bg</span></span>${v ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
+      <div class="crow hb-opts"><div class="tx-colors">${opt('', DESIGN_DEF.home_bg, t('ed/hb-design'))}${opt('key:bg_1', th.bg_1, t('ed/hb-bg1'))}${opt('key:bg_2', th.bg_2, t('ed/hb-bg2'))}${custom}</div></div>
+      ${pk && !mobile ? x.pickerHtml('in-panel', t('ed/home-bg')) : ''}</div>`;
+  }
+  A.homeBg = (val) => {
+    const x = X(); const v = val || null; x.E.picker = null;
+    if ((x.E.D.ec[HB] || null) === v) return false;
+    x.commit(() => { if (v) x.E.D.ec[HB] = v; else delete x.E.D.ec[HB]; });
+    window.toast(t('ed/toast-color', { k: t('ed/home-bg') }), x.undoOpt(4000));
+  };
+  A.homeBgPick = () => {
+    const x = X(); if (x.E.picker && x.E.picker.elRow === HB) { x.E.picker = null; return; }
+    const { th, ec } = x.liveTheme(); const cur = resolveKey('home_bg', th, ec).slice(0, 7);
+    x.E.picker = { key: 'primary', elRow: HB, label: t('ed/home-bg'), orig: cur, value: cur, where: 'home' };
+    if (x.mobileEd()) { x.E.picker.back = x.E.mpanel || null; x.E.mpanel = 'picker'; }
+  };
+
   function slotOf(slot) { const [, b, f] = slot.split('-'); return [b, f]; }
   window.MP = {
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b],
-    resolveKey, EL, aiSvg, // AD：导出结构预览 / AI 首页设计用
+    resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
     elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
     resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },

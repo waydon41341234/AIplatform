@@ -573,11 +573,13 @@
         <div class="basecard"><div class="hd">${t('ed/base-colors')}</div>${groups.map(([g, ks]) => `<div class="bc-row"><span class="k">${t(g)}</span><div class="sws">${ks.map((k) => `<button class="sw-btn ${E.picker && E.picker.key === k && !E.picker.tbRow && !E.picker.elRow ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(t('ed/key-' + k))}" data-act="pick" data-arg="${k}|panel"></button>`).join('')}</div></div>`).join('')}</div>
         ${E.picker && E.picker.where === 'panel' ? pickerHtml('in-panel') : ''}
         <button class="btn btn-secondary btn-sm btn-block" style="margin-top:12px" data-act="openKeys">${ic('caret-right', 'ic-16')}${t('ed/all-keys')}</button></div>`;
-    if (mode === 'colors-only') return colorsSec;
+    const homeSec = window.MP && window.MP.homeBgSec ? window.MP.homeBgSec(mobileEd()) : ''; // 首页背景（home_bg，Figma 424:433220）：品牌配色之后
+    if (mode === 'colors-only') return colorsSec + homeSec;
     const hNote = E.contentH ? t('ed/height-note-n', { n: E.contentH }) : t('ed/height-note');
     return `<h2 class="p-title">${t('ed/page-settings')}</h2><p class="p-sub">${t('ed/page-hint')}</p>${window.AD ? window.AD.entryCard() : ''}
       <div class="p-sec"><div class="lab">${t('ed/tpl-sec')}</div>${tplRow()}</div>
       ${colorsSec}
+      ${homeSec}
       <div class="p-sec"><div class="lab">${t('ed/page-height')}</div><div class="h-row"><input class="input" style="width:110px" type="number" min="1334" max="6000" value="${E.D.height}" data-input="pageHeight" data-key="heightKey"><span class="caption faint">${hNote}</span></div></div>
       <div class="p-note">${ic('frame-corners', 'ic-16')}${t('ed/unit-750')}</div>`;
   }
