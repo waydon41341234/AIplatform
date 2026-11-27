@@ -212,7 +212,6 @@ Object.assign(window.I18N, {
   'ed/slide-edit': ['编辑', '編輯', 'Edit', 'Sửa'],
   'ed/slide-hint': ['拖动排序；眼睛控制是否显示，至少保留 1 张', '拖動排序；眼睛控制是否顯示，至少保留 1 張', 'Drag to reorder. The eye shows or hides a slide; keep at least 1.', 'Kéo để sắp xếp. Biểu tượng mắt ẩn/hiện ảnh; giữ ít nhất 1 ảnh.'],
   'ed/slide-text-note': ['Banner 上的标题文字是图片的一部分，改文字请重新上传或用 AI 生成', 'Banner 上的標題文字是圖片的一部分，改文字請重新上傳或用 AI 生成', 'Text on a banner is part of the image. To change it, upload a new image or generate one with AI.', 'Chữ trên banner là một phần của ảnh. Muốn đổi chữ, hãy tải ảnh mới hoặc tạo bằng AI.'],
-  'ed/slide-style-at': ['Banner 样式（大 / 通用 / 中 / 小）在', 'Banner 樣式（大 / 通用 / 中 / 小）在', 'Banner style (large / standard / medium / small) is under', 'Kiểu banner (lớn / chuẩn / vừa / nhỏ) nằm ở'],
   // Banner AI 参考图反推提示词 / 候选排序（QA 2026-11-26）
   'ed/ai-ref-prompt': ['首页 Banner，{w}×{h} 横幅，参考图主色约 {hex}，{style}；左侧留出标题文字区，右侧放主视觉，光效点缀', '首頁 Banner，{w}×{h} 橫幅，參考圖主色約 {hex}，{style}；左側留出標題文字區，右側放主視覺，光效點綴', 'Homepage banner, {w}×{h}, main color from the reference about {hex}, {style}; title space on the left, hero visual on the right, light accents', 'Banner trang chủ, {w}×{h}, màu chính theo ảnh tham khảo khoảng {hex}, {style}; chừa vùng tiêu đề bên trái, hình chủ đạo bên phải, điểm sáng'],
   'ed/ai-st-glossy': ['3D 光泽卡通风格', '3D 光澤卡通風格', 'glossy 3D cartoon style', 'phong cách 3D bóng hoạt hình'],
