@@ -373,3 +373,6 @@
 /* AI 设计的顶部栏（aidesign tbColors → --tb-search / --tb-bal）：默认搜索图标按同形状遮罩跟色；已登录余额金额换成在顶部栏底色上看得清的色（余额框颜色里自己改过的 --bx-amt 照旧优先） */
 .h5-top .srch-cl .srch-k { display: block; width: 22px; height: 19px; background: var(--tb-search); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .h5-top .bx b, .pc-top .bx b { color: var(--bx-amt, var(--tb-bal, var(--o-accent_3))); }
+/* 未登录币种框（tbColors → --tb-cur / --tb-curic）：文字 + 箭头、默认币种图标在 AI 彩色 / 深色顶部栏底上不到 3:1 时换色；文字样式里自己改过的颜色（.h5 .h5-top .cur-cl）照旧优先 */
+.h5-top .cur-cl { color: var(--tb-cur, var(--o-neutral_2)); }
+.h5-top .cur-cl .cur-ic { background: var(--tb-curic, var(--o-accent_3)); }

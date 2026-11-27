@@ -228,6 +228,7 @@
     let s = KEYS.map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP ? window.MP.vars(th, ec) : '');
     s += `;--tb-bg:${tb.bg || tbBgDef(th)}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.side) s += `;--tb-side:${tb.side}`; // 搜索/注册等变量 PC 顶部栏用（pc.js）
     if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.bal) s += `;--tb-bal:${tb.bal}`; // AI 设计的顶部栏底色上：默认搜索图标跟色、余额金额换成看得清的色（aidesign tbColors）
+    if (tb.cur) s += `;--tb-cur:${tb.cur}`; if (tb.curIc) s += `;--tb-curic:${tb.curIc}`; // 同上：未登录币种框文字 / 默认币种图标
     return s;
   }
 

@@ -119,6 +119,14 @@
     if (c.search && !okOn(c.search, 3)) { const ss = [c.search, c.text, th.lead, ink(top)].filter(Boolean); c.search = ss.find((x) => okOn(x, 3)) || best(top, ss); }
     const bals = [th.accent_3, th.primary, c.text || th.lead, th.lead, ink(top)];
     c.bal = okOn(th.accent_3, 3) ? null : bals.find((x) => okOn(x, 3)) || best(top, bals);
+    // 未登录币种框（文字 + 箭头 neutral_2、默认币种图标 accent_3，Figma 25517:2140）：同余额 / 搜索，在 AI 的彩色 / 深色顶部栏底上不到 3:1 就换成看得清的色
+    // （11-27 QA：品牌色顶部栏上「CNY」只有 1.1–1.5:1，白金-2 / 黑金-3 / 科技蓝-3 / 清新-2 / 节日-1 / 霓虹-3）；浅色平铺 = 默认白底，照 Figma 不动
+    if (c.bg) {
+      const curs = [c.text, th.lead, ink(top)].filter(Boolean);
+      c.cur = okOn(th.neutral_2, 3) ? null : curs.find((x) => okOn(x, 3)) || best(top, curs);
+      const curIcs = [th.primary, c.text, th.lead, ink(top)].filter(Boolean);
+      c.curIc = okOn(th.accent_3, 3) ? null : curIcs.find((x) => okOn(x, 3)) || best(top, curIcs);
+    }
     const regs = [th.primary, th.accent_3, th.lead, dark ? th.bg_1 : mix(th.primary, th.lead, 0.4)];
     c.reg = regs.find((x) => okOn(x, 1.6)) || best(top, regs);
     c.regInk = best(c.reg, [th.bg_2, th.lead, '#ffffff', '#111111']);
