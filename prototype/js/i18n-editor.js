@@ -602,4 +602,25 @@ Object.assign(window.I18N, {
   'ed/keyscope/opt2sub-0': ['{k} {key} 改成 {hex}，这一行跟随它', '{k} {key} 改成 {hex}，這一行跟隨它', '{k} becomes {hex}; this row follows it', '{k} đổi thành {hex}; dòng này theo nó'],
   'ed/keyscope/toast-all-0': ['{k}已更新', '{k}已更新', '{k} color updated', 'Đã cập nhật {k}'],
   'ed/keyscope/toast-all-1': ['{k}已更新，1 处已同步', '{k}已更新，1 處已同步', '{k} color updated in 1 place', 'Đã cập nhật {k} tại 1 vị trí'],
+
+  // 单卡换图（11-28，Figma「04-11-28 单卡换图」65983:30427，组件 ED/CardImageMenu 65987:30447）：文案同 Figma 变量 game-card/image-flow/*（集合 14:2）。
+  // Figma 里写死的「炸金花」「180×180」「800×600」「✦10」换成占位符；游戏名来自游戏平台，四种语言都不翻译
+  'game-card/image-flow/entry': ['游戏卡片图片', '遊戲卡片圖片', 'Game card image', 'Ảnh thẻ trò chơi'],
+  'game-card/image-flow/upload': ['上传图片', '上傳圖片', 'Upload image', 'Tải ảnh lên'],
+  'game-card/image-flow/upload-sub': ['PNG / JPG · 按卡片尺寸裁切', 'PNG / JPG · 按卡片尺寸裁切', 'PNG / JPG · cropped to card size', 'PNG / JPG · cắt theo kích thước thẻ'],
+  'game-card/image-flow/ai': ['AI 生成图片', 'AI 生成圖片', 'Generate image with AI', 'Tạo ảnh bằng AI'],
+  'game-card/image-flow/ai-sub': ['4 张候选 · ✦{x}', '4 張候選 · ✦{x}', '4 options · ✦{x}', '4 lựa chọn · ✦{x}'],
+  'game-card/image-flow/restore': ['恢复原图', '恢復原圖', 'Restore original', 'Khôi phục ảnh gốc'],
+  'game-card/image-flow/restore-hint': ['还没换过图', '還沒換過圖', 'Not replaced yet', 'Chưa thay ảnh'],
+  'game-card/image-flow/restore-sub': ['换回游戏原来的图片', '換回遊戲原來的圖片', 'Switch back to the original image', 'Đổi lại ảnh gốc của game'],
+  'game-card/image-flow/resize-title': ['游戏图片 · {name} · 目标 {w}×{h}', '遊戲圖片 · {name} · 目標 {w}×{h}', 'Game image · {name} · Target {w}×{h}', 'Ảnh game · {name} · Mục tiêu {w}×{h}'],
+  'game-card/image-flow/resize-foot': ['原图 {w}×{h} → {tw}×{th} · 只换这一张，名称、角标、维护状态不变', '原圖 {w}×{h} → {tw}×{th} · 只換這一張，名稱、角標、維護狀態不變', 'Original {w}×{h} → {tw}×{th} · Only this card; name, badge and status stay', 'Gốc {w}×{h} → {tw}×{th} · Chỉ thẻ này; tên, nhãn, trạng thái giữ nguyên'],
+  'game-card/image-flow/ai-title': ['AI 生成 · 游戏图片', 'AI 生成 · 遊戲圖片', 'AI generate · Game image', 'Tạo bằng AI · Ảnh game'],
+  'game-card/image-flow/ai-scope': ['只这一张 · {name}', '只這一張 · {name}', 'This card only · {name}', 'Chỉ thẻ này · {name}'],
+  'game-card/image-flow/ai-prompt': ['{name}游戏封面：主角人物居中，金色喜庆配色，清晰高对比，方形构图', '{name}遊戲封面：主角人物置中，金色喜慶配色，清晰高對比，方形構圖', '{name} game cover: hero character centered, festive gold palette, crisp high contrast, square composition', 'Bìa game {name}: nhân vật chính ở giữa, tông vàng rực rỡ, tương phản rõ, khung vuông'],
+  'game-card/image-flow/ai-spec': ['{n} 张 · {w}×{h}', '{n} 張 · {w}×{h}', '{n} images · {w}×{h}', '{n} ảnh · {w}×{h}'],
+  'game-card/image-flow/applied': ['图片已应用', '圖片已套用', 'Image applied', 'Đã áp dụng ảnh'],
+  'game-card/image-flow/restored': ['已恢复原图', '已還原原圖', 'Original image restored', 'Đã khôi phục ảnh gốc'],
+  'game-card/image-flow/undo': ['撤销换图', '撤銷換圖', 'Undo image change', 'Hoàn tác đổi ảnh'],
+  'game-card/style-name/0': ['经典', '經典', 'Classic', 'Cổ điển'],
 });

@@ -507,10 +507,114 @@
   A.gcCvMenu = (arg) => {
     const [id, f, j] = arg.split('|'), x = X(), E = x.E, key = 'gccv:' + id + '|' + f + '|' + j;
     if (E.sel !== id) { E.ai = null; E.picker = null; }
+    if (E.gcSel) { E.gcSel = null; if (E.ai && E.ai.mod === 'gcimg') E.ai = null; } // 单卡换图：点兜底图 / 收藏星 = 取消卡片选中
     E.sel = id; E.tab = 'content';
     if (x.mobileEd()) { S().menu = 'am:mp-gamecards-' + f; return; } // 手机：底部菜单（amSheet）
     S().menu = S().menu === key ? null : key;
   };
+  // ---------- 单卡换图（11-28，Figma「04-11-28 单卡换图」65983:30427；菜单 ED/CardImageMenu 65987:30447） ----------
+  // 画布上点某张游戏卡片 → 选中这张卡（蓝框，模块工具条收起）+ 换图菜单（电脑：卡片右侧浮层；手机：底部弹层）：上传图片 / AI 生成图片 / 恢复原图。
+  // 只换这一张的图，名称、角标、维护状态不变。换的图存 E.D.m.gamecards.imgs[卡片序号] = { f: 'img:…', x, y }（裁切位置）或 { f, fit: 'pad', fill }（留边）；
+  // 原图 = 游戏平台给的封面（GAMES），一直不改，所以每张卡都记得原图，「恢复原图」= 删掉这一项。换图 / 恢复都走 commit（撤销 / 重做）。
+  // 画布第 8 张是兜底图示意（不是真的游戏封面），点它照旧出兜底图菜单。
+  const GC_STYLE = 0, GC_SZ = [180, 180], GC_AI_COST = 10; // HTML 只有「经典」卡片：上传尺寸 180×180（Figma game-card/upload-size/0），裁切 1:1
+  const gcOrig = (j) => CL + 'game' + GAMES[j][1] + '.webp';
+  const gcOwn = (m, j) => (m && m.imgs && m.imgs[j]) || null;
+  function gcCover(m, j) {
+    const o = gcOwn(m, j); if (!o) return `<img src="${gcOrig(j)}" alt="">`;
+    const st = o.fit === 'pad' ? `object-fit:contain;background:var(--o-${o.fill || 'bg_1'})` : `object-position:${(o.x ?? 0.5) * 100}% ${(o.y ?? 0.5) * 100}%`;
+    return `<img src="${esc(o.f.replace(/^img:/, ''))}" style="${st}" alt="">`;
+  }
+  // 选中的卡（编辑器状态，不进设计数据）：只在它所在的模块还选着时算数
+  const gcSelJ = (mid) => { const E = X().E, s = E.gcSel; return s && s.id === mid && E.sel === mid && GAMES[s.j] && s.j !== GC_FB ? s.j : null; };
+  const gcMenuOpen = (mid, j) => S().menu === 'gcimg:' + mid + '|' + j && !X().mobileEd();
+  function gcMenuBody(m, j) {
+    const own = !!gcOwn(m, j);
+    // Figma：菜单项没有图标，主文字 14 + 说明 12；没换过图时「恢复原图」整行灰（不可点）
+    const it = (act, lab, sub, dis) => `<button class="menu-item gim-it" data-act="${act}" role="menuitem" ${dis ? 'disabled aria-disabled="true" data-keep' : ''} data-stop><span class="tx"><span class="lb">${lab}</span><span class="sub">${sub}</span></span></button>`;
+    return `<div class="gim-hd"><span class="th">${gcCover(m, j)}</span><span class="tx"><b class="ellipsis">${esc(GAMES[j][0])}</b><small class="ellipsis">${t('game-card/style-name/' + GC_STYLE)} · ${GC_SZ[0]}×${GC_SZ[1]}</small></span></div><div class="gim-sep"></div>`
+      + it('gcImgUpload', t('game-card/image-flow/upload'), t('game-card/image-flow/upload-sub'))
+      + it('gcImgAi', t('game-card/image-flow/ai'), t('game-card/image-flow/ai-sub', { x: GC_AI_COST }))
+      + it('gcImgRestore', t('game-card/image-flow/restore'), t(own ? 'game-card/image-flow/restore-sub' : 'game-card/image-flow/restore-hint'), !own);
+  }
+  const gcMenu = (mid, m, j) => (gcMenuOpen(mid, j) ? `<div class="menu gc-img-menu" role="menu" aria-label="${esc(GAMES[j][0])}" data-stop>${gcMenuBody(m, j)}</div>` : '');
+  // 手机：底部弹层（Figma M 1 / 5：画布不压暗，盖住底部工具栏）
+  function gcImgSheet() {
+    const E = X().E, s = E.gcSel;
+    if (!s || !GAMES[s.j] || s.j === GC_FB || E.sel !== s.id) { E.mpanel = null; return ''; }
+    return `<div class="scrim is-clear" data-act="gcImgClose"></div><div class="sheet med-sheet gim-sheet" role="dialog" aria-label="${esc(GAMES[s.j][0])}" data-sk="msheet"><div class="sheet-grab"></div><div class="gim-list">${gcMenuBody(M('gamecards'), s.j)}</div></div>`;
+  }
+  A.gcCard = (arg) => {
+    const [id, j0] = arg.split('|'), j = +j0, x = X(), E = x.E, mob = x.mobileEd();
+    if (!GAMES[j] || j === GC_FB) return false;
+    const same = E.gcSel && E.gcSel.id === id && E.gcSel.j === j;
+    if (E.sel !== id) { E.tab = 'content'; E.picker = null; E.rn = null; }
+    if (E.ai && !(E.ai.mod === 'gcimg' && same && !mob)) E.ai = null; // 换了一张卡（或手机）：上一张的 AI 面板收起（状态留在本次会话，再打开接着看）
+    E.sel = id; E.keys = null; E.h5side = false; E.gcSel = { id, j };
+    if (mob) { E.mpanel = 'gcimg'; S().menu = null; return; }
+    const k = 'gcimg:' + id + '|' + j;
+    S().menu = window.__prevMenu === k ? null : k; // 再点同一张：收起菜单，卡片仍选中
+  };
+  A.gcImgClose = () => { const E = X().E; if (E.mpanel === 'gcimg') E.mpanel = null; };
+  // 上传图片：选图 → 现有「调整尺寸」弹窗（裁切，比例 = 卡片上传尺寸 1:1）→ 采用（editor.js rsApply → gcRsApply）
+  A.gcImgUpload = (again) => {
+    const x = X(), E = x.E, s = E.gcSel; if (!s) return false;
+    if (E.mpanel === 'gcimg') E.mpanel = null;
+    const slot = 'gc:' + s.id + '|' + s.j;
+    window.pickImage({ maxMB: 5 }, (src) => {
+      const im = new Image();
+      im.onload = () => {
+        const w = im.naturalWidth || GC_SZ[0], h = im.naturalHeight || GC_SZ[1];
+        if (again && E.rs && E.rs.slot === slot) Object.assign(E.rs, { f: 'img:' + src, w, h, x: 0.5, y: 0.5 }); // 弹窗里「重新上传」：换图，留在弹窗
+        else x.openResize(slot, 'img:' + src, w, h);
+        window.render();
+      };
+      im.onerror = () => window.toast(t('mp/icon-bad'), { info: true });
+      im.src = src;
+    });
+    if (again) return false;
+  };
+  A.gcImgAi = () => { const E = X().E, s = E.gcSel; if (!s || !window.AIG) return false; if (E.mpanel === 'gcimg') E.mpanel = null; window.AIG.open('gcimg', 'card', { idx: s.j }); };
+  A.gcImgRestore = () => { const s = X().E.gcSel; if (!s || !gcOwn(M('gamecards'), s.j)) return false; gcSet(s.j, null, 'game-card/image-flow/restored'); };
+  // 写入这一张的图（null = 恢复原图）+ 画布 Toast「图片已应用 / 已恢复原图 · 撤销换图」
+  function gcSet(j, v, msg) {
+    const x = X(), prev = gcOwn(M('gamecards'), j);
+    x.commit(() => { gcPut(x.E.D.m.gamecards, j, v); });
+    gcDone(j, prev, msg);
+  }
+  function gcPut(m, j, v) { const o = Object.assign({}, m.imgs); if (v) o[j] = v; else delete o[j]; if (Object.keys(o).length) m.imgs = o; else delete m.imgs; }
+  // Toast 的「撤销换图」只撤这一次：还是最后一步就正常撤销（可重做）；之后又改了别的，就只把这张卡的图改回去、另记一步（这张卡已被后来的操作改过就不动）
+  function gcDone(j, prev, msg) {
+    const x = X(), E = x.E, after = JSON.stringify(E.D), depth = E.past.length, now = JSON.stringify(gcOwn(M('gamecards'), j));
+    if (x.mobileEd() && E.mpanel === 'gcimg') E.mpanel = null;
+    x.canvasToast(t(msg), { action: () => {
+      const E2 = X().E;
+      if (E2.past.length === depth && JSON.stringify(E2.D) === after) { A.undo(); window.render(); return; }
+      if (JSON.stringify(gcOwn(M('gamecards'), j)) !== now) return;
+      X().commit(() => { gcPut(X().E.D.m.gamecards, j, prev); });
+      window.toast(t('ed/undo-toast')); window.render();
+    }, actionLabel: t('game-card/image-flow/undo'), ms: 5000 });
+  }
+  // 「调整尺寸」采用：裁切存位置，留边存底色 Key
+  function gcRsApply(r) { const j = +r.slot.slice(3).split('|')[1]; gcSet(j, r.mode === 'pad' ? { f: r.f, fit: 'pad', fill: r.fill } : { f: r.f, x: r.x, y: r.y }, 'game-card/image-flow/applied'); }
+  const gcSpec = (slot) => { const j = +slot.slice(3).split('|')[1]; return { w: GC_SZ[0], h: GC_SZ[1], name: GAMES[j] ? GAMES[j][0] : '' }; };
+  // 电脑菜单：浮在选中卡片右侧（Figma 1：卡片右边 + 3、顶边对齐）；右边放不下就放左边；不超出画布上下
+  function gcPlaceMenu(m) {
+    const c = document.querySelector('#app .cl-gc .c.is-csel'); if (!c) { m.remove(); return; }
+    const r = c.getBoundingClientRect(), cv = (c.closest('.ed-canvas') || document.body).getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
+    let left = r.right + 3; if (left + mw > Math.min(window.innerWidth, cv.right) - 8) left = Math.max(8, r.left - 3 - mw);
+    const top = Math.max(cv.top + 8, Math.min(r.top + 3, Math.min(window.innerHeight, cv.bottom) - 8 - mh));
+    m.style.left = left + 'px'; m.style.top = top + 'px';
+  }
+  // 画布有缩放（transform），fixed 会相对画布定位，所以每次渲染后把菜单移到 body 下（上一次的先删掉）
+  window.AFTER_RENDER.push(() => {
+    document.querySelectorAll('body > .gc-img-menu').forEach((n) => n.remove());
+    const m = document.querySelector('#app .gc-img-menu'); if (!m) return;
+    document.body.appendChild(m); gcPlaceMenu(m);
+  });
+  const gcFollow = () => { const m = document.querySelector('body > .gc-img-menu'); if (m) gcPlaceMenu(m); }; // 画布滚动 / 窗口变化：菜单跟着卡片
+  document.addEventListener('scroll', gcFollow, true);
+  window.addEventListener('resize', gcFollow);
   A.gcFlag = (k) => { const x = X(); x.commit(() => { const m = x.E.D.m.gamecards; m[k] = m[k] === false; }); };
   A.gcStarReset = () => { const x = X(), m = M('gamecards'); if (!m.starOff && !m.starSel) return false; x.commit(() => { const g = x.E.D.m.gamecards; g.starOff = null; g.starSel = null; }); window.toast(t('ed/reset-toast'), x.undoOpt()); };
   // AI 生成（原型：按款式画 SVG；正式版按提示词出图）。target = fallback（兜底封面 260×260）| star（收藏星两张 36×36）
@@ -621,10 +725,14 @@
       const shown = Math.max(cols, Math.floor(GAMES.length / cols) * cols), mid = id || b;
       // 画布上点兜底封面 / 收藏星：出 上传 / AI / 恢复 菜单（同面板「⋯」）
       const cvm = (f, j) => (S().menu === 'gccv:' + mid + '|' + f + '|' + j && !X().mobileEd() && X().assetMenuItems ? `<div class="menu icon-menu am-menu gc-cv-menu ${j % cols >= cols / 2 ? 'r' : ''}" data-stop>${X().assetMenuItems('mp-gamecards-' + f)}</div>` : '');
+      // 单卡换图：点卡片（图或名称）= 选中这张卡 + 换图菜单；收藏星、第 8 张兜底图示意照旧出各自的菜单
+      let cs = gcSelJ(mid);
+      if (cs != null && cs >= shown) { X().E.gcSel = null; cs = null; } // 改了每行张数后这张卡不显示了：回到选中整个模块（工具条回来）
       const cards = GAMES.slice(0, shown).map(([n, g], j) => {
-        const fb = j === GC_FB, cover = fb ? gcFbInner(m) : `<img src="${CL}game${g}.webp" alt="">`, sf = j ? 'starOff' : 'starSel';
+        const fb = j === GC_FB, cover = fb ? gcFbInner(m) : gcCover(m, j), sf = j ? 'starOff' : 'starSel';
         const star = m.fav !== false ? `<span class="star" data-act="gcCvMenu" data-arg="${mid}|${sf}|${j}" data-stop>${gcStarImg(m, sf)}</span>` : '';
-        return `<div class="c"><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px" ${fb ? `data-act="gcCvMenu" data-arg="${mid}|fallback|${j}" data-stop` : ''}>${cover}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${star}${m.tag && !fb ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}${cvm('fallback', j)}${cvm(sf, j)}</div>`;
+        const pick = fb ? '' : `data-act="gcCard" data-arg="${mid}|${j}" data-stop`;
+        return `<div class="c ${fb ? '' : 'gc-pick'} ${cs === j ? 'is-csel' : ''}" ${pick}><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px" ${fb ? `data-act="gcCvMenu" data-arg="${mid}|fallback|${j}" data-stop` : ''}>${cover}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${star}${m.tag && !fb ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}${cvm('fallback', j)}${cvm(sf, j)}${cs === j ? gcMenu(mid, m, j) : ''}</div>`;
       }).join('');
       // 标题行 = 当前选中分类的下一个分类（Figma「棋牌游戏」），图标跟游戏菜单的未选中图
       let hd = '';
@@ -1165,7 +1273,36 @@
       defaultTarget: () => 'fallback',
       impl: () => GC_AI,
     });
+    // 单卡换图 · AI（Figma 3：标题「AI 生成 · 游戏图片」、生成哪张「只这一张 · 炸金花」、提示词预填、规格「4 张 · 180×180」、不显示款式行；✦10 跟其它面板一样直接扣）
+    // 面板显示在游戏卡片模块的位置（host）；候选暂借其它游戏的封面示意（同 Figma 页说明）
+    AIG.reg('gcimg', {
+      host: 'gamecards', tool: false, oneTarget: true,
+      targets: () => [{ id: 'card', label: t('game-card/image-flow/entry'), kind: 'image', spec: GC_SZ, count: 4, cost: GC_AI_COST, ratio: 1, cols: 4 }],
+      defaultTarget: () => 'card',
+      impl: () => GC_CARD_AI,
+    });
   }
+  const gcName = (a) => (GAMES[+a.idx] || [''])[0];
+  const gcCand = (g) => 'img:' + CL + 'game' + g + '.webp';
+  const GC_CARD_AI = {
+    entries: () => GAMES.map(([n], j) => ({ i: j, name: n })).filter((e) => e.i !== GC_FB),
+    title: () => t('game-card/image-flow/ai-title'),
+    tgLabel: (a) => t('game-card/image-flow/ai-scope', { name: gcName(a) }),
+    specTxt: (a, tg, sp) => t('game-card/image-flow/ai-spec', { n: tg.count, w: sp[0], h: sp[1] }),
+    noStyle: true,
+    styles: () => [{ id: 'cover', label: '', html: '' }],
+    preset: (tg, st, a) => t('game-card/image-flow/ai-prompt', { name: a ? gcName(a) : '' }),
+    refPrompt: (tg, res, a) => ({ style: 'cover', prompt: t('game-card/image-flow/ai-prompt', { name: gcName(a) }) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
+    // 4 张候选：其它游戏的封面（不含这张卡自己的原图），再生成换下一组
+    gen: (a, tg, i, n) => { const own = GAMES[+i][1], pool = GAMES.map((q) => q[1]).filter((g) => g !== own), k0 = (a.round * n) % pool.length; return Array.from({ length: n }, (v, k) => ({ g: pool[(k0 + k) % pool.length] })); },
+    tile: (a, tg, i, c) => `<i class="aig-img" style="${window.fxStyle(gcCand(c.g))}"></i>`,
+    name: (a) => gcName(a),
+    lib: (a, tg, i, c) => gcCand(c.g),
+    // AIG 外面包 commit；换图前的值记下来给 Toast 的「撤销换图」。用了以后：卡片仍选中，手机回到画布（Figma M 4）
+    apply: (a, tg, i, c) => { const m = X().E.D.m.gamecards; a.gcPrev = gcOwn(m, +i); gcPut(m, +i, { f: gcCand(c.g) }); },
+    onUsed: (a) => { const E = X().E; E.gcSel = { id: a.id, j: +a.idx }; if (X().mobileEd()) E.mpanel = null; gcDone(+a.idx, a.gcPrev || null, 'game-card/image-flow/applied'); },
+    pay: () => ['one', { type: t('game-card/image-flow/entry') }],
+  };
 
 
   // ---------- 批量上传图标（ED-05） ----------
@@ -1446,6 +1583,7 @@
     // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); const D = X().E.D; D.m[b][f] = v; if (b === 'gamemenu' && v && GM_BTN_EC[f] && D.ec) delete D.ec[GM_BTN_EC[f]]; },
     gcFbInner: (m) => gcFbInner(m),
+    gcCover: (m, j) => gcCover(m, j), gcImgSheet, gcRsApply, gcSpec, // 单卡换图：PC 卡片封面、手机底部弹层、「调整尺寸」采用 / 规格
     gcStarImg: (m, f, cls) => gcStarImg(m, f, cls), // PC 卡片也显示收藏星（含上传 / AI 图）
     // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
     // 公告栏 11-27：旧的「【方括号】/“引号”/ 数字」规则上色转成 spans（括号去掉），补上「显示消息气泡」

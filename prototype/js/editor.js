@@ -147,7 +147,7 @@
     if (opts.status) E.status = opts.status;
     E.then = opts.then || null;
     E.adBar = opts.design && opts.design.iconStyle ? { ics: opts.design.iconStyle } : null; E.adp = null; E.adMod = null;
-    E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.ks = null; E.keys = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved';
+    E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.ks = null; E.keys = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved'; E.gcSel = null;
     LS.set('ed.last', E.name);
     startLoad();
     window.go('editor');
@@ -274,9 +274,11 @@
   // ---------- H5 预览 ----------
   function modWrap(id, inner, opts = {}) {
     const sel = E.sel === id;
+    // 单卡换图：选中了一张游戏卡片时，模块工具条收起（Figma 04-11-28 单卡换图 电脑 1–6），只留模块选中框 + 名称；手机只画卡片的选中框
+    const csel = sel && E.gcSel && E.gcSel.id === id;
     let extra = '';
-    if (sel && !mobileEd()) extra = `<span class="sel-label ${opts.top ? 'inside' : ''}">${esc(bnPv() && baseName(id) === 'banner' ? t('ed/previewing', { n: bnPv().n + 1 }) : modName(id))}</span>${selToolbar(id, opts.top)}`;
-    return `<div class="mod ${sel ? 'is-sel' : ''}" data-mod="${id}" data-act="selMod" data-arg="${id}">${inner}${extra}${window.AD ? window.AD.modMask(id) : ''}</div>`;
+    if (sel && !mobileEd()) extra = `<span class="sel-label ${opts.top ? 'inside' : ''}">${esc(bnPv() && baseName(id) === 'banner' ? t('ed/previewing', { n: bnPv().n + 1 }) : modName(id))}</span>${csel ? '' : selToolbar(id, opts.top)}`;
+    return `<div class="mod ${sel ? 'is-sel' : ''} ${csel ? 'has-csel' : ''}" data-mod="${id}" data-act="selMod" data-arg="${id}">${inner}${extra}${window.AD ? window.AD.modMask(id) : ''}</div>`;
   }
   function selToolbar(id, below) {
     // 工具条统一（壳层整理 2026-11-26）：[内容 | 布局 | 颜色] 跟右栏页签同名，当前页签高亮；Banner 前面多「换图 / AI」；
@@ -1405,6 +1407,8 @@
     if (Date.now() - (E.swiped || 0) < 300) return false;
     const nid = id || null;
     if (nid !== E.sel) { E.tab = 'content'; E.ai = null; E.picker = null; E.rn = null; }
+    // 单卡换图：点模块其它地方 = 回到选中整个模块（卡片选中框、这张卡的 AI 面板收起，工具条照旧出来）
+    if (E.gcSel) { E.gcSel = null; if (E.ai && E.ai.mod === 'gcimg') E.ai = null; }
     E.sel = nid; S.menu = null; E.keys = null;
     E.h5side = nid === 'sidebar';
     if (mobileEd()) E.mpanel = nid ? 'module' : null;
@@ -1644,6 +1648,7 @@
   const icSlot = (slot) => { const [b, i, f] = slot.slice(3).split('|'); return { b, i: +i, f: f || 'img' }; };
   function slotSpec(slot) {
     if (slot.startsWith('slide')) { const b = BANNER[E.D.banner.size]; return { w: b.w, h: b.h, name: 'Banner' }; }
+    if (slot.startsWith('gc:')) return window.MP.gcSpec(slot); // 单卡换图：'gc:<模块>|<卡片序号>'，经典 180×180
     if (slot.startsWith('ic:')) { const e = libEntry(slot); return { w: 128, h: 128, name: e ? e.name : t('ed/lib-chip-icon') }; }
     const s = SLOT_SPEC[slot] || [96, 96, null]; return { w: s[0], h: s[1], name: s[2] ? t(s[2]) : 'Logo' };
   }
@@ -1823,9 +1828,10 @@
   A.openResize = (slot) => { const s = E.D.banner.slides[+slot.slice(5)]; if (!s) return false; openResize(slot, s.f, s.w, s.h); };
   A.rsMode = (m) => { E.rs.mode = m; };
   A.rsFill = (k) => { E.rs.fill = k; };
-  A.rsReupload = () => { E.fpSlot = E.rs.slot; E.rs = null; E.lib = null; E.dlg = 'fp'; };
+  A.rsReupload = () => { if (E.rs.slot.startsWith('gc:')) return A.gcImgUpload('again'); E.fpSlot = E.rs.slot; E.rs = null; E.lib = null; E.dlg = 'fp'; };
   A.rsApply = () => {
     const r = E.rs; const sp = slotSpec(r.slot);
+    if (r.slot.startsWith('gc:')) { E.rs = null; E.dlg = null; E.lib = null; window.MP.gcRsApply(r); return; } // 单卡换图：只换这一张，Toast「图片已应用 · 撤销换图」
     commit(() => { setAsset(r.slot, Object.assign({ f: r.f, w: sp.w, h: sp.h, fit: r.mode }, r.mode === 'pad' ? { fill: r.fill } : { x: r.x, y: r.y })); });
     E.rs = null; E.dlg = null; E.lib = null;
     window.toast(t('ed/rs-done', { w: sp.w, h: sp.h }), undoOpt());
@@ -1842,11 +1848,12 @@
     if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px"></div></div>`;
     else { const ratio = g.sp.w / g.sp.h; let tw = g.BW, thh = g.BW / ratio; if (thh > g.BH) { thh = g.BH; tw = g.BH * ratio; } const s = Math.min(tw / r.w, thh / r.h); stage = `<div class="rs-pad" style="width:${tw}px;height:${thh}px;background:${th[r.fill]}"><span class="rs-img in" style="width:${r.w * s}px;height:${r.h * s}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"></span></div>`; }
     const card = (m, icn, k) => `<button class="rcard ${r.mode === m ? 'is-on' : ''}" data-act="rsMode" data-arg="${m}">${ic(icn)}<span><b>${t(k)}</b></span></button>`;
-    return `<div class="dialog-head"><h3>${t('ed/rs-title', { w: g.sp.w, h: g.sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>
+    const gc = r.slot.startsWith('gc:'); // 单卡换图（Figma ResizeDialog Mode=裁切 1:1）：标题带游戏名，底部说明「只换这一张…」
+    return `<div class="dialog-head"><h3>${gc ? esc(t('game-card/image-flow/resize-title', { name: g.sp.name, w: g.sp.w, h: g.sp.h })) : t('ed/rs-title', { w: g.sp.w, h: g.sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>
       <div class="rs ${mobile ? 'is-m' : ''}"><div class="rs-stage">${stage}</div><div class="rs-opts">${card('crop', 'crop', 'ed/rs-crop')}${card('pad', 'frame-corners', 'ed/rs-pad')}
         ${r.mode === 'pad' ? `<div class="lab">${t('ed/rs-fill')}</div><div class="sws">${['bg_1', 'bg_2', 'primary'].map((k) => `<button class="sw-btn ${r.fill === k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-label="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-pressed="${r.fill === k}" data-act="rsFill" data-arg="${k}"></button>`).join('')}</div>` : ''}
         <button class="btn btn-ghost btn-sm" data-act="rsReupload">${ic('upload-simple', 'ic-16')}${t('ed/rs-reupload')}</button></div></div>
-      <div class="dialog-foot"><span class="caption faint rs-cap">${t('ed/rs-from-to', { w: r.w, h: r.h, tw: g.sp.w, th: g.sp.h })}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary" data-act="rsApply">${t('ed/pick-apply')}</button></div>`;
+      <div class="dialog-foot ${gc ? 'rs-gc' : ''}"><span class="caption faint rs-cap">${t(gc ? 'game-card/image-flow/resize-foot' : 'ed/rs-from-to', { w: r.w, h: r.h, tw: g.sp.w, th: g.sp.h })}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary" data-act="rsApply">${t('ed/pick-apply')}</button></div>`;
   }
   function startCropDrag(e, fr) {
     e.preventDefault();
@@ -1963,8 +1970,9 @@
     const need = { lib: 'lib', resize: 'rs', pal: 'palQ', tplpick: 'tpl', batch: 'bx' }[E.dlg];
     if (need && !E[need]) { E.dlg = null; return ''; }
     const body = (map[E.dlg] || fpBody)(m);
-    const full = ['lib', 'resize', 'batch', 'tplpick', 'adfig'].includes(E.dlg);
-    const cls = { lib: 'dialog-lib', tplpick: 'dialog-tpl', pal: 'dialog-sm', rename: 'dialog-sm', batch: 'dialog-bx', resize: 'dialog-rs', adfig: 'dialog-adfig' }[E.dlg] || '';
+    const rsGc = E.dlg === 'resize' && E.rs.slot.startsWith('gc:'); // 单卡换图：手机是高度随内容的底部弹层（Figma ResizeDialog Mode=裁切 1:1 Mobile），不是全屏
+    const full = ['lib', 'resize', 'batch', 'tplpick', 'adfig'].includes(E.dlg) && !rsGc;
+    const cls = ({ lib: 'dialog-lib', tplpick: 'dialog-tpl', pal: 'dialog-sm', rename: 'dialog-sm', batch: 'dialog-bx', resize: 'dialog-rs', adfig: 'dialog-adfig' }[E.dlg] || '') + (rsGc ? ' is-rsgc' : '');
     if (m) return `<div class="scrim" data-act="closeDlg"></div><div class="sheet med-sheet ed-dlg-sheet ${full ? 'is-full' : ''} ${cls}" data-sk="dlgsheet">${full ? '' : '<div class="sheet-grab"></div>'}${body}</div>${E.dlg === 'batch' ? window.MP.batchPickSheet() : ''}`;
     return `<div class="scrim" data-act="closeDlg"></div><div class="dialog dialog-wide ${cls}" data-sk="dlg">${body}</div>`;
   }
@@ -2050,7 +2058,7 @@
   A.toolDock = () => { E.toolPos = null; lsSet('ed-tool-pos', null); S.menu = null; };
   document.addEventListener('dblclick', (e) => { if (e.target.closest && e.target.closest('[data-stgrip]')) { A.toolDock(); window.render(); } });
 
-  A.canvasBg = (a, el, e) => { if (e.target === el || e.target.classList.contains('ed-stage') || e.target.classList.contains('med-stage')) { if (E.sel || E.picker) { E.sel = null; E.ai = null; E.picker = null; E.h5side = false; if (mobileEd()) E.mpanel = null; return; } } return false; };
+  A.canvasBg = (a, el, e) => { if (e.target === el || e.target.classList.contains('ed-stage') || e.target.classList.contains('med-stage')) { if (E.sel || E.picker) { E.sel = null; E.ai = null; E.picker = null; E.h5side = false; E.gcSel = null; if (mobileEd()) E.mpanel = null; return; } } return false; };
 
   // ---------- 手机视图 ----------
   function mobile() {
@@ -2078,7 +2086,7 @@
   };
   A.closePreview = () => { E.preview = false; };
   A.mIconClose = () => { E.mpanel = 'module'; E.iconMenu = null; };
-  A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; E.keys = null; if (E.sel) E.sel = null; E.h5side = false; S.menu = null; E.rn = null; };
+  A.mClose = () => { E.mpanel = null; E.picker = null; E.ai = null; E.keys = null; if (E.sel) E.sel = null; E.h5side = false; S.menu = null; E.rn = null; E.gcSel = null; };
   // 手机模块弹层标题栏（Figma M-01 / M-S0）：名称 · 「✦ AI」·「⇄ 换样式 · ✦10」文字按钮 · ✕；上移 / 下移 / 隐藏收进 ⋯
   function mModuleHead(id) {
     const b = baseName(id);
@@ -2104,6 +2112,7 @@
     else if (E.mpanel === 'ad' && window.AD) { return window.AD.mSheet(); }
     else if (E.mpanel === 'keys' && E.keys) { head = t('ed/keys-title', { n: 68 }); body = window.MP.keysPanel(true); cls = 'is-tall'; }
     else if (E.mpanel === 'iconmenu') { return `<div class="scrim" data-act="mIconClose"></div><div class="sheet med-sheet icon-sheet" data-sk="msheet"><div class="sheet-grab"></div>${window.MP.iconSheet()}</div>`; }
+    else if (E.mpanel === 'gcimg') { return window.MP.gcImgSheet(); } // 单卡换图：底部弹层（Figma 手机 1 / 5）
     else if (E.mpanel === 'addmod') { return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet add-sheet" data-sk="msheet"><div class="sheet-grab"></div>${addList()}</div>`; }
     else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim ${rowPk(E.picker) ? 'is-clear' : ''}" data-act="pkCancel"></div><div class="sheet med-sheet ${rowPk(E.picker) ? 'pk-sheet' : ''} ${rowPk(E.picker) && pkSheetShown ? 'no-anim' : ''}"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
     else if (E.mpanel === 'module' && E.sel && window.AIG && window.AIG.isOpen(baseName(E.sel))) {
@@ -2139,7 +2148,8 @@
     if (E.dlg) { A.closeDlg(); return; }
     if (E.preview) { E.preview = false; return; }
     if (E.ai) { E.ai = null; return; } // AI 面板先关，回到模块面板
-    if (E.mpanel) { if (E.mpanel === 'iconmenu') A.mIconClose(); else if (E.mpanel === 'keys') A.keysBack(); else A.mClose(); return; }
+    if (E.mpanel) { if (E.mpanel === 'iconmenu') A.mIconClose(); else if (E.mpanel === 'keys') A.keysBack(); else if (E.mpanel === 'gcimg') A.gcImgClose(); else A.mClose(); return; }
+    if (E.gcSel) { E.gcSel = null; return; } // 选中的游戏卡片：回到模块选中（工具条回来）
     if (E.adMod) { A.adModCancel(); return; }
     if (E.adp) { A.adEClose(); return; }
     if (E.keys) { E.keys = null; return; }
@@ -2264,8 +2274,9 @@
   window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), assetMenuItems: (id) => assetMenuItems(id), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist,
-    pkLive: () => !!(E.picker && E.picker.orig0 != null && !E.picker.follow && !pkIdle(E.picker)), keyUses: (K, dbg) => keyUses(K, null, dbg) }; // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
+    pkLive: () => !!(E.picker && E.picker.orig0 != null && !E.picker.follow && !pkIdle(E.picker)), keyUses: (K, dbg) => keyUses(K, null, dbg),
+    openResize: (slot, f, w, h) => openResize(slot, f, w, h), canvasToast: (msg, o) => canvasToast(msg, o) }; // 单卡换图：上传走「调整尺寸」、Toast 放画布上 // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
   // PC 未开放：不管从哪里带进来的 PC 视图（恢复的状态 / 外部直接改 E.device）一律回落 H5
   window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); syncRowPk(); return mobileEd() ? mobile() : desktop(); };
-  window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod), escape };
+  window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod || E.gcSel), escape };
 })();

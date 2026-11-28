@@ -1498,3 +1498,34 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
   .pk-copy .hc-ic { width: 20px; height: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .hex-chip, .pk-copy { transition: none; } }
+
+/* ---------- 单卡换图（11-28，Figma「04-11-28 单卡换图」65983:30427；菜单 ED/CardImageMenu 65987:30447） ----------
+   画布：点卡片 = 选中这张卡（2px 蓝框圆角 10，含图和名称）；电脑模块选中框 + 名称留着、工具条收起；手机只画卡片的框 */
+.cl-gc .c.gc-pick { cursor: pointer; }
+.cl-gc .c.is-csel::after { content: ''; position: absolute; inset: -3px; border: 2px solid var(--brand); border-radius: 10px; pointer-events: none; z-index: 2; }
+.med .h5 .mod.is-sel.has-csel { outline: none; }
+/* 菜单：240 宽、圆角 16、内边距 4、项间距 2；头部 = 缩略图 32（圆角 8）+ 游戏名 14 + 「经典 · 180×180」12；分隔线；三项无图标，主文字 14 + 说明 12，项高 56、圆角 12 */
+.gc-img-menu { position: fixed; z-index: 70; width: 240px; max-width: calc(100vw - 16px); padding: 4px; border-radius: 16px; border-color: var(--border); display: flex; flex-direction: column; gap: 2px; color: var(--text); font-family: var(--font); font-size: var(--fs-body-sm); text-align: left; }
+.gim-hd { display: flex; align-items: center; gap: 8px; padding: 8px; min-width: 0; }
+.gim-hd .th { flex: none; width: 32px; height: 32px; border-radius: 8px; overflow: hidden; background: var(--bg-sunken); }
+.gim-hd .th img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gim-hd .tx { display: flex; flex-direction: column; min-width: 0; }
+.gim-hd b { font: 500 14px/22px var(--font); color: var(--text); }
+.gim-hd small { font-size: 12px; line-height: 18px; color: var(--text-2); }
+.gim-sep { flex: none; height: 1px; margin: 0 1px; background: var(--border); }
+.gim-it.menu-item { min-height: 56px; padding: 8px 12px; border-radius: 12px; }
+.gim-it .tx { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; text-align: left; }
+.gim-it .lb { font: 500 14px/22px var(--font); color: var(--text); }
+.gim-it .sub { font-size: 12px; line-height: 18px; color: var(--text-2); }
+.gim-it.menu-item[disabled], .menu .gim-it.menu-item:disabled { opacity: 1; cursor: default; background: none; }
+.gim-it[disabled] .lb, .gim-it[disabled] .sub { color: var(--text-3); }
+/* 手机：底部弹层（底板 raised、描边，上 8 左右 4 下 28；画布不压暗） */
+.sheet.gim-sheet { padding: 8px 4px calc(28px + env(safe-area-inset-bottom)); background: var(--bg-raised); border: 1px solid var(--border); border-bottom: 0; }
+.gim-sheet .sheet-grab { margin-bottom: 3px; }
+.gim-list { display: flex; flex-direction: column; gap: 2px; }
+/* 调整尺寸（单卡换图，Figma ResizeDialog Mode=裁切 1:1）：底部说明较长，电脑可换行、按钮不被挤；
+   手机 = 高度随内容的底部弹层：说明占一整行（可换行），下面「取消 / 应用」两个等宽按钮，顶部分隔线 */
+.dialog:not(.ed-dlg-sheet) .dialog-foot.rs-gc .rs-cap { flex: 1 1 auto; min-width: 0; }
+.ed-dlg-sheet.is-rsgc { max-height: 88dvh; }
+.ed-dlg-sheet.is-rsgc .dialog-foot { flex-wrap: wrap; gap: 10px 8px; margin: 16px -16px 0; padding: 12px 16px 0; border-top: 1px solid var(--border); }
+.ed-dlg-sheet.is-rsgc .dialog-foot .rs-cap { flex-basis: 100%; margin-right: 0; align-self: auto; }
