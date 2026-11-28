@@ -1084,6 +1084,26 @@
     if (E.adp && id) { if (E.adp.pick != null || E.adp.stage === 'gen') { window.toast(t(E.adp.stage === 'gen' ? 'ad/gen-first' : 'ad/preview-first'), { info: true }); return false; } E.adp = null; if (E.mpanel === 'ad') E.mpanel = null; }
     return selMod0.call(this, id, el, e);
   };
+  // 画布上模块里的按钮（公告喇叭、游戏卡片 / 卡片换图、底部导航图标、顶部栏 Logo…）不走 selMod，各自直接选中模块、打开换图 / 图标菜单。
+  // 预览模版 / 3 套结果、生成中：一样先拦下来、同样提示（Figma D2 / D6：画布只预览，右栏一直是「应用这一套 / 放弃」，11-28 QA 第 2 轮）；
+  // 只放行轮播圆点（slideTo，只换显示哪张）。还在选风格（没预览）：先收起 AI 面板，再照常打开（同点模块 selMod）
+  const CANVAS_FREE = ['slideTo', 'selMod']; // selMod 由上面的包装自己提示 / 收面板
+  const locked = (a) => !!a && (a.pick != null || a.stage === 'gen');
+  const lockTip = (a) => window.toast(t(a.stage === 'gen' ? 'ad/gen-first' : 'ad/preview-first'), { info: true });
+  document.addEventListener('click', (e) => {
+    if (S.route !== 'editor') return;
+    const E = X().E, a = E.adp; if (!a || E.loading) return;
+    const el = e.target.closest && e.target.closest('[data-act]');
+    if (!el || CANVAS_FREE.includes(el.dataset.act) || !el.closest('.ed-canvas [data-mod], .med-canvas [data-mod], .preview-full [data-mod]')) return;
+    if (locked(a)) { e.stopImmediatePropagation(); e.preventDefault(); lockTip(a); return; }
+    E.adp = null; if (E.mpanel === 'ad') E.mpanel = null; // 往下照常分发（core.js 的 click 在冒泡阶段）
+  }, true);
+  // 左栏拖动排序（按住 ⋮⋮）也会改真实设计、进撤销：预览中同样先拦（跟眼睛「隐藏」toggleHide 一样；生成中照旧可以改，会带进 3 套结果）
+  document.addEventListener('pointerdown', (e) => {
+    if (S.route !== 'editor') return;
+    const a = X().E.adp; if (!a || a.pick == null || !(e.target.closest && e.target.closest('.ed-left [data-grip]'))) return;
+    e.stopImmediatePropagation(); e.preventDefault(); lockTip(a);
+  }, true);
   const mClose0 = A.mClose;
   A.mClose = function () { if (X().E.mpanel === 'ad') return A.adEClose(); return mClose0.apply(this, arguments); };
   const edBack0 = A.edBack;

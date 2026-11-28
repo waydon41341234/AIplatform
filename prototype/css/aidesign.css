@@ -459,3 +459,7 @@ button.ad-tck { border: 0; padding: 0; cursor: pointer; z-index: 2; }
 .ad-msheet > .sheet-grab { flex: none; margin: 0 auto 16px; }
 .ad-msheet > .sheet-head { flex: none; height: 32px; margin: 0 0 16px; }
 @media (min-width: 600px) and (max-width: 839px) { .sheet.med-sheet.ad-msheet { left: 0; right: 0; width: auto; transform: none; } }
+/* AI 弹层上面再开的弹层（生成 3 套首页设计？/ 关闭并放弃这 3 套结果？/ 取消生成？）：遮罩要盖住 AI 弹层（压暗、点不到，点遮罩只关上面这层），
+   弹层在遮罩上面（Figma M4；以前两层都是 80 / 90，后开的遮罩垫在 AI 弹层下面，11-28 QA 第 2 轮）。同 .drawer ~ .scrim 的写法 */
+.ad-msheet ~ .scrim { z-index: 91; }
+.ad-msheet ~ .sheet, .ad-msheet ~ .dialog { z-index: 92; }
