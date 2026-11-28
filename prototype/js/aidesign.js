@@ -105,6 +105,18 @@
     if (dark) ec['key:home_bg'] = 'key:bg_1'; // 深色风格：首页背景改跟页面背景（home_bg 跟设计默认 #FFFFFF 是经典蓝白的，深色底上会整页发白）
     return ec;
   }
+  // 帐户栏未登录「注册」：字（midnav.btnText，默认 text_primary 白）在按钮底（midnav.btn，默认主色）上看不清（< 3:1，浅金 / 浅绿主色上白字只有 1.3–1.9:1）
+  // 就换成对比最高的基础色引用（bg_2 / lead / bg_1 / neutral_1），之后改配色照样跟着变（11-28 QA；Codex 套、Claude 模版、合并后都走这里）
+  function regInk(D) {
+    const MP = window.MP; if (!MP || !MP.resolveKey) return;
+    const th = D.theme, ec = D.ec;
+    const kv = (k) => (k[0] === '#' ? k : th[k] != null ? th[k] : MP.resolveKey(k, th, ec));
+    const col = (id, def) => { const v = ec[id]; return v && v.startsWith('key:') ? kv(v.slice(4)) : v || kv(def); };
+    const btn = col('midnav.btn', 'primary'); if (typeof btn !== 'string' || btn[0] !== '#') return;
+    if (contrast(btn, col('midnav.btnText', 'text_primary')) >= 3) return;
+    const k = ['bg_2', 'lead', 'bg_1', 'neutral_1'].sort((p1, p2) => contrast(btn, th[p2]) - contrast(btn, th[p1]))[0];
+    ec['midnav.btnText'] = 'key:' + k; if (D.baseEc) D.baseEc['midnav.btnText'] = ec['midnav.btnText'];
+  }
   function tbColors(mode, th, dark) {
     let c;
     if (mode === 'brand') { const k = ink(th.primary); c = { bg: th.primary, text: k, search: k }; }
@@ -246,7 +258,7 @@
     // 游戏菜单按钮跟模版配色（默认按钮位图是经典蓝白的）；深色模版底部导航底色跟 bg_2（设计 Key 默认白底）——同 Figma 模版画面
     ec['gamemenu.bg'] = 'key:bg_2'; ec['gamemenu.active'] = 'key:primary';
     if (T.dark) ec['key:web_btmnav_db'] = 'key:bg_2';
-    D.ec = Object.assign(ec, T.ec); D.baseEc = Object.assign({}, D.ec);
+    D.ec = Object.assign(ec, T.ec); regInk(D); D.baseEc = Object.assign({}, D.ec);
     return D;
   }
   // ---------- Codex 21 套（Waydon 11-28 00:40：「生成 3 套 · ✦50」的 3 套结果 = 所选风格的 Codex 3 套）----------
@@ -281,7 +293,7 @@
     delete ec['bottomnav.active']; // 底部导航选中跟 Key btmnav_active（Codex ec 给了 key:primary），不写死成色值
     ec['gamemenu.bg'] = 'key:bg_2'; ec['gamemenu.active'] = 'key:primary';
     if (C.dark) ec['key:web_btmnav_db'] = 'key:bg_2';
-    D.ec = Object.assign(ec, C.ec); D.baseEc = Object.assign({}, D.ec);
+    D.ec = Object.assign(ec, C.ec); regInk(D); D.baseEc = Object.assign({}, D.ec);
     return D;
   }
   // 套到当前项目（Claude 模版 / Codex 套共用）：先按原规则合并（模块、内容不变；自己锁定的颜色不覆盖），再换 Banner 规格 + 图、入口图标；
@@ -300,6 +312,9 @@
     if (CX) { const want = CX.dark ? CX_LOGO : 'none'; if (auto && lf !== want) { D.tb.logoF = want; dropFit(); } }
     else if (C.tb.logoF && C.tb.logoF !== 'none' && auto) { D.tb.logoF = C.tb.logoF; dropFit(); }
     else if (lf === CX_LOGO) { D.tb.logoF = 'none'; dropFit(); }
+    // 业主锁定的主色 / 按钮色合并后，「注册」字色再按合并后的底色查一次（业主自己改过的字色不动）
+    const ownInk = D0.ec['midnav.btnText'] && !(D0.baseEc && D0.baseEc['midnav.btnText'] === D0.ec['midnav.btnText']);
+    if (!ownInk) regInk(D);
     return r;
   }
   const mergeAny = (D0, C) => (C.aiDesign && ((C.aiDesign.tpl && TPL_BY[C.aiDesign.tpl]) || (C.aiDesign.codex && CX_BY[C.aiDesign.codex])) ? mergeTpl(D0, C) : mergeInto(D0, C));
@@ -683,12 +698,12 @@
   // AD-03 编辑器「AI 一键设计」
   // ======================================================================
   function entryCard() {
-    return `<button class="ad-entry" data-act="adEOpen">${ic('sparkle-fill', 'ad-entry-ic')}<span class="tx"><b>${t('ad/e-title')}</b><small>${t('ai-template/entry-help')}</small></span>${ic('caret-right', 'ic-16 faint')}</button>`;
+    return `<button class="ad-entry" data-act="adEOpen">${ic('sparkle-fill', 'ad-entry-ic')}<span class="tx"><b>${t('ai-template/entry-title')}</b><small>${t('ai-template/entry-help')}</small></span>${ic('caret-right', 'ic-16 faint')}</button>`;
   }
   A.adEOpen = () => {
     const x = X(), E = x.E;
     const st = E.D.style && ST[E.D.style] ? E.D.style : 'platinum';
-    E.adp = { stage: 'idle', p: newParams({ style: st, ics: E.D.iconStyle || ST[st].ics, follow: !E.D.iconStyle }), sets: [], pick: null, progress: 0, seed: 0, kept: x.customCount() };
+    E.adp = { stage: 'idle', p: newParams({ style: st, ics: E.D.iconStyle || ST[st].ics, follow: !E.D.iconStyle }), sets: [], pick: null, progress: 0, seed: 0 };
     E.sel = null; E.keys = null; E.picker = null; E.ai = null; S.menu = null;
     if (edMob()) E.mpanel = 'ad';
   };
@@ -710,13 +725,13 @@
     window.costConfirm({ title: t('ad/cf-title'), body: t('ad/cf-body'), cost: AD_COST, okLabel: t('confirm/ok'), icon: 'toolbox-fill', costLabel: t('confirm/cost-label2'), costText: t('confirm/points', { n: num(AD_COST) }), onOk: () => edStart(a, p, true) });
   };
   let edTimer = null;
-  // 一套生成结果：套到当前项目上的设计 + 用的是哪套模版（显示提示词用）；预览中（a.real）按真实设计合并
-  // 结果 = Codex 套（cx = 套 id，卡片名「黑金 · 电子」）；预览中（a.real）按真实设计合并
-  function genSet(p, i, seed) { const a = P(), C = codexBuild(p, i, seed); return { st: 'ok', D: mergeAny((a && a.real) || X().E.D, C).D, cx: C.aiDesign.codex || null, tid: C.aiDesign.tpl || null }; }
+  // 一套生成结果 = Codex 套本身（C，没合并；cx = 套 id，卡片名「黑金 · 电子」）+ 用的是哪套模版（显示提示词用）。
+  // 合并到项目上是在预览 / 应用的那一刻按当前真实设计算（genMerged）：生成中改了页面（如隐藏公告栏），3 套预览和应用都带着这次改动（11-28 QA）
+  function genSet(p, i, seed) { const C = codexBuild(p, i, seed); return { st: 'ok', C, cx: C.aiDesign.codex || null, tid: C.aiDesign.tpl || null }; }
   function edStart(a, p, useFlag) {
     const x = X(); if (x.E.adp !== a) return;
     a.stage = 'gen'; a.pick = null; a.progress = 0; a.cancelN = 0; a.more = false; a.fail = failMode(p.prompt, useFlag); a.seed = (a.seed || 0) + (a.sets.length ? 1 : 0); a.gp = p; a.charged = 0;
-    a.sets = [{ st: 'pend' }, { st: 'pend' }, { st: 'pend' }]; a.kept = x.customCount();
+    a.sets = [{ st: 'pend' }, { st: 'pend' }, { st: 'pend' }];
     clearInterval(edTimer);
     const start = Date.now();
     edTimer = setInterval(() => {
@@ -791,17 +806,20 @@
     x.fixSlide(); E.adp = null; E.adBar = null; if (E.mpanel === 'ad') E.mpanel = null;
     clearInterval(edTimer);
     // Toast（Figma D3「已套用「午夜鎏金」 · 撤销」/ D7「已套用「黑金 · 电子」 · 撤销」）放在画布底部导航上
-    apToast(T ? t('ad/tpl-applied', { name: tplName(T) }) : C ? t('ad/gen-applied', { name: cxName(C) }) : t('ad/applied'));
+    // 文案存成函数：每次显示时按当前语言取（中途切语言后「重做」不会一半英文一半中文，11-28 QA）
+    apToast(T ? () => t('ad/tpl-applied', { name: tplName(T) }) : C ? () => t('ad/gen-applied', { name: cxName(C) }) : () => t('ad/applied'));
   };
   // ---------- 套用后的撤销 / 重做 Toast（Figma D3 → D8 → D7）----------
   // 「撤销」= 回到套用前（Toast「已撤销模板套用，原配置已恢复。 · 重做」）；「重做」= 再套上（回到「已套用 · 撤销」）。
   // 顶栏撤销 / 重做、Ctrl+Z / Ctrl+Shift+Z 撤到 / 重做到这一步也出同样的 Toast；Toast 还在时又改了别的（这一步不再是最后一步）就收掉
-  let AP = null; // { before, after, msg, id, at: 'after' | 'before' }
+  let AP = null; // { before, after, msg（函数，按当前语言取文案）, id, at: 'after' | 'before', lang }
   const snapNow = () => JSON.stringify(X().E.D);
-  const apOpt = (label, fn) => ({ ms: 5000, actionLabel: label, action: () => { fn(); window.render(); }, cls: 'gc-toast ad-toast', onNav: true });
+  // 带遮罩的弹窗开着（「生成 3 套首页设计？」确认、编辑器各弹窗）：Toast 先收掉（Figma D4 没有 Toast），它的撤销 / 重做也不在弹窗背后改页面（11-28 QA）
+  const modalOpen = () => !!(S.dialog || S.sheet || X().E.dlg);
+  const apOpt = (label, fn) => ({ ms: 5000, actionLabel: label, action: () => { if (modalOpen()) return; fn(); window.render(); }, cls: 'gc-toast ad-toast', onNav: true });
   function apShow(at) {
-    if (!AP) return; if (AP.id) window.toastDrop(AP.id); AP.at = at;
-    AP.id = at === 'after' ? X().canvasToast(AP.msg, apOpt(t('ai-template/undo'), () => A.undo()))
+    if (!AP) return; if (AP.id) window.toastDrop(AP.id); AP.at = at; AP.lang = S.lang;
+    AP.id = at === 'after' ? X().canvasToast(AP.msg(), apOpt(t('ai-template/undo'), () => A.undo()))
       : X().canvasToast(t('ai-template/toast-undo'), apOpt(t('ai-template/redo'), () => A.redo()));
   }
   function apToast(msg) { const E = X().E; if (AP && AP.id) window.toastDrop(AP.id); AP = { before: E.past[E.past.length - 1], after: snapNow(), msg }; apShow('after'); }
@@ -819,7 +837,8 @@
   };
   window.AFTER_RENDER.push(() => {
     if (!AP || !AP.id || !S.toasts.some((q) => q.id === AP.id)) return;
-    if (S.route !== 'editor' || snapNow() !== AP[AP.at]) { window.toastDrop(AP.id); AP.id = null; }
+    if (S.route !== 'editor' || snapNow() !== AP[AP.at] || modalOpen()) { window.toastDrop(AP.id); AP.id = null; return; }
+    if (AP.lang !== S.lang) setTimeout(() => { if (AP && AP.id && AP.lang !== S.lang) apShow(AP.at); }, 0); // 中途切语言：Toast 按新语言重出
   });
   // ---------- 风格模版：合并预览缓存 / 素材预加载 / 提示词 ----------
   // 模版的图标是模版自己的 AI 图，「图标风格」选项不改它（只影响「生成 3 套」）：合并 / 卡片都按模版自己的图标风格
@@ -839,7 +858,16 @@
     if (!D) { if (TC.size > 60) TC.clear(); D = tplDesign(TPL_BY[id], pri, null, 'editor'); TC.set(key, D); }
     return D;
   }
-  function pickD(a) { const k = a && a.pick; if (!k) return null; if (k.src === 'tpl') return TPL_BY[k.id] ? tplMerged(a, k.id) : null; const s = a.sets[k.i]; return s && s.st === 'ok' ? s.D : null; }
+  // 生成结果合并缓存：同一套 + 同一份真实设计只算一次（卡片缩略、画布预览、应用用的是同一份）
+  const GM = new Map();
+  function genMerged(a, i) {
+    const s = a && a.sets[i]; if (!s || s.st !== 'ok' || !s.C) return null;
+    const base = a.real || X().E.D, key = (s.cx || i) + '|' + a.seed + '|' + JSON.stringify(s.C.theme) + '|' + JSON.stringify(base);
+    let D = GM.get(key);
+    if (!D) { if (GM.size > 30) GM.clear(); D = mergeAny(base, s.C).D; GM.set(key, D); }
+    return D;
+  }
+  function pickD(a) { const k = a && a.pick; if (!k) return null; if (k.src === 'tpl') return TPL_BY[k.id] ? tplMerged(a, k.id) : null; return genMerged(a, k.i); }
   // 预加载一套模版的图（单文件版走 window.A_ 内联图）；有一张失败 = 这套显示「图片加载失败 · 重试」
   const TL = {}, FAIL = new Set(); let tlRr = 0;
   const srcOf = (p) => (window.A_ && p.startsWith('assets/') && window.A_[p.slice(7)]) || p;
@@ -896,7 +924,15 @@
     if (src === 'gen') { if (a.stage === 'gen') return false; a.pick = null; a.sets = []; a.stage = 'idle'; a.cancelN = 0; a.more = false; return; }
     clearInterval(edTimer); E.adp = null; if (E.mpanel === 'ad') E.mpanel = null;
   };
-  A.adEClose = () => { const a = P(); if (a && a.stage === 'gen') { const ok = a.sets.filter((s) => s.st === 'ok').length; if (ok) { X().E.dlg = 'adcancel'; return; } edCancelNow(a); } A.adEDiscard(); };
+  // 关掉整个面板（Esc / 手机 × / 点遮罩）：生成中照旧先问取消；3 套结果（已扣点）还没应用时先问一句，免得按一下 Esc 就丢掉（11-28 QA）。
+  // 「‹」「放弃」是明确的操作，照 Figma 直接回到选风格（D6 → D1）
+  A.adEClose = () => {
+    const a = P();
+    if (a && a.stage === 'gen') { const ok = a.sets.filter((s) => s.st === 'ok').length; if (ok) { X().E.dlg = 'adcancel'; return; } edCancelNow(a); }
+    else if (a && a.stage === 'done' && a.sets.some((s) => s.st === 'ok')) { X().E.dlg = 'adclose'; S.menu = null; return; }
+    A.adEDiscard();
+  };
+  A.adECloseOk = () => { X().E.dlg = null; A.adEDiscard(); };
   // 电脑面板左上「‹」（Figma：D2 / D6 → D1，D1 → D0）：生成中 = 取消生成（同「取消生成」按钮）；在预览模版 / 看结果 = 回到选风格；否则关面板
   A.adEBack = () => {
     const a = P(); if (!a) return false;
@@ -927,7 +963,7 @@
     const colorSec = sec(t('ad/opt-color'), `<div class="ad-chips">${q.ref.length ? `<button class="chip ${q.colorMode === 'ref' ? 'is-on' : ''}" data-act="adEMode" data-arg="ref"><span class="ad-dots">${q.ref.map((c) => `<i style="background:${c}"></i>`).join('')}</span>${t('ad/c-ref')}</button>` : ''}<button class="chip ${q.colorMode === 'style' ? 'is-on' : ''}" data-act="adEMode" data-arg="style"><span class="ad-dots"><i style="background:${ST[q.style].prim[0]}"></i></span>${t('ad/c-style')}</button></div>
       <div class="ad-sug">${sug.map((c) => `<button class="ad-sugc ${cur === c ? 'is-on' : ''}" style="background:${c}" data-act="adEHex" data-arg="${c}" title="${c}" aria-label="${c}"></button>`).join('')}<label class="ad-sugc ad-cpick ${q.colorMode === 'custom' ? 'is-on' : ''}" title="${esc(t('ad/c-custom'))}" style="${q.colorMode === 'custom' ? `background:${q.hex}` : ''}"><input type="color" value="${esc(q.custom || '#c8a96a')}" data-ad-custom="adE" aria-label="${esc(t('ad/c-custom'))}"></label></div>`);
     const promptSec = sec(t('ad/e-prompt'), `<textarea class="input ad-eprompt" rows="2" data-input="adEPrompt" placeholder="${esc(t('ad/placeholder'))}">${esc(q.prompt)}</textarea>`);
-    const kept = a.kept ? `<div class="p-note">${ic('lock-fill', 'ic-16')}${t('ad/kept', { n: a.kept })}</div>` : '';
+    const nk = x.customCount(), kept = nk ? `<div class="p-note">${ic('lock-fill', 'ic-16')}${t('ad/kept', { n: nk })}</div>` : ''; // 当前真实设计里改过的颜色（面板渲染时 E.D 就是真实设计，预览只换画布）
     // 余额不够也照样能点：走 costConfirm，主按钮变「去充值」
     const genBtn = `<button class="btn btn-primary btn-block" data-act="adEGen">${ic('sparkle-fill', 'ic-16')}${t('ad/e-gen', { c: AD_COST })}</button>`;
     return `<div class="ad-epanel">${styles}${tplSec(a, mobile)}${refSec}${icsSec}${colorSec}${promptSec}${kept}<div class="ad-egen">${genBtn}${balLine()}</div></div>`;
@@ -947,7 +983,7 @@
         const on = pickIs(a, 'gen', i), C = CX_BY[s.cx], nm = C ? cxName(C) : t('ad/set-n', { i: i + 1 });
         // 手机上面板盖住画布：选中那张的眼睛 = 全屏预览
         const eye = on && mobile ? `<button class="ad-tck" data-act="adEPreview" data-arg="gen" title="${esc(t('ad/full-preview'))}" aria-label="${esc(t('ad/full-preview'))}">${ic('eye-fill')}</button>` : '';
-        return `<div class="ad-tcard ad-rcard ${on ? 'is-on' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-act="adEPick" data-arg="${i}" aria-label="${esc(nm)}"><span class="ad-tpv">${mini(s.D, 0.25)}${eye}</span><b class="ellipsis" title="${esc(nm)}">${esc(nm)}</b></div>`;
+        return `<div class="ad-tcard ad-rcard ${on ? 'is-on' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-act="adEPick" data-arg="${i}" aria-label="${esc(nm)}"><span class="ad-tpv">${mini(genMerged(a, i), 0.25)}${eye}</span><b class="ellipsis" title="${esc(nm)}">${esc(nm)}</b></div>`;
       }
       // 3 套全失败时只用底部「重试 · ✦50」，卡片上不再各放一个「免费重试」
       if (s.st === 'fail') return `<div class="ad-tcard ad-rcard is-fail"><span class="ad-tpv ad-tfail">${ic('x-circle-fill', 'ic-24')}${a.stage === 'failed' ? '' : `<button class="ad-tp-btn" data-act="adERetry" data-arg="${i}">${t('ad/retry-free')}</button>`}</span><b class="ellipsis">${t('ad/set-failed')}</b></div>`;
@@ -967,10 +1003,10 @@
       if (f) notes += `<div class="notice is-warn">${ic('warning-circle-fill')}<div>${t('ad/partial-n', { d: ok, f, c: AD_COST })}</div></div>`;
       else if (a.cancelN) notes += `<div class="notice">${ic('stop-circle-fill')}<div>${t('ad/cancelled-paid', { d: a.cancelN, c: AD_COST })}</div></div>`;
       notes += `<div class="ad-rnote">${ic('eye-fill', 'ic-16 is-brand')}<span>${t('ad/p-preview')}</span></div>`;
-      if (a.kept) notes += `<div class="ad-rlock">${ic('lock-fill', 'ic-16')}<span>${t('ad/p-locked', { n: a.kept })}</span></div>`;
+      const nk = X().customCount(); if (nk) notes += `<div class="ad-rlock">${ic('lock-fill', 'ic-16')}<span>${t('ad/p-locked', { n: nk })}</span></div>`;
       notes += `<div class="ad-rnote is-faint">${ic('info-fill', 'ic-16')}<span>${t('ad/p-src')}</span></div>`;
       const dis = !(a.pick && a.pick.src === 'gen');
-      foot = `<div class="ad-eacts"><button class="btn btn-secondary" data-act="adEDiscard" data-arg="gen" title="${esc(t('ad/discard'))}"><span>${t('ad/discard')}</span></button><button class="btn btn-primary ${dis ? 'is-disabled' : ''}" data-act="adEApply" data-arg="gen" title="${esc(t('ad/apply'))}"><span>${t('ad/apply')}</span></button></div><button class="ad-again" data-act="adEGen">${t('ad/p-again', { c: AD_COST })}</button>`;
+      foot = `<div class="ad-eacts"><button class="btn btn-outline" data-act="adEDiscard" data-arg="gen" title="${esc(t('ad/discard'))}"><span>${t('ad/discard')}</span></button><button class="btn btn-primary ${dis ? 'is-disabled' : ''}" data-act="adEApply" data-arg="gen" title="${esc(t('ad/apply'))}"><span>${t('ad/apply')}</span></button></div><button class="ad-again" data-act="adEGen">${t('ad/p-again', { c: AD_COST })}</button>`;
     }
     return `<div class="ad-epanel ad-rpanel">${sumChips(p)}<div class="ad-tcards ad-rcards">${cards}</div><div class="ad-rnotes">${notes}</div><div class="ad-egen">${foot}</div></div>`;
   }
@@ -985,7 +1021,7 @@
   function promptBlock(a) {
     const tx = promptText(a); if (!tx) return '';
     return `<div class="ad-tprompt ${a.more ? 'is-open' : ''}"><div class="ad-tp-hd">${ic('sparkle-fill', 'ic-16')}<b>${t('ad/tpl-prompt')}</b></div><div class="ad-tp-tx" data-tptx>${esc(tx)}</div>
-      <div class="ad-tp-ft"><button class="ad-tp-btn" data-act="adECopy">${t('ad/tpl-copy')}</button><button class="ad-tp-btn" data-act="adERewrite">${ic('pencil-simple', 'ic-16')}${t('ad/tpl-rewrite')}</button><button class="ad-tp-more" data-act="adEMore">${t(a.more ? 'ad/less' : 'ad/more')}${ic(a.more ? 'caret-up' : 'caret-down', 'ic-12')}</button></div></div>`;
+      <div class="ad-tp-ft"><button class="ad-tp-btn" data-act="adECopy">${t('ad/tpl-copy')}</button><button class="ad-tp-btn" data-act="adERewrite">${t('ad/tpl-rewrite')}</button><button class="ad-tp-more" data-act="adEMore">${t(a.more ? 'ad/less' : 'ad/tpl-expand')}</button></div></div>`; // Figma D2：两个 40 高胶囊按钮（无图标）+ 蓝字「展开」
   }
   // 「{风格} · 3 套模版」（Figma 440:334066 / 手机 440:335401）：点一套 = 画布预览，套用免费；选中后出提示词 + 应用 / 放弃
   function tplSec(a, mobile) {
@@ -1010,18 +1046,32 @@
     document.querySelectorAll('.ad-tprompt:not(.is-open)').forEach((b) => { const x = b.querySelector('.ad-tp-tx'), mb = b.querySelector('.ad-tp-more'); if (x && mb) mb.hidden = x.scrollHeight <= x.clientHeight + 1; });
   };
   window.AFTER_RENDER.push(fitTpl); window.addEventListener('resize', fitTpl);
+  // 手机弹层（Figma M1 / M2 / M5 / M6）：顶上留一条压暗的编辑器、圆角 20 + 把手；滚动位置按「输入 / 生成结果」分开记（打开从「页面风格」开始）
+  const isRes = (a) => !!a && (a.stage === 'gen' || a.stage === 'done' || a.stage === 'failed');
   function mSheet() {
-    return `<div class="scrim" data-act="adEClose"></div><div class="sheet med-sheet is-full ad-msheet"><div class="sheet-head"><button class="ibtn ibtn-sm" data-act="adEClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button><h3>${t('ad/e-title')}</h3>${costPill()}</div><div class="ad-mbody" data-sk="admbody">${edPanel(true)}</div></div>`;
+    const na = document.querySelector('#app .ad-msheet') ? 'no-anim' : ''; // 已经开着（面板里点选项重渲染）：不再从底下滑上来
+    return `<div class="scrim ${na}" data-act="adEClose"></div><div class="sheet med-sheet ad-msheet ${na}"><div class="sheet-grab"></div><div class="sheet-head"><button class="ibtn ibtn-sm" data-act="adEClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button><h3>${t('ad/e-title')}</h3>${costPill()}</div><div class="ad-mbody" data-sk="admbody${isRes(P()) ? '-r' : ''}">${edPanel(true)}</div></div>`;
   }
-  // 预览候选时：渲染那一刻把画布换成候选（不改 E.D，不进撤销、不保存）
-  const view0 = window.VIEWS.editor;
-  window.VIEWS.editor = function () {
-    const x = X(), E = x.E, a = E.adp;
+  // 预览候选时：只在画出画布的那一刻把 E.D 换成候选（editor.js desktop() / mobile() 用 AD.canvasWith 包住画布）——
+  // 不改 E.D，不进撤销、不保存；顶栏「检查 · N 项待完成」、左栏状态点、浮动配色条、面板都还是真实设计（Figma D2 / D6，11-28 QA）
+  function canvasWith(fn) {
+    const E = X().E, a = E.adp;
     const pd = !E.loading && a ? pickD(a) : null;
-    if (pd) {
-      const real = E.D; a.real = real; E.D = pd;
-      try { return view0(); } finally { E.D = real; a.real = null; }
+    if (!pd) return fn();
+    const real = E.D; a.real = real; E.D = pd;
+    try { return fn(); } finally { E.D = real; a.real = null; }
+  }
+  // 跨过 840（拉窗口 / 平板转屏）：电脑右栏面板 ⇄ 手机全屏弹层（E.mpanel = 'ad'），面板状态（选风格 / 预览 / 生成中 / 3 套结果）都留着（11-28 QA）。
+  // 手机上正在预览或生成时弹层一定开着（不然画布在预览、按钮又找不到，「应用这一套 / 放弃」点不到）
+  const view0 = window.VIEWS.editor;
+  let lastMob = null;
+  window.VIEWS.editor = function () {
+    const E = X().E, a = E.adp, m = edMob();
+    if (a && !E.loading) {
+      if (m && E.mpanel !== 'ad' && (lastMob === false || a.pick != null || a.stage === 'gen')) { E.mpanel = 'ad'; E.sel = null; E.picker = null; E.keys = null; S.menu = null; }
+      if (!m && E.mpanel === 'ad') { E.mpanel = null; E.preview = false; }
     }
+    lastMob = m;
     return view0();
   };
   // 预览中先应用或放弃，避免改到看不见的设计
@@ -1031,7 +1081,7 @@
   const selMod0 = A.selMod;
   A.selMod = function (id, el, e) {
     const E = X().E;
-    if (E.adp && id) { if (E.adp.pick != null || E.adp.stage === 'gen') { window.toast(t('ad/preview-first'), { info: true }); return false; } E.adp = null; if (E.mpanel === 'ad') E.mpanel = null; }
+    if (E.adp && id) { if (E.adp.pick != null || E.adp.stage === 'gen') { window.toast(t(E.adp.stage === 'gen' ? 'ad/gen-first' : 'ad/preview-first'), { info: true }); return false; } E.adp = null; if (E.mpanel === 'ad') E.mpanel = null; }
     return selMod0.call(this, id, el, e);
   };
   const mClose0 = A.mClose;
@@ -1250,11 +1300,14 @@
     else ok.push({ id: 'adkeys', mod: null, act: 'openKeys', name: t('ad/chk-keys'), text: t('ad/chk-keys-ok', { n: rows.length }) });
   }
   const edCancelBody = () => { const a = P(); const d = a ? a.sets.filter((s) => s.st === 'ok').length : 0; return `<div class="ad-ecancel">${cancelBody('adECancelOk', 'adECancelKeep', d)}</div>`; };
+  // 关面板时还有没应用的结果：继续看 / 放弃结果
+  const edCloseBody = () => { const a = P(); const n = a ? a.sets.filter((s) => s.st === 'ok').length : 0; return `<div class="ad-ecancel"><h3>${t('ad/close-title', { n })}</h3><p class="muted" style="margin:8px 0 0">${t('ad/close-body', { n, c: AD_COST })}</p>
+    <div class="dialog-foot"><button class="btn btn-secondary" data-act="closeDlg">${t('ad/close-keep')}</button><button class="btn btn-danger" data-act="adECloseOk">${t('ad/close-ok')}</button></div></div>`; };
 
   window.AD = {
-    composer, recordView, doneIdx: okIdx, tile, openViewer, entryCard, edPanel: () => edPanel(false), mSheet, edBar, toolBtn, modMask,
-    figIncl, figViewBtn, checks, dlgs: { adfig: figBody, adcancel: edCancelBody }, ST, buildDesign, mergeInto, slices, comps, counts,
-    TPLS, tplsOf, tplDesign, mergeAny, TPL_N, tbFix, TB_AUTO,
+    composer, recordView, doneIdx: okIdx, tile, openViewer, entryCard, edPanel: () => edPanel(false), mSheet, edBar, toolBtn, modMask, canvasWith,
+    figIncl, figViewBtn, checks, dlgs: { adfig: figBody, adcancel: edCancelBody, adclose: edCloseBody }, edPanelSk: () => (isRes(P()) ? 'ed-right-adr' : 'ed-right-ad'), ST, buildDesign, mergeInto, slices, comps, counts,
+    TPLS, tplsOf, tplDesign, codexDesign, mergeAny, TPL_N, tbFix, TB_AUTO,
     failTpl: (id) => { FAIL.add(id); delete TL[id]; }, // 测试用：下一次加载这套模版的图时模拟失败
 
   };
