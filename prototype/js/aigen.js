@@ -16,7 +16,8 @@
  *           gen(a, tg, i, n, base) → 候选数组, best?(a, tg, cands), tile(a, tg, i, c), old?(a, tg, i), preview?,
  *           apply(a, tg, i, c)（AIG 外面包 commit）, lib?(a, tg, i, c) → 素材值, pay(tg) → [kind, vars], onTarget?(tg),
  *           title?(a, tg) → 标题, tgLabel?(a, tg) → 目标分段名, specTxt?(a, tg, sp) → 规格标签, noStyle?: true（不显示款式行）, onUsed?(a, tg)（「使用」后代替默认 Toast） }
- *   适配器另可写 host: '<模块>'（面板显示在这个模块的位置，单卡换图 gcimg → gamecards）、oneTarget: true（只有一个目标也显示「生成哪张」）
+ *   适配器另可写 host: '<模块>'（面板显示在这个模块的位置，单卡换图 gcimg → gamecards）、oneTarget: true（只有一个目标也显示「生成哪张」）、
+ *   livePreset: true（业主没改过的默认提示词每次显示都按当前数据重写，单卡换图的构图跟卡片样式）
  * 依赖：core（refSlot / refPick / costConfirm / lowBalance / toast）、editor（window.EDX，运行时取）。 */
 (function () {
   const A = window.ACT, I = window.INP;
@@ -404,6 +405,8 @@
   function panel() {
     const a = cur(); if (!a) return '';
     const x = X(), tg = tgOf(a), m = impl(a, tg), tgs = tgsOf(a.mod), lock = busy(a), ents = entriesOf(a, tg);
+    // livePreset：默认提示词跟着数据走（单卡换图：构图跟卡片样式，换了样式再打开 / 撤销都不会留旧构图）；业主改过或看参考图写的不动
+    if (adp(a).livePreset && !lock && !a.dirty && !a.fromRef && !a.analyzing) a.prompt = m.preset(tg, a.style, a);
     const name = nameOf(a, tg);
     const hd = `<h2 class="p-title aig-hd">${ic('sparkle-fill', 'aig-ic')}<span class="ellipsis">${esc(m.title ? m.title(a, tg) : t('aig/title', { name }))}</span><button class="ibtn ibtn-sm aig-x" data-act="aigClose" title="${esc(t('aig/close'))}" aria-label="${esc(t('aig/close'))}">${ic('x')}</button></h2>`;
     // 整套时不显示「生成哪张」（Figma G4-13 / G2-07）

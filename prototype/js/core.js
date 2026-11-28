@@ -63,7 +63,7 @@
   let toastId = 0;
   function toast(msg, opts = {}) {
     const id = ++toastId;
-    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls });
+    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls }); // cls：个别 Toast 的样式（如「撤销」做成胶囊按钮）
     renderToasts();
     setTimeout(() => { S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }, opts.ms || 2400);
     return id;

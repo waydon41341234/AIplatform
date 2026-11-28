@@ -491,7 +491,7 @@ window.I18N = {
   'mp/shape-square': ['方角', '方角', 'Square', 'Vuông'],
   'mp/gc-show': ['显示内容', '顯示內容', 'Show on cards', 'Hiển thị trên thẻ'],
   'mp/gc-name': ['游戏名称', '遊戲名稱', 'Game name', 'Tên trò chơi'],
-  'mp/gc-fallback': ['封面兜底图', '封面兜底圖', 'Fallback cover', 'Ảnh bìa dự phòng'],
+  'mp/gc-fallback': ['兜底图', '兜底圖', 'Fallback image', 'Ảnh dự phòng'], // 同 Figma 变量（11-28 游戏卡片 6 样式）
   'mp/cols': ['列数', '欄數', 'Columns', 'Số cột'],
   'mp/cols-n': ['{n} 列', '{n} 欄', '{n} cols', '{n} cột'],
   'mp/ft-links': ['链接', '連結', 'Links', 'Liên kết'],
