@@ -155,6 +155,7 @@
   A.pgTplAll = () => { S.pg.tplF = 'all'; S.pg.tplLv = 'all'; };
   A.pgTpl = (k) => {
     if (window.openTplPreview) window.openTplPreview(k);
+    else if (window.CT && window.CT.fromTpl && window.CT.fromTpl(k)) return false; // 综合版1 → 自定义模版
     else if (window.openNewProject) window.openNewProject({ template: k });
     else { window.openEditor({ template: k }); return false; }
   };

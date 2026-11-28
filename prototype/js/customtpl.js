@@ -73,15 +73,17 @@
   const swDots = (k) => (k === 'custom' ? `<span class="ct-sw"><i style="background:${C.cp.p}"></i><i style="background:${C.cp.a}"></i><i style="background:${C.cp.base === 'light' ? '#f5f5f7' : '#111'}"></i></span>` : `<span class="ct-sw">${STYLES[k].sw.map((c) => `<i style="background:${c}"></i>`).join('')}</span>`);
   const stLabel = (st, cs) => (st === 'custom' ? t('ct/cp-near', { s: t('ct/s-' + (cs || effStyle(st))) }) : t('ct/s-' + st));
 
-  // ---------- 起始线框（Figma 01 页 WF 起始 · 空白 / A / B / C / D）----------
+  // ---------- 起始线框（Figma 01 页 WF 起始 · 空白 / 综合版1 / A / B / C / D）----------
+  // 综合版1（11-28，原名经典蓝白）：由通用版式「综合版1」首页反推，Figma WF 起始 夜 66145:11544 / 日 66145:11821，组件 66149:93634
   const ST = {
     blank: { top: 'T2', bn: 'BN1', fl: null, c: [] },
+    classic: { top: 'T4', bn: 'BN1', fl: null, c: [['banner', 'B3'], ['notice', 'N1'], ['account', 'M3'], ['gamemenu', 'G4'], ['zone', 'C1b', 'H1']] },
     A: { top: 'T1', bn: 'BN1', fl: 'X1', c: [['banner', 'B1'], ['notice', 'N1'], ['account', 'M1'], ['gamemenu', 'G1'], ['zone', 'C1a', 'H1'], ['promo', 'P1'], ['zone', 'C5', 'H1'], ['jackpot', 'J2'], ['zone', 'C3', 'H1'], ['zone', 'C1b', 'H1'], ['rank', 'R1'], ['app', 'D1'], ['footer', 'F1']] },
     B: { top: 'T3', bn: 'BN1', fl: null, c: [['banner', 'B3'], ['promo', 'P1'], ['jackpot', 'J1'], ['notice', 'N2'], ['gamemenu', 'G3'], ['zone', 'C1a', 'H2'], ['footer', 'F2']] },
     C: { top: 'T2', bn: 'BN2', fl: 'X1', c: [['banner', 'B2'], ['notice', 'N3'], ['search', 'S1'], ['gamemenu', 'G2'], ['zone', 'C2', 'H3'], ['zone', 'C2', 'H3'], ['zone', 'C1b', 'H3'], ['zone', 'C2', 'H3'], ['app', 'D2'], ['footer', 'F3']] },
     D: { top: 'T4', bn: 'BN2', fl: 'X2', c: [['banner', 'B3'], ['notice', 'N4'], ['account', 'M3'], ['gamemenu', 'G4'], ['zone', 'C6', 'H4'], ['zone', 'C6', 'H4'], ['footer', 'F2']] },
   };
-  const START_KEYS = ['blank', 'A', 'B', 'C', 'D'];
+  const START_KEYS = ['blank', 'classic', 'A', 'B', 'C', 'D']; // 综合版1 = 第 2 张卡（Figma D1 65829:5185 / M1 65830:7300）
   let seq = 0;
   const nid = () => 'b' + Date.now().toString(36) + (++seq).toString(36);
   function mk(m, o, h, glob) { return { id: nid(), m, o, p: Object.assign({ r: glob.r, g: glob.g, h: h || glob.h }, OPT_P[o] || {}), hid: false }; }
@@ -277,7 +279,7 @@
     const g = C.doc.glob;
     return `<div class="ct-psegs">${['r', 'g', 'h'].map((k) => pseg(t('ct/p-' + k), PV[k], g[k], 'ctGlob', k, (v) => pvLabel(k, v))).join('')}</div>`;
   }
-  const stName = (k) => t(k === 'blank' ? 'ct/start-blank' : 'ct/start-x', { x: k });
+  const stName = (k) => (k === 'classic' ? t('template/classic-blue') : t(k === 'blank' ? 'ct/start-blank' : 'ct/start-x', { x: k })); // 综合版1 与通用版式同名
   const xBtn = (act) => `<button class="ibtn ibtn-sm" data-act="${act}" aria-label="${esc(t('common/close'))}">${ic('x')}</button>`;
   // 弹层只在第一次出现时播放进场动画；之后每次重渲染（点卡片、调参数、生成进度）都加 is-still，不再闪
   let layerPrev = new Set(), layerCur = new Set();
@@ -475,7 +477,7 @@
           <p class="caption faint">${esc(t('ct/res-foot'))}</p></aside></div></div>${layers()}`;
   }
   window.VIEWS.custom = function () {
-    if (!C.doc) { C.doc = fromStart('blank'); C.picker = true; C.pick = 'A'; }
+    if (!C.doc) { C.doc = fromStart('blank'); C.picker = true; C.pickSeen = false; C.pick = 'A'; }
     if (C.stage === 'result' && C.res) return resultView();
     if (C.stage === 'result') C.stage = 'edit';
     return mob() ? mobileView() : deskView();
@@ -538,18 +540,33 @@
   }
   A.ctEdBack = () => { C.stage = 'edit'; C.sel = null; C.pane = null; C.dlg = null; window.go('custom'); return false; };
   A.ctEdUndo = () => { if (C.res) { C.stage = 'result'; C.dlg = null; } window.go('custom'); return false; };
-  window.CT = { entry, pseg, match: (d, s) => match(d || C.doc, s || C.style), startDoc, ctDesign, ctName, ctSlice, edPanel };
+  window.CT = { entry, pseg, match: (d, s) => match(d || C.doc, s || C.style), startDoc, fromTpl, ctDesign, ctName, ctSlice, edPanel };
 
   // ======================================================================
   // 动作
   // ======================================================================
   const dragged = () => !!C.__drag;
-  A.ctOpen = () => { C.picker = true; C.pick = C.doc ? (C.doc.start === 'blank' ? 'A' : C.doc.start || 'A') : 'A'; if (C.stage !== 'gen') C.stage = 'edit'; C.sel = null; C.pane = null; C.dlg = null; C.msheet = null; C.preview = false; window.go('custom'); return false; };
+  A.ctOpen = () => { C.picker = true; C.pickSeen = false; C.pick = C.doc ? (C.doc.start === 'blank' ? 'A' : C.doc.start || 'A') : 'A'; if (C.stage !== 'gen') C.stage = 'edit'; C.sel = null; C.pane = null; C.dlg = null; C.msheet = null; C.preview = false; window.go('custom'); return false; };
+  // 通用版式「用这个模板新建」（11-28，Figma 04-6 注 66149:140067 ②）：综合版1 → 直接带着综合版1起始线框进 #/custom 的排版画布
+  // （不弹起始线框、不弹新建项目名）；经 commit() 载入，撤销回到之前的画布；之前画布有内容时提示上带「撤销」。生成中不打断，只跳过去。
+  const TPL_START = { 'classic-blue': 'classic' };
+  const shape = (d) => JSON.stringify(d, (k, v) => (k === 'id' ? undefined : v)); // 比较结构，不比 id
+  function fromTpl(tk) {
+    const k = TPL_START[tk]; if (!k) return false;
+    if (C.stage === 'gen') { window.go('custom'); return true; }
+    const prev = C.doc, fresh = fromStart(k);
+    const had = !!prev && shape(prev) !== shape(startDoc('blank')) && shape(prev) !== shape(fresh);
+    if (prev) commit(() => { C.doc = fresh; }); else C.doc = fresh;
+    C.stage = 'edit'; C.picker = false; C.sel = null; C.pane = null; C.dlg = null; C.msheet = null; C.preview = false;
+    window.go('custom');
+    window.toast(t('ct/started', { s: stName(k) }), had ? Object.assign({ ms: 5000 }, undoOpt()) : {});
+    return true;
+  }
   A.ctBack = () => { window.go('home'); return false; };
   A.ctPick = (k) => { C.pick = k; };
   A.ctStart = () => { const k = C.pick; commit(() => { C.doc = JSON.parse(JSON.stringify(fromStart(k))); }); C.picker = false; C.sel = null; C.pane = null; C.msheet = null; window.toast(t('ct/started', { s: stName(k) })); };
   A.ctPickClose = () => { C.picker = false; };
-  A.ctRepick = () => { C.pick = C.doc.start && C.doc.start !== 'blank' ? C.doc.start : 'A'; C.picker = true; C.msheet = null; };
+  A.ctRepick = () => { C.pick = C.doc.start && C.doc.start !== 'blank' ? C.doc.start : 'A'; C.picker = true; C.pickSeen = false; C.msheet = null; };
   A.ctClose = () => { if (C.dlg) C.dlg = null; else if (C.msheet) { if (C.msheet === 'layout') C.pane = null; C.msheet = null; } };
   A.ctBg = () => { if (dragged()) return false; if (!C.sel && !C.pane) return false; C.sel = null; C.pane = null; };
   A.ctSel = (id) => {
@@ -721,7 +738,18 @@
       if (cur) { const r = cur.getBoundingClientRect(); const want = cv.scrollTop + r.top - cr.top - cr.height * 0.35; if (Math.abs(want - cv.scrollTop) > 4) cv.scrollTop = want; }
     }
   });
-  window.addEventListener('resize', () => { if (S.route === 'custom' && C.sel) window.render(); });
+  // 起始线框卡：电脑 6 张一行，缩略图按卡宽缩放（1440 时 176 宽 = Figma D1）；刚打开时把选中卡滚进可视范围（手机横滑，Figma M1）
+  window.AFTER_RENDER.push(() => {
+    if (S.route !== 'custom' || !C.picker) return;
+    document.querySelectorAll('.ct-pcards:not(.is-m) .ct-pthumb > .wf-page').forEach((n) => { const w = n.parentNode.clientWidth; if (w) n.style.zoom = w / 750; });
+    if (C.pickSeen) return;
+    C.pickSeen = true;
+    const box = document.querySelector('.ct-pcards.is-m'), on = box && box.querySelector('.ct-pcard.is-on');
+    if (!on) return;
+    const br = box.getBoundingClientRect(), r = on.getBoundingClientRect();
+    if (r.right > br.right - 16) box.scrollLeft += r.right - br.right + 16; else if (r.left < br.left + 16) box.scrollLeft -= br.left + 16 - r.left;
+  });
+  window.addEventListener('resize', () => { if (S.route === 'custom' && (C.sel || C.picker)) window.render(); });
 
   // ======================================================================
   // 拖拽：左栏内容区块排序 / 新增模块拖入画布（pointer 事件，鼠标整行可拖，触屏用把手）

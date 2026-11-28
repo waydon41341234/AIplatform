@@ -227,17 +227,20 @@ body.ct-dragging, body.ct-dragging * { cursor: grabbing !important; user-select:
 .ct-genpill { position: sticky; bottom: 24px; z-index: 30; width: max-content; margin: -80px auto 0; display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius-full); background: var(--bg-raised); color: var(--brand); font-size: var(--fs-body-sm); box-shadow: var(--shadow-lg); }
 
 /* ================= 弹窗：起始线框 / 选风格 ================= */
-.dialog.ct-dlg.is-pick { width: min(1072px, calc(100vw - 32px)); }
+.dialog.ct-dlg.is-pick { width: min(1282px, calc(100vw - 32px)); }
 .dialog.ct-dlg.is-style { width: min(788px, calc(100vw - 32px)); }
 .ct-dlg .dialog-head { align-items: flex-start; margin-bottom: var(--space-20); }
 .ct-dlg .dialog-head p, .ct-sheet .dialog-head p { margin: 4px 0 0; }
-.ct-pcards { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-16); }
-.ct-pcard { display: flex; flex-direction: column; border-radius: var(--radius-md); background: var(--fill-3); text-align: left; overflow: hidden; outline: 2px solid transparent; outline-offset: -2px; min-width: 0; }
-.ct-pcard:hover { background: var(--fill-2); }
+/* 起始线框卡（Figma D1 65829:5185：6 张一行，卡 192 = 边 1 + 内距 7 + 缩略图 176×264 圆角 12；名称 14 中粗 + 说明 12 text-3）；
+   缩略图按卡宽缩放（customtpl.js AFTER_RENDER），比例固定 2:3，窄屏电脑也不裁切 */
+.ct-pcards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-16); }
+.ct-pcard { display: flex; flex-direction: column; gap: var(--space-8); padding: 7px; border: var(--stroke-thin) solid var(--border); border-radius: var(--radius-lg); background: var(--bg-raised); text-align: left; overflow: hidden; outline: 2px solid transparent; outline-offset: -2px; min-width: 0; }
+.ct-pcard:hover { background: var(--fill-3); }
 .ct-pcard.is-on { background: var(--brand-subtle); outline-color: var(--brand); color: var(--brand); }
-.ct-pthumb { height: 272px; overflow: hidden; margin: 8px 8px 0; border-radius: var(--radius-sm); background: var(--wf-page); }
-.ct-pname { display: flex; flex-direction: column; gap: 2px; padding: var(--space-12); }
-.ct-pname .caption { color: var(--text-2); }
+.ct-pthumb { aspect-ratio: 176 / 264; overflow: hidden; border-radius: var(--radius-md); background: var(--wf-page); }
+.ct-pname { display: flex; flex-direction: column; gap: 2px; padding: 2px 4px 4px; }
+.ct-pname b { font-weight: 500; }
+.ct-pname .caption { color: var(--text-3); }
 .ct-pcard.is-on .ct-pname .caption { color: var(--brand); }
 .ct-pfoot, .ct-sfoot { display: flex; align-items: center; gap: var(--space-8); margin-top: var(--space-20); }
 .ct-sfoot { padding-top: var(--space-16); border-top: var(--stroke-hairline) solid var(--border); }
@@ -309,8 +312,9 @@ body.ct-dragging, body.ct-dragging * { cursor: grabbing !important; user-select:
 .ct-lgrid.is-m { display: flex; overflow-x: auto; gap: var(--space-8); margin: 0 calc(-1 * var(--space-16)); padding: 0 var(--space-16) 4px; scrollbar-width: none; }
 .ct-lgrid.is-m .ct-lcard { flex: 0 0 156px; }
 .ct-pcards.is-m { display: flex; overflow-x: auto; gap: var(--space-12); margin: 0 calc(-1 * var(--space-16)); padding: 0 var(--space-16) 4px; scrollbar-width: none; }
-.ct-pcards.is-m .ct-pcard { flex: 0 0 148px; }
-.ct-pcards.is-m .ct-pthumb { height: 300px; }
+.ct-pcards.is-m .ct-pcard { flex: 0 0 146px; padding: 6px; gap: 6px; } /* Figma M1 65830:7300：卡 146，缩略图 132×300 */
+.ct-pcards.is-m .ct-pthumb { aspect-ratio: auto; height: 300px; }
+.ct-pcards.is-m .ct-pname { padding: 0 1px; }
 .ct-pgo { margin-top: var(--space-16); }
 .ct-scards.is-m { grid-template-columns: 1fr 1fr; }
 .ct-sheet.is-style .ct-costl { flex-direction: row; justify-content: space-between; align-items: center; margin: var(--space-16) 0 var(--space-12); }

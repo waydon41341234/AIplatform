@@ -174,7 +174,8 @@ Object.assign(window.I18N, {
   'ct/start-blank': ['空白', '空白', 'Blank', 'Trống'],
   'ct/start-x': ['起始 {x}', '起始 {x}', 'Starter {x}', 'Khởi đầu {x}'],
   'ct/start-d-blank': ['只有顶部栏 + 底部导航', '只有頂部欄 + 底部導航', 'Top bar + bottom nav only', 'Chỉ thanh trên + điều hướng dưới'],
-  'ct/start-d-A': ['通栏 Banner + 宫格 + 横卡 + 排行榜', '通欄 Banner + 宮格 + 橫卡 + 排行榜', 'Wide banner + grid + cards + leaderboard', 'Banner tràn + lưới + thẻ + xếp hạng'],
+  'ct/start-d-classic': ['通用版式 · 由当前首页反推', '通用版式 · 由當前首頁反推', 'General layout · from the current home page', 'Bố cục chung · suy từ trang chủ hiện tại'], // Figma D1 66147:25589
+  'ct/start-d-A': ['Banner + 宫格 + 横卡 + 排行榜', 'Banner + 宮格 + 橫卡 + 排行榜', 'Banner + grid + cards + leaderboard', 'Banner + lưới + thẻ + xếp hạng'], // 同 Figma D1（6 张一行，免折行）
   'ct/start-d-B': ['圆角 Banner + 分类卡 + 宫格', '圓角 Banner + 分類卡 + 宮格', 'Rounded banner + category cards + grid', 'Banner bo góc + thẻ danh mục + lưới'],
   'ct/start-d-C': ['搜索 + 胶囊页签 + 多组横滑', '搜尋 + 膠囊頁籤 + 多組橫滑', 'Search + pill tabs + scrolling rows', 'Tìm kiếm + tab viên + nhiều hàng trượt'],
   'ct/start-d-D': ['左侧竖向分类 + 单列横幅', '左側直向分類 + 單列橫幅', 'Left rail + single-column banners', 'Thanh dọc trái + banner 1 cột'],
