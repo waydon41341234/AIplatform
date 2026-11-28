@@ -822,10 +822,18 @@
     // 规范包面板叠在生成面板上、比它高：取最高的那个
     const hs = window.innerWidth < 600 ? [...document.querySelectorAll('.ct-sheet.is-spec, .ct-sheet.is-cmp')].map((n) => n.offsetHeight) : [];
     if (hs.length) document.documentElement.style.setProperty('--toast-b', Math.max.apply(null, hs) + 12 + 'px');
-    // 手机顶栏：全称「AI 一键生成」把标题挤成省略号时换短的「生成」（en / vi、375 以下）
-    const tb = mob() && document.querySelector('.ct-mtop .ct-mt b'), gl = tb && document.querySelector('.ct-mtop [data-ct-gl]');
-    if (gl && tb.scrollWidth > tb.clientWidth + 1) gl.textContent = t('ct/gen-short');
+    fitGenLabel();
   });
+  // 手机顶栏：全称「AI 一键生成」把标题挤成省略号时换短的「生成」（en / vi、375 以下）
+  // 先放回全称再量；按亚像素量（scrollWidth 取整，差不到 1px 也会出省略号）；同一断点内改宽度不重渲，resize 时也要量
+  function fitGenLabel() {
+    const tb = S.route === 'custom' && mob() && document.querySelector('.ct-mtop .ct-mt b'), gl = tb && document.querySelector('.ct-mtop [data-ct-gl]');
+    if (!gl) return;
+    const full = t('ct/gen-btn');
+    if (gl.textContent !== full) gl.textContent = full;
+    const rg = document.createRange(); rg.selectNodeContents(tb);
+    if (tb.scrollWidth > tb.clientWidth || rg.getBoundingClientRect().width > tb.getBoundingClientRect().width + 0.01) gl.textContent = t('ct/gen-short');
+  }
 
   // ======================================================================
   // 渲染后：工具条定位、页面高度、滚动跟随
@@ -872,7 +880,7 @@
     const br = box.getBoundingClientRect(), r = on.getBoundingClientRect();
     if (r.right > br.right - 16) box.scrollLeft += r.right - br.right + 16; else if (r.left < br.left + 16) box.scrollLeft -= br.left + 16 - r.left;
   });
-  window.addEventListener('resize', () => { if (S.route === 'custom' && (C.sel || C.picker)) window.render(); });
+  window.addEventListener('resize', () => { if (S.route === 'custom' && (C.sel || C.picker)) window.render(); else fitGenLabel(); });
 
   // ======================================================================
   // 拖拽：左栏内容区块排序 / 新增模块拖入画布（pointer 事件，鼠标整行可拖，触屏用把手）
