@@ -157,13 +157,15 @@
   const allBlocks = () => FIXED.map((k) => C.doc.fixed[k]).concat(C.doc.blocks);
   const findB = (id) => (C.doc && id ? allBlocks().find((b) => b.id === id) : null);
   const selB = () => findB(C.sel);
+  // hv：撤销历史的版本号，每次 commit / 撤销 / 重做 +1（带「撤销」的提示按它认出自己那一步还是不是最后一步，见 undoOpt）
+  let hv = 0;
   function commit(fn) {
     C.past.push(JSON.stringify(C.doc)); if (C.past.length > 60) C.past.shift();
-    C.future = [];
+    C.future = []; hv++;
     fn();
   }
   function restore(snap) {
-    C.doc = JSON.parse(snap);
+    C.doc = JSON.parse(snap); hv++;
     if (!findB(C.sel)) { C.sel = null; C.pane = null; }
     if (C.msheet === 'layout' && !selB()) C.msheet = null;
   }
@@ -591,7 +593,7 @@
     if (prev) commit(() => { C.doc = fresh; }); else C.doc = fresh;
     C.stage = 'edit'; C.picker = false; C.sel = null; C.pane = null; C.dlg = null; C.msheet = null; C.preview = false;
     window.go('custom');
-    window.toast(t('ct/started', { s: stName(k) }), had ? Object.assign({ ms: 5000 }, undoOpt()) : {});
+    if (had) undoToast(t('ct/started', { s: stName(k) }), 5000); else window.toast(t('ct/started', { s: stName(k) }));
     return true;
   }
   A.ctBack = () => { window.go('home'); return false; };
@@ -622,9 +624,17 @@
   A.ctUp = () => move(-1);
   A.ctDown = () => move(1);
   A.ctDup = () => { const b = selB(); const L = C.doc.blocks, i = L.indexOf(b); if (i < 0) return false; const c = JSON.parse(JSON.stringify(b)); c.id = nid(); commit(() => { L.splice(i + 1, 0, c); }); C.sel = c.id; C.pane = null; window.toast(t('ct/dup-toast', { m: modName(b.m) })); };
-  const undoOpt = () => ({ action: () => { A.ctUndo(); window.render(); }, actionLabel: t('ed/undo') });
-  A.ctHide = () => { const b = selB(); if (!b || (MODS[b.m].fixed && b.m !== 'float')) return false; commit(() => { b.hid = true; }); C.sel = null; C.pane = null; if (C.msheet === 'layout') C.msheet = null; window.toast(t('ct/hid-toast', { m: modName(b.m) }), undoOpt()); };
-  A.ctDel = () => { const b = selB(); const L = C.doc.blocks, i = L.indexOf(b); if (i < 0) return false; commit(() => { L.splice(i, 1); }); C.sel = null; C.pane = null; if (C.msheet === 'layout') C.msheet = null; window.toast(t('ct/del-toast', { m: modName(b.m) }), undoOpt()); };
+  // 提示上的「撤销」只撤它自己那一步：之后又撤销 / 重做 / 改了别的（hv 变了），这条直接收掉，不会多撤一步（同编辑器 gcAutoCheck，11-28 回归）；
+  // 离开 #/custom 或不在排版画布（生成中 / 成品页）时先收起、点不到（hold），回来时还没到时间就再出
+  const undoT = new Map(); // 提示 id → 发出时的 hv
+  const undoOpt = (ms) => {
+    const v = hv;
+    return { ms, actionLabel: t('ed/undo'), hold: () => S.route !== 'custom' || C.stage !== 'edit' || hv !== v, action: () => { if (hv !== v) return; A.ctUndo(); window.render(); } };
+  };
+  const undoToast = (msg, ms) => { undoT.set(window.toast(msg, undoOpt(ms)), hv); };
+  window.AFTER_RENDER.push(() => { undoT.forEach((v, id) => { if (!S.toasts.some((q) => q.id === id)) undoT.delete(id); else if (v !== hv) { undoT.delete(id); window.toastDrop(id); } }); });
+  A.ctHide = () => { const b = selB(); if (!b || (MODS[b.m].fixed && b.m !== 'float')) return false; commit(() => { b.hid = true; }); C.sel = null; C.pane = null; if (C.msheet === 'layout') C.msheet = null; undoToast(t('ct/hid-toast', { m: modName(b.m) })); };
+  A.ctDel = () => { const b = selB(); const L = C.doc.blocks, i = L.indexOf(b); if (i < 0) return false; commit(() => { L.splice(i, 1); }); C.sel = null; C.pane = null; if (C.msheet === 'layout') C.msheet = null; undoToast(t('ct/del-toast', { m: modName(b.m) })); };
   A.ctUndo = () => { if (!C.past.length || C.stage !== 'edit') return false; C.future.push(JSON.stringify(C.doc)); restore(C.past.pop()); };
   A.ctRedo = () => { if (!C.future.length || C.stage !== 'edit') return false; C.past.push(JSON.stringify(C.doc)); restore(C.future.pop()); };
   function insertAt(m, idx) {
