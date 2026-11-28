@@ -223,6 +223,13 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .ks-foot { display: flex; justify-content: flex-end; gap: 8px; }
 .ks-foot .btn { height: 40px; padding: 0 20px; font-size: 14px; }
 .ks-scrim { z-index: 95; }
+/* 手机：模块弹层（.m-mod，没有遮罩，层级同 .sheet 90）开着时再开的编辑器弹窗 / 确认弹层（选择图片、素材库、「换这个模块的样式？」…）：
+   遮罩和弹层都提到模块弹层上面（同 .ks-scrim / .ks-sheet、素材菜单 amSheet 的 95 / 96），模块弹层压暗、点不到，点遮罩只关上面这层；
+   弹层上再叠一层时，后开的遮罩盖住先开的弹层（11-28 整合测试） */
+.med-sheet.m-mod ~ .scrim { z-index: 95; }
+.med-sheet.m-mod ~ .sheet, .med-sheet.m-mod ~ .dialog { z-index: 96; }
+.med-sheet.m-mod ~ :is(.sheet, .dialog) ~ .scrim { z-index: 97; }
+.med-sheet.m-mod ~ :is(.sheet, .dialog) ~ .scrim ~ :is(.sheet, .dialog) { z-index: 98; }
 .scrim.no-anim, .dialog.no-anim { animation: none; }
 .pk-sug button.is-on { box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 4px var(--brand); border-color: transparent; }
 .pk-sheet .pk-sug button.is-on { box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--brand); }

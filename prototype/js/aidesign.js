@@ -818,7 +818,8 @@
   // 顶栏撤销 / 重做、Ctrl+Z / Ctrl+Shift+Z 撤到 / 重做到这一步也出同样的 Toast；Toast 还在时又改了别的（这一步不再是最后一步）就收掉
   let AP = null; // { before, after, msg（函数，按当前语言取文案）, id, at: 'after' | 'before', lang }
   const snapNow = () => JSON.stringify(X().E.D);
-  // 带遮罩的弹窗开着（「生成 3 套首页设计？」确认、编辑器各弹窗）：Toast 先收掉（Figma D4 没有 Toast），它的撤销 / 重做也不在弹窗背后改页面（11-28 QA）
+  // 带遮罩的弹窗开着（「生成 3 套首页设计？」确认、编辑器各弹窗）：Toast 先收起（Figma D4 没有 Toast），它的撤销 / 重做也不在弹窗背后改页面（11-28 QA）；
+  // 收起用 canvasToast 默认的 hold（editor.js toastHeld，再预览 / 生成时也一样）：不算用掉，弹窗关掉 / 放弃预览后时间还没到就再出（11-28 整合测试）
   const modalOpen = () => !!(S.dialog || S.sheet || X().E.dlg);
   const apOpt = (label, fn) => ({ ms: 5000, actionLabel: label, action: () => { if (modalOpen()) return; fn(); window.render(); }, cls: 'gc-toast ad-toast', onNav: true });
   function apShow(at) {
@@ -826,7 +827,8 @@
     AP.id = at === 'after' ? X().canvasToast(AP.msg(), apOpt(t('ai-template/undo'), () => A.undo()))
       : X().canvasToast(t('ai-template/toast-undo'), apOpt(t('ai-template/redo'), () => A.redo()));
   }
-  function apToast(msg) { const E = X().E; if (AP && AP.id) window.toastDrop(AP.id); AP = { before: E.past[E.past.length - 1], after: snapNow(), msg }; apShow('after'); }
+  // 套用 = 新的一步：之前还在的画布撤销 Toast（「菜单已移到中部」「撤销换图」「只改了这一行」…，预览时先收起的）一起收掉，画布上只留「已套用」一条（11-28 整合测试）
+  function apToast(msg) { const E = X().E; if (AP && AP.id) window.toastDrop(AP.id); if (X().dropCanvasToasts) X().dropCanvasToasts(); AP = { before: E.past[E.past.length - 1], after: snapNow(), msg }; apShow('after'); }
   const quiet = (f) => { const ids = new Set(S.toasts.map((q) => q.id)); const r = f(); S.toasts.filter((q) => !ids.has(q.id)).forEach((q) => window.toastDrop(q.id)); return r; };
   const undo0 = A.undo, redo0 = A.redo;
   A.undo = function () {
@@ -841,15 +843,18 @@
   };
   window.AFTER_RENDER.push(() => {
     if (!AP || !AP.id || !S.toasts.some((q) => q.id === AP.id)) return;
-    if (S.route !== 'editor' || snapNow() !== AP[AP.at] || modalOpen()) { window.toastDrop(AP.id); AP.id = null; return; }
+    if (S.route !== 'editor' || snapNow() !== AP[AP.at]) { window.toastDrop(AP.id); AP.id = null; return; }
     if (AP.lang !== S.lang) setTimeout(() => { if (AP && AP.id && AP.lang !== S.lang) apShow(AP.at); }, 0); // 中途切语言：Toast 按新语言重出
   });
   // ---------- 风格模版：合并预览缓存 / 素材预加载 / 提示词 ----------
   // 模版的图标是模版自己的 AI 图，「图标风格」选项不改它（只影响「生成 3 套」）：合并 / 卡片都按模版自己的图标风格
+  // 缓存键里的「当前真实设计」= 设计对象本身 + editor.js 的改动计数（drev，每次保存 +1），不再每张缩略图 / 每次渲染把整份设计（含换过的几 MB 卡图）JSON 一遍（11-28 整合测试：换了大图后结果面板很慢）
+  let bObj = null, bId = 0;
+  const baseKey = (b) => { if (b !== bObj) { bObj = b; bId++; } return bId + '.' + (X().drev ? X().drev() : JSON.stringify(b)); };
   const TM = new Map();
   function tplMerged(a, id) {
     const T = TPL_BY[id]; const q = a.p, base = a.real || X().E.D, pri = tplPri(q);
-    const key = id + '|' + (pri || '') + '|' + JSON.stringify(base);
+    const key = id + '|' + (pri || '') + '|' + baseKey(base);
     let D = TM.get(key);
     if (!D) { if (TM.size > 30) TM.clear(); D = mergeTpl(base, tplDesign(T, pri, null, 'editor')).D; TM.set(key, D); }
     return D;
@@ -866,7 +871,7 @@
   const GM = new Map();
   function genMerged(a, i) {
     const s = a && a.sets[i]; if (!s || s.st !== 'ok' || !s.C) return null;
-    const base = a.real || X().E.D, key = (s.cx || i) + '|' + a.seed + '|' + JSON.stringify(s.C.theme) + '|' + JSON.stringify(base);
+    const base = a.real || X().E.D, key = (s.cx || i) + '|' + a.seed + '|' + JSON.stringify(s.C.theme) + '|' + baseKey(base);
     let D = GM.get(key);
     if (!D) { if (GM.size > 30) GM.clear(); D = mergeAny(base, s.C).D; GM.set(key, D); }
     return D;
