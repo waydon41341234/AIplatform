@@ -7,7 +7,7 @@
 (function () {
   const LS = {
     get(k, d) { try { const v = localStorage.getItem('proto.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('proto.' + k, JSON.stringify(v)); } catch (e) { /* 隐私模式忽略 */ } },
+    set(k, v) { try { localStorage.setItem('proto.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }, // 隐私模式 / 超出本地空间：返回 false（编辑器据此显示「保存失败」，不假装已保存）
   };
   const qs = new URLSearchParams(location.search);
   const S = (window.S = {
@@ -285,6 +285,28 @@
   window.fxStyle = (f, def) => { if (!/^img:/.test(f || '')) return `${def ? `background-image:url(${def});` : ''}filter:${f || 'none'}`; const k = f.indexOf('#'); return k < 0 ? `background-image:url(${f.slice(4)});filter:none` : `background-image:url(${f.slice(4, k)});filter:${f.slice(k + 1)}`; };
   window.imgOk = (f) => !!f && /^image\/(png|svg\+xml|apng|avif|webp)$/.test(f.type);
   // pickImage({accept, maxMB, multiple}, cb)：单选 cb(dataURL, file)；多选 cb([{src, name, file}])。类型 / 大小不合规自己 toast，不回调
+  // 上传大图先缩小再存（11-28 整合测试：手机照片 3–5 MB 的 data URL 存进设计数据会超出本地保存空间，刷新后整份改动丢失）：
+  // 长边超过 2560 或文件超过 1.2 MB 的 PNG / JPG / WebP / AVIF → 长边最多 2560、WebP 0.88（浏览器不支持 WebP 编码时用 JPG）；
+  // 仍保留比例，裁切 / 留边的位置不受影响；GIF / APNG / SVG 不动（动图 / 矢量）；缩完反而更大就用原图
+  const SHRINK_PX = 2560, SHRINK_B = 1.2 * 1048576;
+  function shrinkUpload(o) {
+    return new Promise((res) => {
+      const ty = (o.file && o.file.type) || '';
+      if (!/^image\/(png|jpeg|webp|avif)$/.test(ty) || !/^data:image\//.test(o.src)) return res(o);
+      const im = new Image();
+      im.onload = () => {
+        const w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, SHRINK_PX / Math.max(w, h, 1));
+        if (k === 1 && o.file.size <= SHRINK_B) return res(o);
+        try {
+          const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          let out = c.toDataURL('image/webp', 0.88); if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/jpeg', 0.88);
+          res(out.length < o.src.length ? Object.assign({}, o, { src: out }) : o);
+        } catch (e) { res(o); }
+      };
+      im.onerror = () => res(o); im.src = o.src;
+    });
+  }
   window.pickImage = function (opts, cb) {
     opts = Object.assign({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10, multiple: false }, opts || {});
     const inp = document.createElement('input');
@@ -299,7 +321,7 @@
       if (big.length) window.toast(opts.maxMB === 10 ? t('composer/ref-too-big') : t('common/file-too-big', { n: opts.maxMB }), { info: true });
       const good = files.filter((f) => ok(f) && f.size <= opts.maxMB * 1048576);
       if (!good.length) return;
-      const read = (f) => new Promise((res) => { const r = new FileReader(); r.onload = () => res({ src: r.result, name: f.name, file: f }); r.readAsDataURL(f); });
+      const read = (f) => new Promise((res) => { const r = new FileReader(); r.onload = () => res({ src: r.result, name: f.name, file: f }); r.readAsDataURL(f); }).then(shrinkUpload);
       Promise.all((opts.multiple ? good : good.slice(0, 1)).map(read)).then((arr) => { if (opts.multiple) cb(arr); else cb(arr[0].src, arr[0].file); window.render(); });
     });
     inp.click();

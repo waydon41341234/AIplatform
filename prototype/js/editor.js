@@ -106,11 +106,16 @@
   // ---------- 历史（撤销/重做）+ 自动保存（ED-15） ----------
   const snap = () => JSON.stringify(E.D);
   let saveTimer = null;
-  function persist() { LS.set('ed.d.' + E.name, E.D); LS.set('ed.last', E.name); LS.set('ed.st.' + E.name, E.status); LS.set('ed.meta', { figmaLinked: E.figmaLinked, projAssets: E.projAssets.slice(-24) }); }
+  // 返回是否全部写入成功（超出本地空间时 LS.set 返回 false：设计数据没存上就显示「保存失败」，素材库记录存不下就只留最近几张）
+  function persist() {
+    let ok = LS.set('ed.d.' + E.name, E.D); LS.set('ed.last', E.name); LS.set('ed.st.' + E.name, E.status);
+    let pa = E.projAssets.slice(-24); while (!LS.set('ed.meta', { figmaLinked: E.figmaLinked, projAssets: pa }) && pa.length) pa = pa.slice(Math.ceil(pa.length / 2));
+    return ok;
+  }
   function save() {
     E.save = 'saving'; clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      if (S.demo && S.demo.saveFail) E.save = 'failed'; else { persist(); E.save = 'saved'; }
+      if (S.demo && S.demo.saveFail) E.save = 'failed'; else E.save = persist() ? 'saved' : 'failed';
       if (S.route === 'editor') window.render();
     }, 600);
   }
