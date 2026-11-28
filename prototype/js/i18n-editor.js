@@ -592,4 +592,14 @@ Object.assign(window.I18N, {
   'ed/keyscope/hint-shared': ['{k}在本页用于 {n} 处，应用时会问你改哪里', '{k}在本頁用於 {n} 處，套用時會問你改哪裡', '{k} is used in {n} places. You\'ll choose where to apply.', '{k} dùng ở {n} chỗ. Bạn sẽ chọn nơi áp dụng.'],
   // 「全部」的 Toast = Figma ed/toast-color（141:1294「主色已更新，12 处已同步」），这里带 Key 名和处数（越南语 Key 名在句中小写，照 Figma）
   'ed/keyscope/toast-all': ['{k}已更新，{n} 处已同步', '{k}已更新，{n} 處已同步', '{k} color updated in {n} places', 'Đã cập nhật {k} tại {n} vị trí'],
+  // 「N 处」= 0（本页没有别的地方用这个 Key）和 = 1（英文单数）时的句子（Figma 只画了 12 处；中文、越南语 1 处同上面）
+  'ed/keyscope/hint-shared-0': ['{k}在本页没有其它地方用到，应用时会问你改哪里', '{k}在本頁沒有其他地方用到，套用時會問你改哪裡', '{k} isn\'t used anywhere else on this page. You\'ll choose where to apply.', '{k} chưa dùng ở chỗ nào khác trên trang. Bạn sẽ chọn nơi áp dụng.'],
+  'ed/keyscope/hint-shared-1': ['{k}在本页用于 1 处，应用时会问你改哪里', '{k}在本頁用於 1 處，套用時會問你改哪裡', '{k} is used in 1 place. You\'ll choose where to apply.', '{k} dùng ở 1 chỗ. Bạn sẽ chọn nơi áp dụng.'],
+  'ed/keyscope/body-0': ['「{row}」已改为跟随 {k} {key}。本页没有其它地方用到{k}。', '「{row}」已改為跟隨 {k} {key}。本頁沒有其他地方用到{k}。', '"{row}" now follows {k}. {k} isn\'t used anywhere else on this page.', '"{row}" giờ theo {k} {key}. Trang này chưa dùng {k} ở chỗ nào khác.'],
+  'ed/keyscope/body-1': ['「{row}」已改为跟随 {k} {key}。{k}在本页还用于 1 处。', '「{row}」已改為跟隨 {k} {key}。{k}在本頁還用於 1 處。', '"{row}" now follows {k}. {k} is used in 1 other place on this page.', '"{row}" giờ theo {k} {key}. {k} còn dùng ở 1 chỗ khác trên trang.'],
+  'ed/keyscope/opt2-0': ['改写{k}', '改寫{k}', 'Update {k}', 'Đổi {k}'],
+  'ed/keyscope/opt2-1': ['全部 1 处', '全部 1 處', 'All 1 place', 'Cả 1 chỗ'],
+  'ed/keyscope/opt2sub-0': ['{k} {key} 改成 {hex}，这一行跟随它', '{k} {key} 改成 {hex}，這一行跟隨它', '{k} becomes {hex}; this row follows it', '{k} đổi thành {hex}; dòng này theo nó'],
+  'ed/keyscope/toast-all-0': ['{k}已更新', '{k}已更新', '{k} color updated', 'Đã cập nhật {k}'],
+  'ed/keyscope/toast-all-1': ['{k}已更新，1 处已同步', '{k}已更新，1 處已同步', '{k} color updated in 1 place', 'Đã cập nhật {k} tại 1 vị trí'],
 });

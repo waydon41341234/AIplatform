@@ -201,6 +201,10 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .pk-sheet .pk-sug { justify-content: space-between; }
 .pk-sheet .pk-sug button { width: 32px; height: 32px; }
 .pk-sheet .pk-foot .btn { height: 40px; font-size: var(--fs-body); }
+/* 取色中那一行（.crow.is-pk）：还没改色照常显示（Figma 第 1 / 2 步）；改了色（.is-live）= 「自定义」：只有彩虹带圈，Key 标签换成「自定义」 */
+.crow.is-pk:not(.is-live) .pk-live-tag, .crow.is-live .cr-sw .tx-key:not(.pk-live-tag) { display: none; }
+.crow.is-live .cr-sw .sw-btn.is-on { box-shadow: inset 0 0 0 1px var(--sw-edge); }
+.crow.is-live .cr-sw .rainbow { box-shadow: 0 0 0 2px var(--cr-gap), 0 0 0 4px var(--brand), inset 0 0 0 1px var(--sw-edge); }
 /* G6/FollowTag：跟随 <key>（淡蓝底蓝字胶囊） */
 .tx-colors .tx-key.is-follow, .crow .tx-key.is-follow { background: var(--brand-subtle); border-color: transparent; color: var(--brand); border-radius: var(--radius-full); font-family: inherit; font-weight: 500; }
 /* G6/KeyScopeDialog：电脑 380 宽居中弹窗（内边距 24、圆角 24、间距 16）；手机底部弹层（上 8 左右 20 下 32、间距 12），「应用」在上、「取消」在下 */
