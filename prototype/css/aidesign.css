@@ -384,7 +384,8 @@
 .ad-eref-tx { flex: 1; min-width: 0; font-size: 12px; line-height: 18px; color: var(--text-2); white-space: normal; overflow-wrap: anywhere; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 /* 生成中 / 结果：顶部参数小标签 */
 .ad-sum { display: flex; flex-wrap: wrap; gap: 6px; }
-.ad-sum > span { max-width: 100%; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--fill-2); color: var(--text); font-size: 12px; line-height: 26px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Figma D5 / D6 param：左右 8、底 fill/tertiary——307 宽的面板里「黑金 / 图标：金属质感（跟随）/ 主色：风格默认」一行放得下（11-28 QA） */
+.ad-sum > span { max-width: 100%; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--fill-3); color: var(--text); font-size: 12px; line-height: 26px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ad-rcards { margin-top: 12px; }
 .ad-rcard { cursor: pointer; }
 .ad-rcard.is-gen, .ad-rcard.is-void, .ad-rcard.is-fail { cursor: default; }
@@ -441,3 +442,20 @@ button.ad-tck { border: 0; padding: 0; cursor: pointer; z-index: 2; }
 .ad-rpanel > .ad-egen { margin-top: auto; padding-top: var(--space-20); }
 .ad-mbody:has(> .ad-rpanel) { display: flex; flex-direction: column; }
 .ad-mbody > .ad-rpanel { flex: 1 0 auto; display: flex; flex-direction: column; }
+/* ---- 11-28 QA：照 Figma D1 / D2 / D6 / M1 ---- */
+/* 分区标题（页面风格 / 黑金 · 3 套模版 / 效果图（可选）…）：13 Medium、color/text/secondary */
+.ad-epanel .p-sec > .lab { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text-2); }
+/* 「生成 3 套」下面的余额行居中（Figma ad/p-balance） */
+.ad-egen > .caption { text-align: center; }
+/* 提示词卡：复制 / 改写后生成 = 40 高胶囊（14 Medium，无图标），展开 = 12 蓝字（Figma D2 actions） */
+.ad-tp-ft .ad-tp-btn { height: 40px; padding: 0 20px; background: var(--fill-2); font-size: 14px; font-weight: 500; }
+.ad-tp-ft .ad-tp-btn:hover { background: var(--fill-1); }
+.ad-tp-ft .ad-tp-more { font-weight: 400; }
+/* 3 套结果的「放弃」= 描边按钮（Figma D6 btn-discard：无底色、1px border/default） */
+.ad-eacts .btn-outline { background: transparent; color: var(--text); }
+.ad-eacts .btn-outline:hover { background: var(--bg-hover); }
+/* 手机弹层（Figma M1 AiDesignPanel：离顶 8、上圆角 20、把手 36×5，标题行 32 高）：顶上露出一条压暗的编辑器 */
+.sheet.ad-msheet { top: 8px; height: calc(100dvh - 8px); max-height: none; padding-top: 8px; border-radius: 20px 20px 0 0; }
+.ad-msheet > .sheet-grab { flex: none; margin: 0 auto 16px; }
+.ad-msheet > .sheet-head { flex: none; height: 32px; margin: 0 0 16px; }
+@media (min-width: 600px) and (max-width: 839px) { .sheet.med-sheet.ad-msheet { left: 0; right: 0; width: auto; transform: none; } }

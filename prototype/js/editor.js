@@ -1056,6 +1056,9 @@
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   // 模块颜色页签里「去修改」打开 68 Key：电脑上也要换成 Key 面板（‹ 返回回到原模块）
+  // 右栏滚动位置按内容记（render 前后同 key 才保留）：AI 一键设计面板（输入 / 生成结果）和页面设置、模块面板各记各的，
+  // 打开 AI 面板从「页面风格」开始、应用后页面设置从顶上开始（Figma D1 / D3，11-28 QA）
+  const rightSk = () => (E.adp && !E.sel && window.AD ? (window.AD.edPanelSk ? window.AD.edPanelSk() : 'ed-right-ad') : 'ed-right');
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); if (E.keys && E.sel && !mobileEd()) return pageSettings(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
 
   // ---------- 取色器 ----------
@@ -2050,12 +2053,14 @@
     if (E.nameEdit && E.dlg !== 'rename') return `<input class="input ed-name-in" data-input="nameIn" data-key="nameKey" value="${esc(E.nameEdit.v)}" maxlength="40" style="width:calc(${Math.max(8, [...E.nameEdit.v].length * 1.6)}ch + 24px)" data-autofocus aria-label="${esc(t('ed/project-name'))}">`;
     return `<button class="ed-name" data-act="nameEdit" title="${esc(t('ed/project-name'))}">${esc(E.name)}</button>`;
   }
+  // AI 一键设计预览候选时只换画布（aidesign.js AD.canvasWith）：顶栏检查、左栏、浮动配色条、右栏都还是真实设计
+  const onCanvas = (fn) => (window.AD && window.AD.canvasWith ? window.AD.canvasWith(fn) : fn());
   function desktop() {
     const scale = E.zoom / 50;
     // PC 画布由 E 组 js/pc.js 提供；未加载时保持待设计空状态
-    const canvas = window.PC && E.device === 'pc' ? window.PC.canvas() : E.device === 'pc'
+    const canvas = onCanvas(() => (window.PC && E.device === 'pc' ? window.PC.canvas() : E.device === 'pc'
       ? `<div class="pc-empty">${window.empty('wrench-fill', t('ed/pc-todo-title'), t('ed/pc-todo-desc'), `<button class="btn btn-secondary btn-sm" data-act="setDevice" data-arg="h5">${t('ed/back-h5')}</button>`)}</div>`
-      : `<div class="ed-stage" style="padding-bottom:${120 + 815 * (scale - 1)}px"><div class="ed-zoom" style="transform:scale(${scale})">${h5({ measure: true })}<div class="over-wrap"><div style="transform:scale(${1 / scale});transform-origin:top center">${overNotice()}</div></div></div></div>`;
+      : `<div class="ed-stage" style="padding-bottom:${120 + 815 * (scale - 1)}px"><div class="ed-zoom" style="transform:scale(${scale})">${h5({ measure: true })}<div class="over-wrap"><div style="transform:scale(${1 / scale});transform-origin:top center">${overNotice()}</div></div></div></div>`));
     return `<div class="ed">
       <header class="ed-top"><button class="ibtn ibtn-sm" data-act="edBack" title="${esc(t('nav/home'))}">${ic('caret-left')}</button>${nameHtml()}
         ${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span>` : ''}<span class="lv-pill"><img src="assets/badge-tier1.png" alt="">${t('level/standard-title')}</span>${window.demoTag()}${saveHtml()}
@@ -2066,7 +2071,7 @@
         ${checkBtn()}<span class="rel"><button class="ibtn ibtn-sm ${S.menu === 'edmore' ? 'is-on' : ''}" data-act="menu:toggle" data-arg="edmore" title="${esc(t('ed/more'))}" aria-label="${esc(t('ed/more'))}">${ic('dots-three')}</button>${S.menu === 'edmore' ? `<div class="menu ed-more-menu"><button class="menu-item" data-act="pageReset" ${pageDirty() ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}<span class="tx"><span>${t('ed/page-reset-all')}</span><span class="sub">${t(pageDirty() ? 'ed/page-reset-tip' : 'ed/page-is-default')}</span></span></button></div>` : ''}</span><button class="btn btn-primary btn-sm" data-act="openExport">${ic('download-simple', 'ic-16')}${t('ed/export')}</button></header>
       <div class="ed-body"><nav class="ed-left" data-sk="ed-left" style="${paneW('l')}">${tree()}</nav><div class="ed-rz" data-rz="l" title="${esc(t('ed/rz-tip'))}"></div>
         <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
-        <div class="ed-rz" data-rz="r" title="${esc(t('ed/rz-tip'))}"></div><aside class="ed-right" data-sk="ed-right" style="${paneW('r')}">${rightPanel()}</aside></div></div>${rowFloat()}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
+        <div class="ed-rz" data-rz="r" title="${esc(t('ed/rz-tip'))}"></div><aside class="ed-right" data-sk="${rightSk()}" style="${paneW('r')}">${rightPanel()}</aside></div></div>${rowFloat()}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
   }
   // ---------- 左右侧栏可拖动加宽（Waydon 2026-11-26）：宽度存本机，双击把手恢复默认 ----------
   const PANE = { l: [200, 480], r: [280, 600] };
@@ -2118,8 +2123,8 @@
     const scale = 343 / 375;
     const panel = mobilePanel();
     const pc = E.device === 'pc';
-    const canvas = pc ? (window.PC ? window.PC.canvas({ mobile: true }) : `<div class="pc-empty">${window.empty('wrench-fill', t('ed/pc-todo-title'), t('ed/pc-todo-desc'), `<button class="btn btn-secondary btn-sm" data-act="mDevice" data-arg="h5">${t('ed/back-h5')}</button>`)}</div>`)
-      : `<div class="med-stage"><div style="width:343px;height:auto"><div style="transform:scale(${scale});transform-origin:top left;width:375px">${h5({ measure: true })}</div></div>${overNotice()}</div>`;
+    const canvas = onCanvas(() => (pc ? (window.PC ? window.PC.canvas({ mobile: true }) : `<div class="pc-empty">${window.empty('wrench-fill', t('ed/pc-todo-title'), t('ed/pc-todo-desc'), `<button class="btn btn-secondary btn-sm" data-act="mDevice" data-arg="h5">${t('ed/back-h5')}</button>`)}</div>`)
+      : `<div class="med-stage"><div style="width:343px;height:auto"><div style="transform:scale(${scale});transform-origin:top left;width:375px">${h5({ measure: true })}</div></div>${overNotice()}</div>`));
     const n = checks().req.length;
     return `<div class="med">
       <header class="med-nav"><button class="ibtn" data-act="edBack" aria-label="${esc(t('nav/home'))}">${ic('caret-left')}</button><button class="tt" data-act="nameEdit"><b>${esc(E.name)}</b><small>${window.demoTag()}${E.status === 'exported' ? `<span class="pill-tag is-ok">${t('status/exported')}</span> ` : ''}${pc ? `<span class="pc-tag">${t('ed/pc-preview')}</span> · ` : ''}${saveHtml(true)}</small></button>
@@ -2130,7 +2135,7 @@
         ${E.mpanel || pc ? '' : `<div class="med-login"><div class="iseg">${[['out', 'ed/signed-out'], ['in', 'ed/signed-in']].map(([v, k]) => `<button class="${(E.D.login ? 'in' : 'out') === v ? 'is-on' : ''}" data-act="setLogin" data-arg="${v}">${t(k)}</button>`).join('')}</div></div>`}
         ${E.mpanel || pc ? '' : `<button class="fab" data-act="mPanel" data-arg="colors" aria-label="${esc(t('ed/m-colors'))}">${ic('paint-brush-fill')}<i style="background:${E.D.theme.primary}"></i></button>`}${busyMask()}</main>
       <nav class="med-tools">${[['pages', 'squares-four-fill', 'ed/pages'], ['modules', 'layout-fill', 'ed/m-modules'], ['colors', 'palette-fill', 'ed/m-colors'], ['preview', 'eye-fill', 'ed/m-preview']].map(([id, i, k]) => `<button class="${E.mpanel === id ? 'is-on' : ''}" data-act="mPanel" data-arg="${id}">${ic(i)}${t(k)}</button>`).join('')}</nav>
-    </div>${panel}${amSheet()}${E.preview ? `<div class="preview-full"><button class="ibtn ibtn-secondary x" data-act="closePreview" aria-label="${esc(t('ed/close'))}">${ic('x')}</button>${h5({ noFold: true })}</div>` : ''}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}${window.AIG ? window.AIG.layers() : ''}`;
+    </div>${panel}${amSheet()}${E.preview ? `<div class="preview-full"><button class="ibtn ibtn-secondary x" data-act="closePreview" aria-label="${esc(t('ed/close'))}">${ic('x')}</button>${onCanvas(() => h5({ noFold: true }))}</div>` : ''}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}${window.AIG ? window.AIG.layers() : ''}`;
   }
   A.mPanel = (id) => {
     if (id === 'preview') { E.preview = true; E.sel = null; E.mpanel = null; return; }

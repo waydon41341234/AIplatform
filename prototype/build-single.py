@@ -5,8 +5,10 @@
 import base64
 import pathlib
 import re
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
+CAP = 15_500_000  # 单文件上限 15.5 MB（十进制，按严的算）
 MIME = {'.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp'}
 
 
@@ -14,7 +16,7 @@ MIME = {'.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp'}
 # 多文件版照旧用原图）：画布上入口图标最大约 40 CSS px、Banner 约 355 CSS px 宽，缩到下面的尺寸肉眼看不出差别。
 #   ai-tpl（Claude 免费模版）：入口图标 96×96 → 56×56（q72，透明 q50）；Banner 720×212 → 640×188 q52
 #   ai-codex（「生成 3 套」结果）：入口图标 64×64 → 56×56（同上）；Banner 690×203 → 640×188 q55
-# 没装 Pillow 时照原样内嵌，并提示体积可能超限。
+# 没装 Pillow 时照原样内嵌；写完后检查体积，超过上限就报错退出（退出码 1），不会悄悄生成一个超限的单文件（11-28 QA）。
 SHRINK = [
     (re.compile(r'^ai-tpl/[^/]+/(acct|bn|gm)-[\w-]+\.webp$'), {'size': (56, 56), 'quality': 72, 'alpha_quality': 50}),
     (re.compile(r'^ai-tpl/[^/]+/banner-\d\.webp$'), {'width': 640, 'quality': 52}),
@@ -26,7 +28,7 @@ try:
     from PIL import Image
 except ImportError:  # pragma: no cover
     Image = None
-    print('提示：没有 Pillow，AI 模版素材照原图内嵌，单文件可能超过 15.5 MB（pip install pillow）')
+    print('提示：没有 Pillow，AI 模版素材照原图内嵌，单文件可能超过 15.5 MB（pip install pillow）', file=sys.stderr)
 
 
 def shrink(name, raw):
@@ -105,3 +107,10 @@ boss = re.sub(r'<title>.*?</title>', '<title>定制设计平台 · 原型展示<
 out2 = ROOT / 'dist' / 'prototype-showcase.html'
 out2.write_text(boss, encoding='utf-8')
 print(out2, len(boss.encode('utf-8')), 'B')
+
+over = [(o.name, n) for o, n in ((out, len(html.encode('utf-8'))), (out2, len(boss.encode('utf-8')))) if n > CAP]
+if over:
+    why = '没有 Pillow，AI 模版素材没有重压（pip install pillow 后重跑）' if Image is None else '内嵌的素材太多，先缩小或去掉不需要的图'
+    for name, n in over:
+        print(f'错误：{name} {n} B 超过上限 {CAP} B（15.5 MB）：{why}', file=sys.stderr)
+    sys.exit(1)

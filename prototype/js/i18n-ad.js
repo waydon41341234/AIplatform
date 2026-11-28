@@ -26,7 +26,7 @@ Object.assign(window.I18N, {
   'ad/st-platinum-s': ['香槟金 · 留白', '香檳金 · 留白', 'Champagne · airy', 'Sâm panh · thoáng'],
   'ad/st-blackgold-s': ['深底金 · 强对比', '深底金 · 強對比', 'Dark gold · bold', 'Vàng nền tối · đậm'],
   'ad/st-techblue-s': ['深蓝渐变 · 亮蓝', '深藍漸層 · 亮藍', 'Navy · bright blue', 'Xanh đậm · sáng'],
-  'ad/st-fresh-s': ['荷叶绿 · 黑金 · Rolex绿', '荷葉綠 · 黑金 · Rolex綠', 'Lotus · black gold · Rolex', 'Xanh lá sen · đen vàng'],
+  'ad/st-fresh-s': ['荷叶绿 · 黑金 · Rolex绿', '荷葉綠 · 黑金 · Rolex綠', 'Lotus green · Black gold · Rolex green', 'Xanh lá sen · Đen vàng · Xanh Rolex'], // Figma ad/st-fresh-d
   'ad/st-festive-s': ['红金 · 喜庆', '紅金 · 喜慶', 'Red gold · festive', 'Đỏ vàng · vui tươi'],
   'ad/st-neon-s': ['紫青霓虹 · 发光', '紫青霓虹 · 發光', 'Neon · glow', 'Neon · phát sáng'],
   'ad/st-minimal-s': ['灰白 · 小圆角', '灰白 · 小圓角', 'Gray · small radius', 'Xám · bo nhỏ'],
@@ -102,7 +102,7 @@ Object.assign(window.I18N, {
   'ad/n-ed-d': ['项目「{name}」的 AI 一键设计，回到编辑器选一套应用', '專案「{name}」的 AI 一鍵設計，回到編輯器選一套套用', 'AI design for "{name}": pick a set in the editor', 'Thiết kế AI cho "{name}": chọn một bộ trong trình sửa'],
 
   // 编辑器（AD-03）
-  'ad/e-title': ['AI 一键设计', 'AI 一鍵設計', 'AI one-click design', 'Thiết kế AI một chạm'],
+  'ad/e-title': ['AI 一键设计', 'AI 一鍵設計', 'AI Design', 'Thiết kế AI'], // 面板标题，同入口卡 ai-template/entry-title
   'ad/e-desc': ['上传效果图或选风格，一次生成 3 套', '上傳效果圖或選風格，一次生成 3 套', 'Upload a mockup or pick a style; 3 sets at once', 'Tải ảnh mẫu hoặc chọn phong cách; tạo 3 bộ'],
   'ad/e-prompt': ['补充描述', '補充描述', 'Extra notes', 'Mô tả thêm'],
   'ad/e-gen': ['生成 3 套 · ✦{c}', '生成 3 套 · ✦{c}', 'Generate 3 · ✦{c}', 'Tạo 3 bộ · ✦{c}'],
@@ -215,8 +215,16 @@ Object.assign(window.I18N, {
   'ad/cf-title': ['生成 3 套首页设计？', '生成 3 套首頁設計？', 'Generate 3 home page designs?', 'Tạo 3 thiết kế trang chủ?'],
   'ad/cf-body': ['按所选风格一次生成 3 套完整首页设计（H5 + PC），选定一套后写入项目，并随源文件导出切图、色值规范和组件。不满意可重新生成，失败不扣点。', '按所選風格一次生成 3 套完整首頁設計（H5 + PC），選定一套後寫入專案，並隨原始檔匯出切圖、色值規範和元件。不滿意可重新生成，失敗不扣點。', 'Creates 3 complete home page designs (H5 + PC) in the chosen style. The one you pick is written into the project and exported with slices, color specs and components. You can generate again, and failures are not charged.', 'Tạo 3 thiết kế trang chủ hoàn chỉnh (H5 + PC) theo phong cách đã chọn. Bộ bạn chọn sẽ ghi vào dự án và xuất kèm lát cắt, quy chuẩn màu và thành phần. Có thể tạo lại, lỗi không trừ điểm.'],
   'confirm/cost-label2': ['本次约消耗', '本次約消耗', 'Estimated cost', 'Chi phí ước tính'],
-  'ai-template/entry-help': ['模板免费；重生成确认50点', '模板免費；重生成確認50點', 'Templates are free; generating costs 50 credits', 'Mẫu miễn phí; tạo mới tốn 50 điểm'],
+  'ai-template/entry-help': ['模板免费；重生成确认50点', '模板免費；重生成確認50點', 'Free templates; regenerate for 50 credits', 'Mẫu miễn phí; tạo lại với 50 điểm'],
   'ai-template/undo': ['撤销', '復原', 'Undo', 'Hoàn tác'],
   'ai-template/redo': ['重做', '重做', 'Redo', 'Làm lại'],
-  'ai-template/toast-undo': ['已撤销模板套用，原配置已恢复。', '已復原模板套用，原設定已恢復。', 'Template undone. Your previous settings are back.', 'Đã hoàn tác mẫu, cấu hình cũ đã được khôi phục.'],
+  'ai-template/toast-undo': ['已撤销模板套用，原配置已恢复。', '已復原模板套用，原設定已恢復。', 'Template application undone; original settings restored.', 'Đã hoàn tác mẫu; khôi phục cấu hình gốc.'],
+  'ai-template/entry-title': ['AI 一键设计', 'AI 一鍵設計', 'AI Design', 'Thiết kế AI'],
+  'ad/tpl-expand': ['展开', '展開', 'More', 'Mở rộng'], // Figma ad/tpl/expand
+  // 以下 Figma 没画（HTML 补的状态）
+  'ad/gen-first': ['正在生成 3 套：等生成完成，或先「取消生成」', '正在生成 3 套：等生成完成，或先「取消生成」', 'Generating 3 sets: wait for them to finish, or cancel first', 'Đang tạo 3 bộ: chờ tạo xong hoặc hủy tạo trước'],
+  'ad/close-title': ['关闭并放弃这 {n} 套结果？', '關閉並放棄這 {n} 套結果？', 'Close and discard these {n} results?', 'Đóng và bỏ {n} kết quả này?'],
+  'ad/close-body': ['已扣的 {c} 点不退回，关闭后这 {n} 套不能再找回。要留下其中一套，先选中再点「应用这一套」。', '已扣的 {c} 點不退回，關閉後這 {n} 套無法再找回。要留下其中一套，先選中再點「套用這一套」。', 'The {c} credits already spent are not refunded, and these {n} results can’t be recovered after closing. To keep one, select it and click “Apply this set”.', '{c} điểm đã trừ không được hoàn lại, đóng rồi không tìm lại được {n} kết quả này. Muốn giữ một bộ, hãy chọn rồi bấm “Áp dụng bộ này”.'],
+  'ad/close-keep': ['继续看', '繼續看', 'Keep viewing', 'Xem tiếp'],
+  'ad/close-ok': ['放弃结果', '放棄結果', 'Discard results', 'Bỏ kết quả'],
 });

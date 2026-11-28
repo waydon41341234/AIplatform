@@ -20,6 +20,16 @@ EXT_EC = {'home_bg': 'key:home_bg', 'home_db': 'key:home_db', 'btmnav_def': 'key
           'bs_topnav_bg': 'key:bs_topnav_bg', 'web_bs_yj_bg': 'key:web_bs_yj_bg', 'web_btmnav_db': 'key:web_btmnav_db',
           'category_active_text': 'gamemenu.activeText'}
 # 底导 98 / 110 / 120 / 140 以外的高度原型用 h / 2 显示（editor.js BNAV_PX），面板分段只有 98 / 120 / 140
+# 越南语套名：照本流程的 Figma 文案 ad/gen/applied-blackgold-1「Đã áp dụng “Đen vàng · Điện tử”」统一——黑金 = Đen vàng
+# （同 ad/st-blackgold、ad/tpl/title-blackgold「Đen vàng · 3 mẫu」），电子 = Điện tử；manifest / ai-template/name-* 原来写的是「Vàng đen · Slots」（11-28 QA）
+VI_FIX = [('Vàng đen', 'Đen vàng'), ('Slots', 'Điện tử')]
+
+
+def vi_fix(name):
+    name = list(name)
+    for a, b in VI_FIX:
+        name[3] = name[3].replace(a, b)
+    return name
 
 
 def ec_of(th, ext):
@@ -55,9 +65,10 @@ def main():
         lay = dict(banner_size=com['banner_size'], banner_corner=s['layout']['banner_corner'], gm_style=com['gm_style'],
                    gc_cols=s['layout']['gc_cols'], gc_gap=s['layout']['gc_gap'], gc_corner=s['layout']['gc_corner'],
                    bn_style=com['bn_style'], bn_h=s['layout']['bn_h'])
-        rows.append({'id': s['id'], 'style': s['style'], 'n': s['n'], 'name': s['name'], 'dark': s['dark'], 'th': th,
+        name = vi_fix(s['name'])
+        rows.append({'id': s['id'], 'style': s['style'], 'n': s['n'], 'name': name, 'dark': s['dark'], 'th': th,
                      'ec': ec_of(th, s['ext']), 'layout': lay, 'a': a})
-        i18n[s['nameKey']] = s['name']
+        i18n[s['nameKey']] = name
     for st in STYLES:
         i18n[f'ai-template/style-{st}'] = d['styleNames'][st]
     js = ['/* 自动生成，勿手改：python3 prototype/build-ai-codex.py（来源 assets/ai-codex/manifest.json，说明 assets/ai-codex/README.md）。',
