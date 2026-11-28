@@ -26,6 +26,14 @@ estimate → 检查余额 → reserve(−上限) → provider.generate → relea
 - 并发：参考实现依赖 Node 单线程；多实例部署必须把“检查余额 + 预留”做成数据库原子操作。
 - 单次最多 4 张（`MAX_BATCH`）。
 
+## 自定义模版 · AI 一键生成整页（2026-11-28，原型）
+
+- 入口：`#/custom` 排版画布「AI 一键生成」→ 弹窗（风格标签 + 可改的提示词 ≤ 300 字 + 普通定制规范包 `normal-custom-v1` 永远附带、只读）→ 现有扣点确认（50 点）→ 生成中 → 结果 → 采用进编辑器。
+- 建议新增整页入口 `POST /api/ai/page-jobs`，后端按 `outputs` 拆成多个现有 `AiGenerateRequest`（`shared/ai/contract.ts`），整页只预留 / 结算一次 50 点，子请求 `idempotencyKey` = 整页 key + 槽位。完整请求 / 拆分 / 返回示例见 `docs/spec-pack/request-example.md`；规范包内容见 `docs/spec-pack/normal-custom-v1.md`（机读 `normal-custom-v1.json`）。
+- 原型里请求体由 `prototype/js/customtpl.js` 的 `buildReq()` 在点「AI 一键生成 · 50 点」时拼好（`projectId` 为 `null`，原型没有后端项目），扣点确认通过后发起生成；同一个对象挂在生成中状态 `CT_S.gen.req` 和结果 `CT_S.res.req` 上，并可从控制台读 `window.CT.lastRequest`（最近一次真正发起的请求；`window.CT.buildRequest()` 按当前排版和提示词现拼一份，不扣点）。
+- 字段：`kind: "page"`、`locale`、`layout`（`platform` / `starter` / `fixed` / `blocks[{id, module, option, params}]` / `hidden` / `sequence`）、`styleTag`（`platinum` | `brazil-green` | `night-green` | `fresh-blue` | `null`）、`stylePromptVersion: "ct-style-v1"`、`promptEdited`、`prompt`（原样发送）、`specPack { version, source, inline }`、`outputs`（theme 11 个 Key、排版里有 Banner 才出通用 Banner 1020×300 × 3、按模块出游戏类型 / 中部导航消息 / 底部导航前 5 个图标；`logo` / `gameCards` 为 `false`）、`cost: 50`。`outputs` 由平台按排版 + 规范包算出，业主不选。
+- 演示网关：按 `styleTag` 选对应配色版本的现成整页图；`null` 用匹配到的版式自己的原稿配色（对照表见 request-example.md 第 4 节）。
+
 ## 上线前待定（方案第 9 节）
 
 预充值 vs 业主自带 Key、费率与税费发票、退款规则、上游对账周期、失败是否收费的判定、每日额度与并发限制。
