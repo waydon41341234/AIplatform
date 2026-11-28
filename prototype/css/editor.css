@@ -840,7 +840,8 @@ body:has(.pc-mfloat) .proto-bar { bottom: calc(76px + 52px + env(safe-area-inset
 .cl-gc .tabs span.on { color: var(--o-primary); }
 .cl-gc .tabs span.on::after { content: ''; position: absolute; left: 50%; bottom: -1px; width: 26px; height: 2px; margin-left: -13px; background: var(--o-primary); border-radius: 1px; }
 .cl-gc .grid { display: grid; }
-.cl-gc .c { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; color: var(--e-gamecards-text); }
+.cl-gc .c { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.cl-gc .c:not(.s-western) { color: var(--e-gamecards-text); } /* 欧美：名称在图上，默认白字（见下方 .gcd.s-western） */
 /* 封面铺满列宽（正方形，最大 180）：列数 / 卡片间距 改了能直接看出来 */
 .cl-gc .im { position: relative; width: 100%; max-width: 180px; aspect-ratio: 1; overflow: hidden; background: var(--e-gamecards-placeholder); }
 .cl-gc .im > img:first-child { width: 100%; height: 100%; display: block; object-fit: cover; }
@@ -1535,7 +1536,8 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .cl-gc.is-solo { padding: 0 12px; }
 .cl-gc .grid { column-gap: 8px; row-gap: 10px; }
 .cl-gc.is-side .grid { column-gap: 7px; }
-.gcd { container-type: inline-size; position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; color: var(--e-gamecards-text, var(--text-2)); }
+.gcd { container-type: inline-size; position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.gcd:not(.s-western) { color: var(--e-gamecards-text, var(--text-2)); }
 .gcd:has(.menu) { z-index: 6; } /* 容器会建层叠上下文：卡片上的「⋯」菜单不被后面的卡片盖住 */
 .gcd .im { position: relative; flex: none; width: 76.5cqw; max-width: none; aspect-ratio: 1; border-radius: 10.5cqw; overflow: hidden; background: none; }
 .gcd .im.fb { background: var(--e-gamecards-placeholder, #e3e3e3); display: flex; align-items: center; justify-content: center; }
@@ -1545,14 +1547,17 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .gcd .im .wg { position: absolute; right: 1cqw; bottom: 1cqw; width: 34cqw; }
 .gcd .im .rec { position: absolute; left: 0; top: 0; z-index: 1; width: 21cqw; height: 17.6cqw; display: flex; align-items: center; justify-content: center; background: var(--e-gamecards-label, #ff8a00); color: var(--e-gamecards-labelText, #fff); border-radius: 0 0 9cqw 0; }
 .gcd .im .rec .ic { width: 58%; height: 58%; }
-.gcd > .nm { max-width: 100%; font-size: 12.94cqw; line-height: 1.35; text-align: center; white-space: normal; word-break: break-all; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+.gcd > .nm { max-width: 100%; font-size: clamp(min(12.94cqw, 8px), calc(12.94cqw * var(--gc-nk, 1)), 24px); font-weight: var(--gc-nw, 400); line-height: 1.35; text-align: center; white-space: normal; word-break: break-all; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
 /* 名称字号跟卡片宽等比（H5/GameCard 85 宽：经典 / 竖版 / 方形 / 圆版 10.96 = 12.94cqw、欧美 9.53 = 11.25cqw、横版 7.16 = 8.46cqw；Figma 中部 3 张 113 宽时 14.62，同比例）
+   文字样式「游戏名称」（11-28 QA）：字号存倍数 --gc-nk、粗细 --gc-nw（editor.js TX_VARS，只写在画布 .h5 .cl-gc 上，面板样式缩图不受影响）；
+   改过的字号最大 24、最小 8（默认本来就小于 8 时保持默认，同 editor.js txSz）
    经典：图 65/85 方图、圆角 9，名称在图下最多两行 */
 .gcd.s-classic > .nm, .gcd.s-portrait > .nm { -webkit-line-clamp: 2; }
 /* 欧美：整卡 3:4、圆角 10.6/85，底部暖红渐变上压白色粗体名称；平台角标在顶部居中 */
 .gcd.s-western .im { width: 100%; aspect-ratio: 3 / 4; border-radius: 12.5cqw; }
 .gcd.s-western .im .shade { position: absolute; inset: 0; background: linear-gradient(to top, #8e1d12f2 0%, #8e1d1299 24%, #8e1d1200 50%); pointer-events: none; }
-.gcd.s-western .im .nm { position: absolute; left: 4cqw; right: 4cqw; bottom: 5cqw; z-index: 1; color: #fff; font-size: 11.25cqw; font-weight: 700; line-height: 1.3; text-align: center; word-break: break-all; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.gcd.s-western .im .nm { position: absolute; left: 4cqw; right: 4cqw; bottom: 5cqw; z-index: 1; color: #fff; font-size: clamp(min(11.25cqw, 8px), calc(11.25cqw * var(--gc-nk, 1)), 24px); font-weight: var(--gc-nw, 700); line-height: 1.3; text-align: center; word-break: break-all; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.cl-gc.tc-own .gcd.s-western .im .nm { color: var(--e-gamecards-text); } /* 默认 = cards_text 欧美分支固定白；改了「游戏名称」颜色才跟它 */
 .gcd.s-western .im .wg { right: auto; bottom: auto; left: 50%; top: 0; transform: translateX(-50%); width: 34cqw; }
 .gcd.s-western .im .star { top: 3.5cqw; right: 3.5cqw; }
 /* 竖版：图 75/85、3:4、圆角 6，平台角标底部居中 */
@@ -1571,11 +1576,11 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .gcd.s-landscape .im .star { top: 1.5cqw; right: 1.5cqw; width: 15cqw; height: 15cqw; }
 .gcd.s-landscape .im .rec { width: 23.5cqw; height: 19cqw; border-radius: 0 0 7cqw 0; }
 .gcd.s-landscape .im .wg { right: 3cqw; bottom: 3cqw; width: 27cqw; }
-.gcd.s-landscape > .nm { font-size: 8.46cqw; }
+.gcd.s-landscape > .nm { font-size: clamp(min(8.46cqw, 8px), calc(8.46cqw * var(--gc-nk, 1)), 24px); }
 /* 中部横向分类（Figma 65750:31407）：图标 + 名称，选中 = gamemenu.tabActive 文字 + 下划线（不跟左侧选中按钮底共用）；没有按钮底 */
 .h5-gm.center { gap: 16px; padding: 4px 24px 0 12px; margin-bottom: 6px; }
-.h5-gm.center > span { display: inline-flex; align-items: center; gap: 3px; padding: 6px 0 7px; border-radius: 0; background: none; color: var(--e-gamemenu-text); font-size: 12px; line-height: 18px; }
-.h5-gm.center > span b { font-weight: 400; }
+.h5-gm.center > span { display: inline-flex; align-items: center; gap: 3px; padding: 6px 0 7px; border-radius: 0; background: none; color: var(--e-gamemenu-text); font-size: 12px; font-weight: 400; line-height: 18px; }
+.h5-gm.center > span b { font-weight: inherit; } /* 粗细写在 span 上：文字样式「分类名称（未选中 / 选中）」改的是 span（11-28 QA：b 自己写 400 时改粗体没反应） */
 .h5-gm.center > span.on { background: none; color: var(--e-gamemenu-tabActive); }
 .h5-gm.center > span.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; background: var(--e-gamemenu-tabActive); }
 .h5-gm.center .gi { width: 24px; height: 18px; flex: none; }

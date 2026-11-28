@@ -865,6 +865,23 @@
   // 非中文界面的默认字号（跟 editor.css 里 html:not([lang^="zh"]) 的规则一致）：竖排分类名英 / 越文偏长，默认 11 而不是 13
   const TX_DS_LATIN = { 'gamemenu.name': 11, 'gamemenu.nameOn': 11 };
   const txDs = (df) => (!/^zh/.test(S.lang) && TX_DS_LATIN[df[0]]) || df[4];
+  // 游戏名称（11-28 QA）：画布上的名称字号跟卡片宽等比（editor.css .gcd > .nm 用 cqw，每行张数 / 菜单位置 / 卡片样式一变就跟着变），
+  // 所以面板显示、加减的是「现在画布上的字号」：默认 = MP.gcNameBase()（卡片宽 × 样式比例），业主改的存倍数 k（E.D.txt['gamecards.name'].k），
+  // 画布用 CSS 变量 --gc-nk 乘上去，换排版后照旧等比。上限 24（48/750）；下限 8，默认本来就比 8 小（横版 左侧 · 3 张 7.19）时就是默认值（同 CSS clamp）
+  const TX_SCALE = { 'gamecards.name': () => (window.MP && window.MP.gcNameBase ? window.MP.gcNameBase(E.sel) : 11) };
+  // 改成 CSS 变量（不直接写 font-size / font-weight，免得跟卡片样式的规则比优先级）：[容器, 字号倍数变量, 粗细变量]
+  const TX_VARS = { 'gamecards.name': ['.cl-gc', '--gc-nk', '--gc-nw'] };
+  // 默认粗细跟卡片样式走的：欧美卡片名称压在图上，粗体（H5/GameCard 欧美）；其它常规
+  const TX_DW = { 'gamecards.name': () => (window.MP && window.MP.gcStyle && window.MP.gcStyle() === 'western' ? 700 : 400) };
+  const txDw = (df) => (TX_DW[df[0]] ? TX_DW[df[0]]() : df[5]);
+  // 当前字号 / 默认字号（CSS px，按倍数算的可带小数；面板显示 ×2 取整 = 750 稿）
+  const txSz = (df) => {
+    const id = df[0], v = (E.D.txt || {})[id] || {};
+    if (TX_SCALE[id]) { const b = TX_SCALE[id](), mx = df[6] || 24; return { ds: b, s: v.k ? Math.max(Math.min(b, 8), Math.min(mx, b * v.k)) : b }; }
+    const ds = txDs(df); return { ds, s: v.s || ds };
+  };
+  // Key 标签显示的 Key 名（同颜色页签 GC_CAP）：游戏名称 = cards_text（欧美分支固定白，其它 = neutral_1）
+  const TX_CAP = { 'gamecards.name': 'cards_text' };
   const TX_W = [400, 500, 700];
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
@@ -885,6 +902,7 @@
     const T = E.D.txt || {}; let css = '';
     for (const [id, , sel, csel] of TX_ALL) {
       const v = T[id]; if (!v) continue;
+      if (TX_VARS[id]) { const [box, vk, vw] = TX_VARS[id]; if (v.k || v.w) css += `.h5 ${box}{${v.k ? `${vk}:${v.k};` : ''}${v.w ? `${vw}:${v.w};` : ''}}`; continue; } // 颜色跟颜色页签同源（TX_EC）
       const scope = (q) => q.split(',').map((x) => '.h5 ' + x.trim()).join(',');
       if (v.s || v.w) css += `${scope(sel)}{${v.s ? `font-size:${v.s}px;` : ''}${v.w ? `font-weight:${v.w};` : ''}}`;
       if (v.c && !TX_EC[id]) css += `${scope(csel)}{color:${txRes(v.c)}}`;
@@ -910,36 +928,36 @@
   // 生效的颜色（标题行色值胶囊）：改过 = 那个值，没改 = 默认 Key 的色值
   // 顶部栏没改过的字：AI 设计按底色自动换的色（liveTheme().tb.cur / text / bal）才是画布上的色，胶囊显示它
   const TX_AUTO = { 'tb.cur': 'cur', 'tb.search': 'text', 'tb.bal': 'bal' };
-  const txCol = (id) => { const lt = liveTheme(); return txRes(txRaw(id)) || (TX_AUTO[id] && lt.tb[TX_AUTO[id]]) || keyVal(txDefKey(id), lt.th, lt.ec) || ''; };
+  const txCol = (id) => { const lt = liveTheme(), dk = txDefKey(id); return txRes(txRaw(id)) || (TX_AUTO[id] && lt.tb[TX_AUTO[id]]) || (dk[0] === '#' ? dk : keyVal(dk, lt.th, lt.ec)) || ''; }; // 默认可以是固定色值（欧美游戏名称 #FFFFFF）
   // 文字颜色一行（文字样式和顶部栏「颜色」页签共用，改的是同一个值）。Figma G6/TxColorRow 463:31176（Waydon 11-27 09:18「默认选中默认的颜色，不是默认按钮」）：
   // 没有「默认」按钮：[默认色块 = 绑定的 Key，没改过时选中，再点 = 恢复默认][lead / neutral_1 / neutral_2 / primary / accent_2 / accent_3 / 白 去掉默认 Key 后取前 6 个][彩虹 = 自定义]，
   // Key 标签换到第二行靠右。色块存 'key:<名>'（跟整页配色走），白色存 #ffffff；色块提示「Key 名 · #HEX」
   const TX_PAL = ['lead', 'neutral_1', 'neutral_2', 'primary', 'accent_2', 'accent_3', '#ffffff'];
   function txColors(id) {
     const MP = window.MP, { th, ec } = liveTheme(), kv = (k) => (k[0] === '#' ? k : keyVal(k, th, ec) || '');
-    const def = txDefKey(id), raw = txRaw(id), sws = TX_PAL.filter((k) => k !== def).slice(0, 6);
+    const def = txDefKey(id), raw = txRaw(id), sws = TX_PAL.filter((k) => k.toLowerCase() !== def.toLowerCase()).slice(0, 6); // 默认是白色（欧美游戏名称）时白色块不重复列
     const lc = (c) => String(c || '').slice(0, 7).toLowerCase();
     // 选中哪个：没改 = 默认色块（-1）；'key:<名>' = 那个色块；十六进制 = 同色的色块（白色、旧存档存的色值）；都对不上 = 彩虹（自定义 / 颜色页签选了色盘里没有的 Key）
     let on = -1;
     if (raw && raw.startsWith('key:')) { const k = raw.slice(4); on = k === def ? -1 : sws.indexOf(k) >= 0 ? sws.indexOf(k) : 'c'; }
     else if (raw) { const i = sws.findIndex((k) => lc(kv(k)) === lc(raw)); on = i >= 0 ? i : lc(kv(def)) === lc(raw) ? -1 : 'c'; }
     const btn = (isOn, col, tip, arg, cls = '') => `<button class="sw-btn ${cls} ${isOn ? 'is-on' : ''}" style="background:${col}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${isOn}" data-act="txColor" data-arg="${id}|${arg}"></button>`;
-    const defB = btn(on === -1, kv(def), MP.swTip(`${t('mp/c-default')} · ${MP.keyLabel(def)}`, kv(def)), '', 'sw-def');
+    const defB = btn(on === -1, kv(def), MP.swTip(def[0] === '#' ? t('mp/c-default') : `${t('mp/c-default')} · ${MP.keyLabel(def)}`, kv(def)), '', 'sw-def');
     const swB = sws.map((k, i) => (k[0] === '#' ? btn(on === i, k, MP.swTip(k.toUpperCase(), k), k) : btn(on === i, kv(k), MP.swTip(MP.keyLabel(k), kv(k)), 'key:' + k))).join('');
     const cu = on === 'c' ? MP.hexOf(txRes(raw)) : null, rbTip = cu ? `${t('tx/c-custom')} · ${cu.hex}` : t('tx/c-custom');
     const rb = `<label class="rainbow tx-custom ${cu ? 'is-on has-val' : ''}" ${cu ? `style="--c:${cu.css}"` : ''} title="${esc(rbTip)}"><input type="color" data-txcolor="${id}" value="${cu ? cu.hex.toLowerCase() : lc(kv(def)) || '#333333'}" aria-label="${esc(rbTip)}"></label>`;
     const tagV = on === -1 ? null : typeof on === 'number' ? (sws[on][0] === '#' ? sws[on] : 'key:' + sws[on]) : raw;
-    return `<div class="tx-colors cr-sw tx-pal">${defB}${swB}${rb}<i class="tx-br" aria-hidden="true"></i>${MP.keyTag(tagV, def)}</div>`;
+    return `<div class="tx-colors cr-sw tx-pal">${defB}${swB}${rb}<i class="tx-br" aria-hidden="true"></i>${MP.keyTag(tagV, TX_CAP[id] || def)}</div>`;
   }
   function txtSec(b) {
     const els = [].concat(...[].concat(b).map((x) => TXT[x] || [])).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
     const rows = els.map((df) => {
-      const [id, k, , , , dw, mx = 24] = df, ds = txDs(df);
-      const v = txOf(id), size = v.s || ds, w = v.w || dw;
-      const changed = v.s || v.w || v.c;
+      const [id, k, , , , , mx = 24] = df, dw = txDw(df);
+      const v = txOf(id), size = Math.round(txSz(df).s * 2) / 2, w = v.w || dw;
+      const changed = v.s || v.k || (v.w && v.w !== dw) || v.c;
       // 标题行：[名称][色值胶囊（当前生效的文字颜色，点一下复制）][↺ 重置]（Figma G6/HexChip，Waydon 11-27 方案 A）
       return `<div class="tx-row"><div class="tx-hd"><b>${t(k)}</b>${window.MP.hexChip(txCol(id))}${changed ? `<button class="tx-reset" data-act="txReset" data-arg="${id}">${ic('arrow-counter-clockwise', 'ic-16')}${t('tx/reset')}</button>` : ''}</div>
-        <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em title="${esc(t('tx/size-tip', { n: size * 2 }))}">${size * 2}</em><button data-act="txSize" data-arg="${id}|1" ${size >= mx ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
+        <div class="tx-bar"><span class="tx-size"><button data-act="txSize" data-arg="${id}|-1" ${size <= 8 ? 'disabled' : ''} aria-label="-">${ic('minus', 'ic-16')}</button><em title="${esc(t('tx/size-tip', { n: Math.round(size * 2) }))}">${Math.round(size * 2)}</em><button data-act="txSize" data-arg="${id}|1" ${size >= mx ? 'disabled' : ''} aria-label="+">${ic('plus', 'ic-16')}</button></span>
         <span class="tx-w">${TX_W.map((x) => `<button class="${w === x ? 'is-on' : ''}" style="font-weight:${x}" data-act="txWeight" data-arg="${id}|${x}">${t('tx/w-' + x)}</button>`).join('')}</span></div>
         ${txColors(id)}</div>`;
     }).join('');
@@ -949,15 +967,22 @@
     if (k === 'c') {
       // 色块存 'key:<名>'（颜色页签能对上同一个色块，换整页配色跟着变）；选默认 Key / 点默认色块 = 回到默认（清掉）；彩虹 / 白色存十六进制
       const key = v && v.startsWith('key:') ? v.slice(4) : null;
-      const val = !v || key === txDefKey(id) ? null : key ? v : v.toLowerCase();
+      const dk = txDefKey(id), val = !v || key === dk || (!key && dk[0] === '#' && v.toLowerCase() === dk.toLowerCase()) ? null : key ? v : v.toLowerCase();
       if ((txRaw(id) || null) === val) return false; // 再点已选中的色块：没有变化，不记撤销
       if (TX_EC[id]) { const eid = TX_EC[id]; commit(() => { E.D.ec = E.D.ec || {}; if (val) E.D.ec[eid] = val; else delete E.D.ec[eid]; }); return; }
       commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (val) o.c = val; else delete o.c; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); return;
     }
     commit(() => { E.D.txt = E.D.txt || {}; const o = Object.assign({}, E.D.txt[id]); if (v == null || v === '') delete o[k]; else o[k] = v; if (Object.keys(o).length) E.D.txt[id] = o; else delete E.D.txt[id]; }); };
   const txDef = (id) => TX_ALL.find((x) => x[0] === id);
-  A.txSize = (arg) => { const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false; const ds = txDs(df), cur = txOf(id).s || ds; const n = Math.max(8, Math.min(df[6] || 24, cur + (+d))); txSet(id, 's', n === ds ? null : n); };
-  A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; txSet(id, 'w', +w === df[5] ? null : +w); };
+  A.txSize = (arg) => {
+    const [id, d] = arg.split('|'); const df = txDef(id); if (!df) return false;
+    if (TX_SCALE[id]) { // 按画布上现在的字号 ±1（750 稿 ±2），换算成倍数存；回到默认字号就清掉
+      const { ds, s } = txSz(df), u0 = Math.round(s * 2), u = Math.max(16, Math.min((df[6] || 24) * 2, u0 + 2 * d)); if (u === u0) return false;
+      return txSet(id, 'k', u === Math.round(ds * 2) ? null : +(u / 2 / ds).toFixed(4));
+    }
+    const ds = txDs(df), cur = txOf(id).s || ds; const n = Math.max(8, Math.min(df[6] || 24, cur + (+d))); txSet(id, 's', n === ds ? null : n);
+  };
+  A.txWeight = (arg) => { const [id, w] = arg.split('|'); const df = txDef(id); if (!df) return false; const dw = txDw(df), cur = txOf(id).w || dw; if (+w === cur) return false; txSet(id, 'w', +w === dw ? null : +w); };
   A.txColor = (arg) => { const i = arg.indexOf('|'); return txSet(arg.slice(0, i), 'c', arg.slice(i + 1) || null); };
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[TX_EC[id]]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
@@ -1880,7 +1905,17 @@
   // ---------- 检查 / 导出（ED-12 / ED-16） ----------
   A.openChecks = () => { E.dlg = 'checks'; S.menu = null; };
   A.openExport = () => { E.dlg = 'export'; if (E.exp.stage !== 'exporting') E.exp.stage = 'ready'; E.exp.linking = 0; };
-  A.locate = (id) => { const all = checks(); const c = [...all.req, ...all.sug].find((x) => x.id === id); E.dlg = null; if (c && c.act && A[c.act]) { return A[c.act](c.arg); } A.selMod(c ? c.mod : id); };
+  // 定位：选中模块并打开「内容」页签（检查项都是缺图，在内容里改；游戏菜单与游戏卡片合并面板里切模块会留在布局 / 颜色，这里要回到内容，11-28 QA）；
+  // 游戏菜单：分类列表在合并面板的内容页签下半段，滚到第一个缺图的分类
+  A.locate = (id) => {
+    const all = checks(); const c = [...all.req, ...all.sug].find((x) => x.id === id); E.dlg = null; if (c && c.act && A[c.act]) { return A[c.act](c.arg); }
+    const mod = c ? c.mod : id; A.selMod(mod); if (!mod) return;
+    E.tab = 'content'; E.ai = null; E.picker = null;
+    if (baseName(mod) === 'gamemenu') {
+      const i = E.D.m.gamemenu.items.findIndex((it) => it.on && !(it.img || it.def));
+      setTimeout(() => { const r = document.querySelector(`${mobileEd() ? '.med-sheet' : '.ed-right'} [data-drag-list="gamemenu"] [data-row="${i < 0 ? 0 : i}"]`); if (r && r.scrollIntoView) r.scrollIntoView({ block: 'center' }); }, 80);
+    }
+  };
   A.chkConfirm = () => { commit(() => { E.D.chkOk.jackpot = true; }); window.toast(t('ed/chk-solved', { name: t('cat/jackpot') })); };
   A.markAll = () => { E.checksPassed = true; };
   A.expOpt = (k) => { E.exp.opts[k] = !E.exp.opts[k]; };

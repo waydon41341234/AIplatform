@@ -124,6 +124,9 @@
   };
   const ALT = ['primary', 'lead', 'bg_2', 'accent_3', 'bg_1', 'neutral_2', 'accent_1'];
   const cssVar = (id) => '--e-' + id.replace('.', '-');
+  // 元素色的默认 Key（颜色行第一个色块、文字样式的默认色、取色器「当前」）：游戏名称 = cards_text，欧美卡片分支是固定白 #FFFFFF、
+  // 其它样式 = neutral_1（11-28 QA：欧美名称压在暗红渐变上是白字，色块 / 色值胶囊要显示白色，不是 #666666）
+  const elDef = (id) => { if (id === 'gamecards.text' && X().E.D.m && gcStyleOf(M('gamecards')) === 'western') return '#FFFFFF'; for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; };
   function vars(th, ec) {
     let s = '';
     // 元素色可存十六进制，或 'key:<名>' 引用 68 Key（换整页配色时跟着变）；默认 Key 也可以是扩展 Key（如 ddt_bg）
@@ -491,6 +494,15 @@
   // 推荐角标（热门 / 新）：H5/GameCard 欧美、竖版两种样式里隐藏（只有经典 / 方形 / 圆版 / 横版显示）
   const gcRecOk = (s) => s !== 'western' && s !== 'portrait';
   const gcStyleIdx = () => GC_STYLES.indexOf(gcStyleOf(M('gamecards')));
+  // 游戏名称的默认字号（CSS px）= 卡片宽 × 样式比例（同 editor.css .gcd > .nm 的 cqw：欧美 11.25%、横版 8.46%、其它 12.94%）。
+  // 卡片宽按画布排版算：左侧 = 375 − 左右 10×2（.cl-games）− 菜单 76 − 间距 10 = 269、列间距 7；中部 / 单独 = 375 − 12×2 = 351、列间距 8
+  // （经典 左侧 · 3 张 = 85 宽 → 11；中部 · 3 张 = 111.7 宽 → 14.45，Figma C3 113 宽 14.62）。文字样式面板显示 / 加减的是这个值 × 业主设的倍数
+  const GC_NM_R = { western: 0.1125, landscape: 0.0846 };
+  function gcNameBase(id) {
+    const m = M('gamecards'); if (!m) return 11;
+    const side = gcSide(id && String(id).split('~')[0] === 'gamecards' ? id : undefined), n = gcColsOf(m), [w, g] = side ? [269, 7] : [351, 8];
+    return ((w - g * (n - 1)) / n) * (GC_NM_R[gcStyleOf(m)] || 0.1294);
+  }
   // 旧存档 / AI 设计迁移（面板 11-28 起只剩 菜单位置 + 每行张数 + 卡片样式）：
   //   分类样式 竖排 → 左侧、横向标签 / 图标分类 → 中部；标签形状、卡片圆角、卡片间距去掉（由卡片样式决定）；
   //   非横版 2 张 → 3、左侧 + 4 张 → 3；去掉开关的元素（平台角标、收藏星、分类标题行）回到显示
@@ -504,6 +516,9 @@
       delete gc.corner; delete gc.gap;
       ['tag', 'fav', 'title'].forEach((k) => { if (gc[k] === false) gc[k] = true; });
     }
+    // 文字样式「游戏名称」：旧存档存的是固定字号 s（默认 11），11-28 起存倍数 k（画布名称跟卡片宽等比），按 s ÷ 11 换算
+    const tn = D.txt && D.txt['gamecards.name'];
+    if (tn && tn.s != null) { if (tn.k == null && +tn.s !== 11) tn.k = +(tn.s / 11).toFixed(4); delete tn.s; if (!Object.keys(tn).length) delete D.txt['gamecards.name']; }
     return D;
   }
   // 元素色当前值（面板缩略图用；画布用 CSS 变量）
@@ -718,13 +733,13 @@
   }
   // 颜色：同游戏菜单做法（'key:<名>' 引用 68 Key），「默认」= Figma 绑定的 Key；选中页签 / 分隔线 / 展开 固定跟 Key，点「去改」进整页配色
   const GC_SW = { 'gamecards.tab': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'gamecards.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'gamecards.placeholder': ['ddt_bg', 'bg_1', 'neutral_3', 'primary'], 'gamecards.placeholderIcon': ['ddt_icon', 'bg_1', 'neutral_3', 'neutral_2'], 'gamecards.label': ['label_accent3', 'accent_2', 'accent_1', 'primary'], 'gamecards.labelText': ['labeltext_accent3', 'lead', 'accent_3', 'primary'] };
-  const GC_CAP = { 'gamecards.text': 'cards_text' }; // Key 标签显示的 Key 名（游戏名称 = cards_text 经典卡片分支）
+  const GC_CAP = { 'gamecards.text': 'cards_text' }; // Key 标签显示的 Key 名（游戏名称 = cards_text：欧美卡片分支固定白，其它 = neutral_1）
   function gcColor() {
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamecards');
     const kv = kvOf(th, ec);
     const row = (id) => {
-      const key = EL.gamecards.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
-      return colorRow(lab, { act: 'bnColor', id, v, key, sws: GC_SW[id], kv, pk, pickArg: `${id}|${key}`, tag: GC_CAP[id], col: curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
+      const key = elDef(id), v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+      return colorRow(lab, { act: 'bnColor', id, v, key, sws: GC_SW[id], kv, pk, pickArg: `${id}|${key[0] === '#' ? 'neutral_1' : key}`, tag: GC_CAP[id], col: curCol(ec[id], key, kv) }, pk ? x.pickerHtml('in-panel', lab) : '');
     };
     const link = (lab, key) => linkRow(lab, key, kv(key));
     const fbImg = m.fallback && m.fallback.startsWith('img:');
@@ -822,7 +837,9 @@
       let hd = '';
       const gv = vis('gamemenu'), ai = gmAct(), cur = gv.indexOf(M('gamemenu').items[ai]), nx = gv[(cur + 1) % Math.max(gv.length, 1)];
       if (nx) { const src = nx.img || nx.def; hd = `<div class="hd"><span class="hi">${src ? img(src) : ic(nx.i)}</span><b>${esc(t('mp/gc-cat-title', { n: nm(nx) }))}</b><small>${t('mp/gc-all')}</small></div>`; }
-      return `<div class="cl-gc st-${st} ${side ? 'is-side' : 'is-solo'}">${tabs}<div class="grid c${cols}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cards}</div><div class="more">${t('mp/gc-more-n', { n: `<em>${14 + GAMES.length - shown}</em>` })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
+      // 欧美卡片名称默认固定白字（cards_text 欧美分支）；业主改了「游戏名称」颜色（含取色中实时预览）才跟 --e-gamecards-text（tc-own）
+      const tcOwn = !!X().liveTheme().ec['gamecards.text'];
+      return `<div class="cl-gc st-${st} ${side ? 'is-side' : 'is-solo'} ${tcOwn ? 'tc-own' : ''}">${tabs}<div class="grid c${cols}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cards}</div><div class="more">${t('mp/gc-more-n', { n: `<em>${14 + GAMES.length - shown}</em>` })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
     }
     if (b === 'footer') return `<div class="h5-foot" style="text-align:${m.align}"><div class="ln">${vis('footer').map((x) => esc(nm(x))).join(' · ')}</div><div>${esc(m.copy)}</div></div>`;
     return '';
@@ -1657,7 +1674,9 @@
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b], libIcons,
     resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
     keyTag, swRow, keyLabel, hexOf, curCol, hexChip, swTip, colorRow, linkRow, // 色值胶囊（Figma G6/HexChip 460:31190）：editor.js 的颜色行、文字样式卡、取色器共用
-    elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
+    elKey: (id) => elDef(id),
+    // 游戏名称（11-28 QA）：文字样式的默认字号 / 粗细跟卡片样式和排版走（editor.js TX_SCALE / TX_DW）
+    gcStyle: () => gcStyleOf(M('gamecards')), gcNameBase,
     // 取色器切 Key 范围「N 处」用（editor.js keyUses）：画布上正显示的帐户栏入口角标颜色行 [行 ID, 默认 Key]（已登录、入口显示、有角标）
     bdRows: () => (X().E.D.login ? M('midnav').items.map((it, i) => [it, i]).filter(([it]) => it.on && it.badge).map(([it, i]) => [bdId(it, i), bdKey(it)]) : []),
     // 这一行现在显示的是按钮图（游戏菜单竖排的按钮底，没选颜色）：不是 Key 颜色
