@@ -1,0 +1,138 @@
+{
+ "style": "techblue",
+ "n": 3,
+ "id": "techblue-3",
+ "name": "星际蓝紫",
+ "style_zh": "科技蓝",
+ "dark": true,
+ "prompt_zh": "【科技蓝 · 星际蓝紫】深色底 #0D1036，主色 #4F6BFF，点缀 #8F7BFF。整体：星云、蓝紫行星与光速粒子。Banner 3 张（通用 · 圆角 8，1020×300）：首存豪礼 / 赛事狂欢 / VIP 尊享，标题在左、主体物在右。图标 双色，帐户栏 4 个、底部导航 6 个、游戏分类 9 个同一套光影。布局：游戏菜单顶部页签·胶囊，游戏卡片 3 列圆角 32，底部导航平铺，顶部栏主色底。",
+ "theme": {
+  "primary": "#4F6BFF",
+  "lead": "#ECEEFF",
+  "neutral_1": "#AEB4E0",
+  "neutral_2": "#7A80B3",
+  "neutral_3": "#4A4F80",
+  "border": "#2A2E5E",
+  "bg_1": "#0D1036",
+  "bg_2": "#161A4A",
+  "accent_1": "#19C37D",
+  "accent_2": "#FF4D5E",
+  "accent_3": "#8F7BFF"
+ },
+ "ec": {
+  "key:home_bg": "key:bg_1"
+ },
+ "modules": {
+  "banner_size": "general",
+  "banner_corner": 8,
+  "banner_ind": "s1",
+  "gm_style": "tabs",
+  "gm_shape": "pill",
+  "jp_layout": "flow",
+  "jp_corner": 32,
+  "jp_margin": 24,
+  "jp_bg": "accent_3",
+  "gc_cols": 3,
+  "gc_corner": 32,
+  "gc_gap": 20,
+  "footer_align": "center",
+  "bn_style": "regular",
+  "sd_style": "list",
+  "tb_mode": "brand",
+  "icon_style": "duotone"
+ },
+ "logo": "assets/ai-logo/star-gaming.png",
+ "assets": {
+  "banner-1": "assets/ai-tpl/techblue-3/banner-1.webp",
+  "banner-2": "assets/ai-tpl/techblue-3/banner-2.webp",
+  "banner-3": "assets/ai-tpl/techblue-3/banner-3.webp",
+  "acct-dep": "assets/ai-tpl/techblue-3/acct-dep.webp",
+  "acct-vip": "assets/ai-tpl/techblue-3/acct-vip.webp",
+  "acct-share": "assets/ai-tpl/techblue-3/acct-share.webp",
+  "acct-more": "assets/ai-tpl/techblue-3/acct-more.webp",
+  "bn-home": "assets/ai-tpl/techblue-3/bn-home.webp",
+  "bn-promo": "assets/ai-tpl/techblue-3/bn-promo.webp",
+  "bn-share": "assets/ai-tpl/techblue-3/bn-share.webp",
+  "bn-dep": "assets/ai-tpl/techblue-3/bn-dep.webp",
+  "bn-mine": "assets/ai-tpl/techblue-3/bn-mine.webp",
+  "bn-reg": "assets/ai-tpl/techblue-3/bn-reg.webp",
+  "bn-home-off": "assets/ai-tpl/techblue-3/bn-home-off.webp",
+  "bn-promo-off": "assets/ai-tpl/techblue-3/bn-promo-off.webp",
+  "bn-share-off": "assets/ai-tpl/techblue-3/bn-share-off.webp",
+  "bn-dep-off": "assets/ai-tpl/techblue-3/bn-dep-off.webp",
+  "bn-mine-off": "assets/ai-tpl/techblue-3/bn-mine-off.webp",
+  "bn-reg-off": "assets/ai-tpl/techblue-3/bn-reg-off.webp",
+  "gm-1": "assets/ai-tpl/techblue-3/gm-1.webp",
+  "gm-2": "assets/ai-tpl/techblue-3/gm-2.webp",
+  "gm-3": "assets/ai-tpl/techblue-3/gm-3.webp",
+  "gm-6": "assets/ai-tpl/techblue-3/gm-6.webp",
+  "gm-4": "assets/ai-tpl/techblue-3/gm-4.webp",
+  "gm-7": "assets/ai-tpl/techblue-3/gm-7.webp",
+  "gm-9": "assets/ai-tpl/techblue-3/gm-9.webp",
+  "gm-8": "assets/ai-tpl/techblue-3/gm-8.webp",
+  "gm-10": "assets/ai-tpl/techblue-3/gm-10.webp"
+ },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
+ "thumb": "assets/ai-tpl/techblue-3/thumb.webp",
+ "bytes_webp": 242470,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "60e77888945be245fc720457e13b1c72727d8b0c",
+   "attempts": 1
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "80e98e55f1a37f227b581e8c6751cf49e41347ae",
+   "attempts": 1
+  },
+  "time": "2026-11-27",
+  "regenerated": []
+ },
+ "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
+ "figmaPage": "430:619174",
+ "figmaSection": "434:449513",
+ "figmaNode": "437:222482",
+ "figmaCaption": "437:222603",
+ "figmaSlotPanel": "437:222653",
+ "figmaSheets": {
+  "banner_sheet": "440:334065",
+  "icon_sheet": "440:365716"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on non-primary backgrounds use LIGHTEN (dark) / DARKEN (light) blend to hide the sheet background; -off slots use a saturation -1 / exposure -0.2 image filter"
+}

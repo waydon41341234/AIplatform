@@ -146,7 +146,7 @@
     if (!P.tplReady) body = `<div class="pg-grid">${all.map(() => `<div class="card"><div class="cover r-3x4 skeleton"></div><div class="pg-sk-line skeleton"></div><div class="pg-sk-line is-short skeleton"></div></div>`).join('')}</div>`;
     else if (!list.length) body = q ? emptyBox('magnifying-glass', t('pg/none', { q: P.tplQ.trim() }), `<button class="btn btn-secondary btn-sm" data-act="pgTplClear">${t('pg/clear-search')}</button>`) : emptyBox('squares-four-fill', t('home/tpl-empty'), viewAllBtn('pgTplAll'));
     else body = `<div class="pg-grid">${list.map(tplCardHtml).join('')}</div>`;
-    return page(`<main class="page pg">${head(t('nav/templates'), t('pg/templates-sub'), search)}${filters}${body}</main>`);
+    return page(`<main class="page pg">${head(t('nav/templates'), t('pg/templates-sub'), search)}${window.CT ? window.CT.entry() : ''}${filters}${body}</main>`);
   }
   I.pgTplQ = (v) => { S.pg.tplQ = v; return true; };
   A.pgTplClear = () => { S.pg.tplQ = ''; };
@@ -386,7 +386,9 @@
   window.AFTER_RENDER.push(applyAvatar);
   applyAvatar();
   window.avatarOf = avCur; // 其他模块要用当前头像时读它：'a1'~'a8' 或业主上传的 dataURL
-  A.avOpen = () => { S.menu = null; S.pg.avSel = avCur(); if (mob()) S.sheet = 'pg-av'; else S.dialog = 'pg-av'; };
+  A.avOpen = () => { S.menu = null; S.pg.avSel = avCur(); S.pg.avIn = true; if (mob()) S.sheet = 'pg-av'; else S.dialog = 'pg-av'; };
+  // 入场动画只在打开那一下播：选头像 / 上传后整页重渲染，弹窗和遮罩不再从透明重新淡入（否则每点一下全屏闪一次）
+  window.AFTER_RENDER.push(() => { if (S.pg.avIn && document.querySelector('.av-dlg')) S.pg.avIn = false; });
   A.avPick = (k) => { if (AVS.includes(k)) S.pg.avSel = k; };
   A.avUpload = () => {
     window.pickImage({ accept: 'image/png,image/jpeg,image/webp', maxMB: 2 }, (src) => {
@@ -500,8 +502,8 @@
     if (S.dialog === 'pg-del' || S.sheet === 'pg-del') {
       h += wrap('pg-del', `<h3>${t('proj/delete-q')}</h3><p class="muted pg-dp">${t('proj/delete-d')}</p><div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="pgDelOk">${t('proj/delete')}</button></div>`);
     }
-    if (S.dialog === 'pg-av') h += window.dialog(avBody(), 'av-dlg');
-    if (S.sheet === 'pg-av') h += window.sheet(avBody(), 'av-dlg');
+    if (S.dialog === 'pg-av') h += window.dialog(avBody(), `av-dlg ${S.pg.avIn ? '' : 'is-stay'}`);
+    if (S.sheet === 'pg-av') h += window.sheet(avBody(), `av-dlg ${S.pg.avIn ? '' : 'is-stay'}`);
     if (S.dialog === 'pg-logout' || S.sheet === 'pg-logout') {
       h += wrap('pg-logout', `<h3>${t('account/logout-q')}</h3><div class="dialog-foot pg-foot"><button class="btn btn-secondary" data-act="closeAll">${t('confirm/cancel')}</button><button class="btn btn-danger" data-act="pgLogoutOk">${t('account/logout')}</button></div>`);
     }

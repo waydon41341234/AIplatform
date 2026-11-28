@@ -26,7 +26,7 @@
   function themeStyle() {
     const { th, tb, ec } = X().liveTheme();
     let s = Object.keys(th).map((k) => `--o-${k}:${th[k]}`).join(';') + (window.MP && window.MP.vars ? window.MP.vars(th, ec || {}) : '');
-    if (tb) { if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`; }
+    if (tb) { if (tb.bg) s += `;--tb-bg:${tb.bg}`; if (tb.text) s += `;--tb-text:${tb.text}`; if (tb.search) s += `;--tb-search:${tb.search}`; if (tb.reg) s += `;--tb-reg:${tb.reg}`; if (tb.login) s += `;--tb-login:${tb.login}`; if (tb.regInk) s += `;--tb-regink:${tb.regInk}`; if (tb.bal) s += `;--tb-bal:${tb.bal}`; }
     return s;
   }
   const zStyle = (z) => `zoom:${z};--pc-iz:${(1 / z).toFixed(4)}`;
@@ -83,7 +83,7 @@
   function midnav() {
     const m = M('midnav'), D = X().E.D, T = D.txt || {};
     // 文字样式按 H5 字号等比换算到 PC（H5 默认 → PC 默认），粗细原样；颜色走模块色变量（跟 H5 同源）
-    const tx = (id, h5, pc) => { const v = T[id] || {}; return (v.s ? `font-size:${Math.round((v.s * pc) / h5)}px;` : '') + (v.w ? `font-weight:${v.w};` : '') + (v.c && id !== 'midnav.name' && id !== 'midnav.reg' ? `color:${v.c};` : ''); };
+    const tx = (id, h5, pc) => { const v = T[id] || {}; return (v.s ? `font-size:${Math.round((v.s * pc) / h5)}px;` : '') + (v.w ? `font-weight:${v.w};` : '') + (v.c && id !== 'midnav.name' && id !== 'midnav.reg' ? `color:${window.txRes ? window.txRes(v.c) : v.c};` : ''); };
     // 帐户区跟 H5 一致：未登录 = 登录 / 注册按钮，已登录 = 用户名 + 余额框（通用组件，顶部栏共用设置）
     const acct = m.layout !== 'account' ? '' : D.login
       ? `<div class="acct in"><span class="u" style="${tx('midnav.user', 11, 14)}">${window.balUser ? window.balUser() : ''}</span><span class="b" style="${tx('midnav.bal', 13, 18)}">${window.balBox ? window.balBox() : ''}</span><span class="sp"></span></div>`
@@ -101,8 +101,8 @@
   }
   function gamecards() {
     const m = M('gamecards');
-    // 与 H5 一致：第 1 张推荐角标、第 8 张示意兜底封面（MP.gcFbInner）
-    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, g], j) => { const fb = j === 7 && window.MP.gcFbInner; return `<div class="c"><div class="im cl ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px">${fb ? window.MP.gcFbInner(m) : `<img src="assets/classic/game${g}.webp" alt="">`}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${m.fav !== false && window.MP.gcStarImg ? window.MP.gcStarImg(m, j ? 'starOff' : 'starSel', 'star') : ''}${m.tag && !fb ? '<img class="wg" src="assets/classic/wg.png" alt="">' : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`; }).join('')}</div></div>`;
+    // 与 H5 一致：第 1 张推荐角标、第 8 张示意兜底封面（MP.gcFbInner）；单卡换图换过的封面（MP.gcCover）
+    return `<div class="pc-sec"><div class="pc-gc" style="gap:${m.gap || 16}px">${GAMES.map(([n, g], j) => { const fb = j === 7 && window.MP.gcFbInner; return `<div class="c"><div class="im cl ${fb ? 'fb' : ''}" style="border-radius:${m.corner || 0}px">${fb ? window.MP.gcFbInner(m) : window.MP.gcCover ? window.MP.gcCover(m, j) : `<img src="assets/classic/game${g}.webp" alt="">`}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${m.fav !== false && window.MP.gcStarImg ? window.MP.gcStarImg(m, j ? 'starOff' : 'starSel', 'star') : ''}${m.tag && !fb ? '<img class="wg" src="assets/classic/wg.png" alt="">' : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}</div>`; }).join('')}</div></div>`;
   }
   function footer() {
     const m = M('footer');

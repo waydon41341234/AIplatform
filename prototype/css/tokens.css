@@ -44,6 +44,8 @@
   --success: #30d158; --warning: #ff9f0a; --error: #ff453a;
   --icon: #ffffff; --icon-2: #ebebf599; --icon-3: #ebebf54d;
   --fill-1: #7878805c; --fill-2: #78788052; --fill-3: #7676802e;
+  --sw-edge: rgba(255, 255, 255, .18); /* 色块内描边（Figma color/border/swatch-edge VariableID:459:12）：白 / 黑色块在深浅主题都看得见 */
+  --fill-3-solid: #2c2c30; /* fill-3 叠在 bg-surface 上的实色：卡片里色块选中圈的 2px 间隙用 */
   --shadow-composer: 0 4px 20px #00000047;
   --shadow-md: 0 8px 24px #00000066; --shadow-lg: 0 16px 48px #00000080;
   --skeleton-a: #1c1c1e; --skeleton-b: #2c2c2e;
@@ -58,6 +60,8 @@ html[data-theme="light"] {
   --success: #34c759; --warning: #ff9500; --error: #ff3b30;
   --icon: #000000; --icon-2: #3c3c4399; --icon-3: #3c3c434d;
   --fill-1: #78788033; --fill-2: #78788029; --fill-3: #74748014;
+  --sw-edge: rgba(0, 0, 0, .12);
+  --fill-3-solid: #f4f4f5;
   --shadow-composer: 0 4px 20px #0d1a3314;
   --shadow-md: 0 8px 24px #0d1a331f; --shadow-lg: 0 16px 48px #0d1a3329;
   --skeleton-a: #e5e5ea; --skeleton-b: #f2f2f7;

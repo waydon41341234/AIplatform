@@ -156,14 +156,77 @@
 .ad-cand.is-void { color: var(--text-3); }
 .ad-ck { position: absolute; right: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
 .ad-ck .ic { width: 14px; height: 14px; }
-.ad-eacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--space-12); }
-.ad-eacts .btn { flex: 1 1 auto; min-width: 0; }
-.ad-msheet { display: flex; flex-direction: column; }
+.ad-eacts { display: flex; flex-wrap: nowrap; gap: 8px; margin-top: var(--space-12); }
+.ad-eacts .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; }
+.ad-eacts .btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-msheet { display: flex; flex-direction: column; padding-bottom: 0; }
 .ad-msheet > .sheet-head { padding: 0 var(--space-4); }
-.ad-msheet > .sheet-head h3 { display: flex; align-items: center; gap: 6px; }
-.ad-mbody { flex: 1; min-height: 0; overflow: auto; padding-bottom: var(--space-16); }
+.ad-msheet > .sheet-head h3 { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+/* 底部「生成 3 套」贴着屏幕底：滚动区不留下边距，安全区算进按钮条自己（不再露出一条底下的内容） */
+.ad-mbody { flex: 1; min-height: 0; overflow: auto; padding-bottom: 0; }
 .ad-msheet .ad-cand { min-height: calc(667px * .28); }
-.ad-msheet .ad-egen { bottom: 0; }
+.ad-msheet .ad-egen { bottom: 0; margin-bottom: 0; padding-bottom: calc(var(--space-16) + env(safe-area-inset-bottom)); }
+/* 标题栏 ✦50（Figma header · cost） */
+.ad-cost { flex: none; margin-left: auto; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 600; line-height: 22px; }
+.ad-msheet > .sheet-head .ad-cost { margin-left: 0; }
+/* 风格卡 · 横排（Figma StyleCard 150×60：36×48 缩略 + 名称 / 高级皇冠 + 短描述） */
+.ad-scard.is-row { flex-direction: row; align-items: center; gap: 8px; height: 60px; padding: 6px 8px 6px 6px; border-width: 1px; border-radius: 12px; }
+.ad-scard.is-row .ad-sthumb { flex: none; width: 36px; height: 48px; gap: 2px; padding: 0 0 3px; border-radius: 8px; }
+.ad-scard.is-row .ad-sthumb .t { height: 6px; }
+.ad-scard.is-row .ad-sthumb .t em { right: 3px; top: 1.5px; width: 7px; height: 3px; border-radius: 2px; }
+.ad-scard.is-row .ad-sthumb .b { height: 10px; margin: 0 3px; border-radius: calc(var(--r) / 4); }
+.ad-scard.is-row .ad-sthumb .j { height: 5px; margin: 0 3px; border-radius: calc(var(--r) / 4); }
+.ad-scard.is-row .ad-sthumb .j em { height: 1.5px; }
+.ad-scard.is-row .ad-sthumb .n { margin: 0 3px; }
+.ad-scard.is-row .ad-sthumb .n em { width: 4px; height: 4px; border-radius: 1.5px; }
+.ad-scard.is-row .ad-sthumb .c { gap: 2px; margin: 0 3px; }
+.ad-scard.is-row .ad-sthumb .c em { border-radius: 2px; }
+.ad-scard.is-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ad-scard.is-row .nm { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.ad-scard.is-row b { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text); }
+.ad-scard.is-row small { font-size: 12px; line-height: 18px; color: var(--text-2); }
+.ad-scard.is-row.is-on b, .ad-scard.is-row.is-on small { color: var(--brand); }
+.ad-prem { flex: none; display: inline-flex; width: 12px; height: 12px; color: #E8B53A; }
+.ad-prem .ic { width: 12px; height: 12px; }
+/* AI 一键设计 · 页面风格模版（Waydon 11-27 第 5 条；Figma 440:334066 电脑 / 440:335401 手机） */
+.ad-tsec .lab { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ad-tfree { flex: none; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+.ad-thint { margin: -4px 0 8px; font-size: 12px; line-height: 18px; color: var(--text-3); }
+.ad-tcards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ad-tcard { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 4px 4px 6px; border-radius: 12px; background: var(--fill-3); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer; text-align: center; }
+.ad-tcard:hover { box-shadow: inset 0 0 0 1px var(--brand); }
+.ad-tcard.is-on { background: var(--brand-subtle); box-shadow: inset 0 0 0 1.5px var(--brand); }
+.ad-tcard.is-on > b { color: var(--brand); }
+.ad-tcard.is-dis { opacity: .6; pointer-events: none; }
+.ad-tcard > b { font-size: 12px; line-height: 18px; font-weight: 500; color: var(--text); }
+.ad-tpv { position: relative; display: block; border-radius: 8px; overflow: hidden; background: var(--fill-2); }
+.ad-tpv .ad-mini { border-radius: 0; }
+.ad-tskel, .ad-tfail { display: flex; width: 100%; aspect-ratio: 375 / 667; }
+.ad-tfail { flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 6px; color: var(--text-3); font-size: 11px; line-height: 16px; }
+.ad-tno { position: absolute; left: 5px; top: 5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #000000a6; color: #fff; font-size: 10px; line-height: 18px; font-weight: 600; text-align: center; }
+.ad-tck { position: absolute; right: 5px; top: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.ad-tck .ic { width: 12px; height: 12px; }
+.ad-tprompt { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--fill-3); }
+.ad-eres .ad-tprompt { background: var(--fill-2); }
+.ad-tp-hd { display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 20px; }
+.ad-tp-hd .ic { color: var(--brand); }
+.ad-tp-tx { font-size: 12px; line-height: 18px; color: var(--text-2); white-space: pre-line; word-break: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; user-select: text; }
+.ad-tprompt.is-open .ad-tp-tx { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: visible; }
+.ad-tp-ft { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ad-tp-btn { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--fill-2); color: var(--text); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.ad-tp-btn:hover { background: var(--bg-hover); }
+.ad-tp-btn .ic { width: 14px; height: 14px; }
+.ad-tp-more[hidden] { display: none; }
+.ad-tp-more { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--brand); white-space: nowrap; }
+.ad-tp-more .ic { width: 12px; height: 12px; }
+.ad-tnote { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12px; line-height: 18px; color: var(--text-3); }
+.ad-tnote .ic { flex: none; margin-top: 1px; }
+.ad-tacts { flex-wrap: nowrap; }
+.ad-tacts .btn { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; height: auto; min-height: 40px; white-space: nowrap; line-height: 16px; text-align: center; }
+.ad-msheet .ad-tno { min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; line-height: 20px; }
+.ad-msheet .ad-tck { width: 22px; height: 22px; }
+.ad-msheet .ad-tck .ic { width: 14px; height: 14px; }
+.ad-msheet .ad-tacts .btn { padding-left: 10px; padding-right: 10px; }
 .ad-ecancel h3 { margin: 0; }
 
 /* 已应用提示条 */
@@ -306,3 +369,97 @@
 .ad-sw i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--bg-raised); margin-left: -4px; }
 .ad-sw i:first-child { margin-left: 0; }
 .menu .ad-sw i { width: 18px; height: 18px; }
+
+/* AI 设计的顶部栏（aidesign tbColors → --tb-search / --tb-bal）：默认搜索图标按同形状遮罩跟色；已登录余额金额换成在顶部栏底色上看得清的色（余额框颜色里自己改过的 --bx-amt 照旧优先） */
+.h5-top .srch-cl .srch-k { display: block; width: 22px; height: 19px; background: var(--tb-search); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.h5-top .bx b, .pc-top .bx b { color: var(--bx-amt, var(--tb-bal, var(--o-accent_3))); }
+/* 未登录币种框（tbColors → --tb-cur / --tb-curic）：文字 + 箭头、默认币种图标在 AI 彩色 / 深色顶部栏底上不到 3:1 时换色；文字样式里自己改过的颜色（.h5 .h5-top .cur-cl）照旧优先 */
+.h5-top .cur-cl { color: var(--tb-cur, var(--o-neutral_2)); }
+.h5-top .cur-cl .cur-ic { background: var(--tb-curic, var(--o-accent_3)); }
+
+/* ---------- AI 一键设计 11-28（Figma 04-11-28 D1–D8 / M1–M8）---------- */
+/* 效果图行：格子不倾斜、不出悬停提示，说明在右边自动换行（以前提示框盖住上面的标题） */
+.ad-epanel .ad-eref { align-items: center; }
+.ad-epanel .ad-eref .refslot { transform: none; }
+.ad-eref-tx { flex: 1; min-width: 0; font-size: 12px; line-height: 18px; color: var(--text-2); white-space: normal; overflow-wrap: anywhere; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+/* 生成中 / 结果：顶部参数小标签 */
+.ad-sum { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Figma D5 / D6 param：左右 8、底 fill/tertiary——307 宽的面板里「黑金 / 图标：金属质感（跟随）/ 主色：风格默认」一行放得下（11-28 QA） */
+.ad-sum > span { max-width: 100%; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--fill-3); color: var(--text); font-size: 12px; line-height: 26px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-rcards { margin-top: 12px; }
+.ad-rcard { cursor: pointer; }
+.ad-rcard.is-gen, .ad-rcard.is-void, .ad-rcard.is-fail { cursor: default; }
+.ad-rcard.is-gen:hover, .ad-rcard.is-void:hover, .ad-rcard.is-fail:hover { box-shadow: inset 0 0 0 1px var(--border); }
+.ad-rcard.is-gen > b { color: var(--text-2); }
+/* 生成中的灰阶线框（顶栏 / Banner / 公告 / 入口 / 九宫格）+ 中间转圈百分比 + 底部进度条 */
+.ad-wf { display: flex; flex-direction: column; gap: 3px; aspect-ratio: 375 / 667; padding: 0 4px 4px; background: var(--fill-3); }
+.ad-wf > i, .ad-wf .r i, .ad-wf .g i { display: block; border-radius: 3px; background: var(--fill-1); }
+.ad-wf > i.t { height: 6%; margin: 0 -4px; border-radius: 0; }
+.ad-wf > i.b { height: 16%; }
+.ad-wf > i.n { height: 6%; }
+.ad-wf .r { display: flex; justify-content: space-between; gap: 4px; padding: 2px 4px; }
+.ad-wf .r i { width: 12%; aspect-ratio: 1; }
+.ad-wf .g { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.ad-wf .pc { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--bg-surface) 88%, transparent); box-shadow: var(--shadow-md); }
+.ad-wf .pc .wb-spin { width: 18px; height: 18px; border-width: 2px; }
+.ad-wf .pc b { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.ad-wf .bar { position: absolute; left: 8px; right: 8px; bottom: 10px; height: 4px; border-radius: 2px; background: var(--fill-1); overflow: hidden; }
+.ad-wf .bar i { display: block; height: 100%; border-radius: 2px; background: var(--brand); transition: width .3s; }
+/* 说明行：预览 / 保留颜色 / 导出说明 */
+.ad-rnotes { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.ad-rnotes:empty { display: none; }
+.ad-rnotes .notice { margin: 0; }
+.ad-rnote { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 20px; color: var(--text-2); }
+.ad-rnote > .ic { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--brand); }
+.ad-rnote.is-faint { font-size: 12px; line-height: 18px; color: var(--text-3); }
+.ad-rnote.is-faint > .ic { margin-top: 1px; color: var(--text-3); }
+.ad-rlock { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--fill-3); font-size: 13px; line-height: 20px; color: var(--text); }
+.ad-rlock > .ic { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--warning); }
+.ad-spin { animation: spin 1s linear infinite; }
+.ad-rpanel .ad-egen .btn > .ic { flex: none; }
+.ad-rpanel .ad-eacts { margin-top: 0; }
+.ad-again { display: block; width: 100%; padding: 6px 0; color: var(--brand); font-size: 13px; line-height: 20px; font-weight: 500; text-align: center; white-space: normal; }
+.ad-again:hover { text-decoration: underline; }
+/* 手机上选中卡片右上角的眼睛 = 全屏预览（是按钮） */
+button.ad-tck { border: 0; padding: 0; cursor: pointer; z-index: 2; }
+/* 已套用 / 已撤销提示：文字长时换行，按钮不挤出去 */
+.toast.ad-toast { max-width: min(520px, calc(100vw - 32px)); }
+.toast.ad-toast > span { white-space: normal; min-width: 0; }
+.toast.ad-toast button { flex: none; white-space: nowrap; }
+/* 确认弹窗「本次约消耗 · 50 点」蓝字（Figma D4） */
+.cost-card .cc-cost.is-brand { color: var(--brand); }
+/* 手机面板头：左 ×、标题、右 ✦50（Figma M1） */
+.ad-msheet > .sheet-head { gap: 4px; }
+.ad-msheet > .sheet-head h3 { font-size: 16px; }
+/* 电脑面板标题（‹ AI 一键设计 ✦50）滚动时钉在顶上；点模版后滚到「3 套模版」时留出标题的位置（Figma D2） */
+.ed-right > .p-title:has(+ .ad-epanel) { position: sticky; top: -16px; z-index: 4; margin-top: -16px; padding-top: 16px; padding-bottom: 8px; background: var(--bg-surface); }
+.ed-right .ad-tsec { scroll-margin-top: 64px; }
+/* 结果 / 模版卡片名：英文 / 越南文长名最多两行，不再只剩「Black Gold · …」 */
+.ad-tcard > b { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+/* 3 套结果：「放弃 / 应用这一套 / 再来一组」压在面板底部（Figma D6） */
+.ed-right:has(> .ad-rpanel) { display: flex; flex-direction: column; }
+.ed-right > .ad-rpanel { flex: 1 0 auto; display: flex; flex-direction: column; }
+.ad-rpanel > .ad-egen { margin-top: auto; padding-top: var(--space-20); }
+.ad-mbody:has(> .ad-rpanel) { display: flex; flex-direction: column; }
+.ad-mbody > .ad-rpanel { flex: 1 0 auto; display: flex; flex-direction: column; }
+/* ---- 11-28 QA：照 Figma D1 / D2 / D6 / M1 ---- */
+/* 分区标题（页面风格 / 黑金 · 3 套模版 / 效果图（可选）…）：13 Medium、color/text/secondary */
+.ad-epanel .p-sec > .lab { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text-2); }
+/* 「生成 3 套」下面的余额行居中（Figma ad/p-balance） */
+.ad-egen > .caption { text-align: center; }
+/* 提示词卡：复制 / 改写后生成 = 40 高胶囊（14 Medium，无图标），展开 = 12 蓝字（Figma D2 actions） */
+.ad-tp-ft .ad-tp-btn { height: 40px; padding: 0 20px; background: var(--fill-2); font-size: 14px; font-weight: 500; }
+.ad-tp-ft .ad-tp-btn:hover { background: var(--fill-1); }
+.ad-tp-ft .ad-tp-more { font-weight: 400; }
+/* 3 套结果的「放弃」= 描边按钮（Figma D6 btn-discard：无底色、1px border/default） */
+.ad-eacts .btn-outline { background: transparent; color: var(--text); }
+.ad-eacts .btn-outline:hover { background: var(--bg-hover); }
+/* 手机弹层（Figma M1 AiDesignPanel：离顶 8、上圆角 20、把手 36×5，标题行 32 高）：顶上露出一条压暗的编辑器 */
+.sheet.ad-msheet { top: 8px; height: calc(100dvh - 8px); max-height: none; padding-top: 8px; border-radius: 20px 20px 0 0; }
+.ad-msheet > .sheet-grab { flex: none; margin: 0 auto 16px; }
+.ad-msheet > .sheet-head { flex: none; height: 32px; margin: 0 0 16px; }
+@media (min-width: 600px) and (max-width: 839px) { .sheet.med-sheet.ad-msheet { left: 0; right: 0; width: auto; transform: none; } }
+/* AI 弹层上面再开的弹层（生成 3 套首页设计？/ 关闭并放弃这 3 套结果？/ 取消生成？）：遮罩要盖住 AI 弹层（压暗、点不到，点遮罩只关上面这层），
+   弹层在遮罩上面（Figma M4；以前两层都是 80 / 90，后开的遮罩垫在 AI 弹层下面，11-28 QA 第 2 轮）。同 .drawer ~ .scrim 的写法 */
+.ad-msheet ~ .scrim { z-index: 91; }
+.ad-msheet ~ .sheet, .ad-msheet ~ .dialog { z-index: 92; }

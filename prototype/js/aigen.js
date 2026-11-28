@@ -14,7 +14,10 @@
  *   实现 = { styles(tg, a) → [{ id, label, html }], preset(tg, st, a), refPrompt?(tg, res, a)（返回 style: null = 不选中任何款式）, where?(tg),
  *           defStyle?(tg) → 默认款式, refOf?(tg, st, a) → { src, name }（点款式 = 同时把这张图放进参考图格，Banner 主题）, stLab? → 款式行标题 key, stGrid? → 款式格 class, replacedKey? → 「已按新…改写」文案 key, entries?(tg) → [{ i, name, label?, req, def, thumb, pics, cost? }], sample?(tg) → 整套默认样板入口, usedName?(a, tg) → toast 里的名字, libName?(a, tg) → 素材库名字, lowWhat?(a, tg) → 余额不足正文前缀（「1 张轮播图」）,
  *           gen(a, tg, i, n, base) → 候选数组, best?(a, tg, cands), tile(a, tg, i, c), old?(a, tg, i), preview?,
- *           apply(a, tg, i, c)（AIG 外面包 commit）, lib?(a, tg, i, c) → 素材值, pay(tg) → [kind, vars], onTarget?(tg) }
+ *           apply(a, tg, i, c)（AIG 外面包 commit）, lib?(a, tg, i, c) → 素材值, pay(tg) → [kind, vars], onTarget?(tg),
+ *           title?(a, tg) → 标题, tgLabel?(a, tg) → 目标分段名, specTxt?(a, tg, sp) → 规格标签, noStyle?: true（不显示款式行）, onUsed?(a, tg)（「使用」后代替默认 Toast） }
+ *   适配器另可写 host: '<模块>'（面板显示在这个模块的位置，单卡换图 gcimg → gamecards）、oneTarget: true（只有一个目标也显示「生成哪张」）、
+ *   livePreset: true（业主没改过的默认提示词每次显示都按当前数据重写，单卡换图的构图跟卡片样式）
  * 依赖：core（refSlot / refPick / costConfirm / lowBalance / toast）、editor（window.EDX，运行时取）。 */
 (function () {
   const A = window.ACT, I = window.INP;
@@ -59,9 +62,9 @@
   // 确认框 / toast 里的名字：拉丁字母开头前面留空格（生成 Banner 第 2 张？/ 生成整套帐户栏图标？）；en / vi 句中整套名首字母小写
   const midName = (n) => String(n || '').replace(/^(All|Cả bộ) /, (m) => m.toLowerCase());
   const cTitle = (n) => { n = midName(n); return t('aig/confirm-title', { sp: /^[A-Za-z0-9]/.test(n) ? ' ' : '', name: n }); };
-  // 一组两张的说明：「（信箱 未登录 / 已登录）」「（未选 / 选中）」
+  // 一组两张的说明：「（消息 已读 / 未读）」「（未选 / 选中）」
   const pairNote = (a, tg, list) => { const ents = entriesOf(a, tg), two = list.filter((i) => ((ents.find((e) => e.i === String(i)) || {}).pics || 1) > 1); if (!two.length || !tg.pair) return ''; const pr = tg.pair(two[0]); if (!pr) return ''; return t('aig/pair-note', { name: two.length === 1 && list.length === 1 ? entName(a, tg, two[0]) + ' ' : '', a: pr[0], b: pr[1] }); };
-  // 其余只有一个、且一个入口两张：「（信箱 2 张）」（Figma G3-15c）
+  // 其余只有一个、且一个入口两张：「（消息 2 张）」（Figma G3-15c）
   const picsNote = (a, tg, list) => { if (list.length !== 1) return ''; const k = picsOf(a, tg, list); return k > 1 ? t('aig/rest-pics', { name: entName(a, tg, list[0]), k }) : ''; };
   const cBody = (a, tg, list, x) => t('aig/confirm-body', { n: list.length, k: picsOf(a, tg, list), p: pairNote(a, tg, list), x });
   // 计数：G2 / G4 把样板算进总数（已生成 9/9 · 样板 1 + 其余 8）；G3 帐户栏 / 公告栏只算其余（已生成 3/3 · 样板 1 + 其余 3）
@@ -96,12 +99,14 @@
     }
     if (scope === 'set' && o.idx != null && o.idx !== '' && ents.some((e) => e.i === String(o.idx))) a.pref = String(o.idx);
     a.jump = true; E.ai = a; E.picker = null; E.keys = null; E.tab = 'content'; S().menu = null; S().sheet = null;
+    if (!d.host && E.gcSel) E.gcSel = null; // 打开模块自己的 AI（兜底图 / 收藏星等）= 取消单卡换图的卡片选中（同画布上点兜底图 / 收藏星，QA 11-28）
     if (impl(a, tg).onTarget) impl(a, tg).onTarget(tg);
     if (x.mobileEd()) E.mpanel = 'module';
     return true;
   }
   function close() { const E = X().E; E.ai = null; S().menu = null; if (S().sheet === 'aigModel') S().sheet = null; }
-  const isOpen = (mod) => { const a = cur(); return !!a && a.mod === mod; };
+  // host：面板借用另一个模块的位置显示（单卡换图 gcimg → 游戏卡片）
+  const isOpen = (mod) => { const a = cur(); return !!a && (a.mod === mod || (ADP[a.mod] && ADP[a.mod].host === mod)); };
 
   // data-arg = 模块 id | 目标 id | 入口 | 范围（后三个可省）
   A.aigOpen = (arg) => {
@@ -247,17 +252,19 @@
     if (a.stage === 'failed') { a.stage = a.cands.length ? 'cands' : 'setup'; return; }
     close();
   };
-  function finish(a, name) {
+  function finish(a, name, tg) {
     const x = X(), E = x.E;
     a.stage = 'setup'; a.cands = []; a.pick = null; a.rows = {}; a.failed = {}; a.sample = null;
     if (E.ai === a) E.ai = null;
+    const m = tg ? impl(a, tg) : {};
+    if (m.onUsed) { m.onUsed(a, tg); return; } // 适配器自己出 Toast（单卡换图：画布 Toast「图片已应用 · 撤销换图」）
     window.toast(t('aig/used', { name: midName(name) }), x.undoOpt());
   }
   A.aigUse = () => {
     const a = cur(); if (!a || a.stage !== 'cands' || a.pick == null) return false;
     const tg = tgOf(a), m = impl(a, tg), c = a.cands[a.pick], i = sampleIdx(a, tg), name = a.scope !== 'set' && m.usedName ? m.usedName(a, tg) : nameOf(a, tg);
     X().commit(() => { m.apply(a, tg, i, c); toLib(a, tg, i, [c]); });
-    finish(a, name);
+    finish(a, name, tg);
   };
   // 整套：样板挑好后按同一款式生成其余入口（发送时已确认过整套价钱的，这一步不再确认）
   A.aigRest = () => {
@@ -312,7 +319,7 @@
   A.aigUseAll = () => {
     const a = cur(); if (!a || a.stage !== 'list') return false; const tg = tgOf(a), m = impl(a, tg), ks = Object.keys(a.rows); if (!ks.length) return false;
     X().commit(() => { ks.forEach((i) => { m.apply(a, tg, i, a.rows[i]); toLib(a, tg, i, [a.rows[i]]); }); });
-    finish(a, nameOf(a, tg));
+    finish(a, nameOf(a, tg), tg);
   };
 
   // ---------- 渲染 ----------
@@ -348,7 +355,7 @@
       const si = sampleIdx(a, tg), rest = a.scope === 'set' ? picked(a, tg).filter((i) => i !== String(si)) : [];
       const pr = pairOf(a, tg);
       const lab = a.scope === 'set' ? t('aig/sample', { name: esc(entName(a, tg, si)) }) : pr ? t(tg.lr ? 'aig/cands-pair-lr' : 'aig/cands-pair', { a: pr[0], b: pr[1] }) : t('aig/cands');
-      // 左 / 右一组（公告栏信箱 未登录 / 已登录、游戏菜单按钮底图）：2×2，每个候选是两张分开的格子，说明写在下面（Figma G3-16C）
+      // 左 / 右一组（公告栏消息 已读 / 未读、游戏菜单按钮底图）：2×2，每个候选是两张分开的格子，说明写在下面（Figma G3-16C）
       const lr = pr && tg.lr;
       const tiles = lr ? a.cands.map((c, k) => `<button class="aig-pair2 ${a.pick === k ? 'is-on' : ''}" data-act="aigPick" data-arg="${k}" aria-pressed="${a.pick === k}"><span class="aig-pp">${tile(a, tg, si, c)}${k === a.best ? `<span class="best">${t('aig/best')}</span>` : ''}</span><span class="aig-cap">${esc(pr[0])} / ${esc(pr[1])}</span></button>`).join('')
         : a.cands.map((c, k) => `<button class="aig-cand ${pr ? 'is-pair' : ''} ${a.pick === k ? 'is-on' : ''}" style="${ratioCss(tg)}" data-act="aigPick" data-arg="${k}" aria-pressed="${a.pick === k}">${tile(a, tg, si, c)}${k === a.best ? `<span class="best">${t('aig/best')}</span>` : ''}</button>`).join('');
@@ -398,10 +405,13 @@
   function panel() {
     const a = cur(); if (!a) return '';
     const x = X(), tg = tgOf(a), m = impl(a, tg), tgs = tgsOf(a.mod), lock = busy(a), ents = entriesOf(a, tg);
+    // livePreset：默认提示词跟着数据走（单卡换图：构图跟卡片样式，换了样式再打开 / 撤销都不会留旧构图）；业主改过或看参考图写的不动
+    if (adp(a).livePreset && !lock && !a.dirty && !a.fromRef && !a.analyzing) a.prompt = m.preset(tg, a.style, a);
     const name = nameOf(a, tg);
-    const hd = `<h2 class="p-title aig-hd">${ic('sparkle-fill', 'aig-ic')}<span class="ellipsis">${esc(t('aig/title', { name }))}</span><button class="ibtn ibtn-sm aig-x" data-act="aigClose" title="${esc(t('aig/close'))}" aria-label="${esc(t('aig/close'))}">${ic('x')}</button></h2>`;
+    const hd = `<h2 class="p-title aig-hd">${ic('sparkle-fill', 'aig-ic')}<span class="ellipsis">${esc(m.title ? m.title(a, tg) : t('aig/title', { name }))}</span><button class="ibtn ibtn-sm aig-x" data-act="aigClose" title="${esc(t('aig/close'))}" aria-label="${esc(t('aig/close'))}">${ic('x')}</button></h2>`;
     // 整套时不显示「生成哪张」（Figma G4-13 / G2-07）
-    const tgSw = tgs.length >= 2 && a.scope !== 'set' ? sec(t('aig/target'), seg(tgs.map((q) => ({ v: q.id, label: q.label })), a.tg, 'aigTarget', 'is-hug', lock)) : '';
+    // oneTarget：只有一个目标也显示（单卡换图「只这一张 · 炸金花」），tgLabel 可按当前入口改写名字
+    const tgSw = (tgs.length >= 2 || adp(a).oneTarget) && a.scope !== 'set' ? sec(t('aig/target'), seg(tgs.map((q) => ({ v: q.id, label: m.tgLabel && q.id === tg.id ? m.tgLabel(a, q) : q.label })), a.tg, 'aigTarget', 'is-hug', lock)) : '';
     let scope = '';
     if (scopeable(a, tg)) {
       const oneI = oneIdx(a, tg) != null ? oneIdx(a, tg) : sampleIdx(a, tg) || ents[0].i;
@@ -425,12 +435,12 @@
     const sts = m.styles(tg, a);
     // 整套出样板后：顶部栏（G2-09）和手机（M-11b）把款式区收起，样板候选紧跟输入框
     const foldSt = a.scope === 'set' && a.stage !== 'setup' && (adp(a).upfront || x.mobileEd());
-    const styles = a.stage === 'rest' || a.stage === 'list' || foldSt ? '' : sec(t(m.stLab || 'aig/style'), `<div class="aig-styles ${m.stGrid || ''}">${sts.map((s) => `<button class="aig-st ${a.style === s.id ? 'is-on' : ''}" data-act="aigStyle" data-arg="${s.id}" ${lock || a.analyzing ? 'disabled' : ''} title="${esc(s.label)}" aria-pressed="${a.style === s.id}"><span class="pv">${s.html}</span><small>${esc(s.label)}</small></button>`).join('')}</div>`);
+    const styles = m.noStyle || a.stage === 'rest' || a.stage === 'list' || foldSt ? '' : sec(t(m.stLab || 'aig/style'), `<div class="aig-styles ${m.stGrid || ''}">${sts.map((s) => `<button class="aig-st ${a.style === s.id ? 'is-on' : ''}" data-act="aigStyle" data-arg="${s.id}" ${lock || a.analyzing ? 'disabled' : ''} title="${esc(s.label)}" aria-pressed="${a.style === s.id}"><span class="pv">${s.html}</span><small>${esc(s.label)}</small></button>`).join('')}</div>`);
     const cost = sendCost(a, tg), sp = specOf(a, tg), now = Date.now(), hintOn = now < (a.hintUntil || 0), shake = now < (a.shakeUntil || 0);
     const empty = !a.prompt.trim();
     const send = lock ? `<button class="send is-busy" disabled aria-label="${esc(t('aig/generating', { n: tg.count, p: a.pct }))}">${ic('sparkle-fill')}${cost}<i class="aig-spin" aria-hidden="true"></i></button>`
       : `<button class="send ${empty || a.analyzing ? 'is-disabled' : ''}" data-act="aigSend" title="${esc(t('aig/send-tip', { n: cost }))}" aria-label="${esc(t('aig/send-tip', { n: cost }))}">${ic('sparkle-fill')}${cost}${ic('arrow-up')}</button>`;
-    const specTxt = t(pairOf(a, tg) ? 'aig/count-spec-pair' : 'aig/count-spec', { n: tg.count, w: sp[0], h: sp[1] });
+    const specTxt = m.specTxt ? m.specTxt(a, tg, sp) : t(pairOf(a, tg) ? 'aig/count-spec-pair' : 'aig/count-spec', { n: tg.count, w: sp[0], h: sp[1] });
     const box = `<div class="aig-comp"><div class="c-box aig-box ${hintOn ? 'is-err' : ''} ${shake ? 'is-shake' : ''}"><div class="c-input">${window.refSlot(a.refSt, 'aigRef')}<div class="aig-main"><textarea rows="4" maxlength="300" data-input="aigPrompt" data-key="aigKey" placeholder="${esc(a.analyzing ? t('ed/tbai-analyzing') : t('aig/prompt-ph'))}" ${lock || a.analyzing ? 'disabled' : ''}>${esc(a.analyzing ? '' : a.prompt)}</textarea><span class="aig-spec" title="${esc(specTxt)}">${specTxt}</span></div></div>
       <div class="c-tools">${modelPill(lock)}<span class="sb-spacer"></span>${send}</div></div>${hintOn ? `<div class="c-hint aig-hint" role="alert">${ic('warning-circle-fill', 'ic-16')}<span>${t('composer/empty-hint')}</span></div>` : ''}</div>`;
     const low = x.afford(cost) || lock || a.stage === 'list' ? '' : `<button class="aig-low" data-act="edTopup">${ic('warning-circle-fill', 'ic-16')}${t('aig/low')}</button>`;

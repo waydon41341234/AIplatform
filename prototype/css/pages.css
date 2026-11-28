@@ -197,11 +197,12 @@ button.pg-row:hover, .pg-row.is-open { background: var(--bg-hover); }
 .pg-av-btn:hover::after, .pg-av-btn:focus-visible::after { opacity: 1; }
 .pg-av-edit { position: absolute; right: -2px; bottom: -2px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-raised); border: var(--stroke-thin) solid var(--border); color: var(--icon); }
 .pg-av-edit svg { width: 14px; height: 14px; }
+.av-dlg.is-stay, .scrim:has(+ .av-dlg.is-stay) { animation: none; } /* 弹窗已开着时重渲染（选头像 / 上传）不重播入场动画，见 pages.js avIn */
 .av-head { margin-bottom: var(--space-16); }
 .av-cur { display: flex; align-items: center; gap: var(--space-16); }
 .av-pv { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex: none; background: var(--fill-2); }
 .av-cur-t { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.av-cur-t p { margin: 0; }
+.av-cur-t p { margin: 0; text-wrap: pretty; } /* 说明两行时不留单字 / 单词孤行（英文 “image”、中文 “形”） */
 .av-grid { display: grid; grid-template-columns: repeat(4, 72px); justify-content: space-between; row-gap: var(--space-16); margin-top: var(--space-20); }
 .av-opt { position: relative; box-sizing: border-box; width: 72px; height: 72px; padding: 2px; border-radius: 50%; border: 2px solid transparent; transition: border-color .15s ease; }
 .av-opt img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }

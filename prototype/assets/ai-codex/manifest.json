@@ -1,0 +1,319 @@
+{
+ "source": {
+  "fileKey": "FikSmkYSPbP30PrjagWyYl",
+  "page": "430:619174 「04-AI 模版 11-27」",
+  "sections": {
+   "platinum": "430:654090",
+   "blackgold": "430:654091",
+   "techblue": "65736:26603",
+   "fresh": "65736:26610",
+   "festive": "65736:26617",
+   "neon": "65736:26624",
+   "minimal": "65736:26631"
+  },
+  "colorCollection": "65736:140281 「AI 首页模版 / 色彩」",
+  "i18nCollection": "14:2 (ai-template/name-*, ai-template/style-*)",
+  "promptSection": "65736:172611 「套件提示词与预览组件」",
+  "extractedAt": "2026-11-28"
+ },
+ "export": {
+  "method": "get_screenshot 1x, contentsOnly=true on each group frame of 资源组件与设置 (transparent background), cropped to the 78x78 component bounds, LANCZOS to 64x64, webp q72 alpha_quality 50; banner = AI 原图 / <id> / banner 1020x300 -> 690x203 webp q60; thumb = 首页 / <id> 750x1334 rendered 301x534 -> 240x426 webp q55",
+  "slotBounds": {
+   "account/deposit": [
+    47,
+    83,
+    78,
+    78
+   ],
+   "account/vip": [
+    232,
+    83,
+    78,
+    78
+   ],
+   "account/share": [
+    417,
+    83,
+    78,
+    78
+   ],
+   "account/more": [
+    602,
+    83,
+    78,
+    78
+   ],
+   "nav/home": [
+    47,
+    260,
+    78,
+    78
+   ],
+   "nav/home-off": [
+    47,
+    394,
+    78,
+    78
+   ],
+   "nav/promo": [
+    232,
+    260,
+    78,
+    78
+   ],
+   "nav/promo-off": [
+    232,
+    394,
+    78,
+    78
+   ],
+   "nav/share": [
+    417,
+    260,
+    78,
+    78
+   ],
+   "nav/share-off": [
+    417,
+    394,
+    78,
+    78
+   ],
+   "nav/deposit": [
+    602,
+    260,
+    78,
+    78
+   ],
+   "nav/deposit-off": [
+    602,
+    394,
+    78,
+    78
+   ],
+   "nav/mine": [
+    787,
+    260,
+    78,
+    78
+   ],
+   "nav/mine-off": [
+    787,
+    394,
+    78,
+    78
+   ],
+   "nav/register": [
+    972,
+    260,
+    78,
+    78
+   ],
+   "nav/register-off": [
+    972,
+    394,
+    78,
+    78
+   ],
+   "game/g1": [
+    47,
+    569,
+    78,
+    78
+   ],
+   "game/g2": [
+    215,
+    569,
+    78,
+    78
+   ],
+   "game/g3": [
+    383,
+    569,
+    78,
+    78
+   ],
+   "game/g4": [
+    551,
+    569,
+    78,
+    78
+   ],
+   "game/g5": [
+    719,
+    569,
+    78,
+    78
+   ],
+   "game/g6": [
+    887,
+    569,
+    78,
+    78
+   ],
+   "game/g7": [
+    1055,
+    569,
+    78,
+    78
+   ],
+   "game/g8": [
+    47,
+    711,
+    78,
+    78
+   ],
+   "game/g9": [
+    215,
+    711,
+    78,
+    78
+   ],
+   "game/g10": [
+    383,
+    711,
+    78,
+    78
+   ],
+   "game/g11": [
+    551,
+    711,
+    78,
+    78
+   ],
+   "game/g12": [
+    719,
+    711,
+    78,
+    78
+   ],
+   "game/g13": [
+    887,
+    711,
+    78,
+    78
+   ],
+   "notice/speaker": [
+    47,
+    963,
+    78,
+    78
+   ],
+   "notice/mail": [
+    232,
+    963,
+    78,
+    78
+   ]
+  },
+  "groupOrigin": {
+   "账户入口": [
+    24,
+    34
+   ],
+   "底部导航": [
+    24,
+    211
+   ],
+   "游戏分类": [
+    24,
+    520
+   ],
+   "公告与消息": [
+    24,
+    914
+   ]
+  },
+  "slotFile": {
+   "account/deposit": "acct-dep",
+   "account/vip": "acct-vip",
+   "account/share": "acct-share",
+   "account/more": "acct-more",
+   "nav/<k>[-off]": "bn-<home|promo|share|dep|mine|reg>[-off] (deposit->dep, register->reg)",
+   "game/gN": "gm-N (N = 1..13, same N as mp/gm-n-N)",
+   "notice/speaker": "notice-speaker",
+   "notice/mail": "notice-mail"
+  }
+ },
+ "common": {
+  "banner_size": "general",
+  "gm_style": "side",
+  "bn_style": "regular",
+  "topbar": "版式=经典蓝, 登录态=已登录",
+  "order": [
+   "banner",
+   "notice",
+   "midnav",
+   "gamemenu",
+   "gamecards"
+  ],
+  "note": "All 21 首页 frames share one structure: Banner 708x208 (general), notice 50, account bar 81, left game-category column 150 wide + 3-column game cards 540 wide, flat bottom nav (no raised centre), classic top bar 90; no jackpot / footer / sidebar."
+ },
+ "styleNames": {
+  "platinum": [
+   "白金",
+   "白金",
+   "Platinum",
+   "Bạch kim"
+  ],
+  "blackgold": [
+   "黑金",
+   "黑金",
+   "Black gold",
+   "Đen vàng"
+  ],
+  "techblue": [
+   "科技蓝",
+   "科技藍",
+   "Tech blue",
+   "Xanh công nghệ"
+  ],
+  "fresh": [
+   "巴西绿",
+   "巴西綠",
+   "Brazil green",
+   "Xanh Brazil"
+  ],
+  "festive": [
+   "节日红金",
+   "節日紅金",
+   "Festive red and gold",
+   "Đỏ vàng lễ hội"
+  ],
+  "neon": [
+   "霓虹电竞",
+   "霓虹電競",
+   "Neon esports",
+   "Esports neon"
+  ],
+  "minimal": [
+   "极简灰",
+   "極簡灰",
+   "Minimal gray",
+   "Xám tối giản"
+  ]
+ },
+ "sets": [
+  {"id":"platinum-1","style":"platinum","n":1,"name":["白金 · 棋牌","白金 · 棋牌","Platinum · Table Games","Bạch kim · Cờ bài"],"nameKey":"ai-template/name-platinum-1","en":"Platinum · Table Games","dark":false,"theme":{"primary":"#b18b47","lead":"#302b22","neutral_1":"#635a4e","neutral_2":"#918779","neutral_3":"#c4bcad","border":"#dbd9d6","bg_1":"#f9f5ec","bg_2":"#fefdfb","accent_1":"#449a69","accent_2":"#c7573d","accent_3":"#b98a45"},"ext":{"home_bg":"#f9f5ec","home_db":"#fefdfb","btmnav_def":"#635a4e","btmnav_active":"#896d3b","bs_topnav_bg":"#fdfbf8","web_bs_yj_bg":"#fefdfb","web_btmnav_db":"#fdfbf8","category_active_text":"#151515"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":77848,"figma":{"h5":"65736:140301","resources":"65736:140304","groups":{"账户入口":"65736:140305","底部导航":"65736:140319","游戏分类":"65736:140357","公告与消息":"65736:140398"},"home":"65736:170255","bottomNavSignedOut":"65736:172574","bannerSource":"65736:26591","atlasSource":"65736:26592","promptBanner":"65736:173367","promptAtlas":"65736:173373","nameVariable":"VariableID:65780:51695"}},
+  {"id":"platinum-2","style":"platinum","n":2,"name":["白金 · 捕鱼","白金 · 捕魚","Platinum · Fishing Game","Bạch kim · Bắn cá"],"nameKey":"ai-template/name-platinum-2","en":"Platinum · Fishing Game","dark":false,"theme":{"primary":"#897954","lead":"#2e2a22","neutral_1":"#61594e","neutral_2":"#8f8679","neutral_3":"#c2bbae","border":"#dbdad8","bg_1":"#f5f3ed","bg_2":"#fefefd","accent_1":"#42996a","accent_2":"#c5573e","accent_3":"#b78946"},"ext":{"home_bg":"#f5f3ed","home_db":"#fefefd","btmnav_def":"#61594e","btmnav_active":"#7e6f4e","bs_topnav_bg":"#f8f7f4","web_bs_yj_bg":"#fefefd","web_btmnav_db":"#faf9f7","category_active_text":"#151515"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":95248,"figma":{"h5":"65736:173232","resources":"65736:173235","groups":{"账户入口":"65736:173236","底部导航":"65736:173250","游戏分类":"65736:173288","公告与消息":"65736:173329"},"home":"65736:174161","bottomNavSignedOut":"65736:176516","bannerSource":"65736:26593","atlasSource":"65736:26594","promptBanner":"65736:173379","promptAtlas":"65736:173385","nameVariable":"VariableID:65780:51698"}},
+  {"id":"platinum-3","style":"platinum","n":3,"name":["白金 · 真人","白金 · 真人","Platinum · Live Casino","Bạch kim · Casino trực tuyến"],"nameKey":"ai-template/name-platinum-3","en":"Platinum · Live Casino","dark":false,"theme":{"primary":"#ab8268","lead":"#302a23","neutral_1":"#625a4f","neutral_2":"#90877a","neutral_3":"#c4bbaf","border":"#dbd8d6","bg_1":"#faf5f2","bg_2":"#fefcfb","accent_1":"#449a6b","accent_2":"#c7573f","accent_3":"#b88a47"},"ext":{"home_bg":"#faf5f2","home_db":"#fefcfb","btmnav_def":"#625a4f","btmnav_active":"#8c6c57","bs_topnav_bg":"#fbf8f6","web_bs_yj_bg":"#fefcfb","web_btmnav_db":"#fcf9f7","category_active_text":"#151515"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":83172,"figma":{"h5":"65736:176606","resources":"65736:176609","groups":{"账户入口":"65736:176610","底部导航":"65736:176624","游戏分类":"65736:176662","公告与消息":"65736:176703"},"home":"65736:177427","bottomNavSignedOut":"65736:179746","bannerSource":"65736:26595","atlasSource":"65736:26596","promptBanner":"65736:173391","promptAtlas":"65736:173397","nameVariable":"VariableID:65780:51701"}},
+  {"id":"blackgold-1","style":"blackgold","n":1,"name":["黑金 · 电子","黑金 · 電子","Black Gold · Slots","Vàng đen · Slots"],"nameKey":"ai-template/name-blackgold-1","en":"Black Gold · Slots","dark":true,"theme":{"primary":"#d7ac4b","lead":"#f1e3c1","neutral_1":"#ccb888","neutral_2":"#948566","neutral_3":"#625844","border":"#4b4537","bg_1":"#11100f","bg_2":"#221d14","accent_1":"#55af6c","accent_2":"#df593e","accent_3":"#e7a43b"},"ext":{"home_bg":"#11100f","home_db":"#221d14","btmnav_def":"#ccb888","btmnav_active":"#d7ac4b","bs_topnav_bg":"#252015","web_bs_yj_bg":"#221d14","web_btmnav_db":"#251f15","category_active_text":"#151515"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":92014,"figma":{"h5":"65736:179800","resources":"65736:179803","groups":{"账户入口":"65736:179804","底部导航":"65736:179818","游戏分类":"65736:179856","公告与消息":"65736:179897"},"home":"65999:9937","bottomNavSignedOut":"65736:199024","bannerSource":"65736:26597","atlasSource":"65736:26598","promptBanner":"65736:173403","promptAtlas":"65736:173409","nameVariable":"VariableID:65780:51704"}},
+  {"id":"blackgold-2","style":"blackgold","n":2,"name":["黑金 · 体育","黑金 · 體育","Black Gold · Football","Vàng đen · Bóng đá"],"nameKey":"ai-template/name-blackgold-2","en":"Black Gold · Football","dark":true,"theme":{"primary":"#f1bc5e","lead":"#f3e4c2","neutral_1":"#cdb989","neutral_2":"#958667","neutral_3":"#645946","border":"#504a3e","bg_1":"#0d1015","bg_2":"#27241d","accent_1":"#57b06d","accent_2":"#e15a3f","accent_3":"#e9a53c"},"ext":{"home_bg":"#0d1015","home_db":"#27241d","btmnav_def":"#cdb989","btmnav_active":"#f1bc5e","bs_topnav_bg":"#322c21","web_bs_yj_bg":"#27241d","web_btmnav_db":"#2f2a1f","category_active_text":"#151515"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":92876,"figma":{"h5":"65736:199078","resources":"65736:199081","groups":{"账户入口":"65736:199082","底部导航":"65736:199096","游戏分类":"65736:199134","公告与消息":"65736:199175"},"home":"65999:9938","bottomNavSignedOut":"65736:202238","bannerSource":"65736:26599","atlasSource":"65736:26600","promptBanner":"65736:173415","promptAtlas":"65736:173421","nameVariable":"VariableID:65780:51707"}},
+  {"id":"blackgold-3","style":"blackgold","n":3,"name":["黑金 · 电竞","黑金 · 電競","Black Gold · Esports","Vàng đen · Esports"],"nameKey":"ai-template/name-blackgold-3","en":"Black Gold · Esports","dark":true,"theme":{"primary":"#cd9756","lead":"#f1e2c2","neutral_1":"#cbb788","neutral_2":"#938367","neutral_3":"#615645","border":"#4e4438","bg_1":"#171310","bg_2":"#251d15","accent_1":"#54ad6c","accent_2":"#df573f","accent_3":"#e6a23c"},"ext":{"home_bg":"#171310","home_db":"#251d15","btmnav_def":"#cbb788","btmnav_active":"#cd9756","bs_topnav_bg":"#2b2117","web_bs_yj_bg":"#251d15","web_btmnav_db":"#292017","category_active_text":"#151515"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":84858,"figma":{"h5":"65736:202310","resources":"65736:202313","groups":{"账户入口":"65736:202314","底部导航":"65736:202328","游戏分类":"65736:202366","公告与消息":"65736:202407"},"home":"65999:9939","bottomNavSignedOut":"65746:17782","bannerSource":"65736:26601","atlasSource":"65736:26602","promptBanner":"65736:173427","promptAtlas":"65736:173433","nameVariable":"VariableID:65780:51710"}},
+  {"id":"techblue-1","style":"techblue","n":1,"name":["科技蓝 · 彩票","科技藍 · 彩票","Tech Blue · Lottery","Xanh công nghệ · Xổ số"],"nameKey":"ai-template/name-techblue-1","en":"Tech Blue · Lottery","dark":true,"theme":{"primary":"#3296ff","lead":"#dceaff","neutral_1":"#a1bade","neutral_2":"#6c89b2","neutral_3":"#425b83","border":"#374c68","bg_1":"#0b1930","bg_2":"#0e2442","accent_1":"#1bc085","accent_2":"#f25268","accent_3":"#f2ae2e"},"ext":{"home_bg":"#0b1930","home_db":"#0e2442","btmnav_def":"#a1bade","btmnav_active":"#3296ff","bs_topnav_bg":"#0f2645","web_bs_yj_bg":"#0e2442","web_btmnav_db":"#0f2645","category_active_text":"#151515"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":89482,"figma":{"h5":"65746:17836","resources":"65746:17839","groups":{"账户入口":"65746:17840","底部导航":"65746:17854","游戏分类":"65746:17892","公告与消息":"65746:17933"},"home":"65746:18621","bottomNavSignedOut":"65746:20940","bannerSource":"65736:26604","atlasSource":"65736:26605","promptBanner":"65736:173439","promptAtlas":"65736:173445","nameVariable":"VariableID:65780:51713"}},
+  {"id":"techblue-2","style":"techblue","n":2,"name":["科技蓝 · 棋牌","科技藍 · 棋牌","Tech Blue · Table Games","Xanh công nghệ · Cờ bài"],"nameKey":"ai-template/name-techblue-2","en":"Tech Blue · Table Games","dark":true,"theme":{"primary":"#00b8d4","lead":"#d9ecfc","neutral_1":"#9ebddb","neutral_2":"#698bb0","neutral_3":"#3f5d80","border":"#305562","bg_1":"#071d28","bg_2":"#062f3c","accent_1":"#17c283","accent_2":"#ee5466","accent_3":"#eeb12c"},"ext":{"home_bg":"#071d28","home_db":"#062f3c","btmnav_def":"#9ebddb","btmnav_active":"#00b8d4","bs_topnav_bg":"#063744","web_bs_yj_bg":"#062f3c","web_btmnav_db":"#063442","category_active_text":"#151515"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":81558,"figma":{"h5":"65746:20994","resources":"65746:20997","groups":{"账户入口":"65746:20998","底部导航":"65746:21012","游戏分类":"65746:21050","公告与消息":"65746:21091"},"home":"65746:21779","bottomNavSignedOut":"65746:24098","bannerSource":"65736:26606","atlasSource":"65736:26607","promptBanner":"65736:173451","promptAtlas":"65736:173457","nameVariable":"VariableID:65780:51716"}},
+  {"id":"techblue-3","style":"techblue","n":3,"name":["科技蓝 · 捕鱼","科技藍 · 捕魚","Tech Blue · Fishing Game","Xanh công nghệ · Bắn cá"],"nameKey":"ai-template/name-techblue-3","en":"Tech Blue · Fishing Game","dark":true,"theme":{"primary":"#728cff","lead":"#e0eaff","neutral_1":"#a5bade","neutral_2":"#7088b2","neutral_3":"#465a83","border":"#3f4867","bg_1":"#101632","bg_2":"#171f41","accent_1":"#1fbf85","accent_2":"#f65168","accent_3":"#f6ae2e"},"ext":{"home_bg":"#101632","home_db":"#171f41","btmnav_def":"#a5bade","btmnav_active":"#728cff","bs_topnav_bg":"#1a2348","web_bs_yj_bg":"#171f41","web_btmnav_db":"#192246","category_active_text":"#151515"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":99024,"figma":{"h5":"65746:24152","resources":"65746:24155","groups":{"账户入口":"65746:24156","底部导航":"65746:24170","游戏分类":"65746:24208","公告与消息":"65746:24249"},"home":"65746:24937","bottomNavSignedOut":"65746:27256","bannerSource":"65736:26608","atlasSource":"65736:26609","promptBanner":"65736:173463","promptAtlas":"65736:173469","nameVariable":"VariableID:65780:51719"}},
+  {"id":"fresh-1","style":"fresh","n":1,"name":["巴西绿 · 真人 (荷叶绿底)","巴西綠 · 真人 (荷葉綠底)","Brazil Green · Live Casino (Lotus Green)","Xanh Brazil · Casino trực tuyến (Xanh lá sen)"],"nameKey":"ai-template/name-fresh-1","en":"Brazil Green · Live Casino (Lotus Green)","dark":true,"theme":{"primary":"#ffde8f","lead":"#ffffff","neutral_1":"#1ae187","neutral_2":"#17ae69","neutral_3":"#159c5f","border":"#11824f","bg_1":"#0a4329","bg_2":"#0b4d2f","accent_1":"#19cf2e","accent_2":"#ff6b5b","accent_3":"#ffaa09"},"ext":{"home_bg":"#0b4d2f","home_db":"#0a4329","btmnav_def":"#17ae69","btmnav_active":"#ffde8f","bs_topnav_bg":"#0b4d2f","web_bs_yj_bg":"#0b4d2f","web_btmnav_db":"#0a4329","category_active_text":"#0a4329"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":83546,"figma":{"h5":"65746:27310","resources":"65746:27313","groups":{"账户入口":"65746:27314","底部导航":"65746:27328","游戏分类":"65746:27366","公告与消息":"65746:27407"},"home":"65746:28095","bottomNavSignedOut":"65746:30414","bannerSource":"65736:26611","atlasSource":"65736:26612","promptBanner":"65736:173475","promptAtlas":"65736:173481","nameVariable":"VariableID:65780:51722"}},
+  {"id":"fresh-2","style":"fresh","n":2,"name":["巴西绿 · 电子 (Rolex黑)","巴西綠 · 電子 (Rolex黑)","Brazil Green · Slots (Rolex Black)","Xanh Brazil · Slots (Rolex đen)"],"nameKey":"ai-template/name-fresh-2","en":"Brazil Green · Slots (Rolex Black)","dark":true,"theme":{"primary":"#1a8950","lead":"#ffffff","neutral_1":"#a4a4a4","neutral_2":"#757575","neutral_3":"#656262","border":"#444444","bg_1":"#1e1e1e","bg_2":"#242424","accent_1":"#19cf2e","accent_2":"#ea4e3d","accent_3":"#ffaa09"},"ext":{"home_bg":"#242424","home_db":"#1e1e1e","btmnav_def":"#757575","btmnav_active":"#1a8950","bs_topnav_bg":"#242424","web_bs_yj_bg":"#242424","web_btmnav_db":"#1e1e1e","category_active_text":"#ffffff"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":92320,"figma":{"h5":"65746:30468","resources":"65746:30471","groups":{"账户入口":"65746:30472","底部导航":"65746:30486","游戏分类":"65746:30524","公告与消息":"65746:30565"},"home":"65746:31253","bottomNavSignedOut":"65746:33572","bannerSource":"65736:26613","atlasSource":"65736:26614","promptBanner":"65736:173487","promptAtlas":"65736:173493","nameVariable":"VariableID:65780:51725"}},
+  {"id":"fresh-3","style":"fresh","n":3,"name":["巴西绿 · 体育 (Rolex绿)","巴西綠 · 體育 (Rolex綠)","Brazil Green · Football (Rolex Green)","Xanh Brazil · Bóng đá (Rolex xanh)"],"nameKey":"ai-template/name-fresh-3","en":"Brazil Green · Football (Rolex Green)","dark":true,"theme":{"primary":"#78e02c","lead":"#ffffff","neutral_1":"#a4a4a4","neutral_2":"#757575","neutral_3":"#656262","border":"#414141","bg_1":"#212121","bg_2":"#161616","accent_1":"#19cf2e","accent_2":"#ea4e3d","accent_3":"#ffaa09"},"ext":{"home_bg":"#161616","home_db":"#212121","btmnav_def":"#757575","btmnav_active":"#78e02c","bs_topnav_bg":"#161616","web_bs_yj_bg":"#212121","web_btmnav_db":"#212121","category_active_text":"#212121"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":83726,"figma":{"h5":"65746:33626","resources":"65746:33629","groups":{"账户入口":"65746:33630","底部导航":"65746:33644","游戏分类":"65746:33682","公告与消息":"65746:33723"},"home":"65746:34411","bottomNavSignedOut":"65746:36772","bannerSource":"65736:26615","atlasSource":"65736:26616","promptBanner":"65736:173499","promptAtlas":"65736:173505","nameVariable":"VariableID:65780:51728"}},
+  {"id":"festive-1","style":"festive","n":1,"name":["红金 · 电竞","紅金 · 電競","Red Gold · Esports","Đỏ vàng · Esports"],"nameKey":"ai-template/name-festive-1","en":"Red Gold · Esports","dark":false,"theme":{"primary":"#c83032","lead":"#401312","neutral_1":"#7e3b33","neutral_2":"#a97168","neutral_3":"#d7b1a8","border":"#dfd5d3","bg_1":"#fff3e8","bg_2":"#fffdfa","accent_1":"#35964e","accent_2":"#b4131c","accent_3":"#e8ac3c"},"ext":{"home_bg":"#fff3e8","home_db":"#fffdfa","btmnav_def":"#7e3b33","btmnav_active":"#c83032","bs_topnav_bg":"#fef9f6","web_bs_yj_bg":"#fffdfa","web_btmnav_db":"#fefaf7","category_active_text":"#ffffff"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":90372,"figma":{"h5":"65746:36826","resources":"65746:36829","groups":{"账户入口":"65746:36830","底部导航":"65746:36844","游戏分类":"65746:36882","公告与消息":"65746:36923"},"home":"65746:37611","bottomNavSignedOut":"65746:39930","bannerSource":"65736:26618","atlasSource":"65736:26619","promptBanner":"65736:176484","promptAtlas":"65736:176490","nameVariable":"VariableID:65780:51731"}},
+  {"id":"festive-2","style":"festive","n":2,"name":["红金 · 彩票 (红底)","紅金 · 彩票 (紅底)","Red Gold · Lottery (Red Background)","Đỏ vàng · Xổ số (Nền đỏ)"],"nameKey":"ai-template/name-festive-2","en":"Red Gold · Lottery (Red Background)","dark":true,"theme":{"primary":"#ffd501","lead":"#ffffff","neutral_1":"#ddacac","neutral_2":"#c08383","neutral_3":"#b67373","border":"#a80000","bg_1":"#480001","bg_2":"#650002","accent_1":"#04be02","accent_2":"#ff0101","accent_3":"#ffaa09"},"ext":{"home_bg":"#480001","home_db":"#480001","btmnav_def":"#ffffff","btmnav_active":"#ffd501","bs_topnav_bg":"#6f0204","web_bs_yj_bg":"#480001","web_btmnav_db":"#250000","category_active_text":"#480001"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":98106,"figma":{"h5":"65746:39984","resources":"65746:39987","groups":{"账户入口":"65746:39988","底部导航":"65746:40002","游戏分类":"65746:40040","公告与消息":"65746:40081"},"home":"65746:40769","bottomNavSignedOut":"65746:43088","bannerSource":"65736:26620","atlasSource":"65736:26621","promptBanner":"65736:176496","promptAtlas":"65736:176502","nameVariable":"VariableID:65780:51734"}},
+  {"id":"festive-3","style":"festive","n":3,"name":["红金 · 棋牌","紅金 · 棋牌","Red Gold · Table Games","Đỏ vàng · Cờ bài"],"nameKey":"ai-template/name-festive-3","en":"Red Gold · Table Games","dark":false,"theme":{"primary":"#b5213c","lead":"#401312","neutral_1":"#7d3a33","neutral_2":"#a97069","neutral_3":"#d6b0a9","border":"#dfd4d3","bg_1":"#fff2ec","bg_2":"#fffbfa","accent_1":"#34964e","accent_2":"#b3131c","accent_3":"#e7ab3c"},"ext":{"home_bg":"#fff2ec","home_db":"#fffbfa","btmnav_def":"#7d3a33","btmnav_active":"#b5213c","bs_topnav_bg":"#fcf3f3","web_bs_yj_bg":"#fffbfa","web_btmnav_db":"#fdf6f5","category_active_text":"#ffffff"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":91300,"figma":{"h5":"65746:43142","resources":"65746:43145","groups":{"账户入口":"65746:43146","底部导航":"65746:43160","游戏分类":"65746:43198","公告与消息":"65746:43239"},"home":"65746:43927","bottomNavSignedOut":"65746:46246","bannerSource":"65736:26622","atlasSource":"65736:26623","promptBanner":"65736:176508","promptAtlas":"65736:176514","nameVariable":"VariableID:65780:51737"}},
+  {"id":"neon-1","style":"neon","n":1,"name":["霓虹电竞 · 捕鱼","霓虹電競 · 捕魚","Neon Esports · Fishing Game","Neon esports · Bắn cá"],"nameKey":"ai-template/name-neon-1","en":"Neon Esports · Fishing Game","dark":true,"theme":{"primary":"#a568ff","lead":"#ede1ff","neutral_1":"#baa3db","neutral_2":"#8c76b0","neutral_3":"#5a4a7b","border":"#493f5f","bg_1":"#140e24","bg_2":"#201637","accent_1":"#2bdeca","accent_2":"#f94093","accent_3":"#f9ab48"},"ext":{"home_bg":"#140e24","home_db":"#201637","btmnav_def":"#baa3db","btmnav_active":"#a568ff","bs_topnav_bg":"#22173b","web_bs_yj_bg":"#201637","web_btmnav_db":"#22173a","category_active_text":"#151515"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":98624,"figma":{"h5":"65746:46300","resources":"65746:46303","groups":{"账户入口":"65746:46304","底部导航":"65746:46318","游戏分类":"65746:46356","公告与消息":"65746:46397"},"home":"65746:47085","bottomNavSignedOut":"65746:49404","bannerSource":"65736:26625","atlasSource":"65736:26626","promptBanner":"65736:176556","promptAtlas":"65736:176562","nameVariable":"VariableID:65780:51740"}},
+  {"id":"neon-2","style":"neon","n":2,"name":["霓虹电竞 · 真人","霓虹電競 · 真人","Neon Esports · Live Casino","Neon esports · Casino trực tuyến"],"nameKey":"ai-template/name-neon-2","en":"Neon Esports · Live Casino","dark":true,"theme":{"primary":"#20d2ca","lead":"#e4e8fc","neutral_1":"#b1aad8","neutral_2":"#837dad","neutral_3":"#525178","border":"#37545c","bg_1":"#091a20","bg_2":"#0c2f34","accent_1":"#22e5c6","accent_2":"#f1478f","accent_3":"#f1b244"},"ext":{"home_bg":"#091a20","home_db":"#0c2f34","btmnav_def":"#b1aad8","btmnav_active":"#20d2ca","bs_topnav_bg":"#0d383c","web_bs_yj_bg":"#0c2f34","web_btmnav_db":"#0d353a","category_active_text":"#151515"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":80932,"figma":{"h5":"65746:49458","resources":"65746:49461","groups":{"账户入口":"65746:49462","底部导航":"65746:49476","游戏分类":"65746:49514","公告与消息":"65746:49555"},"home":"65746:51210","bottomNavSignedOut":"65746:53529","bannerSource":"65736:26627","atlasSource":"65736:26628","promptBanner":"65736:176568","promptAtlas":"65736:176574","nameVariable":"VariableID:65780:51743"}},
+  {"id":"neon-3","style":"neon","n":3,"name":["霓虹电竞 · 电子","霓虹電競 · 電子","Neon Esports · Slots","Neon esports · Slots"],"nameKey":"ai-template/name-neon-3","en":"Neon Esports · Slots","dark":true,"theme":{"primary":"#f259ac","lead":"#f2e0fa","neutral_1":"#bfa2d6","neutral_2":"#9175ab","neutral_3":"#5f4976","border":"#523b54","bg_1":"#1a0c20","bg_2":"#2a122b","accent_1":"#30ddc4","accent_2":"#fe3f8d","accent_3":"#feaa42"},"ext":{"home_bg":"#1a0c20","home_db":"#2a122b","btmnav_def":"#bfa2d6","btmnav_active":"#f259ac","bs_topnav_bg":"#311430","web_bs_yj_bg":"#2a122b","web_btmnav_db":"#2f142e","category_active_text":"#151515"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":95416,"figma":{"h5":"65746:53583","resources":"65746:53586","groups":{"账户入口":"65746:53587","底部导航":"65746:53601","游戏分类":"65746:53639","公告与消息":"65746:53680"},"home":"65746:54368","bottomNavSignedOut":"65746:56687","bannerSource":"65736:26629","atlasSource":"65736:26630","promptBanner":"65736:176580","promptAtlas":"65736:176586","nameVariable":"VariableID:65780:51746"}},
+  {"id":"minimal-1","style":"minimal","n":1,"name":["极简灰 · 体育","極簡灰 · 體育","Minimal Gray · Football","Xám tối giản · Bóng đá"],"nameKey":"ai-template/name-minimal-1","en":"Minimal Gray · Football","dark":false,"theme":{"primary":"#34383c","lead":"#131313","neutral_1":"#545454","neutral_2":"#848485","neutral_3":"#b5b5b5","border":"#d5d5d5","bg_1":"#f4f5f5","bg_2":"#fdfdfd","accent_1":"#2fa168","accent_2":"#dd474c","accent_3":"#ec990d"},"ext":{"home_bg":"#f4f5f5","home_db":"#fdfdfd","btmnav_def":"#545454","btmnav_active":"#34383c","bs_topnav_bg":"#f9f9fa","web_bs_yj_bg":"#fdfdfd","web_btmnav_db":"#fafafa","category_active_text":"#ffffff"},"layoutText":"Banner R8   ·   游戏卡 3 列 / 16 间距 / R18   ·   底导 110 px","layout":{"banner_corner":8,"gc_cols":3,"gc_gap":16,"gc_corner":18,"bn_h":110},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":74272,"figma":{"h5":"65746:56741","resources":"65746:56744","groups":{"账户入口":"65746:56745","底部导航":"65746:56759","游戏分类":"65746:56797","公告与消息":"65746:56838"},"home":"65746:57526","bottomNavSignedOut":"65746:59845","bannerSource":"65736:26632","atlasSource":"65736:26633","promptBanner":"65736:176741","promptAtlas":"65736:176747","nameVariable":"VariableID:65780:51749"}},
+  {"id":"minimal-2","style":"minimal","n":2,"name":["极简灰 · 电竞","極簡灰 · 電競","Minimal Gray · Esports","Xám tối giản · Esports"],"nameKey":"ai-template/name-minimal-2","en":"Minimal Gray · Esports","dark":false,"theme":{"primary":"#51545c","lead":"#141414","neutral_1":"#555555","neutral_2":"#868686","neutral_3":"#b6b6b7","border":"#d6d6d6","bg_1":"#f6f6f7","bg_2":"#fefefe","accent_1":"#31a269","accent_2":"#de494e","accent_3":"#ee9b0f"},"ext":{"home_bg":"#f6f6f7","home_db":"#fefefe","btmnav_def":"#555555","btmnav_active":"#51545c","bs_topnav_bg":"#f4f5f5","web_bs_yj_bg":"#fefefe","web_btmnav_db":"#f7f8f8","category_active_text":"#ffffff"},"layoutText":"Banner R12   ·   游戏卡 3 列 / 20 间距 / R8   ·   底导 124 px","layout":{"banner_corner":12,"gc_cols":3,"gc_gap":20,"gc_corner":8,"bn_h":124},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":71738,"figma":{"h5":"65746:59899","resources":"65746:59902","groups":{"账户入口":"65746:59903","底部导航":"65746:59917","游戏分类":"65746:59955","公告与消息":"65746:59996"},"home":"65746:60684","bottomNavSignedOut":"65746:63003","bannerSource":"65736:26634","atlasSource":"65736:26635","promptBanner":"65736:176753","promptAtlas":"65736:176759","nameVariable":"VariableID:65780:51752"}},
+  {"id":"minimal-3","style":"minimal","n":3,"name":["极简灰 · 彩票","極簡灰 · 彩票","Minimal Gray · Lottery","Xám tối giản · Xổ số"],"nameKey":"ai-template/name-minimal-3","en":"Minimal Gray · Lottery","dark":false,"theme":{"primary":"#3b4149","lead":"#131314","neutral_1":"#545454","neutral_2":"#858585","neutral_3":"#b5b6b6","border":"#d4d4d5","bg_1":"#f2f4f5","bg_2":"#fbfcfc","accent_1":"#30a169","accent_2":"#dd484d","accent_3":"#ed9a0e"},"ext":{"home_bg":"#f2f4f5","home_db":"#fbfcfc","btmnav_def":"#545454","btmnav_active":"#3b4149","bs_topnav_bg":"#f4f5f6","web_bs_yj_bg":"#fbfcfc","web_btmnav_db":"#f6f7f8","category_active_text":"#ffffff"},"layoutText":"Banner R4   ·   游戏卡 3 列 / 12 间距 / R24   ·   底导 104 px","layout":{"banner_corner":4,"gc_cols":3,"gc_gap":12,"gc_corner":24,"bn_h":104},"assets":{"banner":"banner.webp","thumb":"thumb.webp","acct":{"dep":"acct-dep.webp","vip":"acct-vip.webp","share":"acct-share.webp","more":"acct-more.webp"},"bn":{"home":{"on":"bn-home.webp","off":"bn-home-off.webp"},"promo":{"on":"bn-promo.webp","off":"bn-promo-off.webp"},"share":{"on":"bn-share.webp","off":"bn-share-off.webp"},"dep":{"on":"bn-dep.webp","off":"bn-dep-off.webp"},"mine":{"on":"bn-mine.webp","off":"bn-mine-off.webp"},"reg":{"on":"bn-reg.webp","off":"bn-reg-off.webp"}},"gm":["gm-1.webp","gm-2.webp","gm-3.webp","gm-4.webp","gm-5.webp","gm-6.webp","gm-7.webp","gm-8.webp","gm-9.webp","gm-10.webp","gm-11.webp","gm-12.webp","gm-13.webp"],"notice":{"speaker":"notice-speaker.webp","mail":"notice-mail.webp"}},"sizes":{"banner":[690,203],"thumb":[240,426],"icon":[64,64]},"bytes":68072,"figma":{"h5":"65746:63057","resources":"65746:63060","groups":{"账户入口":"65746:63061","底部导航":"65746:63075","游戏分类":"65746:63113","公告与消息":"65746:63154"},"home":"65746:63842","bottomNavSignedOut":"65746:66161","bannerSource":"65736:26636","atlasSource":"65736:26637","promptBanner":"65736:176765","promptAtlas":"65736:176771","nameVariable":"VariableID:65780:51755"}}
+ ]
+}

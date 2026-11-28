@@ -7,7 +7,7 @@
 (function () {
   const LS = {
     get(k, d) { try { const v = localStorage.getItem('proto.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('proto.' + k, JSON.stringify(v)); } catch (e) { /* 隐私模式忽略 */ } },
+    set(k, v) { try { localStorage.setItem('proto.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }, // 隐私模式 / 超出本地空间：返回 false（编辑器据此显示「保存失败」，不假装已保存）
   };
   const qs = new URLSearchParams(location.search);
   const S = (window.S = {
@@ -63,14 +63,17 @@
   let toastId = 0;
   function toast(msg, opts = {}) {
     const id = ++toastId;
-    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info });
+    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls }); // cls：个别 Toast 的样式（如「撤销」做成胶囊按钮）
     renderToasts();
     setTimeout(() => { S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }, opts.ms || 2400);
+    return id;
   }
+  // 提前收掉一条提示（单卡换图：同一时间只留一条「撤销换图」）
+  function toastDrop(id) { if (!S.toasts.some((x) => x.id === id)) return; S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }
   function renderToasts() {
     let w = document.querySelector('.toast-wrap');
     if (!w) { w = document.createElement('div'); w.className = 'toast-wrap'; document.body.appendChild(w); }
-    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
+    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''} ${x.cls || ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
   }
   const comingSoon = () => toast(t('common/coming-soon'), { info: true });
 
@@ -157,7 +160,7 @@
   const dialog = (inner, cls = '') => `<div class="scrim" data-act="closeAll"></div><div class="dialog ${cls}" role="dialog">${inner}</div>`;
   const empty = (icon, title, desc, btn) => `<div class="empty"><div class="ico">${ic(icon, 'ic-24')}</div><h3>${esc(title)}</h3>${desc ? `<p>${esc(desc)}</p>` : ''}${btn || ''}</div>`;
 
-  Object.assign(window, { t, esc, num, ic, typeIcon, MODEL_LOGO, bp, isMobile, toast, comingSoon, go, render, seg, sheet, dialog, empty, LS });
+  Object.assign(window, { t, esc, num, ic, typeIcon, MODEL_LOGO, bp, isMobile, toast, toastDrop, comingSoon, go, render, seg, sheet, dialog, empty, LS });
   window.AFTER_RENDER = [];
   window.addEventListener('DOMContentLoaded', () => { parseRoute(); render(); });
 })();
@@ -282,6 +285,28 @@
   window.fxStyle = (f, def) => { if (!/^img:/.test(f || '')) return `${def ? `background-image:url(${def});` : ''}filter:${f || 'none'}`; const k = f.indexOf('#'); return k < 0 ? `background-image:url(${f.slice(4)});filter:none` : `background-image:url(${f.slice(4, k)});filter:${f.slice(k + 1)}`; };
   window.imgOk = (f) => !!f && /^image\/(png|svg\+xml|apng|avif|webp)$/.test(f.type);
   // pickImage({accept, maxMB, multiple}, cb)：单选 cb(dataURL, file)；多选 cb([{src, name, file}])。类型 / 大小不合规自己 toast，不回调
+  // 上传大图先缩小再存（11-28 整合测试：手机照片 3–5 MB 的 data URL 存进设计数据会超出本地保存空间，刷新后整份改动丢失）：
+  // 长边超过 2560 或文件超过 1.2 MB 的 PNG / JPG / WebP / AVIF → 长边最多 2560、WebP 0.88（浏览器不支持 WebP 编码时用 JPG）；
+  // 仍保留比例，裁切 / 留边的位置不受影响；GIF / APNG / SVG 不动（动图 / 矢量）；缩完反而更大就用原图
+  const SHRINK_PX = 2560, SHRINK_B = 1.2 * 1048576;
+  function shrinkUpload(o) {
+    return new Promise((res) => {
+      const ty = (o.file && o.file.type) || '';
+      if (!/^image\/(png|jpeg|webp|avif)$/.test(ty) || !/^data:image\//.test(o.src)) return res(o);
+      const im = new Image();
+      im.onload = () => {
+        const w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, SHRINK_PX / Math.max(w, h, 1));
+        if (k === 1 && o.file.size <= SHRINK_B) return res(o);
+        try {
+          const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          let out = c.toDataURL('image/webp', 0.88); if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/jpeg', 0.88);
+          res(out.length < o.src.length ? Object.assign({}, o, { src: out }) : o);
+        } catch (e) { res(o); }
+      };
+      im.onerror = () => res(o); im.src = o.src;
+    });
+  }
   window.pickImage = function (opts, cb) {
     opts = Object.assign({ accept: 'image/png,image/jpeg,image/webp', maxMB: 10, multiple: false }, opts || {});
     const inp = document.createElement('input');
@@ -296,7 +321,7 @@
       if (big.length) window.toast(opts.maxMB === 10 ? t('composer/ref-too-big') : t('common/file-too-big', { n: opts.maxMB }), { info: true });
       const good = files.filter((f) => ok(f) && f.size <= opts.maxMB * 1048576);
       if (!good.length) return;
-      const read = (f) => new Promise((res) => { const r = new FileReader(); r.onload = () => res({ src: r.result, name: f.name, file: f }); r.readAsDataURL(f); });
+      const read = (f) => new Promise((res) => { const r = new FileReader(); r.onload = () => res({ src: r.result, name: f.name, file: f }); r.readAsDataURL(f); }).then(shrinkUpload);
       Promise.all((opts.multiple ? good : good.slice(0, 1)).map(read)).then((arr) => { if (opts.multiple) cb(arr); else cb(arr[0].src, arr[0].file); window.render(); });
     });
     inp.click();
@@ -353,11 +378,12 @@
       ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by-s', { n: num(short) })}</div>`}
       <div class="dialog-foot cc-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div></div>`;
     }
-    return `<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
-      <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
+    // icon / costLabel / costText（可选）：顶部图标块 + 自定义「本次约消耗 · 50 点」（AI 一键设计 Figma D4 / M4）
+    return `${o.icon ? `<span class="cc-ic">${ic(ok ? o.icon : 'wallet-fill')}</span>` : ''}<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
+      <div class="cost-card"><div class="cost-row"><span class="muted">${o.costLabel ? esc(o.costLabel) : t('confirm/cost-label')}</span><b${o.costText ? ' class="cc-cost is-brand"' : ''}>${o.costText ? esc(o.costText) : t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
         <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: num(S.credits) })}</span></div></div>
       ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by', { n: num(short) })}</div>`}
-      <div class="dialog-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
+      <div class="dialog-foot ${o.icon ? 'cc-foot' : ''}"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div>`; // 带图标块的（AI 一键设计 Figma M4）：手机两个等宽按钮
   }
   window.costConfirmLayer = function () {
     if (S.dialog === 'cost') return window.dialog(costBody(), 'cost-dialog');

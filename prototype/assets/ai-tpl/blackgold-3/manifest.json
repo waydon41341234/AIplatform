@@ -1,0 +1,141 @@
+{
+ "style": "blackgold",
+ "n": 3,
+ "id": "blackgold-3",
+ "name": "香槟夜宴",
+ "style_zh": "黑金",
+ "dark": true,
+ "prompt_zh": "【黑金 · 香槟夜宴】深色底 #0B0B0D，主色 #E6C675，点缀 #D4AF37。整体：香槟塔、金色光斑与夜宴舞台。Banner 3 张（通用 · 圆角 16，1020×300）：首存豪礼 / 赛事狂欢 / VIP 尊享，标题在左、主体物在右。图标 金属质感，帐户栏 4 个、底部导航 6 个、游戏分类 9 个同一套光影。布局：游戏菜单顶部页签·胶囊，游戏卡片 3 列圆角 32，底部导航中间凸起，顶部栏主色底。",
+ "theme": {
+  "primary": "#E6C675",
+  "lead": "#F6EFE0",
+  "neutral_1": "#D2C3A0",
+  "neutral_2": "#958A72",
+  "neutral_3": "#5E5748",
+  "border": "#33302A",
+  "bg_1": "#0B0B0D",
+  "bg_2": "#17161A",
+  "accent_1": "#4CAF6E",
+  "accent_2": "#E0533D",
+  "accent_3": "#D4AF37"
+ },
+ "ec": {
+  "key:home_bg": "key:bg_1"
+ },
+ "modules": {
+  "banner_size": "general",
+  "banner_corner": 16,
+  "banner_ind": "s1",
+  "gm_style": "tabs",
+  "gm_shape": "pill",
+  "jp_layout": "flow",
+  "jp_corner": 32,
+  "jp_margin": 24,
+  "jp_bg": "accent_3",
+  "gc_cols": 3,
+  "gc_corner": 32,
+  "gc_gap": 20,
+  "footer_align": "center",
+  "bn_style": "raised",
+  "sd_style": "list",
+  "tb_mode": "brand",
+  "icon_style": "metal"
+ },
+ "logo": "assets/ai-logo/royal88.png",
+ "assets": {
+  "banner-1": "assets/ai-tpl/blackgold-3/banner-1.webp",
+  "banner-2": "assets/ai-tpl/blackgold-3/banner-2.webp",
+  "banner-3": "assets/ai-tpl/blackgold-3/banner-3.webp",
+  "acct-dep": "assets/ai-tpl/blackgold-3/acct-dep.webp",
+  "acct-vip": "assets/ai-tpl/blackgold-3/acct-vip.webp",
+  "acct-share": "assets/ai-tpl/blackgold-3/acct-share.webp",
+  "acct-more": "assets/ai-tpl/blackgold-3/acct-more.webp",
+  "bn-home": "assets/ai-tpl/blackgold-3/bn-home.webp",
+  "bn-promo": "assets/ai-tpl/blackgold-3/bn-promo.webp",
+  "bn-share": "assets/ai-tpl/blackgold-3/bn-share.webp",
+  "bn-dep": "assets/ai-tpl/blackgold-3/bn-dep.webp",
+  "bn-mine": "assets/ai-tpl/blackgold-3/bn-mine.webp",
+  "bn-reg": "assets/ai-tpl/blackgold-3/bn-reg.webp",
+  "bn-home-off": "assets/ai-tpl/blackgold-3/bn-home-off.webp",
+  "bn-promo-off": "assets/ai-tpl/blackgold-3/bn-promo-off.webp",
+  "bn-share-off": "assets/ai-tpl/blackgold-3/bn-share-off.webp",
+  "bn-dep-off": "assets/ai-tpl/blackgold-3/bn-dep-off.webp",
+  "bn-mine-off": "assets/ai-tpl/blackgold-3/bn-mine-off.webp",
+  "bn-reg-off": "assets/ai-tpl/blackgold-3/bn-reg-off.webp",
+  "gm-1": "assets/ai-tpl/blackgold-3/gm-1.webp",
+  "gm-2": "assets/ai-tpl/blackgold-3/gm-2.webp",
+  "gm-3": "assets/ai-tpl/blackgold-3/gm-3.webp",
+  "gm-6": "assets/ai-tpl/blackgold-3/gm-6.webp",
+  "gm-4": "assets/ai-tpl/blackgold-3/gm-4.webp",
+  "gm-7": "assets/ai-tpl/blackgold-3/gm-7.webp",
+  "gm-9": "assets/ai-tpl/blackgold-3/gm-9.webp",
+  "gm-8": "assets/ai-tpl/blackgold-3/gm-8.webp",
+  "gm-10": "assets/ai-tpl/blackgold-3/gm-10.webp"
+ },
+ "slots": {
+  "banner.slides[0..2]": [
+   "banner-1",
+   "banner-2",
+   "banner-3"
+  ],
+  "midnav.items[0..3].img": [
+   "acct-dep",
+   "acct-vip",
+   "acct-share",
+   "acct-more"
+  ],
+  "bottomnav.items[i].imgOn / img": "bn-<id>.webp / bn-<id>-off.webp (home promo share dep mine reg)",
+  "bottomnav.items[1].imgOut": "bn-promo",
+  "bottomnav.items[3].imgOut": "bn-reg-off",
+  "gamemenu.items[0..8].img": [
+   "gm-1",
+   "gm-2",
+   "gm-3",
+   "gm-6",
+   "gm-4",
+   "gm-7",
+   "gm-9",
+   "gm-8",
+   "gm-10"
+  ]
+ },
+ "thumb": "assets/ai-tpl/blackgold-3/thumb.webp",
+ "bytes_webp": 206772,
+ "missing": [],
+ "gen": {
+  "model": "gpt-image-2.5-sunburst",
+  "banner_sheet": {
+   "size": [
+    1024,
+    1024
+   ],
+   "imageHash": "e5fe02278f67ee14e78f9b4f1d49d7f677bf3185",
+   "attempts": 1,
+   "note": "09:37 and 12:27 KL calls were denied by the session permission classifier; Waydon approved generation 14:34 KL; generated 14:41 KL"
+  },
+  "icon_sheet": {
+   "size": [
+    1280,
+    1024
+   ],
+   "imageHash": "20c4ddd3e9607a0ea8e5eafd15c2ee0ee3601ce3",
+   "attempts": 1,
+   "note": "09:37 and 12:27 KL calls were denied by the session permission classifier; Waydon approved generation 14:34 KL; generated 14:41 KL"
+  },
+  "time": "2026-11-27",
+  "regenerated": [],
+  "keying": "tile keyer (bg_key.py tile): every icon is drawn inside a glowing gold-rim stage tile (curtains, bokeh, pedestal inside); tile kept on all 19; alpha = anti-aliased rounded rectangle (r 32 px on the sheet) fitted to the outer edge of the rim, the soft gold glow outside the rim dropped; tiles sit on a 250 x 244 px pitch, not the 256 px cell grid, so tile boxes come from rim projections"
+ },
+ "figmaFile": "KEDg6ZjNHLCa2RmMn1veKH",
+ "figmaPage": "430:619174",
+ "figmaSection": "430:654091",
+ "figmaNode": "434:416991",
+ "figmaCaption": "434:417113",
+ "figmaSlotPanel": "434:417163",
+ "figmaSheets": {
+  "banner_sheet": "478:12",
+  "icon_sheet": "478:13"
+ },
+ "colorBinding": "explicit fills (no variable mode); 11-colour strip with key-named swatches under the frame",
+ "figmaSlotNote": "slot/<name> layers hold CROP fills of the two generate_image sheets (upload to Figma is blocked by the proxy, so the keyed transparent PNGs exist only in the repo); icon slots on non-primary backgrounds use LIGHTEN (dark) / DARKEN (light) blend to hide the sheet background; -off slots use a saturation -1 / exposure -0.2 image filter"
+}
