@@ -1297,8 +1297,10 @@
   let ctUntil = 0, ctTimer = null, ctNav = false;
   // o.onNav：电脑上把 Toast 竖直居中放在手机画布的底部导航上（单卡换图 Figma 2b / 4 / 6），不写就放在底部导航上方（取色器 5a / 5b）
   // 画布 Toast 默认带 hold（弹窗开着 / AI 预览中先收起）；ctIds 记下还在的画布 Toast，AI 一键设计「应用这一套」时一起收掉（dropCanvasToasts），画布上只留「已套用」一条
+  // 普通撤销 Toast（undoOpt：隐藏 / 删除 / 添加模块、换配色、恢复默认…）不走 canvasToast、不进 ctIds，按 hold === toastHeld 认出来一起收掉：
+  // 它的「撤销」就是 A.undo，套用后会撤掉「已套用」这一步而不是它自己那一步（11-28 整合测试复测）
   const ctIds = new Set();
-  function dropCanvasToasts() { ctIds.forEach((id) => window.toastDrop(id)); ctIds.clear(); }
+  function dropCanvasToasts() { ctIds.forEach((id) => window.toastDrop(id)); ctIds.clear(); S.toasts.filter((q) => q.hold === toastHeld).forEach((q) => window.toastDrop(q.id)); }
   function canvasToast(msg, o) { const id = window.toast(msg, Object.assign({ hold: toastHeld }, o)); ctIds.forEach((k) => { if (!S.toasts.some((q) => q.id === k)) ctIds.delete(k); }); ctIds.add(id); ctNav = !!o.onNav; ctUntil = Date.now() + o.ms; clearTimeout(ctTimer); ctTimer = setTimeout(() => { ctUntil = 0; placeToast(); }, o.ms + 80); placeToast(); return id; }
   function placeToast() {
     const w = document.querySelector('.toast-wrap'); if (!w) return;
