@@ -356,8 +356,9 @@
       ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by-s', { n: num(short) })}</div>`}
       <div class="dialog-foot cc-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div></div>`;
     }
-    return `<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
-      <div class="cost-card"><div class="cost-row"><span class="muted">${t('confirm/cost-label')}</span><b>${t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
+    // icon / costLabel / costText（可选）：顶部图标块 + 自定义「本次约消耗 · 50 点」（AI 一键设计 Figma D4 / M4）
+    return `${o.icon ? `<span class="cc-ic">${ic(ok ? o.icon : 'wallet-fill')}</span>` : ''}<h3>${esc(o.title || '')}</h3>${o.body ? `<p class="muted" style="margin:8px 0 16px">${esc(o.body)}</p>` : '<div style="height:16px"></div>'}
+      <div class="cost-card"><div class="cost-row"><span class="muted">${o.costLabel ? esc(o.costLabel) : t('confirm/cost-label')}</span><b${o.costText ? ' class="cc-cost is-brand"' : ''}>${o.costText ? esc(o.costText) : t('confirm/approx', { n: num(o.cost || 0) })}</b></div>
         <div class="cost-row ${ok ? '' : 'is-err'}"><span class="${ok ? 'muted' : ''}">${t('confirm/balance-label')}</span><span>${t('confirm/points', { n: num(S.credits) })}</span></div></div>
       ${ok ? '' : `<div class="caption err-text" style="margin-top:8px">${t('confirm/short-by', { n: num(short) })}</div>`}
       <div class="dialog-foot"><button class="btn btn-secondary" data-act="costCancel">${t('confirm/cancel')}</button>${ok ? `<button class="btn btn-primary" data-act="costOk">${esc(o.okLabel)}</button>` : `<button class="btn btn-primary" data-act="costTopup">${ic('wallet-fill', 'ic-16')}${t('confirm/topup')}</button>`}</div>`;
