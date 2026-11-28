@@ -134,7 +134,7 @@
   // 创作框：空提示词照常提示（不用登录）；有内容才要账号，提示词保留，登录后真正发出
   guardAct('cSend', () => !S.c.prompt.trim());
   guardAct('adSend', () => S.ad && S.ad.refSt && S.ad.refSt.uploading);
-  ['newChat', 'openSession', 'openProject', 'pgNewProj', 'pgOpenProj', 'noticeOpen', 'creditOpen', 'openExport', 'doExport', 'tplNew'].forEach((n) => guardAct(n));
+  ['newChat', 'openSession', 'openProject', 'pgNewProj', 'pgOpenProj', 'noticeOpen', 'creditOpen', 'openExport', 'doExport', 'tplNew', 'levelCta'].forEach((n) => guardAct(n));
   ['openEditor', 'openNewProject', 'startGeneration', 'costConfirm', 'openTopup', 'openCredit', 'openRecord'].forEach(guardFn);
   // 导航：去受保护页面 → 停在原处弹登录，成功后再跳
   const goA = A.go, goW = window.go;

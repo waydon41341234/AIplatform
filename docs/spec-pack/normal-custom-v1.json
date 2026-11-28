@@ -1,0 +1,182 @@
+{
+  "version": "normal-custom-v1",
+  "name": {
+    "zh-Hans": "普通定制规范",
+    "zh-Hant": "普通訂製規範",
+    "en": "Standard custom spec",
+    "vi": "Quy chuẩn tùy chỉnh tiêu chuẩn"
+  },
+  "status": "draft-2026-11-28",
+  "attachMode": "always",
+  "ownerEditable": false,
+  "source": {
+    "figmaFile": "FikSmkYSPbP30PrjagWyYl",
+    "page": "00 封面与说明 (0:1)",
+    "node": "66009:20504",
+    "nodeName": "普通定制版设计说明",
+    "nodeType": "INSTANCE",
+    "readAt": "2026-11-28"
+  },
+  "pageScope": {
+    "pages": [
+      { "id": "home", "label": "首页" },
+      { "id": "jackpot", "label": "彩金池" },
+      { "id": "footer", "label": "页脚" },
+      { "id": "menu", "label": "菜单栏" }
+    ],
+    "platforms": ["h5", "pc"],
+    "note": "普通定制：首页、彩金池、页脚、菜单栏（可定制 H5、PC）；PC 也只做这 4 处"
+  },
+  "canvas": {
+    "h5": { "width": 750, "contentWidth": 710, "height": "auto", "unit": "px" },
+    "pc": { "width": 1920, "contentWidth": 1200, "height": "auto", "unit": "px" }
+  },
+  "logo": {
+    "formats": ["PNG", "GIF"],
+    "width": { "min": 330, "max": 600 },
+    "height": 100,
+    "unit": "px"
+  },
+  "banners": {
+    "formats": ["PNG"],
+    "ownerCanUpload": true,
+    "note": "规范原文：业主可自行在后台上传，不用提供。AI 一键生成时仍按这些尺寸出图",
+    "sizes": [
+      { "id": "large", "label": "01 大 Banner", "width": 1080, "height": 490, "source": "spec" },
+      { "id": "general", "label": "02 通用 Banner", "width": 1020, "height": 300, "source": "spec" },
+      { "id": "small", "label": "03 小 Banner", "width": 386, "height": 244, "source": "spec" },
+      { "id": "pc", "label": "PC Banner", "width": 1920, "height": 564, "source": "platform", "note": "规范实例里没有，取平台 PC Banner 尺寸" }
+    ]
+  },
+  "iconSets": [
+    {
+      "id": "gameType",
+      "label": "游戏类型图标",
+      "formats": ["PNG", "SVG"],
+      "width": 100,
+      "height": 76,
+      "required": true,
+      "canUseDefault": true,
+      "count": 13,
+      "names": ["热门", "棋牌", "捕鱼", "真人", "电子", "体育", "电竞", "斗鸡", "彩票", "试玩", "区块链", "最近", "收藏"]
+    },
+    {
+      "id": "midNav.message",
+      "label": "中部导航 · 消息中心",
+      "formats": ["PNG", "SVG"],
+      "width": 80,
+      "height": 70,
+      "required": true,
+      "canUseDefault": true,
+      "count": 4,
+      "names": ["消息-已读", "消息-未读", "公告", "通知"]
+    },
+    {
+      "id": "midNav.optional",
+      "label": "中部导航 · 自选功能图标",
+      "formats": ["PNG", "SVG"],
+      "width": 80,
+      "height": 70,
+      "required": false,
+      "count": 52,
+      "names": [
+        "稽核", "投注记录", "安全中心", "利息宝", "VIP", "客服", "任务", "返水", "存款", "提现", "APP下载", "信用借款", "分享赚钱", "收藏",
+        "最近", "试玩", "客服代充", "立即分享", "待领取", "领取记录", "账户明细", "提现管理", "有奖反馈", "找回余额", "优惠", "个人资料", "个人报表", "语言",
+        "更多", "搜索", "公积金", "自我禁止", "找到我们", "赛事资讯", "我的记录", "发现", "盲盒抽奖", "金融SVIP", "幸运抽奖", "幸运转盘", "吃瓜网（中文）", "折扣券",
+        "商城", "我的战绩", "软件推荐", "推荐WS浏览器", "NO钱包", "LINE", "脸书", "谷歌", "TG", "Zalo"
+      ],
+      "note": "规范原文：以下自选功能图标可不提供设计。原稿里「推荐WS浏览器」和「NO钱包」两个标签叠在同一格，两个都列出"
+    },
+    {
+      "id": "bottomNav",
+      "label": "底部导航（默认状态）",
+      "formats": ["PNG", "SVG"],
+      "width": 70,
+      "height": 70,
+      "required": true,
+      "canUseDefault": true,
+      "count": 32,
+      "names": [
+        "首页", "优惠", "我的", "客服", "VIP", "利息宝", "任务", "返水", "提现", "存款", "注册", "登录", "APP下载", "立即分享", "信用借款",
+        "分享赚钱", "收藏", "最近", "试玩", "赛事资讯", "我的记录", "朋友圈", "盲盒抽奖", "金融SVIP", "幸运抽奖", "幸运转盘", "吃瓜网（中文）", "折扣券", "商城", "我的战绩",
+        "软件推荐", "WS浏览器"
+      ]
+    }
+  ],
+  "gameCards": {
+    "formats": ["PNG", "SVG"],
+    "sizeCustomizable": true,
+    "ownerCanReplaceImages": true,
+    "mixAllowed": true,
+    "generic": [
+      { "id": "A1", "label": "经典方形卡片", "width": 180, "height": 180, "badge": { "width": 54, "height": 40 }, "favorite": { "width": 50, "height": 50 }, "fallbackIcon": { "width": 180, "height": 180 } },
+      { "id": "A2", "label": "经典长形平台卡片", "width": 520, "height": 203, "badge": null, "favorite": null, "fallbackIcon": { "width": 203, "height": 203 } },
+      { "id": "A3", "label": "欧美竖版卡片", "width": 300, "height": 400, "badge": { "width": 58, "height": 44 }, "favorite": { "width": 50, "height": 50 }, "fallbackIcon": { "width": 300, "height": 300 } },
+      { "id": "A4", "label": "竖版卡片", "width": 300, "height": 400, "badge": { "width": 75, "height": 56 }, "favorite": { "width": 50, "height": 50 }, "fallbackIcon": { "width": 300, "height": 300 } },
+      { "id": "A5", "label": "方版卡片", "width": 300, "height": 300, "badge": { "width": 73, "height": 55 }, "favorite": { "width": 58, "height": 58 }, "fallbackIcon": { "width": 300, "height": 300 } },
+      { "id": "A6", "label": "圆版卡片", "width": 300, "height": 300, "badge": { "width": 162, "height": 128 }, "favorite": { "width": 58, "height": 58 }, "fallbackIcon": { "width": 300, "height": 300 } },
+      { "id": "A7", "label": "横板卡片", "width": 400, "height": 250, "badge": { "width": 58, "height": 44 }, "favorite": { "width": 58, "height": 58 }, "fallbackIcon": { "width": 250, "height": 250 } }
+    ],
+    "custom": {
+      "id": "B",
+      "label": "自定义卡片样式",
+      "required": true,
+      "note": "在首页固定展示，必须提供设计；原图按卡片比例裁切",
+      "badge": { "width": 58, "height": 44 },
+      "favorite": { "width": 50, "height": 50 },
+      "fallbackIcon": { "width": 300, "height": 300 }
+    }
+  },
+  "colors": {
+    "max": 11,
+    "rule": "不能超出 11 个色值。只给这 11 个角色定色（10 个基础色 + 规则 Key text_primary）；neutral_3 先用平台默认 #CCCCCC（待确认）；其余 56 个规则 Key 按 docs/theme-keys.md 的引用规则自动推出",
+    "entries": [
+      { "role": "主题色值", "key": "primary", "usage": "需要特别强调突出的文字、按钮和图标" },
+      { "role": "主级色值", "key": "lead", "usage": "重要级文字信息、内容标题信息" },
+      { "role": "次级色值", "key": "neutral_1", "usage": "普通级别段落信息" },
+      { "role": "较弱色值", "key": "neutral_2", "usage": "辅助、次级的文字信息，不可点击按钮" },
+      { "role": "描边色值", "key": "border", "usage": "分割线、跳转箭头、隐藏密码" },
+      { "role": "背景色值", "key": "bg_1", "usage": "页面通用背景色" },
+      { "role": "底板色值", "key": "bg_2", "usage": "底板色" },
+      { "role": "辅助色 01", "key": "accent_1", "usage": "成功、完成、领取等肯定类标识" },
+      { "role": "辅助色 02", "key": "accent_2", "usage": "删除、错误、严重警告等否定类标识" },
+      { "role": "辅助色 03", "key": "accent_3", "usage": "货币、充值、VIP 等额外赠送金额" },
+      { "role": "主按钮字体色", "key": "text_primary", "usage": "主色按钮里的文字" }
+    ],
+    "notInSpec": [
+      { "key": "neutral_3", "platformRole": "未输入", "platformDefault": "#CCCCCC", "note": "平台 11 个基础色之一，但规范的 11 色里没有；暂按平台默认或由 AI 从 neutral_2 推一个更浅的灰，待 Waydon 确认" }
+    ]
+  },
+  "fontSizes": {
+    "unit": "px（规范写 pt，按设计稿像素用）",
+    "h5": [
+      { "size": 44, "usage": "页面标题" },
+      { "size": 30, "usage": "标题、左侧栏、选中等" },
+      { "size": 24, "usage": "常用文字（输入页面标题、表格标题等）" },
+      { "size": 22, "usage": "常用文字（主体、正文）" },
+      { "size": 20, "usage": "常用提示语" },
+      { "size": 18, "usage": "常用提示语" }
+    ],
+    "pc": [
+      { "size": 24, "usage": "页面标题" },
+      { "size": 22, "usage": "标题、左侧栏、选中等" },
+      { "size": 20, "usage": "常用文字（输入页面标题、表格标题等）" },
+      { "size": 16, "usage": "常用文字（主体、正文）" },
+      { "size": 14, "usage": "常用提示语" }
+    ]
+  },
+  "multilingualSpacing": {
+    "multiLanguage": { "reserveMin": 1.5, "reserveMax": 2, "note": "若选择多语言，文字位置需预留 1.5–2 倍间距" },
+    "singleLanguage": { "note": "单语言不限制" }
+  },
+  "outputFormats": {
+    "designFiles": ["Figma", "PSD", "PNG", "HTML"],
+    "logo": ["PNG", "GIF"],
+    "banner": ["PNG"],
+    "icons": ["PNG", "SVG"],
+    "gameCards": ["PNG", "SVG"]
+  },
+  "notPacked": [
+    "02 实例参考里的外部网址（定制版式案例、亚太 / 欧美 / U 版 / 国际知名版 / 专业体育版线上网址）：只给设计师看，不发给 AI"
+  ]
+}

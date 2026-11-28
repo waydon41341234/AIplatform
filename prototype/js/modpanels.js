@@ -1690,7 +1690,7 @@
     const custom = `<button class="sw-btn hb-custom ${pk || (v && !v.startsWith('key:')) ? 'is-on' : ''}" ${v && !v.startsWith('key:') ? `style="background:${esc(v)}"` : ''} title="${esc(cuTip)}" aria-label="${esc(cuTip)}" data-act="homeBgPick"></button>`;
     const own = v && !(x.E.D.baseEc && x.E.D.baseEc[HB] === v); // AI 风格给的不算业主自改
     return `<div class="p-sec hb-sec" data-sec="home_bg"><div class="lab">${t('ed/home-bg')}</div>
-      <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap">${src}</span><span class="kk mono">home_bg</span></span>${own ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
+      <div class="krow-w"><button class="krow hb-row" data-act="homeBgPick"><span class="ksw" style="background:${col}"></span><span class="kt2"><span class="ku">${t('ed/home-bg')}</span><span class="kcap" title="${esc(src.replace(/<[^>]+>/g, ''))}">${src}</span><span class="kk mono">home_bg</span></span>${own ? `<span class="pill-tag">${t('ed/keys-custom')}</span>` : ''}${ic('caret-right', 'ic-16')}</button></div>
       <div class="bc-row hb-opts"><span class="k">${t('ed/hb-quick')}</span><div class="sws">${opt('', DESIGN_DEF.home_bg, t('ed/hb-design'))}${opt('key:bg_1', th.bg_1, t('ed/hb-bg1'))}${opt('key:bg_2', th.bg_2, t('ed/hb-bg2'))}${custom}</div></div>
       ${pk && !mobile ? x.pickerHtml('in-panel', t('ed/home-bg')) : ''}</div>`;
   }

@@ -390,7 +390,7 @@
   // 项目列表存 LS：新建 / 重命名 / 删除（D 的页面直接改 window.PROJECTS 数组）刷新后保持一致
   let projSaved = '';
   window.AFTER_RENDER.push(() => { const s = JSON.stringify(window.PROJECTS); if (s !== projSaved) { projSaved = s; window.LS.set('projects', window.PROJECTS); } });
-  // 目前只开放「经典蓝白」（真实 UI，Waydon 2026-11-26 11:16）；其余版式（含白金）只显示平台底板色 + 兜底图标 +「暂未开放」
+  // 目前只开放「综合版1」（11-28 由「经典蓝白」改名；真实 UI，Waydon 2026-11-26 11:16）；其余版式（含白金）只显示平台底板色 + 兜底图标 +「暂未开放」
   const TPL_OPEN = ['classic-blue']; // Waydon 2026-11-26 11:16：只开放真实的经典蓝白，其他（含白金）先显示暂不开放
   window.tplOpen = (k) => TPL_OPEN.includes(k);
   const soonToast = () => window.toast(t('tpl/soon-toast'), { info: true });
@@ -469,7 +469,11 @@
       <div class="tpl-btns"><button class="btn btn-secondary" data-act="closeAll">${t('tpl/close')}</button><button class="btn btn-primary" data-act="tplNew">${t('tpl/use')}</button></div></div>`;
     return mobile ? `<div class="sheet-head"><h3 class="ellipsis">${t('template/' + x.k)}</h3><button class="ibtn ibtn-sm ibtn-secondary" data-act="closeAll" aria-label="${esc(t('common/close'))}">${ic('x', 'ic-16')}</button></div>${prev}${info}` : `<div class="tpl-wrap">${prev}${info}</div>`;
   }
-  A.tplNew = () => { window.openNewProject({ template: S.tplK }); };
+  // 「用这个模板新建」：综合版1 直接进自定义模版（带综合版1起始线框，customtpl.js CT.fromTpl）；其他版式仍走新建项目（暂未开放的会提示）
+  A.tplNew = () => {
+    if (window.CT && window.CT.fromTpl && window.tplOpen(S.tplK)) { closeLayers(); if (window.CT.fromTpl(S.tplK)) return false; }
+    window.openNewProject({ template: S.tplK });
+  };
   function defaultName() {
     const names = new Set(window.PROJECTS.map((p) => p.name)); let n = 1;
     while (names.has(t('newproj/default-name', { n }))) n++;
@@ -484,6 +488,8 @@
     if (!window.__inAct) window.render();
   };
   A.openNewProject = (k) => { window.openNewProject({ template: k || null }); };
+  // 首页「定制等级 · 普通定制」的「去定制」（11-28，Figma 04-6 注 66149:140067 ①）：进自定义模版并弹起始线框（同自定义模版入口卡）；未登录先登录（auth.js 守卫）
+  A.levelCta = () => (A.ctOpen ? A.ctOpen() : A.openNewProject());
   function npBody() {
     const np = S.np || {}, emptyName = !np.name.trim();
     const taken = !emptyName && window.PROJECTS.some((p) => p.name === np.name.trim()); // 同名会覆盖已有项目的设计，拦下
@@ -522,7 +528,7 @@
 
   // ---------- 首页 ----------
   window.VIEWS.home = function () {
-    const lv = (tier, key, on) => `<div class="level ${on ? 'is-on' : 'is-off'}"><div class="level-row"><img src="assets/badge-tier${tier}.png" alt=""><span class="level-title">${t('level/' + key + '-title')}</span>${on ? '' : `<span class="pill-tag is-gray">${t('level/coming-soon')}</span>`}</div><div class="level-desc">${t('level/' + key + '-desc')}</div>${on ? `<div><button class="btn btn-primary" data-act="openNewProject">${ic('arrow-right', 'ic-16')}${t('level/cta')}</button></div>` : ''}</div>`;
+    const lv = (tier, key, on) => `<div class="level ${on ? 'is-on' : 'is-off'}"><div class="level-row"><img src="assets/badge-tier${tier}.png" alt=""><span class="level-title">${t('level/' + key + '-title')}</span>${on ? '' : `<span class="pill-tag is-gray">${t('level/coming-soon')}</span>`}</div><div class="level-desc">${t('level/' + key + '-desc')}</div>${on ? `<div><button class="btn btn-primary" data-act="levelCta">${ic('arrow-right', 'ic-16')}${t('level/cta')}</button></div>` : ''}</div>`;
     const tpls = TEMPLATES.filter((x) => S.filter === 'all' || x.f === S.filter);
     const tplEmpty = `<div class="cards-empty">${sm(window.empty('squares-four-fill', t('home/tpl-empty'), '', `<button class="btn btn-secondary btn-sm" data-act="filter" data-arg="all">${t('common/view-all')}</button>`))}</div>`;
     const inner = `<main class="page">
