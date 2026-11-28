@@ -984,7 +984,9 @@
       setEc('midnav.icon', pick([th.primary, th.accent_3, th.lead], D.ec['midnav.icon'] || th.primary));
     } else if (b === 'gamemenu') {
       m.gamemenu.style = pick(['side', 'tabs'], m.gamemenu.style); // 菜单位置 左侧 / 中部（11-28，标签形状已去掉）
-      const a = pick([th.primary, th.accent_3, th.lead], D.ec['gamemenu.active'] || th.primary); setEc('gamemenu.active', a); setEc('gamemenu.activeText', best(a, [th.bg_2, th.lead]));
+      // 左侧：选中按钮底 + 选中文字；中部：选中文字 / 下划线（gamemenu.tabActive，跟按钮底分开存）
+      if (m.gamemenu.style === 'side') { const a = pick([th.primary, th.accent_3, th.lead], D.ec['gamemenu.active'] || th.primary); setEc('gamemenu.active', a); setEc('gamemenu.activeText', best(a, [th.bg_2, th.lead])); }
+      else setEc('gamemenu.tabActive', pick([th.primary, th.accent_3, th.lead], D.ec['gamemenu.tabActive'] || th.primary));
     } else if (b === 'gamecards') {
       m.gamecards.style = pick(window.MP && window.MP.GC_STYLES ? window.MP.GC_STYLES : ['classic'], m.gamecards.style); // 换卡片样式（11-28，圆角 / 间距随样式）
       const l = pick([th.accent_3, th.accent_2, th.primary], D.ec['gamecards.label'] || th.accent_3); setEc('gamecards.label', l); setEc('gamecards.labelText', best(l, [th.bg_2, th.lead]));

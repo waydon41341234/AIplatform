@@ -63,14 +63,14 @@
   let toastId = 0;
   function toast(msg, opts = {}) {
     const id = ++toastId;
-    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info });
+    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls }); // cls：个别 Toast 的样式（如「撤销」做成胶囊按钮）
     renderToasts();
     setTimeout(() => { S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }, opts.ms || 2400);
   }
   function renderToasts() {
     let w = document.querySelector('.toast-wrap');
     if (!w) { w = document.createElement('div'); w.className = 'toast-wrap'; document.body.appendChild(w); }
-    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
+    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''} ${x.cls || ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
   }
   const comingSoon = () => toast(t('common/coming-soon'), { info: true });
 

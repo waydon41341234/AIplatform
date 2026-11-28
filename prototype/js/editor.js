@@ -120,6 +120,7 @@
   function commit(fn) {
     const before = checks().req;
     E.past.push(snap()); if (E.past.length > 60) E.past.shift(); E.future = []; fn();
+    if (window.MP && window.MP.gcNorm) window.MP.gcNorm(E.D); // 游戏卡片 6 样式：任何改动（恢复默认、换模板、AI…）之后都不会留下「菜单左侧 + 每行 4 张」这种无效组合（11-28 QA）
     const after = checks().req.map((x) => x.id);
     before.filter((x) => !after.includes(x.id)).forEach((x) => window.toast(t('ed/chk-solved', { name: x.name })));
     save();
@@ -868,7 +869,7 @@
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
   const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText',
-    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.active', // 中部：选中文字和下划线同一个颜色（gamemenu.active）
+    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.tabActive', // 中部：选中文字和下划线同一个颜色（gamemenu.tabActive，不跟左侧「选中按钮底」共用）
     'gamecards.tab': 'gamecards.tab', 'gamecards.name': 'gamecards.text', 'bottomnav.name': 'bottomnav.def', 'bottomnav.nameOn': 'bottomnav.active' };
   // 文字颜色原始值：'key:<名>'（色块，跟整页配色走）/ 十六进制（自定义、白色）/ 空（= 默认 Key）。跟颜色页签同源的存在 E.D.ec，其它存在 E.D.txt[id].c
   const txRaw = (id) => (TX_EC[id] ? (E.D.ec || {})[TX_EC[id]] : ((E.D.txt || {})[id] || {}).c) || null;
@@ -964,6 +965,8 @@
   const LAYOUT_KEYS = { banner: ['margin', 'corner'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style'], gamecards: ['cols'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
   // 合在一个面板里的模块（游戏菜单与游戏卡片）：「恢复默认布局 / 颜色」一起算、一起恢复（卡片样式在内容页签，不算布局）
   const GROUP = { games: ['gamemenu', 'gamecards'] };
+  // 两个模块是不是同一个面板（游戏菜单 ↔ 游戏卡片）：切换时留在现在的页签
+  const samePanel = (a, b) => !!(a && b && Object.values(GROUP).some((g) => g.includes(baseName(a)) && g.includes(baseName(b))));
   const layoutObj = (D, b) => (b === 'banner' ? D.banner : b === 'topbar' ? D.tb : (D.m || {})[b]);
   function layoutDirty(b) {
     if (GROUP[b]) return GROUP[b].some(layoutDirty);
@@ -1148,7 +1151,7 @@
   // 「N 处」相关文案：0 处（本页没有别的地方用这个 Key）、1 处（英文单数）用各自的句子
   const ksT = (key, n, vars) => t(key + (n === 0 ? '-0' : n === 1 ? '-1' : ''), Object.assign({ n }, vars));
   // 行名每次渲染现取（中途切语言跟着换）：顶部栏行 / 有固定文案的元素行按 ID 取，其它（帐户栏角标这类带参数的）用打开时记下、面板每次渲染更新的名字
-  const pkLab = (p) => (p.tbRow ? t(TB_LAB[p.tbRow] || 'ed/tb-c-bg') : p.elRow === 'gamemenu.active' && !gmSide() ? t('mp/c-gamemenu-active-c') : p.elRow && window.I18N['mp/c-' + p.elRow.replace('.', '-')] ? t('mp/c-' + p.elRow.replace('.', '-')) : p.label || '');
+  const pkLab = (p) => (p.tbRow ? t(TB_LAB[p.tbRow] || 'ed/tb-c-bg') : p.elRow === 'gamemenu.tabActive' ? t('mp/c-gamemenu-active-c') : p.elRow && window.I18N['mp/c-' + p.elRow.replace('.', '-')] ? t('mp/c-' + p.elRow.replace('.', '-')) : p.label || '');
   const capOf = (s) => (s === '@custom' ? t('tx/key-custom') : s === '@img' ? t('mp/gm-c-img') : s || '');
   function pickerHtml(cls = '', title) {
     const p = E.picker; const rp = rowPk(p);
@@ -1413,7 +1416,7 @@
     if (e && el && e.target.closest('[data-stop]') && !el.matches('[data-stop]')) return false;
     if (Date.now() - (E.swiped || 0) < 300) return false;
     const nid = id || null;
-    if (nid !== E.sel) { E.tab = 'content'; E.ai = null; E.picker = null; E.rn = null; }
+    if (nid !== E.sel) { if (!samePanel(nid, E.sel)) E.tab = 'content'; E.ai = null; E.picker = null; E.rn = null; } // 游戏菜单 ↔ 游戏卡片共用一个面板：留在现在的页签（11-28 QA）
     // 单卡换图：点模块其它地方 = 回到选中整个模块（卡片选中框、这张卡的 AI 面板收起，工具条照旧出来）
     if (E.gcSel) { E.gcSel = null; if (E.ai && E.ai.mod === 'gcimg') E.ai = null; }
     E.sel = nid; S.menu = null; E.keys = null;
@@ -2127,7 +2130,9 @@
       return `<div class="sheet med-sheet m-mod m-aig ${window.AIG.tall() ? 'is-tall' : ''} ${mShown === E.sel ? 'no-anim' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${window.AIG.panel()}</div>`;
     } else if (E.mpanel === 'module' && E.sel) {
       const inner = modulePanel(E.sel);
-      body = inner.replace('<h2 class="p-title">', `<div class="sheet-head"><h2 class="p-title" style="margin:0;min-width:0">`).replace('</h2>', `</h2><span class="sb-spacer"></span>${mModuleHead(E.sel)}<button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>`);
+      // 游戏菜单与游戏卡片：标题长，跟 AI / 换样式 / ⋯ 挤在一行会只剩「游戏菜…」——放不下时标题和 ✕ 一行、按钮换到第二行（AFTER_RENDER 量了再加 is-wrap，11-28 QA）
+      const gp = GROUP.games.includes(baseName(E.sel)) ? ' gp-head' : '';
+      body = inner.replace('<h2 class="p-title">', `<div class="sheet-head${gp}"><h2 class="p-title" style="margin:0;min-width:0">`).replace('</h2>', `</h2><span class="sb-spacer"></span>${mModuleHead(E.sel)}<button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>`);
       return `<div class="sheet med-sheet m-mod ${mShown === E.sel ? 'no-anim' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${body}</div>`;
     } else { E.mpanel = null; return ''; }
     return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet ${cls}" data-sk="msheet"><div class="sheet-grab"></div><div class="sheet-head"><h3>${head}</h3><button class="ibtn ibtn-sm" data-act="mClose" aria-label="${esc(t('ed/close'))}">${ic('x')}</button></div>${body}</div>`;
@@ -2278,6 +2283,8 @@
     if (window.MP && window.MP.aigReg) window.MP.aigReg({ target: balTarget, impl: BAL_AI });
   }
 
+  // 手机模块弹层标题放不下（游戏菜单与游戏卡片）：换成两行（标题 + ✕ / 按钮），不再显示省略号
+  window.AFTER_RENDER.push(() => { const h = document.querySelector('.m-mod .sheet-head.gp-head'); if (!h) return; const tt = h.querySelector('.p-title > .ellipsis'); if (tt && tt.scrollWidth > tt.clientWidth + 1) h.classList.add('is-wrap'); });
   window.EDX = { E, tipI: (k, p) => tipI(k, p), txtSec: (b) => txtSec(b), balSec: (m) => balSec(m), balColorRows: () => balColorRows(), balCfg: () => balCfg(), keyVal: (k, th) => keyVal(k, th), slideStyle, commit, save, liveTheme, themeStyle, modWrap, selToolbar, modHtml, pickerHtml, segBtns: (...a) => segBtns(...a), pxSeg: (...a) => pxSeg(...a), pxCustom: (...a) => pxCustom(...a), moreBtn: (...a) => moreBtn(...a), assetMenuItems: (id) => assetMenuItems(id), uploadUI: (...a) => uploadUI(...a), mobileEd, baseName, modName, checks, afford, pay, fail, topup, notice, undoOpt, inkOn,
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist,
