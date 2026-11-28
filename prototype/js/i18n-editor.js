@@ -578,4 +578,18 @@ Object.assign(window.I18N, {
   'ed/hex-copied-a': ['已复制 {hex} · {a}%', '已複製 {hex} · {a}%', 'Copied {hex} · {a}%', 'Đã sao chép {hex} · {a}%'],
   'ed/hex-copy-fail': ['无法复制，请长按色值手动复制', '無法複製，請長按色值手動複製', 'Couldn’t copy — press and hold the value to copy it', 'Không sao chép được — nhấn giữ mã màu để sao chép'],
   'ed/keys-base-cap': ['基础色 · 点击取色', '基礎色 · 點擊取色', 'Base · click to edit', 'Cơ bản · bấm để sửa'],
+  // 取色器切 Key 范围（11-28，Figma 04-11-28 65966:104739；变量 ed/keyscope/*，四种语言照 Figma 原文）
+  // Figma 里写死「主色 / primary / 12 / #10B26C」，这里换成 {k} = Key 中文名、{key} = Key 名、{n} = 本页用到的处数、{row} = 行名、{hex} = 新色值
+  'ed/keyscope/title': ['应用到哪里？', '套用到哪裡？', 'Where should this change go?', 'Áp dụng thay đổi ở đâu?'],
+  'ed/keyscope/body': ['「{row}」已改为跟随 {k} {key}。{k}在本页还用于 {n} 处。', '「{row}」已改為跟隨 {k} {key}。{k}在本頁還用於 {n} 處。', '"{row}" now follows {k}. {k} is used in {n} other places on this page.', '"{row}" giờ theo {k} {key}. {k} còn dùng ở {n} chỗ khác trên trang.'],
+  'ed/keyscope/opt1': ['只改这一行', '只改這一行', 'Only this row', 'Chỉ dòng này'],
+  'ed/keyscope/opt1sub': ['{k}不变，只有这一行变成 {hex}', '{k}不變，只有這一行變成 {hex}', '{k} stays the same; only this row becomes {hex}', '{k} giữ nguyên; chỉ dòng này đổi thành {hex}'],
+  'ed/keyscope/opt2': ['全部 {n} 处', '全部 {n} 處', 'All {n} places', 'Cả {n} chỗ'],
+  'ed/keyscope/opt2sub': ['改写{k} {key}，用到{k}的地方一起变', '改寫{k} {key}，用到{k}的地方一起變', 'Updates {k} everywhere it\'s used', 'Đổi {k} ở mọi chỗ đang dùng'],
+  'ed/keyscope/tag': ['跟随 {key}', '跟隨 {key}', 'Follows {key}', 'Theo {key}'],
+  'ed/keyscope/toast-row': ['只改了这一行', '只改了這一行', 'Changed this row only', 'Chỉ đổi dòng này'],
+  'ed/keyscope/hint-row': ['画布已实时预览，应用后只改这一行', '畫布已即時預覽，套用後只改這一行', 'Previewing on canvas. Apply changes this row only.', 'Đang xem trước trên canvas. Áp dụng chỉ đổi dòng này.'],
+  'ed/keyscope/hint-shared': ['{k}在本页用于 {n} 处，应用时会问你改哪里', '{k}在本頁用於 {n} 處，套用時會問你改哪裡', '{k} is used in {n} places. You\'ll choose where to apply.', '{k} dùng ở {n} chỗ. Bạn sẽ chọn nơi áp dụng.'],
+  // 「全部」的 Toast = Figma ed/toast-color（141:1294「主色已更新，12 处已同步」），这里带 Key 名和处数（越南语 Key 名在句中小写，照 Figma）
+  'ed/keyscope/toast-all': ['{k}已更新，{n} 处已同步', '{k}已更新，{n} 處已同步', '{k} color updated in {n} places', 'Đã cập nhật {k} tại {n} vị trí'],
 });

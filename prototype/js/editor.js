@@ -85,7 +85,7 @@
     checksPassed: false, dlg: null, exp: { stage: 'ready', opts: { figma: true, png: true, svg: false }, dl: {}, failed: {}, retrying: {} }, slide: 0, mpanel: null, preview: false,
     upload: null, replaced: null, h5side: false, D: defaultDesign(), past: [], future: [],
     name: LS.get('ed.last', '星河体育 · 首页'), status: 'designing', save: 'saved', nameEdit: null, rn: null, keys: null, bx: null,
-    lib: null, rs: null, palQ: null, tpl: null, contentH: 0, loadFail: false,
+    lib: null, rs: null, palQ: null, tpl: null, ks: null, contentH: 0, loadFail: false,
     figmaLinked: !!meta0.figmaLinked, projAssets: meta0.projAssets || [],
   });
   // 打开时恢复上次项目的设计
@@ -147,7 +147,7 @@
     if (opts.status) E.status = opts.status;
     E.then = opts.then || null;
     E.adBar = opts.design && opts.design.iconStyle ? { ics: opts.design.iconStyle } : null; E.adp = null; E.adMod = null;
-    E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.keys = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved';
+    E.sel = null; E.ai = null; E.picker = null; E.mpanel = null; E.dlg = null; E.ks = null; E.keys = null; E.rn = null; E.nameEdit = null; E.slide = 0; E.save = 'saved';
     LS.set('ed.last', E.name);
     startLoad();
     window.go('editor');
@@ -720,11 +720,12 @@
     }).join('');
     return `<div class="p-sec">${rows}</div>`;
   }
-  A.bnColor = (arg) => { const i = arg.indexOf('|'); const id = arg.slice(0, i), v = arg.slice(i + 1) || null; if ((E.D.ec[id] || null) === v) return false; E.picker = null; commit(() => { if (v) E.D.ec[id] = v; else delete E.D.ec[id]; }); };
+  A.bnColor = (arg) => { const i = arg.indexOf('|'); const id = arg.slice(0, i), v = arg.slice(i + 1) || null; if ((E.D.ec[id] || null) === v) return false; E.picker = null; commit(() => { if (v) E.D.ec[id] = v; else delete E.D.ec[id]; dropFollow(id); }); };
   A.bnPick = (arg) => {
     const [id, key] = arg.split('|'); if (E.picker && E.picker.elRow === id) { E.picker = null; return; }
     const { th, ec } = liveTheme(); const v = E.D.ec[id]; const cur = (v && !v.startsWith('key:') ? v : keyVal(v ? v.slice(4) : key, th, ec) || '#ffffff').slice(0, 7);
-    E.picker = { key: 'primary', elRow: id, label: t('mp/c-' + id.replace('.', '-')), orig: cur, value: cur, where: 'el' };
+    E.picker = Object.assign({ key: 'primary', elRow: id, label: t('mp/c-' + id.replace('.', '-')), orig: cur, value: cur, where: 'el' }, rowOwn(v, window.MP.elKey(id) || key, cur));
+    rowSheet();
   };
   // ---------- 顶部栏图标 AI 生成（模拟；样图由 Figma generate_image 生成，Waydon 2026-11-26） ----------
   // 跟首页创作框一样：参考图格 + 提示词输入框 + 模型下拉 + 发送键。上方风格卡点一下就把该风格的提示词填进框里；
@@ -982,6 +983,7 @@
       const ec = E.D.ec || {}; Object.keys(ec).forEach((k) => { if (k.startsWith(b + '.')) delete ec[k]; });
       if (balInColorTab(b) && E.D.bal) E.D.bal = Object.assign({}, E.D.bal, { c: {} });
       if (b === 'topbar') { E.D.tb.colors = { bg: null, side: null }; const tx = E.D.txt || {}; (TXT.topbar || []).forEach(([id]) => { if (tx[id]) { delete tx[id].c; if (!Object.keys(tx[id]).length) delete tx[id]; } }); }
+      Object.keys(E.D.ecf || {}).forEach((r) => { if (r.startsWith(b === 'topbar' ? 'tb:' : b + '.')) dropFollow(r); }); // 取色器切 Key 的跟随标记一起清
     });
     window.toast(t('ed/color-reset-done'), undoOpt());
   };
@@ -1011,37 +1013,167 @@
   function rightPanel() { if (E.adp && !E.sel && window.AD) return window.AD.edPanel(); if (E.keys && E.sel && !mobileEd()) return pageSettings(); return E.sel ? modulePanel(E.sel) : pageSettings(); }
 
   // ---------- 取色器 ----------
+  // 取色器切 Key 范围（11-28，Figma 04-11-28 65966:104739；docs/merge-1127.md）：模块颜色页签某一行的彩虹色块打开的「行内取色器」
+  // 电脑浮在该行左侧（.pk-float，位置在 AFTER_RENDER 里按行算），手机是底部弹层（E.mpanel = 'picker'）。标题旁 ▾ = Key 菜单（11 个基础色）：
+  //   切到别的 Key → 这一行改跟那个 Key（Key 标签「跟随 <key>」，提示「<Key> 在本页用于 N 处」）；
+  //   应用时：切了 Key 又改了色值 → 弹「应用到哪里？」（只改这一行 / 全部 N 处）；只切 Key 没改色 → 直接跟随；没切 Key → v67 照旧只改这一行
+  // 行内取色器 = 元素颜色行（E.D.ec）和顶部栏颜色行（E.D.tb.colors）；公告选中文字（onApply）、68 Key 改单独颜色、首页背景不算
+  const rowPk = (p) => !!(p && !p.onApply && (p.where === 'tb' ? p.tbRow : p.where === 'el' && p.elRow && !p.elRow.startsWith('key:')));
+  const rowRef = (p) => (p.tbRow ? 'tb:' + p.tbRow : p.elRow); // E.D.ecf 的键：元素 ID / 'tb:<顶部栏行>'
+  const TB_LAB = { bg: 'ed/tb-c-bg', side: 'ed/tb-c-side', text: 'ed/tb-c-text', search: 'ed/tb-c-search', reg: 'ed/tb-c-reg' };
+  // 这一行自己现在跟的 Key（v = 存的值，def = 默认 Key）：curKey 给 Key 菜单高亮，curLab 是标题右侧的灰字
+  function rowOwn(v, def, cur) {
+    const k = v ? (v.startsWith('key:') ? v.slice(4) : null) : def && def[0] !== '#' ? def : null;
+    return { curKey: k, curLab: k || (v ? t('tx/key-custom') : ''), orig0: cur };
+  }
+  const rowSheet = () => { if (mobileEd() && rowPk(E.picker)) { E.picker.back = E.mpanel || null; E.mpanel = 'picker'; S.menu = null; } };
+  function dropFollow(r) { if (!E.D.ecf || !(r in E.D.ecf)) return; const F = Object.assign({}, E.D.ecf); delete F[r]; if (Object.keys(F).length) E.D.ecf = F; else delete E.D.ecf; }
+  // 写这一行：v = 'key:<名>' / 十六进制；f = 跟随的 Key（只有取色器 Key 菜单切过去的才记）
+  function setRow(p, v, f) {
+    if (p.tbRow) E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [p.tbRow]: v }); else E.D.ec[p.elRow] = v;
+    dropFollow(rowRef(p)); if (f) E.D.ecf = Object.assign({}, E.D.ecf, { [rowRef(p)]: f });
+  }
+  // 「N 处」= 本页（可见模块）绑定这个 Key 的颜色行数（含跟 Key 走的引用 Key，不算正在改的这一行）+ 画布上直接用这个 Key 的地方。
+  // 画布用处从真实页面算：样式表里写了 var(--o-<Key>) 的规则（不算 :hover 之类状态），在当前画布里匹配到、可见的元素，
+  // 把画布上的 --o-<Key> 临时换成探针色再读算出来的颜色：真的取自这个 Key 的才算（被模块颜色行 / 文字样式覆盖掉的不算），每个元素算 1 处
+  const EXT68 = () => Object.fromEntries(((window.MP && window.MP.KEYS68 && window.MP.KEYS68.ext) || []).map((e) => [e[0], e]));
+  function reachesKey(k, K, ec, X, d = 0) {
+    if (!k || k[0] === '#' || d > 8) return false; if (k === K) return true;
+    const own = ec['key:' + k]; if (own) return own.startsWith('key:') && reachesKey(own.slice(4), K, ec, X, d + 1);
+    const e = X[k]; if (!e) return false;
+    if (e[1] === 'ref') return reachesKey(Array.isArray(e[2]) ? e[2][0] : e[2], K, ec, X, d + 1);
+    if (e[1] === 'cond') { const c = e[2][0]; return c[1] === 'ref' && reachesKey(c[2], K, ec, X, d + 1); }
+    return false;
+  }
+  let cssRulesO = null; // 含 var(--o-…) 的样式规则（样式表不变，取一次）
+  function cssRulesWithKeys() {
+    if (cssRulesO) return cssRulesO; const out = [];
+    const walk = (rs) => { for (const r of rs) { if (r.cssRules && !r.selectorText) walk(r.cssRules); else if (r.selectorText && r.style && r.style.cssText.includes('var(--o-')) out.push(r); } };
+    for (const sh of document.styleSheets) { try { walk(sh.cssRules); } catch (e) { /* file:// 打开 index.html 时外链样式表读不到：画布用处记 0 */ } }
+    return (cssRulesO = out);
+  }
+  const CS_PROPS = (pn) => (/^background/.test(pn) ? ['background-color', 'background-image'] : /^border/.test(pn) ? ['border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'] : /^outline/.test(pn) ? ['outline-color'] : /^text-decoration/.test(pn) ? ['text-decoration-color'] : [pn]);
+  function canvasUses(K) {
+    const root = document.querySelector('#app .ed-canvas, #app .med-canvas'); if (!root) return 0;
+    const prop = '--o-' + K, PROBE = 'rgb(1, 2, 3)', use = new RegExp('var\\(' + prop + '\\s*[,)]'), hit = new Set();
+    const hosts = [...root.querySelectorAll(`.h5, [style*="${prop}:"]`)], saved = hosts.map((el) => [el, el.style.getPropertyValue(prop)]);
+    try {
+      hosts.forEach((el) => el.style.setProperty(prop, PROBE));
+      for (const r of cssRulesWithKeys()) {
+        const props = []; r.style.cssText.split(';').forEach((d) => { const i = d.indexOf(':'); if (i > 0 && use.test(d.slice(i + 1))) { const pn = d.slice(0, i).trim(); if (!pn.startsWith('--')) props.push(pn); } });
+        if (!props.length) continue;
+        for (const s0 of r.selectorText.split(',')) {
+          const sel = s0.trim(); if (/:(hover|focus|focus-visible|focus-within|active)\b/.test(sel)) continue;
+          const pm = /::?(before|after)\s*$/.exec(sel); let els; try { els = root.querySelectorAll(pm ? sel.slice(0, pm.index) : sel); } catch (e) { continue; }
+          els.forEach((el) => { if (hit.has(el) || !el.getClientRects().length) return; const cs = getComputedStyle(el, pm ? '::' + pm[1] : null); if (props.some((pn) => CS_PROPS(pn).some((q) => String(cs.getPropertyValue(q)).includes(PROBE)))) hit.add(el); });
+        }
+      }
+    } finally { saved.forEach(([el, v]) => { if (v) el.style.setProperty(prop, v); else el.style.removeProperty(prop); }); }
+    return hit.size;
+  }
+  function keyUses(K, skip) {
+    const D = E.D, ec = D.ec || {}, X = EXT68(), tbi = D.tb.items || {}; let rows = 0;
+    const on = (b) => (b === 'topbar' || b === 'bottomnav' ? !D.hidden[b] : b === 'sidebar' ? !!tbi.side && !D.hidden.sidebar : inPage(b));
+    const bound = (v, def) => (v ? (v.startsWith('key:') ? v.slice(4) : null) : def);
+    for (const b in window.MP.EL) if (on(b)) for (const [id, def] of window.MP.EL[b]) if (id !== skip && reachesKey(bound(ec[id], def), K, ec, X)) rows++;
+    if (on('topbar')) {
+      const tc = D.tb.colors || {};
+      [['bg', true], ['side', !!tbi.side]].forEach(([k, show]) => { if (show && 'tb:' + k !== skip && reachesKey(bound(tc[k], TB_KEY[k]), K, ec, X)) rows++; });
+      if (reachesKey('border', K, ec, X)) rows++; // 跟 Key 走的行：币种外框 / 底部分割线
+      if (!D.login && !(D.tb.icons || {}).cur && reachesKey('accent_3', K, ec, X)) rows++; // 币种图标（默认图）
+    }
+    return rows + canvasUses(K);
+  }
   function pickerHtml(cls = '', title) {
-    const p = E.picker; const hsv = hex2hsv(p.value);
+    const p = E.picker; const rp = rowPk(p);
+    if (rp && cls === 'in-panel' && !mobileEd()) return ''; // 电脑：行内取色器浮在该行左侧（rowFloat）
+    const hsv = hex2hsv(p.value);
     const name = title || p.label || t('ed/key-' + p.key);
-    const fixedRow = p.tbRow || p.elRow;
-    const keyMenu = !fixedRow && S.menu === 'keymenu' ? `<div class="menu keymenu">${KEYS.map((k) => `<button class="menu-item ${p.key === k ? 'is-on' : ''}" data-act="pickKey" data-arg="${k}"><span class="sw" style="background:${E.D.theme[k]}"></span>${t('ed/key-' + k)}<span class="kk">${k}</span></button>`).join('')}</div>` : '';
+    const fixedRow = (p.tbRow || p.elRow) && !rp;
+    const keyOn = rp ? p.follow || p.curKey : p.key;
+    const keyMenu = !fixedRow && S.menu === 'keymenu' ? `<div class="menu keymenu">${KEYS.map((k) => `<button class="menu-item ${keyOn === k ? 'is-on' : ''}" data-act="pickKey" data-arg="${k}"><span class="sw" style="background:${E.D.theme[k]}"></span>${t('ed/key-' + k)}<span class="kk">${k}</span></button>`).join('')}</div>` : '';
+    const cap = fixedRow ? (p.elRow && p.elRow.startsWith('key:') ? p.elRow.slice(4) : '') : rp ? p.follow || p.curLab || '' : p.key;
+    const hint = rp ? (p.follow ? t('ed/keyscope/hint-shared', { k: window.MP.keyLabel(p.follow), n: p.n }) : t('ed/keyscope/hint-row')) : t(p.tbRow ? 'ed/pick-sync-tb' : p.elRow && !p.elRow.startsWith('key:') ? 'ed/pick-sync-el' : 'ed/pick-sync');
     return `<div class="picker ${cls}" data-picker>
-      <div class="pk-head">${fixedRow ? `<span class="pk-title">${esc(name)}</span>` : `<button class="pk-title" data-act="menu:toggle" data-arg="keymenu">${esc(name)}${ic('caret-down')}</button>`}${keyMenu}<span class="caption faint">${fixedRow ? (p.elRow && p.elRow.startsWith('key:') ? p.elRow.slice(4) : '') : p.key}</span></div>
+      <div class="pk-head">${fixedRow ? `<span class="pk-title">${esc(name)}</span>` : `<button class="pk-title" data-act="menu:toggle" data-arg="keymenu" aria-haspopup="menu" aria-expanded="${S.menu === 'keymenu'}"><span class="ellipsis">${esc(name)}</span>${ic('caret-down')}</button>`}${keyMenu}<span class="caption faint pk-cap">${esc(cap)}</span></div>
       <div class="pk-cmp"><div style="background:${p.orig};color:${inkOn(p.orig)}">${t('ed/pick-current')}</div><div data-pk-new style="background:${p.value};color:${inkOn(p.value)}">${t('ed/pick-new')}</div></div>
       <div class="pk-sv" data-drag="sv" style="background:hsl(${hsv.h},100%,50%)"><span class="pk-dot" data-pk-svdot style="left:${hsv.s * 100}%;top:${(1 - hsv.v) * 100}%;background:${p.value}"></span></div>
       <div class="pk-h" data-drag="hue"><span class="pk-dot" data-pk-hdot style="left:${(hsv.h / 360) * 100}%;background:hsl(${hsv.h},100%,50%)"></span></div>
       <label class="pk-hex"><i data-pk-sw style="background:${p.value}"></i><input data-input="pkHex" value="${p.value.toUpperCase()}" maxlength="7"><button type="button" class="pk-copy" data-act="copyHex" data-arg="picker" title="${esc(t('ed/hex-copy', { hex: p.value.toUpperCase() }))}" aria-label="${esc(t('ed/hex-copy', { hex: p.value.toUpperCase() }))}">${ic('copy', 'hc-ic hc-cp')}${ic('check', 'hc-ic hc-ok')}</button></label>
       <div class="caption muted" style="margin-top:8px">${t('ed/pick-suggest')}</div>
-      <div class="pk-sug">${SUGGEST.map((c) => `<button style="background:${c}" title="${c.toUpperCase()}" aria-label="${c.toUpperCase()}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
-      <div class="caption faint" style="margin-bottom:10px">${t(p.tbRow ? 'ed/pick-sync-tb' : p.elRow && !p.elRow.startsWith('key:') ? 'ed/pick-sync-el' : 'ed/pick-sync')}</div>
+      <div class="pk-sug">${SUGGEST.map((c) => `<button class="${c === p.value.toLowerCase() ? 'is-on' : ''}" style="background:${c}" title="${c.toUpperCase()}" aria-label="${c.toUpperCase()}" aria-pressed="${c === p.value.toLowerCase()}" data-act="pkSet" data-arg="${c}"></button>`).join('')}</div>
+      <div class="caption faint pk-hint" style="margin-bottom:10px">${hint}</div>
       <div class="pk-foot"><button class="btn btn-secondary btn-sm" data-act="pkCancel">${t('confirm/cancel')}</button><button class="btn btn-primary btn-sm" data-act="pkApply">${t('ed/pick-apply')}</button></div></div>`;
   }
+  // 电脑：行内取色器浮层（Figma 第 1 步：在该行左侧，顶边对齐该行）
+  const rowFloat = () => (rowPk(E.picker) && !mobileEd() ? `<div class="pk-float" data-pkfloat>${pickerHtml('', E.picker.label)}</div>` : '');
+  function placeRowFloat() {
+    const f = document.querySelector('[data-pkfloat]'); if (!f) return;
+    const row = document.querySelector('.ed-right .crow.is-pk'), pane = document.querySelector('.ed-right');
+    if (!row || !pane) { f.style.visibility = 'hidden'; return; }
+    const r = row.getBoundingClientRect(), pr = pane.getBoundingClientRect(), top0 = (document.querySelector('.ed-top') || pane).getBoundingClientRect().bottom + 8;
+    f.style.left = Math.max(8, pr.left - f.offsetWidth - 16) + 'px';
+    f.style.top = Math.max(top0, Math.min(r.top - 8, window.innerHeight - f.offsetHeight - 16)) + 'px';
+    f.style.visibility = '';
+  }
+  window.AFTER_RENDER.push(placeRowFloat);
+  // 整页重渲染时弹层不重放入场动画（取色器底部弹层、「应用到哪里？」已经开着就不再滑入 / 弹出）
+  let pkSheetShown = false, ksShown = false;
+  window.AFTER_RENDER.push(() => { pkSheetShown = !!document.querySelector('.pk-sheet'); ksShown = !!document.querySelector('.dialog-ks, .ks-sheet'); });
+  document.addEventListener('scroll', (e) => { if (e.target && e.target.classList && e.target.classList.contains('ed-right')) placeRowFloat(); }, true);
+  window.addEventListener('resize', placeRowFloat);
   A.pick = (arg) => { const [k, where] = arg.split('|'); const v = E.D.theme[k]; E.picker = { key: k, orig: v, value: v, where: mobileEd() ? 'sheet' : where }; S.menu = null; if (mobileEd()) { E.picker.back = ['colors', 'module'].includes(E.mpanel) ? E.mpanel : null; E.mpanel = 'picker'; } };
-  A.pickTb = (k) => { if (E.picker && E.picker.tbRow === k) { E.picker = null; return; } E.picker = null; const { th, tb } = liveTheme(); const cur = tb[k] || keyVal(TB_KEY[k] || 'lead', th) || '#ffffff'; E.picker = { key: k, tbRow: k, orig: cur, value: cur, where: 'tb' }; };
-  A.pickKey = (k) => { const v = E.D.theme[k]; Object.assign(E.picker, { key: k, orig: v, value: v }); S.menu = null; };
+  A.pickTb = (k) => { if (E.picker && E.picker.tbRow === k) { E.picker = null; return; } E.picker = null; const { th, tb } = liveTheme(); const cur = tb[k] || keyVal(TB_KEY[k] || 'lead', th) || '#ffffff'; E.picker = Object.assign({ key: k, tbRow: k, label: t(TB_LAB[k] || 'ed/tb-c-bg'), orig: cur, value: cur, where: 'tb' }, rowOwn((E.D.tb.colors || {})[k], TB_KEY[k] || 'lead', cur)); rowSheet(); };
+  A.pickKey = (k) => {
+    const p = E.picker; S.menu = null; if (!p) return;
+    if (!rowPk(p)) { const v = E.D.theme[k]; Object.assign(p, { key: k, orig: v, value: v }); return; }
+    // 行内取色器：切回这一行自己的 Key = 没切；切到别的 Key → 「当前」= 那个 Key 的颜色，画布这一行先跟它，算出本页用了几处
+    if (k === p.curKey) { Object.assign(p, { follow: null, n: 0, orig: p.orig0, value: p.orig0, h: null }); return; }
+    const v = E.D.theme[k]; Object.assign(p, { follow: k, orig: v, value: v, h: null, n: keyUses(k, rowRef(p)) });
+  };
   A.pkSet = (c) => { E.picker.value = c; };
   A.pkCancel = () => { const p = E.picker; E.picker = null; if (E.mpanel === 'picker') E.mpanel = p && p.back ? p.back : null; };
   A.pkApply = () => {
     const p = E.picker; if (!p) return;
     const back = () => { E.picker = null; if (E.mpanel === 'picker') E.mpanel = p.back || null; };
+    if (rowPk(p) && p.follow) {
+      // 切了 Key：色值没改 → 直接跟随；改了 → 先问「应用到哪里？」（取色器留着，弹窗关掉回到这里）
+      if (p.value.toLowerCase() === String(E.D.theme[p.follow]).toLowerCase()) { commit(() => setRow(p, 'key:' + p.follow, p.follow)); back(); window.toast(t('ed/changed-undo'), undoOpt(4000)); return; }
+      E.ks = { opt: 'row', n: p.n || 0 }; E.dlg = 'keyscope'; S.menu = null; return;
+    }
     if (p.value.toLowerCase() === p.orig.toLowerCase()) { back(); return; }
     if (p.onApply) { back(); p.onApply(p.value); return; } // 公告内容富文本：选中文字的自定义色（modpanels.js A.ntPick）
-    commit(() => { if (p.tbRow) E.D.tb.colors[p.tbRow] = p.value; else if (p.elRow) E.D.ec[p.elRow] = p.value; else { E.D.theme[p.key] = p.value; E.D.palette = null; } });
+    commit(() => { if (rowPk(p)) setRow(p, p.value, null); else if (p.tbRow) E.D.tb.colors[p.tbRow] = p.value; else if (p.elRow) E.D.ec[p.elRow] = p.value; else { E.D.theme[p.key] = p.value; E.D.palette = null; } });
     back();
     if (p.elRow && p.elRow.startsWith('key:')) { window.toast(t('ed/changed-undo'), undoOpt(4000)); return; }
-    const label = p.elRow ? t('mp/c-' + p.elRow.replace('.', '-')) : p.tbRow ? t({ bg: 'ed/tb-c-bg', side: 'ed/tb-c-side', text: 'ed/tb-c-text', search: 'ed/tb-c-search', reg: 'ed/tb-c-reg' }[p.tbRow] || 'ed/tb-c-bg') : t('ed/key-' + p.key);
+    const label = p.elRow ? t('mp/c-' + p.elRow.replace('.', '-')) : p.tbRow ? t(TB_LAB[p.tbRow] || 'ed/tb-c-bg') : t('ed/key-' + p.key);
     window.toast(t('ed/toast-color', { k: label }), undoOpt(4000));
+  };
+  // 「应用到哪里？」（Figma G6/KeyScopeDialog 65960:30404：电脑居中弹窗 / 手机底部弹层；选项 G6/ScopeOption 选中 = 淡蓝底蓝字，不打勾）
+  function ksBody(m) {
+    const p = E.picker, q = E.ks, K = p.follow, kl = window.MP.keyLabel(K), hex = (window.MP.hexOf(p.value) || { hex: p.value.toUpperCase() }).hex;
+    const opt = (v, ti, sub) => `<button class="ks-opt ${q.opt === v ? 'is-on' : ''}" role="radio" aria-checked="${q.opt === v}" data-act="ksOpt" data-arg="${v}"><b>${esc(ti)}</b><small>${esc(sub)}</small></button>`;
+    const cancel = `<button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button>`, apply = `<button class="btn btn-primary" data-act="ksApply">${t('ed/pick-apply')}</button>`;
+    return `<h3 class="ks-title" id="ks-title">${t('ed/keyscope/title')}</h3><p class="ks-body">${esc(t('ed/keyscope/body', { row: p.label || '', k: kl, key: K, n: q.n }))}</p>
+      <div class="ks-opts" role="radiogroup" aria-labelledby="ks-title">${opt('row', t('ed/keyscope/opt1'), t('ed/keyscope/opt1sub', { k: kl, hex }))}${opt('all', t('ed/keyscope/opt2', { n: q.n }), t('ed/keyscope/opt2sub', { k: kl, key: K }))}</div>
+      <div class="ks-foot">${m ? apply + cancel : cancel + apply}</div>`;
+  }
+  A.ksOpt = (v) => { if (!E.ks || E.ks.opt === v) return false; E.ks.opt = v === 'all' ? 'all' : 'row'; };
+  A.ksApply = () => {
+    const p = E.picker, q = E.ks; E.dlg = null; E.ks = null;
+    if (!rowPk(p) || !p.follow || !q) return;
+    const K = p.follow, val = p.value.toLowerCase();
+    if (q.opt === 'all') {
+      // 全部 N 处：改写这个 Key 的基础色（用到它的地方一起变），这一行跟随它
+      commit(() => { E.D.theme[K] = val; E.D.palette = null; setRow(p, 'key:' + K, K); });
+      const kl = window.MP.keyLabel(K);
+      window.toast(t('ed/keyscope/toast-all', { k: S.lang === 'vi' ? kl.charAt(0).toLowerCase() + kl.slice(1) : kl, n: q.n }), undoOpt(4000));
+    } else {
+      // 只改这一行：这一行存自定义色值（Key 标签「自定义」），Key 不变
+      commit(() => setRow(p, val, null));
+      window.toast(t('ed/keyscope/toast-row'), undoOpt(4000));
+    }
+    E.picker = null; if (E.mpanel === 'picker') E.mpanel = p.back || null;
   };
   I.pkHex = (v) => { if (validHex(v)) { E.picker.value = (v[0] === '#' ? v : '#' + v).toLowerCase(); livePicker(); } };
   function livePicker() {
@@ -1054,6 +1186,7 @@
     document.querySelectorAll('[data-drag="sv"]').forEach((n) => { n.style.background = `hsl(${p.h != null ? p.h : hsv.h},100%,50%)`; });
     document.querySelectorAll('[data-pk-hdot]').forEach((n) => { const h = p.h != null ? p.h : hsv.h; n.style.left = (h / 360) * 100 + '%'; n.style.background = `hsl(${h},100%,50%)`; });
     document.querySelectorAll('[data-input="pkHex"]').forEach((n) => { if (document.activeElement !== n) n.value = p.value.toUpperCase(); });
+    document.querySelectorAll('.pk-sug button').forEach((n) => { const on = n.dataset.arg === p.value.toLowerCase(); n.classList.toggle('is-on', on); n.setAttribute('aria-pressed', on); });
     // 取色中那一行的色值胶囊、取色器 ⧉ 的提示跟着实时值走（胶囊永远显示「目前生效」的颜色）
     const h = window.MP.hexOf(p.value), tip = h && t('ed/hex-copy', { hex: h.hex });
     if (h) document.querySelectorAll('[data-pk-chip]').forEach((n) => { n.dataset.arg = h.hex; n.title = tip; n.setAttribute('aria-label', tip); const d = n.querySelector('.hc-dot'), x = n.querySelector('.hc-hex'), a = n.querySelector('.hc-a'); if (d) d.style.setProperty('--c', h.hex); if (x) x.textContent = h.hex; if (a) a.remove(); n.classList.remove('has-a'); });
@@ -1331,7 +1464,7 @@
   A.addSlide = () => { const sz = BANNER[E.D.banner.size]; commit(() => { E.D.banner.slides.push({ f: tplOf(E.D.template).slides[0] || 'none', w: sz.w, h: sz.h }); }); setSlide(E.D.banner.slides.length - 1); };
   A.tbItem = (k) => { commit(() => { E.D.tb.items[k] = !E.D.tb.items[k]; }); };
   // 顶部栏颜色：c 为空 = 恢复默认（跟绑定的 Key）；'key:<名>' = 跟整页配色的某个 Key
-  A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); }); };
+  A.tbColor = (arg) => { const i = arg.indexOf('|'), k = arg.slice(0, i), c = arg.slice(i + 1) || null; E.picker = null; if ((E.D.tb.colors[k] || null) === c) return; commit(() => { E.D.tb.colors = Object.assign({}, E.D.tb.colors, { [k]: c }); dropFollow('tb:' + k); }); };
   ['h', 'pad', 'gap'].forEach((k) => { A['tbLayout_' + k] = (v) => { commit(() => { E.D.tb[k] = +v; }); }; });
   // PC 未开放（PC_OPEN = false）：点 PC 不切换画面，只弹「暂未开放」（level/coming-soon，同 Figma Toast 434:448499）
   // 连点只保留一条（先去掉同文案的旧提示再弹，重新计时 2.4 秒），不叠成一串（Figma 434:448788 第 2 条）
@@ -1643,7 +1776,7 @@
     if (E.dlg === 'export' && E.exp.stage === 'connect') E.exp.stage = 'ready';
     if (E.dlg === 'resize' && E.rs && E.rs.back === 'lib' && E.lib) { E.rs = null; E.dlg = 'lib'; return; }
     if (E.dlg === 'adfig') { E.dlg = 'export'; return; } // AD-05：结构预览关掉回到导出结果
-    E.dlg = null; E.rs = null; E.lib = null; E.palQ = null; if (!(E.tpl && E.tpl.busy)) E.tpl = null; E.nameEdit = null; if (E.bx && E.bx.ing == null) E.bx = null;
+    E.dlg = null; E.rs = null; E.lib = null; E.palQ = null; E.ks = null; if (!(E.tpl && E.tpl.busy)) E.tpl = null; E.nameEdit = null; if (E.bx && E.bx.ing == null) E.bx = null;
   };
 
   function checksBody() {
@@ -1695,6 +1828,13 @@
   function dialogs() {
     if (!E.dlg) return '';
     const m = mobileEd();
+    if (E.dlg === 'keyscope') {
+      if (!E.ks || !rowPk(E.picker) || !E.picker.follow) { E.dlg = null; E.ks = null; return ''; }
+      // 手机：盖在取色器底部弹层上面（取色器弹层也是 .sheet，这里的遮罩 / 弹层层级要更高）
+      const na = ksShown ? 'no-anim' : '';
+      return m ? `<div class="scrim ks-scrim ${na}" data-act="closeDlg"></div><div class="sheet med-sheet ks-sheet ${na}" role="dialog" aria-modal="true" aria-labelledby="ks-title" data-sk="dlgsheet"><div class="sheet-grab"></div>${ksBody(true)}</div>`
+        : `<div class="scrim ${na}" data-act="closeDlg"></div><div class="dialog dialog-ks ${na}" role="dialog" aria-modal="true" aria-labelledby="ks-title" data-sk="dlg">${ksBody(false)}</div>`;
+    }
     const map = Object.assign({ checks: checksBody, export: exportBody, fp: fpBody, lib: libBody, resize: resizeBody, pal: palBody, tplpick: tplBody, rename: renameBody, batch: (mm) => window.MP.batchBody(mm) }, window.AD ? window.AD.dlgs : {});
     const need = { lib: 'lib', resize: 'rs', pal: 'palQ', tplpick: 'tpl', batch: 'bx' }[E.dlg];
     if (need && !E[need]) { E.dlg = null; return ''; }
@@ -1741,7 +1881,7 @@
         ${checkBtn()}<span class="rel"><button class="ibtn ibtn-sm ${S.menu === 'edmore' ? 'is-on' : ''}" data-act="menu:toggle" data-arg="edmore" title="${esc(t('ed/more'))}" aria-label="${esc(t('ed/more'))}">${ic('dots-three')}</button>${S.menu === 'edmore' ? `<div class="menu ed-more-menu"><button class="menu-item" data-act="pageReset" ${pageDirty() ? '' : 'disabled'}>${ic('arrow-counter-clockwise')}<span class="tx"><span>${t('ed/page-reset-all')}</span><span class="sub">${t(pageDirty() ? 'ed/page-reset-tip' : 'ed/page-is-default')}</span></span></button></div>` : ''}</span><button class="btn btn-primary btn-sm" data-act="openExport">${ic('download-simple', 'ic-16')}${t('ed/export')}</button></header>
       <div class="ed-body"><nav class="ed-left" data-sk="ed-left" style="${paneW('l')}">${tree()}</nav><div class="ed-rz" data-rz="l" title="${esc(t('ed/rz-tip'))}"></div>
         <main class="ed-canvas" data-sk="ed-canvas" data-act="canvasBg">${window.AD ? window.AD.edBar() : ''}${canvas}${E.device === 'pc' && window.PC ? '' : floats()}${busyMask()}</main>
-        <div class="ed-rz" data-rz="r" title="${esc(t('ed/rz-tip'))}"></div><aside class="ed-right" data-sk="ed-right" style="${paneW('r')}">${rightPanel()}</aside></div></div>${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
+        <div class="ed-rz" data-rz="r" title="${esc(t('ed/rz-tip'))}"></div><aside class="ed-right" data-sk="ed-right" style="${paneW('r')}">${rightPanel()}</aside></div></div>${rowFloat()}${dialogs()}${window.costConfirmLayer ? window.costConfirmLayer() : ''}`;
   }
   // ---------- 左右侧栏可拖动加宽（Waydon 2026-11-26）：宽度存本机，双击把手恢复默认 ----------
   const PANE = { l: [200, 480], r: [280, 600] };
@@ -1841,7 +1981,7 @@
     else if (E.mpanel === 'keys' && E.keys) { head = t('ed/keys-title', { n: 68 }); body = window.MP.keysPanel(true); cls = 'is-tall'; }
     else if (E.mpanel === 'iconmenu') { return `<div class="scrim" data-act="mIconClose"></div><div class="sheet med-sheet icon-sheet" data-sk="msheet"><div class="sheet-grab"></div>${window.MP.iconSheet()}</div>`; }
     else if (E.mpanel === 'addmod') { return `<div class="scrim" data-act="mClose"></div><div class="sheet med-sheet add-sheet" data-sk="msheet"><div class="sheet-grab"></div>${addList()}</div>`; }
-    else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim" data-act="pkCancel"></div><div class="sheet med-sheet"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
+    else if (E.mpanel === 'picker' && E.picker) { return `<div class="scrim ${rowPk(E.picker) ? 'is-clear' : ''}" data-act="pkCancel"></div><div class="sheet med-sheet ${rowPk(E.picker) ? 'pk-sheet' : ''} ${rowPk(E.picker) && pkSheetShown ? 'no-anim' : ''}"><div class="sheet-grab"></div>${pickerHtml('in-panel').replace('class="picker in-panel"', 'class="picker in-panel" style="border:0;padding:0;margin:0;background:none"')}</div>`; }
     else if (E.mpanel === 'module' && E.sel && window.AIG && window.AIG.isOpen(baseName(E.sel))) {
       // AI 生成面板：替换模块弹层内容，标题栏只有面板自己的 ✕（不再叠一个弹层关闭）；整套结果列表时才撑高
       return `<div class="sheet med-sheet m-mod m-aig ${window.AIG.tall() ? 'is-tall' : ''} ${mShown === E.sel ? 'no-anim' : ''}" style="box-shadow:var(--shadow-lg)" data-sk="msheet"><div class="sheet-grab"></div>${window.AIG.panel()}</div>`;
@@ -1870,6 +2010,7 @@
     if (E.rn) { E.rn = null; return; }
     if (E.nameEdit && E.dlg !== 'rename') { E.nameEdit = null; return; }
     if (E.bx && E.bx.pick != null) { E.bx.pick = null; return; }
+    if (E.dlg === 'keyscope') { A.closeDlg(); return; } // 「应用到哪里？」先关，回到取色器
     if (E.picker) { A.pkCancel(); return; }
     if (E.dlg) { A.closeDlg(); return; }
     if (E.preview) { E.preview = false; return; }

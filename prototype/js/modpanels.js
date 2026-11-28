@@ -203,7 +203,7 @@
   const swTip = (lab, col) => { const h = hexOf(col); return h ? `${lab} · ${h.hex}${h.a != null ? ` ${h.a}%` : ''}` : lab; };
   // 颜色行（Figma G6/ColorRow 424:548184）：标题行 = 名称（太长先截名称）+ 右侧色值胶囊；下面一行色块（swRow）；after = 展开的取色器
   // o 同 swRow，另加 col = 当前生效颜色（liveTheme 里取，取色中 = 实时值；默认是图片、没有颜色时不给，不显示胶囊）
-  const colorRow = (lab, o, after = '') => `<div class="crow"><div class="k"><span class="ellipsis">${lab}</span>${o.col ? hexChip(o.col, o.pk) : ''}</div>${swRow(o)}${after}</div>`;
+  const colorRow = (lab, o, after = '') => `<div class="crow ${o.pk ? 'is-pk' : ''}"><div class="k"><span class="ellipsis">${lab}</span>${o.col ? hexChip(o.col, o.pk) : ''}</div>${swRow(o)}${after}</div>`;
   // 跟 Key 走、不单独设置的颜色行：标题行胶囊显示被跟随的 Key 的色值；点「去改」打开整页配色
   const linkRow = (lab, key, col) => `<div class="crow tb-link"><div class="k"><span class="ellipsis">${lab}</span>${hexChip(col)}</div><div class="tb-link-r"><span class="sw-dot" style="background:${col}"></span><span class="ellipsis">${t('ed/tb-c-follow')}</span>${keyTag(null, key)}<button class="tb-goto" data-act="openKeys">${t('ed/tb-c-goto')}</button></div></div>`;
   // 复制色值：先 navigator.clipboard，不行再用隐藏 textarea + execCommand；都失败提示长按手动复制（色值可整段选取）。
@@ -239,14 +239,27 @@
   //   defCss / defTip / defLab：默认值不是 Key 颜色（游戏菜单按钮图）时色块里那张图的样式（滤镜只加在图上，不染选中圈）、提示和 Key 标签文字
   // 正在用彩虹取色（取色器开着，画布已实时预览）时同「自定义」：只有彩虹带圈，Key 标签写「自定义」
   // 色块提示 = 「Key 名 · #HEX」；选了自定义色时彩虹中间填上那个颜色（.has-val，外圈留细彩虹看得出是自定义）
+  // 取色器切 Key 范围（11-28，Figma 04-11-28 65966:104739 第 3 / 5b 步）：行在取色器 Key 菜单里改跟另一个 Key（E.D.ecf[行] = Key 名，值仍存 'key:<名>'）
+  // → 第一个色块显示那个 Key 的颜色并带选中圈，其它色块不带圈，Key 标签换成 G6/FollowTag「跟随 <key>」（淡蓝底蓝字）。
+  // 取色中刚切了 Key（E.picker.follow）同样显示，第一个色块 = 实时颜色。色块点了 / 自定义色 / 恢复默认都会去掉跟随
+  const followOf = (o) => {
+    const r = o.act === 'bnColor' ? o.id : o.act === 'tbColor' ? 'tb:' + o.id : null; if (!r) return null;
+    const x = X(); if (o.pk) return (x.E.picker && x.E.picker.follow) || null;
+    const f = (x.E.D.ecf || {})[r]; return f && o.v === 'key:' + f ? f : null;
+  };
+  const followTag = (k) => { const s = t('ed/keyscope/tag', { key: k }); return `<span class="tx-key is-follow" title="${esc(s + ' · ' + keyLabel(k))}">${esc(s)}</span>`; };
   const swRow = (o) => {
-    const v = o.v || null, img = !!o.defCss, pk = !!o.pk, onDef = !pk && (!v || (!img && v === 'key:' + o.key));
+    const fk = followOf(o);
+    const v = o.v || null, img = !!o.defCss, pk = !!o.pk && !fk, onDef = !pk && !fk && (!v || (!img && v === 'key:' + o.key));
     const sws = (img ? o.sws : o.sws.filter((k) => k !== o.key));
     const defTip = o.defTip || swTip(o.key[0] === '#' ? t('mp/c-default') : `${t('mp/c-default')} · ${keyLabel(o.key)}`, o.kv(o.key));
     const btn = (on, style, tip, arg, cls = '', inner = '') => `<button class="sw-btn ${cls} ${on ? 'is-on' : ''}" style="${style}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${on}" data-act="${o.act}" data-arg="${o.id}|${arg}">${inner}</button>`;
-    const cu = v && !v.startsWith('key:') ? hexOf(v) : null, rbTip = cu ? `${t('tx/c-custom')} · ${cu.hex}` : t('tx/c-custom');
+    const cu = !fk && v && !v.startsWith('key:') ? hexOf(v) : null, rbTip = cu ? `${t('tx/c-custom')} · ${cu.hex}` : t('tx/c-custom');
     const rb = o.rainbow || `<button class="rainbow ${pk || cu ? 'is-on' : ''} ${cu ? 'has-val' : ''}" ${cu ? `style="--c:${cu.css}"` : ''} data-act="${o.pickAct || 'bnPick'}" data-arg="${o.pickArg}" title="${esc(rbTip)}" aria-label="${esc(rbTip)}"></button>`;
-    return `<div class="tx-colors cr-sw">${img ? btn(onDef, '', defTip, '', 'sw-def sw-img', `<i style="${o.defCss}"></i>`) : btn(onDef, `background:${o.kv(o.key)}`, defTip, '', 'sw-def')}${sws.map((k) => btn(!pk && v === 'key:' + k, `background:${o.kv(k)}`, swTip(keyLabel(k), o.kv(k)), 'key:' + k)).join('')}${rb}${keyTag(pk ? 'custom' : onDef && !img ? null : v, o.tag || o.key, o.defLab)}</div>`;
+    const fc = fk ? (o.pk ? X().E.picker.value : o.kv(fk)) : null;
+    const first = fk ? btn(true, `background:${fc}`, swTip(`${t('ed/keyscope/tag', { key: fk })} · ${keyLabel(fk)}`, fc), 'key:' + fk, 'sw-def')
+      : img ? btn(onDef, '', defTip, '', 'sw-def sw-img', `<i style="${o.defCss}"></i>`) : btn(onDef, `background:${o.kv(o.key)}`, defTip, '', 'sw-def');
+    return `<div class="tx-colors cr-sw">${first}${sws.map((k) => btn(!pk && !fk && v === 'key:' + k, `background:${o.kv(k)}`, swTip(keyLabel(k), o.kv(k)), 'key:' + k)).join('')}${rb}${fk ? followTag(fk) : keyTag(pk ? 'custom' : onDef && !img ? null : v, o.tag || o.key, o.defLab)}</div>`;
   };
   function colors(b) {
     const x = X(); const { th, ec } = x.liveTheme(); const P = x.E.picker;
@@ -1420,7 +1433,7 @@
     resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
     keyTag, swRow, keyLabel, hexOf, curCol, hexChip, swTip, colorRow, linkRow, // 色值胶囊（Figma G6/HexChip 460:31190）：editor.js 的颜色行、文字样式卡、取色器共用
     elKey: (id) => { for (const b in EL) for (const [i, k] of EL[b]) if (i === id) return k; return null; },
-    resetColors: (b) => { (EL[b] || []).forEach(([id]) => { delete X().E.D.ec[id]; }); },
+    resetColors: (b) => { const D = X().E.D; (EL[b] || []).forEach(([id]) => { delete D.ec[id]; if (D.ecf) delete D.ecf[id]; }); if (D.ecf && !Object.keys(D.ecf).length) delete D.ecf; },
     getAsset: (slot) => { const [b, f] = slotOf(slot); return M(b)[f]; },
     // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); const D = X().E.D; D.m[b][f] = v; if (b === 'gamemenu' && v && GM_BTN_EC[f] && D.ec) delete D.ec[GM_BTN_EC[f]]; },

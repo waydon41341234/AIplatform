@@ -185,6 +185,49 @@ html[lang="vi"] .bc-row .k { width: 88px; }
 .keymenu .sw { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--border); }
 .keymenu .kk { margin-left: auto; font-size: 11px; color: var(--text-3); }
 .picker-pop { position: absolute; z-index: 30; }
+/* 取色器切 Key 范围（11-28，Figma 04-11-28 65966:104739 / 03 组件 G6/ScopeOption · G6/FollowTag · G6/KeyScopeDialog）
+   电脑：行内取色器浮在该行左侧（位置由 editor.js placeRowFloat 按行算）；手机：底部弹层，画布不压暗（实时预览看得到） */
+.pk-float { position: fixed; z-index: 70; top: 72px; left: 0; }
+.pk-float .picker { width: 264px; }
+.pk-head .pk-title { min-width: 0; max-width: calc(100% - 64px); }
+.pk-head .pk-cap { flex: none; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-head .keymenu { width: 100%; max-height: min(400px, calc(100dvh - 140px)); } /* Figma Key 菜单：11 个基础色一屏放下（行高 34） */
+.pk-head .keymenu .menu-item { min-height: 34px; padding-top: 6px; padding-bottom: 6px; }
+.pk-head .keymenu .sw { width: 16px; height: 16px; }
+.scrim.is-clear { background: transparent; animation: none; }
+.pk-sheet .pk-title { font-size: 18px; line-height: 26px; }
+.pk-sheet .pk-title .ic { width: 20px; height: 20px; }
+.pk-sheet .pk-cmp { height: 40px; font-size: 13px; }
+.pk-sheet .pk-sug { justify-content: space-between; }
+.pk-sheet .pk-sug button { width: 32px; height: 32px; }
+.pk-sheet .pk-foot .btn { height: 40px; font-size: var(--fs-body); }
+/* G6/FollowTag：跟随 <key>（淡蓝底蓝字胶囊） */
+.tx-colors .tx-key.is-follow, .crow .tx-key.is-follow { background: var(--brand-subtle); border-color: transparent; color: var(--brand); border-radius: var(--radius-full); font-family: inherit; font-weight: 500; }
+/* G6/KeyScopeDialog：电脑 380 宽居中弹窗（内边距 24、圆角 24、间距 16）；手机底部弹层（上 8 左右 20 下 32、间距 12），「应用」在上、「取消」在下 */
+.dialog.dialog-ks { width: min(380px, calc(100vw - 32px)); padding: var(--space-24); border-radius: var(--radius-2xl); background: var(--bg-raised); display: flex; flex-direction: column; gap: 16px; }
+.dialog-ks .ks-title, .ks-sheet .ks-title { margin: 0; font-size: 20px; line-height: 28px; font-weight: 500; }
+.ks-body { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-2); overflow-wrap: anywhere; }
+.ks-opts { display: flex; flex-direction: column; gap: 8px; }
+/* G6/ScopeOption：未选 color/fill/tertiary 底；选中 color/brand/subtle 底 + 蓝字（不打勾，同全站选中规则） */
+.ks-opt { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--fill-3); color: var(--text); text-align: left; transition: background .15s; }
+.ks-opt b { font-size: 14px; line-height: 22px; font-weight: 500; }
+.ks-opt small { font-size: var(--fs-caption); line-height: 18px; color: var(--text-2); overflow-wrap: anywhere; }
+.ks-opt:not(.is-on):hover { background: var(--fill-2); }
+.ks-opt.is-on { background: var(--brand-subtle); }
+.ks-opt.is-on b { color: var(--brand); }
+.ks-opt:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand); }
+.ks-foot { display: flex; justify-content: flex-end; gap: 8px; }
+.ks-foot .btn { height: 40px; padding: 0 20px; font-size: 14px; }
+.ks-scrim { z-index: 95; }
+.scrim.no-anim, .dialog.no-anim { animation: none; }
+.pk-sug button.is-on { box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 4px var(--brand); border-color: transparent; }
+.pk-sheet .pk-sug button.is-on { box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--brand); }
+.sheet.ks-sheet { z-index: 96; display: flex; flex-direction: column; gap: 12px; padding: var(--space-8) 20px calc(32px + env(safe-area-inset-bottom)); background: var(--bg-raised); }
+.ks-sheet .sheet-grab { margin-bottom: 0; }
+.ks-sheet .ks-title { font-size: 18px; line-height: 26px; }
+.ks-sheet .ks-body { font-size: var(--fs-caption); line-height: 18px; }
+.ks-sheet .ks-foot { flex-direction: column; gap: 12px; }
+.ks-sheet .ks-foot .btn { width: 100%; }
 
 /* 选中框与浮动工具条（在 H5 里，但用平台色） */
 .h5 .mod { position: relative; }
