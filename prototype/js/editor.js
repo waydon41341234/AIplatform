@@ -1428,7 +1428,8 @@
   // 电脑快捷键（Waydon 2026-11-26）：Ctrl/⌘+Z 回退、Ctrl/⌘+Shift+Z 或 Ctrl+Y 重做、↑/↓ 移动选中模块、Ctrl/⌘+C 复制选中模块
   document.addEventListener('keydown', (e) => {
     if (S.route !== 'editor' || mobileEd() || E.loading || S.dialog || S.sheet) return;
-    if (E.dlg === 'keyscope') return; // 「应用到哪里？」开着：撤销 / 重做 / 移动模块都不在背后偷偷改（11-28 QA）
+    // 编辑器弹窗开着（都有遮罩：「应用到哪里？」、调整尺寸 / 裁切、素材库、导出、换配色…）：撤销 / 重做 / 移动 / 复制模块都不在背后偷偷改（11-28 QA）
+    if (E.dlg) return;
     const tg = e.target; if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
     const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase(); let r;
     if (mod && k === 'z') r = e.shiftKey ? A.redo() : A.undo();
