@@ -314,7 +314,7 @@
   const undoRedo = () => `<button class="ibtn ibtn-sm" data-act="ctUndo" ${C.past.length && C.stage === 'edit' ? '' : 'disabled'} title="${esc(t('ed/undo'))}" aria-label="${esc(t('ed/undo'))}">${ic('arrow-u-up-left')}</button><button class="ibtn ibtn-sm" data-act="ctRedo" ${C.future.length && C.stage === 'edit' ? '' : 'disabled'} title="${esc(t('ed/redo'))}" aria-label="${esc(t('ed/redo'))}">${ic('arrow-u-up-right')}</button>`;
   const genBtn = () => (C.stage === 'gen'
     ? `<button class="btn btn-primary btn-sm is-disabled ct-genbtn" disabled>${ic('circle-notch', 'ic-16 spin')}${esc(t('ct/generating-btn'))}</button>`
-    : `<button class="btn btn-primary btn-sm ct-genbtn" data-act="ctGenOpen">${ic('sparkle-fill', 'ic-16')}${esc(t('ct/gen-btn'))}</button>`); // 手机同 Figma S-M-00 也写全「AI 一键生成」
+    : `<button class="btn btn-primary btn-sm ct-genbtn" data-act="ctGenOpen" aria-label="${esc(t('ct/gen-btn'))}">${ic('sparkle-fill', 'ic-16')}<span data-ct-gl>${esc(t('ct/gen-btn'))}</span></button>`); // 手机同 Figma S-M-00 / M2 也写全「AI 一键生成」；标题放不下时换短的「生成」（渲染后量，见 AFTER_RENDER）
 
   // ---------- 左栏：模块库 ----------
   function rowHtml(b, fixed, idx) {
@@ -331,7 +331,7 @@
     const adds = ADDABLE.map((m) => `<button class="ct-add" data-ct-lib="${m}" data-act="ctAdd" data-arg="${m}">${ic(MODS[m].ic)}<span class="ellipsis">${esc(modName(m))}</span></button>`).join('');
     return `${opts.head === false ? '' : `<div class="ct-lib-h"><h3>${esc(t('ct/lib'))}</h3><p class="caption faint">${esc(t('ct/lib-sub'))}</p></div>`}
       <div class="ct-grp">${esc(t('ct/grp-fixed'))}</div>${fixed}
-      <div class="ct-grp">${esc(t('ct/grp-content', { n }))}</div><div class="ct-rows" data-ct-rows>${content}</div>
+      <div class="ct-grp">${esc(t(mob() ? 'ct/grp-content-m' : 'ct/grp-content', { n }))}</div><div class="ct-rows" data-ct-rows>${content}</div>
       ${opts.adds === false ? '' : `<div class="ct-grp">${esc(t(mob() ? 'ct/grp-add-m' : 'ct/grp-add'))}</div><div class="ct-adds">${adds}</div>`}`;
   }
 
@@ -663,23 +663,30 @@
     if (window.requireLogin) { if (!window.requireLogin(open)) return; } else open();
   };
   // 点标签：填入该标签当前语言的默认提示词并选中；之前改过的文字被换掉时给提示，可撤销（回到之前的标签 + 文字）。
-  // 再点已选标签 = 取消选中，文字保留（之后按提示词、用版式原稿配色生成）
-  A.ctTag = (k) => {
+  // 再点已选标签 = 取消选中，文字保留（之后按提示词、用版式原稿配色生成）；双击（第二下 detail > 1，或选中后 500ms 内）不算再点，免得选了又取消
+  // 换标签的「撤销」只属于这个弹窗：弹窗关着（扣点确认、生成中、关掉了）先收起、点不到（hold），确认生成后直接收掉
+  let tagAt = 0, swapT = null;
+  const dropSwap = () => { if (swapT) window.toastDrop(swapT); swapT = null; };
+  A.ctTag = (k, el, e) => {
     if (!TAGS[k]) return false;
     syncAuto();
-    if (C.tag === k) { C.tag = null; C.auto = false; return; }
+    if (C.tag === k) { if ((e && e.detail > 1) || Date.now() - tagAt < 500) return false; C.tag = null; C.auto = false; return; }
     const prev = { tag: C.tag, prompt: C.prompt, auto: C.auto }, swap = edited();
-    C.tag = k; C.prompt = defPrompt(k); C.auto = true;
-    if (swap) window.toast(t('ct/tag-swapped', { s: tagName(k) }), { ms: 5000, action: () => { Object.assign(C, prev); syncAuto(); if (S.route === 'custom') window.render(); }, actionLabel: t('ed/undo') });
+    C.tag = k; C.prompt = defPrompt(k); C.auto = true; tagAt = Date.now();
+    if (!swap) return;
+    dropSwap(); // 同一时间只留最近一次换标签的撤销
+    swapT = window.toast(t('ct/tag-swapped', { s: tagName(k) }), { ms: 5000, hold: () => S.route !== 'custom' || C.dlg !== 'cmp' || C.stage === 'gen', action: () => { swapT = null; Object.assign(C, prev); syncAuto(); if (S.route === 'custom') window.render(); }, actionLabel: t('ed/undo') });
   };
   A.ctRestore = () => { if (!C.tag) return false; C.prompt = defPrompt(C.tag); C.auto = true; };
-  I.ctPrompt = (v, el) => {
-    const s = v.length > PMAX ? v.slice(0, PMAX) : v;
+  I.ctPrompt = (v, el, e) => {
+    const comp = !!(e && e.isComposing); // 输入法拼写中：不改 el.value（会打断输入法，拼音字母留在框里、汉字进不去），拼写结束（compositionend）再截
+    const s = !comp && v.length > PMAX ? v.slice(0, PMAX) : v;
     if (s !== v) el.value = s;
     C.prompt = s; C.auto = !!C.tag && s === defPrompt(C.tag);
     cmpSync();
     return false;
   };
+  document.addEventListener('compositionend', (e) => { const el = e.target; if (el && el.id === 'ct-prompt') I.ctPrompt(el.value, el, null); });
   A.ctSpec = () => { C.spec = !C.spec; };
   A.ctSpecClose = () => { C.spec = false; };
   A.ctGenGo = () => {
@@ -700,6 +707,7 @@
     const set = (id) => (sp.iconSets || []).find((x) => x.id === id);
     const icon = (id, names, more) => { const x = set(id); return x ? Object.assign({ set: id, width: x.width, height: x.height, format: 'png', names: names || x.names }, more) : null; };
     const bn = ((sp.banners && sp.banners.sizes) || []).find((x) => x.id === 'general') || { width: 1020, height: 300 };
+    const blank = C.prompt.trim() === '';
     return {
       projectId: null, // 原型没有后端项目；正式版填当前项目 id
       idempotencyKey: 'ct-page-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), // 防重复点击，同 key 只扣一次
@@ -711,8 +719,8 @@
         hidden: d.blocks.filter((b) => b.hid).map((b) => b.id),
         sequence: sig(d), // 结果匹配用的布局选项序列
       },
-      styleTag: C.tag, stylePromptVersion: PROMPT_VER, promptEdited: C.prompt !== defPrompt(C.tag),
-      prompt: C.prompt.slice(0, PMAX),
+      styleTag: C.tag, stylePromptVersion: PROMPT_VER, promptEdited: !blank && C.prompt !== defPrompt(C.tag),
+      prompt: blank ? defPrompt(C.tag) : C.prompt.slice(0, PMAX), // 标签选中、文字清空（或只有空格）→ 用标签默认提示词
       specPack: { version: sp.version, source: 'figma:' + src.figmaFile + '/' + src.node, inline: sp },
       outputs: { // 由排版 + 规范包算出来，业主不选
         theme: { keys: ['primary', 'lead', 'neutral_1', 'neutral_2', 'border', 'bg_1', 'bg_2', 'accent_1', 'accent_2', 'accent_3', 'text_primary'], max: 11 },
@@ -729,7 +737,7 @@
     window.spend(COST, 'customtpl', { style: { k: 'ct/tag-' + (tag || 'none') } });
     const lid = S.ledger[0] && S.ledger[0].kind === 'customtpl' ? S.ledger[0].id : null;
     const tok = ++genTok, doc = JSON.parse(JSON.stringify(C.doc));
-    lastReq = req;
+    lastReq = req; dropSwap();
     C.stage = 'gen'; C.sel = null; C.pane = null; C.msheet = null; C.preview = false; C.dlg = null; C.spec = false;
     // 有标签用标签对应的配色版本；没标签用匹配到的版式自己的原稿配色
     const pick = () => { const mr = match(doc, tag ? TAGS[tag] : null); return { mr, cs: tag ? TAGS[tag] : STYLE_OF[mr.x] }; };
@@ -805,14 +813,18 @@
     if (S.route !== 'custom') return;
     if (ctCost() && e.target.matches('.scrim[data-act="closeAll"]')) { e.stopPropagation(); A.costCancel(); window.render(); return; }
     if (!C.spec || C.dlg !== 'cmp' || mob()) return;
-    if (e.target.closest('.ct-spec-pop') || e.target.closest('[data-act="ctSpec"]')) return;
+    if (e.target.closest('.ct-spec-pop') || e.target.closest('[data-act="ctSpec"]') || e.target.closest('.toast-wrap')) return; // 提示（换标签的撤销）照常点
     e.stopPropagation(); e.preventDefault(); C.spec = false; window.render();
   }, true);
   window.AFTER_RENDER.push(() => {
     if (S.route !== 'custom') return;
     // 手机：提示（换标签的撤销）放在底部面板上方，不盖住面板（同编辑器 --toast-b）
-    const sh = window.innerWidth < 600 && document.querySelector('.ct-sheet.is-spec, .ct-sheet.is-cmp');
-    if (sh) document.documentElement.style.setProperty('--toast-b', sh.offsetHeight + 12 + 'px');
+    // 规范包面板叠在生成面板上、比它高：取最高的那个
+    const hs = window.innerWidth < 600 ? [...document.querySelectorAll('.ct-sheet.is-spec, .ct-sheet.is-cmp')].map((n) => n.offsetHeight) : [];
+    if (hs.length) document.documentElement.style.setProperty('--toast-b', Math.max.apply(null, hs) + 12 + 'px');
+    // 手机顶栏：全称「AI 一键生成」把标题挤成省略号时换短的「生成」（en / vi、375 以下）
+    const tb = mob() && document.querySelector('.ct-mtop .ct-mt b'), gl = tb && document.querySelector('.ct-mtop [data-ct-gl]');
+    if (gl && tb.scrollWidth > tb.clientWidth + 1) gl.textContent = t('ct/gen-short');
   });
 
   // ======================================================================

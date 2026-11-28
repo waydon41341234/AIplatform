@@ -1438,8 +1438,9 @@ A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one 
 自定义模版「AI 一键生成整页」弹窗（Figma 设计稿1127 03 页 66114:81676；组件 AIF/StyleTag 66109:81570、SpecPackChip 66109:81583、SpecPackPanel 66110:81628、PromptComposer 66112:81908）。
 
 - **怎么用**：业主点一个风格标签 → 提示词框填入该标签的默认提示词（按当前界面语言）；可以直接生成，也可以改。改过再点别的标签 → 换成新标签的默认提示词，提示「已换成「巴西绿」默认提示词」带「撤销」。没改过的默认提示词跟着切换语言。可以不选标签只写文字（演示用版式自己的原稿配色）。
-- **上限**：300 字符（按 JS 字符串长度）。English「清爽蓝」Figma 原文 304 字符，原型里删成 298 字符（"Icons: flat blue, subtle highlight, consistent rounded corners"），Figma 变量待同步。
-- **版本**：`stylePromptVersion: "ct-style-v1"`，随请求发送（见 `docs/spec-pack/request-example.md`）；改默认提示词时升版本。
+- **上限**：300 字符（按 JS 字符串长度）。默认提示词要给业主留改写的余地（标签提示「可直接用或再修改」，Figma S3 是在默认上加一句）：中文 85–89 字符；English / Tiếng Việt 照 Figma 原文 262–304 字符，几乎顶满（巴西绿 English 正好 300，一点标签计数就变红、一个字也加不进去，QA 11-28），原型里压到 English 231–239、Tiếng Việt 205–230 字符（意思不变，删掉重复修饰和次要的正文字色描述），至少留 60 字符。Figma「06 文案 i18n」`ct/prompt-*` 的 en / vi 值待同步。
+- **清空文字**：标签选中、提示词清空（或只有空格）时生成按钮照样可用，请求里的 `prompt` 发该标签当前语言的默认提示词、`promptEdited: false`（style-prompts.md「清空文字：标签仍选中时，按钮可用（按标签默认提示词生成）」）。
+- **版本**：`stylePromptVersion: "ct-style-v1"`，随请求发送（见 `docs/spec-pack/request-example.md`）；改默认提示词时升版本（en / vi 压短发生在 v1 发布前，同一个未合并分支里，仍记 v1）。
 - **规范包永远附带**：每次生成都附带普通定制规范包 `normal-custom-v1`（`docs/spec-pack/normal-custom-v1.json`，原型数据 `prototype/js/ct-specpack.js`），业主只能查看（弹窗里「普通定制规范 · 已附带」），改不了；尺寸、画布、字号、多语言留位这些硬约束由后端拼进每个素材的提示词（见 `docs/spec-pack/request-example.md`）。
 - **代码位置**：`prototype/js/i18n-custom.js` 的 `ct/prompt-<标签>`；标签 → 配色版本在 `prototype/js/customtpl.js` 的 `TAGS`。
 
@@ -1457,26 +1458,26 @@ A 5-column x 4-row grid sheet of 20 equal square cells of mobile app icons, one 
 
 - **简体中文**（88 字符）：浅色象牙白底 + 香槟金主色 + 银灰点缀，整体明亮、留白多、细金线描边；Banner 用金属质感人物与奖杯，柔和日光；图标金属质感、统一圆角、不要投影；主按钮香槟金底配白字。
 - **繁體中文**（88 字符）：淺色象牙白底 + 香檳金主色 + 銀灰點綴，整體明亮、留白多、細金線描邊；Banner 用金屬質感人物與獎盃，柔和日光；圖示金屬質感、統一圓角、不要投影；主按鈕香檳金底配白字。
-- **English**（295 字符）：Light ivory base + champagne gold primary + silver-grey accents; bright and airy with plenty of white space and fine gold outlines. Banners: metallic figures and trophies in soft daylight. Icons: metallic, consistent rounded corners, no drop shadows. Main button: champagne gold with white text.
-- **Tiếng Việt**（262 字符）：Nền trắng ngà sáng + màu chính vàng champagne + điểm xám bạc; sáng sủa, nhiều khoảng trắng, viền vàng mảnh. Banner: nhân vật và cúp chất kim loại dưới nắng dịu. Biểu tượng: chất kim loại, bo góc đồng nhất, không đổ bóng. Nút chính: nền vàng champagne, chữ trắng.
+- **English**（239 字符）：Ivory base + champagne gold primary + silver-grey accents; bright and airy, fine gold outlines. Banners: metallic figures and trophies in soft daylight. Icons: metallic, rounded corners, no shadows. Main button: champagne gold, white text.
+- **Tiếng Việt**（217 字符）：Nền trắng ngà + vàng champagne + điểm xám bạc; sáng, thoáng, viền vàng mảnh. Banner: nhân vật và cúp kim loại dưới nắng dịu. Biểu tượng: kim loại, bo góc đồng nhất, không đổ bóng. Nút chính: vàng champagne, chữ trắng.
 
 #### 巴西绿（`brazil-green`）
 
 - **简体中文**（85 字符）：荷叶绿深色底 + 黑金点缀 + 祖母绿高光，清爽有质感；Banner 用深绿渐变配金色光效与球场元素；图标绿金双色、细金属描边；主按钮金色配深色字，标题白色、正文浅灰绿。
 - **繁體中文**（85 字符）：荷葉綠深色底 + 黑金點綴 + 祖母綠高光，清爽有質感；Banner 用深綠漸層配金色光效與球場元素；圖示綠金雙色、細金屬描邊；主按鈕金色配深色字，標題白色、內文淺灰綠。
-- **English**（300 字符）：Deep lotus-leaf green base + black-gold accents + emerald highlights; fresh yet refined. Banners: deep green gradients with gold light effects and stadium elements. Icons: green-and-gold duotone with thin metallic outlines. Main button: gold with dark text; white headings, pale grey-green body text.
-- **Tiếng Việt**（263 字符）：Nền xanh lá sen đậm + điểm đen vàng + ánh xanh ngọc lục bảo; tươi mát mà sang. Banner: chuyển màu xanh đậm với hiệu ứng ánh vàng và yếu tố sân bóng. Biểu tượng: hai màu xanh vàng, viền kim loại mảnh. Nút chính: vàng chữ tối; tiêu đề trắng, nội dung xám xanh nhạt.
+- **English**（238 字符）：Dark lotus-green base + black-gold accents + emerald highlights; fresh yet refined. Banners: deep green gradients, gold light, stadium elements. Icons: green-gold duotone, fine metal outlines. Main button: gold, dark text; white headings.
+- **Tiếng Việt**（205 字符）：Nền xanh lá sen đậm + điểm đen vàng + ánh ngọc lục bảo; tươi mát mà sang. Banner: xanh đậm chuyển màu, ánh vàng, sân bóng. Biểu tượng: xanh vàng, viền kim loại mảnh. Nút chính: vàng chữ tối; tiêu đề trắng.
 
 #### 暗夜绿（`night-green`）
 
 - **简体中文**（89 字符）：纯黑底 + 荧光绿主色 + 青绿点缀，高对比、科技电竞感；Banner 用暗色背景配霓虹绿光效与动感人物；图标霓虹描边、轻微发光；主按钮荧光绿配黑字，次级文字用中灰，卡片深灰底。
 - **繁體中文**（89 字符）：純黑底 + 螢光綠主色 + 青綠點綴，高對比、科技電競感；Banner 用暗色背景配霓虹綠光效與動感人物；圖示霓虹描邊、輕微發光；主按鈕螢光綠配黑字，次級文字用中灰，卡片深灰底。
-- **English**（294 字符）：Pure black base + neon green primary + teal accents; high contrast with a techy esports mood. Banners: dark backgrounds with neon green light effects and dynamic figures. Icons: neon outlines with a slight glow. Main button: neon green with black text; mid-grey secondary text, dark grey cards.
-- **Tiếng Việt**（270 字符）：Nền đen tuyền + màu chính xanh neon + điểm xanh ngọc; tương phản cao, chất công nghệ thể thao điện tử. Banner: nền tối với hiệu ứng ánh xanh neon và nhân vật năng động. Biểu tượng: viền neon, phát sáng nhẹ. Nút chính: xanh neon chữ đen; chữ phụ xám vừa, thẻ nền xám đậm.
+- **English**（231 字符）：Pure black base + neon green primary + teal accents; high-contrast esports mood. Banners: dark backgrounds, neon green light, dynamic figures. Icons: neon outlines, slight glow. Main button: neon green, black text; dark grey cards.
+- **Tiếng Việt**（215 字符）：Nền đen tuyền + xanh neon + điểm xanh ngọc; tương phản cao, chất thể thao điện tử. Banner: nền tối, ánh xanh neon, nhân vật năng động. Biểu tượng: viền neon, phát sáng nhẹ. Nút chính: xanh neon chữ đen; thẻ xám đậm.
 
 #### 清爽蓝（`fresh-blue`）
 
 - **简体中文**（86 字符）：浅蓝白底 + 亮蓝主色 + 天蓝点缀，明亮清爽、运动感；Banner 用蓝白渐变配运动员与球类动感元素；图标蓝色扁平带轻微高光、统一圆角；主按钮亮蓝配白字，卡片白底细描边。
 - **繁體中文**（86 字符）：淺藍白底 + 亮藍主色 + 天藍點綴，明亮清爽、運動感；Banner 用藍白漸層配運動員與球類動感元素；圖示藍色扁平帶輕微高光、統一圓角；主按鈕亮藍配白字，卡片白底細描邊。
-- **English**（298 字符）：Light blue-white base + bright blue primary + sky-blue accents; bright, clean and sporty. Banners: blue-white gradients with athletes and dynamic ball elements. Icons: flat blue, subtle highlight, consistent rounded corners. Main button: bright blue with white text; white cards with fine outlines.
-- **Tiếng Việt**（289 字符）：Nền trắng xanh nhạt + màu chính xanh dương sáng + điểm xanh da trời; sáng, sạch, đậm chất thể thao. Banner: chuyển màu xanh trắng với vận động viên và bóng đầy chuyển động. Biểu tượng: phẳng màu xanh, ánh sáng nhẹ, bo góc đồng nhất. Nút chính: xanh sáng chữ trắng; thẻ nền trắng viền mảnh.
+- **English**（238 字符）：Pale blue-white base + bright blue primary + sky-blue accents; clean and sporty. Banners: blue-white gradients, athletes, dynamic balls. Icons: flat blue, soft highlight, rounded corners. Main button: bright blue, white text; white cards.
+- **Tiếng Việt**（230 字符）：Nền trắng xanh nhạt + xanh dương sáng + điểm xanh da trời; sáng, sạch, thể thao. Banner: xanh trắng chuyển màu, vận động viên, bóng. Biểu tượng: phẳng màu xanh, ánh nhẹ, bo góc đồng nhất. Nút chính: xanh sáng chữ trắng; thẻ trắng.

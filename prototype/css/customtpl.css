@@ -65,6 +65,7 @@ html[data-theme="light"] {
 .wf-tile.is-on, .wf-chip.is-on { background: var(--wf-block-strong); }
 .wf-chip { flex: none; display: inline-flex; align-items: center; gap: 12px; height: 64px; padding: 0 26px 0 18px; border-radius: 999px; background: var(--wf-block); }
 .wf-rail { width: 94px; display: flex; flex-direction: column; gap: 12px; }
+.wf-rail .wf-tile.is-on .wf-dot, .wf-rail .wf-tile.is-on .wf-ln { background: var(--wf-block); } /* G4 选中分类：底 wf/block-strong，图标 + 文字条反色 wf/block（Figma 66145:11550 / 66145:11827） */
 .wf-g4 { display: flex; gap: 14px; padding: 0 20px; align-items: flex-start; }
 .wf-g4 > .is-rail { flex: none; }
 .wf-g4r { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
@@ -265,7 +266,8 @@ body.ct-dragging, body.ct-dragging * { cursor: grabbing !important; user-select:
 
 /* ================= 手机（<840） ================= */
 .ct-mtop { flex: none; height: 56px; display: flex; align-items: center; gap: 4px; padding: 0 8px; background: var(--bg-surface); border-bottom: var(--stroke-hairline) solid var(--border); }
-.ct-mt { display: flex; flex-direction: column; line-height: 1.25; margin-left: 4px; }
+.ct-mt { display: flex; flex-direction: column; line-height: 1.25; margin-left: 4px; min-width: 0; }
+.ct-mt > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 「已自动保存」不折行（320 英文） */
 .ct-mt b { font-size: var(--fs-body); }
 .ct-mtop .ct-genbtn { margin-left: 4px; }
 .ct-canvas.is-m { position: relative; inset: auto; flex: 1; min-height: 0; }
@@ -344,7 +346,7 @@ body.ct-dragging, body.ct-dragging * { cursor: grabbing !important; user-select:
 .ct-cmp.is-m .ct-cmp-sec { gap: var(--space-8); }
 .ct-cmp-pr { position: relative; gap: var(--space-8); }
 .ct-cmp-lh { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--space-8); }
-.ct-cmp-lab { font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); font-weight: 500; color: var(--text-2); }
+.ct-cmp-lab { flex: none; white-space: nowrap; font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); font-weight: 500; color: var(--text-2); } /* 标签不折行，窄屏只让规范包芯片的字省略（vi 360） */
 .ct-cmp-hint { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--text-3); }
 .ct-tags { display: flex; flex-wrap: wrap; gap: var(--space-8); }
 .ct-tag, .ct-chip { display: inline-flex; align-items: center; gap: var(--space-6); height: var(--control-sm); padding: 0 var(--space-12) 0 var(--space-8); border-radius: var(--radius-full); background: var(--fill-3); border: var(--stroke-thin) solid var(--border); font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); font-weight: 500; white-space: nowrap; }
@@ -382,7 +384,8 @@ body.ct-dragging, body.ct-dragging * { cursor: grabbing !important; user-select:
 .ct-spec-pop { position: absolute; z-index: 3; left: 0; right: 0; top: calc(var(--control-sm) + 4px); max-height: 232px; overflow: auto; display: flex; flex-direction: column; gap: 6px; padding: var(--space-8) var(--space-12); border-radius: var(--radius-lg); background: var(--bg-raised); border: var(--stroke-thin) solid var(--border); box-shadow: 0 12px 40px #00000052; overscroll-behavior: contain; }
 .ct-spec-h { display: flex; align-items: center; gap: var(--space-8); min-height: 32px; }
 .ct-spec-h b { font-size: var(--fs-body); line-height: var(--lh-body); font-weight: 500; white-space: nowrap; }
-.ct-spec-h h3 { margin: 0; font-size: var(--fs-title-sm); line-height: var(--lh-title-sm); font-weight: 500; white-space: nowrap; }
+.ct-spec-h h3 { margin: 0; min-width: 0; font-size: var(--fs-title-sm); line-height: var(--lh-title-sm); font-weight: 500; } /* 手机窄屏（vi 320–375）标题折行，只读标签和 ✕ 不被挤出去 */
+.ct-spec-h .ibtn { flex: none; margin-left: auto; }
 .ct-spec-ic { width: 20px; height: 20px; flex: none; color: var(--brand); }
 .ct-ro { display: inline-flex; align-items: center; gap: var(--space-4); flex: none; padding: 2px var(--space-8) 2px var(--space-6); border-radius: var(--radius-full); background: var(--fill-3); font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: 500; color: var(--text-2); }
 .ct-ro .ic { width: 12px; height: 12px; color: var(--icon-2); }
@@ -395,7 +398,8 @@ html[lang="en"] .ct-spec-rows, html[lang="vi"] .ct-spec-rows { --kw: 76px; }
 .ct-spec-src { margin: 0; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--text-3); }
 .scrim.ct-spec-scrim { z-index: 94; }
 .sheet.ct-sheet.is-spec { z-index: 95; display: flex; flex-direction: column; gap: var(--space-16); }
-.ct-sheet.is-spec > .sheet-grab { margin-bottom: 0; flex: none; }
+.sheet.ct-sheet.is-spec > * { flex: none; } /* 矮屏（≤ 667 高）面板滚动，不压扁「知道了」 */
+.ct-sheet.is-spec > .sheet-grab { margin-bottom: 0; }
 .ct-sheet.is-spec .ct-spec-rows { gap: 0; }
 .ct-sheet.is-spec .ct-spec-row { padding: 6px 0; }
 .ct-sheet.is-spec .ct-spec-row + .ct-spec-row { border-top: var(--stroke-thin) solid var(--border); }

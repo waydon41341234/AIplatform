@@ -16,7 +16,7 @@ Object.assign(window.I18N, {
   'ed/keys-pending': ['跟设计 · 待确认', '跟設計 · 待確認', 'From design · to confirm', 'Theo thiết kế · chờ xác nhận'],
   // 页面设置 · 首页背景（home_bg，Figma 424:433220，Waydon 2026-11-27）
   'ed/home-bg': ['首页背景', '首頁背景', 'Home background', 'Nền trang chủ'],
-  'ed/hb-src-design': ['跟设计 · 综合版1默认 {hex}', '跟設計 · 綜合版1預設 {hex}', 'From design · All-in-One 1 default {hex}', 'Theo thiết kế · Mặc định Tổng hợp 1 {hex}'],
+  'ed/hb-src-design': ['跟设计 · 综合版1默认 {hex}', '跟設計 · 綜合版1預設 {hex}', 'From design · {hex} · All-in-One 1', 'Theo thiết kế · {hex} · Tổng hợp 1'], // en / vi 色值放前面：说明栏一行放不下时截掉的是版式名，不是色值
   'ed/hb-design': ['跟设计', '跟設計', 'Design', 'Thiết kế'],
   'ed/hb-bg1': ['同页面背景', '同頁面背景', 'Page bg', 'Nền trang'],
   'ed/hb-bg2': ['同卡片底', '同卡片底', 'Card bg', 'Nền thẻ'],
