@@ -79,6 +79,7 @@
     m.jackpot.layout = v.jp; m.jackpot.corner = [0, 16, 32][lv]; m.jackpot.margin = [8, 16, 24][Math.floor(r() * 3)];
     m.gamecards.corner = [0, 20, 32][lv]; m.gamecards.cols = v.cols; m.gamecards.gap = [12, 20, 32][Math.floor(r() * 3)];
     m.footer.align = v.foot; m.bottomnav.style = v.bnav; m.bottomnav.h = v.bh; m.sidebar.style = v.side; m.midnav.per = v.per;
+    if (window.MP && window.MP.gcNorm) window.MP.gcNorm(D); // 游戏卡片 6 样式（11-28）：菜单位置 左侧 / 中部、每行张数按卡片样式取有效值
     // Banner：当前规格 3 张（滤镜模拟 AI 出图）
     const size = v.size, sz = x.BANNER[size];
     D.banner = Object.assign(D.banner, { size, corner: [0, 8, 16][lv], ind: v.ind, slides: [0, 1, 2].map((j) => ({ f: `${st.bf} hue-rotate(${((i * 14 + j * 9 - 9 + (seed || 0) * 5) % 40) - 10}deg)`, w: sz.w, h: sz.h })) });
@@ -168,7 +169,8 @@
     D.ec = Object.assign({}, C.ec, userEc); D.baseEc = Object.assign({}, C.baseEc);
     const userTb = D0.tb.colors && Object.values(D0.tb.colors).some(Boolean) && !D0.aiDesign;
     if (!userTb) D.tb.colors = Object.assign({}, C.tb.colors);
-    ['gamemenu.shape', 'gamemenu.style', 'jackpot.layout', 'jackpot.corner', 'jackpot.margin', 'gamecards.corner', 'gamecards.cols', 'gamecards.gap', 'footer.align', 'bottomnav.style', 'bottomnav.h', 'sidebar.style'].forEach((p) => { const [b, f] = p.split('.'); D.m[b][f] = C.m[b][f]; });
+    ['gamemenu.style', 'jackpot.layout', 'jackpot.corner', 'jackpot.margin', 'gamecards.cols', 'footer.align', 'bottomnav.style', 'bottomnav.h', 'sidebar.style'].forEach((p) => { const [b, f] = p.split('.'); D.m[b][f] = C.m[b][f]; });
+    if (window.MP && window.MP.gcNorm) window.MP.gcNorm(D); // 游戏卡片 6 样式（11-28）：菜单位置 左侧 / 中部、每行张数按卡片样式取有效值
     const sz = x.BANNER[D.banner.size];
     D.banner.corner = C.banner.corner; D.banner.ind = C.banner.ind;
     D.banner.slides = D.banner.slides.map((s, j) => Object.assign({}, s, { f: C.banner.slides[j % C.banner.slides.length].f, w: sz.w, h: sz.h, fit: undefined }));
@@ -231,6 +233,7 @@
     m.jackpot.layout = o.jp_layout; m.jackpot.corner = o.jp_corner; m.jackpot.margin = o.jp_margin;
     m.gamecards.cols = o.gc_cols; m.gamecards.corner = o.gc_corner; m.gamecards.gap = o.gc_gap;
     m.footer.align = o.footer_align; m.bottomnav.style = o.bn_style; m.sidebar.style = o.sd_style;
+    if (window.MP && window.MP.gcNorm) window.MP.gcNorm(D); // 游戏卡片 6 样式（11-28）：菜单位置 左侧 / 中部、每行张数按卡片样式取有效值
     const size = x.BANNER[o.banner_size] ? o.banner_size : 'general';
     D.banner = Object.assign(D.banner, { size, corner: o.banner_corner, ind: o.banner_ind, slides: tplSlides(T, x.BANNER[size]) });
     D.tb.colors = tbColors(o.tb_mode, th, T.dark);
@@ -980,10 +983,10 @@
       m.midnav.per = pick([4, 5], m.midnav.per); m.midnav.size = pick([48, 57, 68], m.midnav.size);
       setEc('midnav.icon', pick([th.primary, th.accent_3, th.lead], D.ec['midnav.icon'] || th.primary));
     } else if (b === 'gamemenu') {
-      m.gamemenu.style = pick(['tabs', 'icons'], m.gamemenu.style); m.gamemenu.shape = pick(['pill', 'square'], m.gamemenu.shape);
+      m.gamemenu.style = pick(['side', 'tabs'], m.gamemenu.style); // 菜单位置 左侧 / 中部（11-28，标签形状已去掉）
       const a = pick([th.primary, th.accent_3, th.lead], D.ec['gamemenu.active'] || th.primary); setEc('gamemenu.active', a); setEc('gamemenu.activeText', best(a, [th.bg_2, th.lead]));
     } else if (b === 'gamecards') {
-      m.gamecards.cols = pick([2, 3, 4], m.gamecards.cols); m.gamecards.corner = pick([0, 20, 32], m.gamecards.corner); m.gamecards.gap = pick([12, 20, 32], m.gamecards.gap);
+      m.gamecards.style = pick(window.MP && window.MP.GC_STYLES ? window.MP.GC_STYLES : ['classic'], m.gamecards.style); // 换卡片样式（11-28，圆角 / 间距随样式）
       const l = pick([th.accent_3, th.accent_2, th.primary], D.ec['gamecards.label'] || th.accent_3); setEc('gamecards.label', l); setEc('gamecards.labelText', best(l, [th.bg_2, th.lead]));
     } else if (b === 'footer') {
       m.footer.align = pick(['center', 'left'], m.footer.align);
@@ -999,6 +1002,7 @@
       const dark = lum(th.bg_1) < 0.2; const cur = D.tb.colors.bg ? (D.tb.colors.bg === th.primary ? 'brand' : 'deep') : 'plain';
       D.tb.colors = tbColors(pick(['plain', 'brand', 'deep'], cur), th, dark);
     }
+    if (window.MP && window.MP.gcNorm) window.MP.gcNorm(D); // 游戏卡片 6 样式（11-28）：菜单位置 左侧 / 中部、每行张数按卡片样式取有效值
   }
 
   // ======================================================================

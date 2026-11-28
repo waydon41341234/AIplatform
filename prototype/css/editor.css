@@ -1529,3 +1529,84 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .ed-dlg-sheet.is-rsgc { max-height: 88dvh; }
 .ed-dlg-sheet.is-rsgc .dialog-foot { flex-wrap: wrap; gap: 10px 8px; margin: 16px -16px 0; padding: 12px 16px 0; border-top: 1px solid var(--border); }
 .ed-dlg-sheet.is-rsgc .dialog-foot .rs-cap { flex-basis: 100%; margin-right: 0; align-self: auto; }
+
+/* ---------- 游戏卡片 6 样式（11-28，Figma「04-11-28 游戏卡片 · 6 样式」65976:10，组件 H5/GameCard 65974:81179） ----------
+   卡片 = 容器（container-type），图片 / 角标 / 收藏星 / 平台角标的尺寸按 Figma 85 宽卡片的比例写成 cqw，每行 2 / 3 / 4 张都等比缩放 */
+.cl-gc.is-solo { padding: 0 12px; }
+.cl-gc .grid { column-gap: 8px; row-gap: 10px; }
+.cl-gc.is-side .grid { column-gap: 7px; }
+.gcd { container-type: inline-size; position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; color: var(--e-gamecards-text, var(--text-2)); }
+.gcd:has(.menu) { z-index: 6; } /* 容器会建层叠上下文：卡片上的「⋯」菜单不被后面的卡片盖住 */
+.gcd .im { position: relative; flex: none; width: 76.5cqw; max-width: none; aspect-ratio: 1; border-radius: 10.5cqw; overflow: hidden; background: none; }
+.gcd .im.fb { background: var(--e-gamecards-placeholder, #e3e3e3); display: flex; align-items: center; justify-content: center; }
+.gcd .im > img:first-child { width: 100%; height: 100%; display: block; object-fit: cover; }
+.gcd .im .star { position: absolute; top: 2cqw; right: 2cqw; z-index: 1; width: 21cqw; height: 21cqw; display: flex; cursor: pointer; }
+.gcd .im .star img { width: 100%; height: 100%; object-fit: contain; }
+.gcd .im .wg { position: absolute; right: 1cqw; bottom: 1cqw; width: 34cqw; }
+.gcd .im .rec { position: absolute; left: 0; top: 0; z-index: 1; width: 21cqw; height: 17.6cqw; display: flex; align-items: center; justify-content: center; background: var(--e-gamecards-label, #ff8a00); color: var(--e-gamecards-labelText, #fff); border-radius: 0 0 9cqw 0; }
+.gcd .im .rec .ic { width: 58%; height: 58%; }
+.gcd > .nm { max-width: 100%; font-size: 11px; line-height: 1.35; text-align: center; white-space: normal; word-break: break-all; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+/* 经典：图 65/85 方图、圆角 9，名称在图下最多两行 */
+.gcd.s-classic > .nm, .gcd.s-portrait > .nm { -webkit-line-clamp: 2; }
+/* 欧美：整卡 3:4、圆角 10.6/85，底部暖红渐变上压白色粗体名称；平台角标在顶部居中 */
+.gcd.s-western .im { width: 100%; aspect-ratio: 3 / 4; border-radius: 12.5cqw; }
+.gcd.s-western .im .shade { position: absolute; inset: 0; background: linear-gradient(to top, #8e1d12f2 0%, #8e1d1299 24%, #8e1d1200 50%); pointer-events: none; }
+.gcd.s-western .im .nm { position: absolute; left: 4cqw; right: 4cqw; bottom: 5cqw; z-index: 1; color: #fff; font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: break-all; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.gcd.s-western .im .wg { right: auto; bottom: auto; left: 50%; top: 0; transform: translateX(-50%); width: 34cqw; }
+.gcd.s-western .im .star { top: 3.5cqw; right: 3.5cqw; }
+/* 竖版：图 75/85、3:4、圆角 6，平台角标底部居中 */
+.gcd.s-portrait .im { width: 88cqw; aspect-ratio: 3 / 4; border-radius: 7cqw; }
+.gcd.s-portrait .im .wg { right: auto; left: 50%; bottom: 0; transform: translateX(-50%); width: 41cqw; }
+/* 方形：图 77/85、圆角 5 */
+.gcd.s-square .im { width: 90.6cqw; border-radius: 5.9cqw; }
+.gcd.s-square .im .wg { width: 37cqw; }
+/* 圆版：图 75/85 圆形（角标被圆形遮住一角，同 Figma 遮罩），平台角标底部居中，收藏星在右上内侧 */
+.gcd.s-round .im { width: 88cqw; border-radius: 50%; }
+.gcd.s-round .im .wg { right: auto; left: 50%; bottom: 2cqw; transform: translateX(-50%); width: 35cqw; }
+.gcd.s-round .im .star { top: 12cqw; right: 15cqw; width: 20cqw; height: 20cqw; }
+.gcd.s-round .im .rec { left: 9cqw; top: 7cqw; width: 26cqw; height: 21cqw; border-radius: 4cqw 4cqw 9cqw 4cqw; }
+/* 横版：整宽 8:5、圆角 3.3/85，名称一行小字 */
+.gcd.s-landscape .im { width: 100%; aspect-ratio: 8 / 5; border-radius: 3.8cqw; }
+.gcd.s-landscape .im .star { top: 1.5cqw; right: 1.5cqw; width: 15cqw; height: 15cqw; }
+.gcd.s-landscape .im .rec { width: 23.5cqw; height: 19cqw; border-radius: 0 0 7cqw 0; }
+.gcd.s-landscape .im .wg { right: 3cqw; bottom: 3cqw; width: 27cqw; }
+.gcd.s-landscape > .nm { font-size: 10px; }
+/* 中部横向分类（Figma 65750:31407）：图标 + 名称，选中 = gamemenu.active 文字 + 下划线；没有按钮底 */
+.h5-gm.center { gap: 16px; padding: 4px 24px 0 12px; margin-bottom: 6px; }
+.h5-gm.center > span { display: inline-flex; align-items: center; gap: 3px; padding: 6px 0 7px; border-radius: 0; background: none; color: var(--e-gamemenu-text); font-size: 12px; line-height: 18px; }
+.h5-gm.center > span b { font-weight: 400; }
+.h5-gm.center > span.on { background: none; color: var(--e-gamemenu-active); }
+.h5-gm.center > span.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; background: var(--e-gamemenu-active); }
+.h5-gm.center .gi { width: 24px; height: 18px; flex: none; }
+.h5-gm.center .gi img { width: 100%; height: 100%; object-fit: contain; }
+.h5-gm.center .gi .ic { width: 16px; height: 16px; }
+/* 面板：卡片样式 3×2（ED/CardStyleChip 66014:114002：缩图 + 名称 + 尺寸，选中淡蓝底蓝字，不打勾） */
+.gcs-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gcs-chip { display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 8px 6px 10px; border-radius: 16px; background: var(--fill-3); color: var(--text); text-align: center; }
+.gcs-chip:hover { background: var(--fill-2); }
+.gcs-chip.is-on { background: var(--brand-subtle); color: var(--brand); }
+.gcs-chip .th { width: 100%; height: 82px; display: flex; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; }
+.gcs-chip b { max-width: 100%; margin-top: 4px; font-size: 13px; font-weight: 500; line-height: 20px; }
+.gcs-chip small { max-width: 100%; font-size: 12px; line-height: 18px; color: var(--text-3); }
+.gcs-chip.is-on small { color: var(--brand); }
+.gcs-chip .gcd { width: 54px; gap: 2px; flex: none; }
+.gcs-chip .gcd.s-landscape { width: 66px; }
+.gcs-chip .gcd > .nm { font-size: 7px; line-height: 1.25; -webkit-line-clamp: 1; }
+.gcs-chip .gcd.s-western .im .nm { font-size: 6px; bottom: 4cqw; }
+/* 兜底图素材卡：缩略图 = 兜底底板 + 图形 / 上传图 */
+.asset .thumb.gc-fthumb { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.asset .thumb.gc-fthumb .fbg { display: flex; width: 22px; height: 22px; }
+.asset .thumb.gc-fthumb .fbg .ic { width: 100%; height: 100%; }
+/* 布局：每行 4 张时「左侧」变灰（Figma 透明度 0.4），点了提示原因 */
+.seg-opt.is-dis { opacity: .4; cursor: not-allowed; }
+.seg-opt.is-dis:hover { color: var(--text-2); }
+/* 颜色页签：游戏菜单 / 游戏卡片两组 */
+.gc-cgrp + .gc-cgrp { margin-top: var(--space-24, 24px); padding-top: var(--space-16); border-top: var(--stroke-thin) solid var(--border); }
+.gc-cgrp-h { margin-top: var(--space-20); font-size: var(--fs-caption); color: var(--text-2); }
+.gc-cgrp-h + .p-sec { margin-top: var(--space-8); }
+/* 手机控制区（Figma 66048:59237）：名称在左、分段在右；「每行 4 张时，菜单固定在中部」放在分段右边 */
+.med-sheet .gc-lay .p-sec { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; column-gap: 12px; }
+.med-sheet .gc-lay .p-sec > .lab { margin: 0; }
+.med-sheet .gc-lay .gc-cc { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.med-sheet .gc-lay .gc-cc .seg { flex: 0 0 56%; }
+.med-sheet .gc-lay .gc-cc .p-note { margin: 0; flex: 1; min-width: 0; }

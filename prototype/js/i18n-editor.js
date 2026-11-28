@@ -623,4 +623,35 @@ Object.assign(window.I18N, {
   'game-card/image-flow/restored': ['已恢复原图', '已還原原圖', 'Original image restored', 'Đã khôi phục ảnh gốc'],
   'game-card/image-flow/undo': ['撤销换图', '撤銷換圖', 'Undo image change', 'Hoàn tác đổi ảnh'],
   'game-card/style-name/0': ['经典', '經典', 'Classic', 'Cổ điển'],
+  // 单卡换图 AI 提示词的构图跟卡片样式（11-28）：1:1 用上面 Figma 原文，3:4 / 8:5 两条是 HTML 补的
+  'game-card/image-flow/ai-prompt-port': ['{name}游戏封面：主角人物居中，金色喜庆配色，清晰高对比，竖版 3:4 构图', '{name}遊戲封面：主角人物置中，金色喜慶配色，清晰高對比，豎版 3:4 構圖', '{name} game cover: hero character centered, festive gold palette, crisp high contrast, 3:4 portrait composition', 'Bìa game {name}: nhân vật chính ở giữa, tông vàng rực rỡ, tương phản rõ, khung dọc 3:4'],
+  'game-card/image-flow/ai-prompt-land': ['{name}游戏封面：主角人物居中，金色喜庆配色，清晰高对比，横版 8:5 构图', '{name}遊戲封面：主角人物置中，金色喜慶配色，清晰高對比，橫版 8:5 構圖', '{name} game cover: hero character centered, festive gold palette, crisp high contrast, 8:5 landscape composition', 'Bìa game {name}: nhân vật chính ở giữa, tông vàng rực rỡ, tương phản rõ, khung ngang 8:5'],
+
+  // 游戏卡片 6 样式（11-28，Figma「04-11-28 游戏卡片 · 6 样式」65976:10，Waydon 已确认）：文案同 Figma 变量（集合「06 文案 i18n」）。
+  // 面板标题「游戏菜单与游戏卡片」在 Figma 里没绑变量，mp/game-panel 是 HTML 补的；mp/gc-fallback-spec 的尺寸换成占位符
+  'mp/game-panel': ['游戏菜单与游戏卡片', '遊戲選單與遊戲卡片', 'Game menu & cards', 'Menu & thẻ trò chơi'],
+  'mp/game-card-style': ['卡片样式', '卡片樣式', 'Card style', 'Kiểu thẻ'],
+  'mp/gc-tag': ['角标（热门 / 新）', '角標（熱門 / 新）', 'Badge (Hot / New)', 'Nhãn (Hot / Mới)'],
+  'mp/gc-fallback-spec': ['封面加载失败时显示 · {w}×{h} · PNG', '封面載入失敗時顯示 · {w}×{h} · PNG', 'Shown when a cover fails to load · {w}×{h} · PNG', 'Hiện khi ảnh bìa lỗi · {w}×{h} · PNG'],
+  'mp/game-menu-position': ['菜单位置', '選單位置', 'Menu position', 'Vị trí menu'],
+  'mp/game-menu-center': ['中部', '中部', 'Center', 'Ở giữa'],
+  'mp/game-card-cols': ['每行张数', '每行張數', 'Cards per row', 'Số thẻ mỗi hàng'],
+  'mp/game-cols-2': ['2', '2', '2', '2'],
+  'mp/game-cols-3': ['3', '3', '3', '3'],
+  'mp/game-cols-4': ['4', '4', '4', '4'],
+  'game-card/cols-note': ['每行 4 张时，菜单固定在中部', '每行 4 張時，選單固定在中部', 'With 4 per row, the menu stays in the center', 'Khi 4 thẻ mỗi hàng, menu cố định ở giữa'],
+  'game-card/auto-center-toast': ['菜单已移到中部', '選單已移到中部', 'Menu moved to the center', 'Đã chuyển menu ra giữa'],
+  'game-card/style-name/1': ['欧美', '歐美', 'Western', 'Âu Mỹ'],
+  'game-card/style-name/2': ['竖版', '豎版', 'Portrait', 'Dọc'],
+  'game-card/style-name/3': ['方形', '方形', 'Square', 'Vuông'],
+  'game-card/style-name/4': ['圆版', '圓版', 'Round', 'Tròn'],
+  'game-card/style-name/5': ['横版', '橫版', 'Landscape', 'Ngang'],
+  'game-card/upload-size/0': ['180 × 180 px', '180 × 180 px', '180 × 180 px', '180 × 180 px'],
+  'game-card/upload-size/1': ['300 × 400 px', '300 × 400 px', '300 × 400 px', '300 × 400 px'],
+  'game-card/upload-size/2': ['300 × 400 px', '300 × 400 px', '300 × 400 px', '300 × 400 px'],
+  'game-card/upload-size/3': ['300 × 300 px', '300 × 300 px', '300 × 300 px', '300 × 300 px'],
+  'game-card/upload-size/4': ['300 × 300 px', '300 × 300 px', '300 × 300 px', '300 × 300 px'],
+  'game-card/upload-size/5': ['400 × 250 px', '400 × 250 px', '400 × 250 px', '400 × 250 px'],
+  // 中部横向分类（没有按钮底）：选中文字和下划线同一个颜色
+  'mp/c-gamemenu-active-c': ['选中文字 / 下划线', '選中文字 / 底線', 'Selected text / underline', 'Chữ đang chọn / gạch chân'],
 });

@@ -850,9 +850,9 @@
     // 问候语 11 neutral_2；余额金额 26=13 Bold（只改帐户栏里的余额框，顶部栏余额在顶部栏里改）；入口角标 18=9 白字
     midnav: [['midnav.name', 'tx/midnav-name', '.cl-ent .it .nm', '.cl-ent .it .nm', 11, 400], ['midnav.btn', 'tx/midnav-login', '.cl-user.out .lg', '.cl-user.out .lg', 12, 400], ['midnav.reg', 'tx/midnav-reg', '.cl-user.out .rg', '.cl-user.out .rg', 12, 400],
       ['midnav.user', 'tx/midnav-user', '.bxu b', '.bxu b', 11, 400], ['midnav.greet', 'tx/midnav-greet', '.bxu .greet', '.bxu .greet', 11, 400], ['midnav.bal', 'tx/midnav-bal', '.cl-user .bx b', '.cl-user .bx b', 13, 700], ['midnav.badge', 'tx/midnav-badge', '.cl-ent .ib .bd', '.cl-ent .ib .bd', 9, 400, 14]],
-    // 游戏菜单（Figma 317:55796）：竖排分类名 26/750=13 Regular，未选中 leftnav_def、选中 leftnav_active；横向标签 / 图标分类 11
+    // 游戏菜单（Figma 317:55796）：竖排分类名 26/750=13 Regular，未选中 leftnav_def、选中 leftnav_active；中部横向分类 24/750=12（11-28，选中跟 gamemenu.active）
     gamemenu: [['gamemenu.name', 'tx/gamemenu-name', '.cl-gm > span:not(.on) b', '.cl-gm > span:not(.on) b', 13, 400], ['gamemenu.nameOn', 'tx/gamemenu-on', '.cl-gm > span.on b', '.cl-gm > span.on b', 13, 400],
-      ['gamemenu.tab', 'tx/gamemenu-name', '.h5-gm > span:not(.on)', '.h5-gm > span:not(.on)', 11, 400], ['gamemenu.tabOn', 'tx/gamemenu-on', '.h5-gm > span.on', '.h5-gm > span.on', 11, 400]],
+      ['gamemenu.tab', 'tx/gamemenu-name', '.h5-gm > span:not(.on)', '.h5-gm > span:not(.on)', 12, 400], ['gamemenu.tabOn', 'tx/gamemenu-on', '.h5-gm > span.on', '.h5-gm > span.on', 12, 400]],
     // 游戏卡片（Figma 317:55739）：页签 26/750=13（选中跟 primary 不改色）；游戏名称 22=11（cards_text）；「另有 N 款游戏 展开」26=13（展开跟 primary）；
     // 分类标题 30=15 lead、「全部」24=12 neutral_2
     gamecards: [['gamecards.tab', 'tx/gamecards-tab', '.cl-gc .tabs span', '.cl-gc .tabs span:not(.on)', 13, 400], ['gamecards.name', 'tx/gamecards-name', '.cl-gc .nm', '.cl-gc .nm', 11, 400], ['gamecards.more', 'tx/gamecards-more', '.cl-gc .more', '.cl-gc .more', 13, 400],
@@ -868,7 +868,7 @@
   // 文字颜色与模块「颜色」页签共用同一个值的元素：颜色存在 E.D.ec[id]（可是 'key:<名>'），不再另存一份
   // 值 = E.D.ec 里的元素 ID（帐户栏入口名颜色 = 颜色页签的「入口文字」midnav.text；注册文字 = midnav.btnText）
   const TX_EC = { 'notice.text': 'notice.text', 'midnav.name': 'midnav.text', 'midnav.user': 'midnav.user', 'midnav.reg': 'midnav.btnText',
-    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.activeText',
+    'gamemenu.name': 'gamemenu.text', 'gamemenu.nameOn': 'gamemenu.activeText', 'gamemenu.tab': 'gamemenu.text', 'gamemenu.tabOn': 'gamemenu.active', // 中部：选中文字和下划线同一个颜色（gamemenu.active）
     'gamecards.tab': 'gamecards.tab', 'gamecards.name': 'gamecards.text', 'bottomnav.name': 'bottomnav.def', 'bottomnav.nameOn': 'bottomnav.active' };
   // 文字颜色原始值：'key:<名>'（色块，跟整页配色走）/ 十六进制（自定义、白色）/ 空（= 默认 Key）。跟颜色页签同源的存在 E.D.ec，其它存在 E.D.txt[id].c
   const txRaw = (id) => (TX_EC[id] ? (E.D.ec || {})[TX_EC[id]] : ((E.D.txt || {})[id] || {}).c) || null;
@@ -898,6 +898,7 @@
     // 游戏菜单：竖排和横向两套字号，只显示当前样式那一套
     'gamemenu.name': () => gmSide(), 'gamemenu.nameOn': () => gmSide(), 'gamemenu.tab': () => !gmSide(), 'gamemenu.tabOn': () => !gmSide(),
     // 游戏卡片：关掉名称 / 分类标题后对应文字样式不显示
+    'gamecards.tab': () => !window.MP.gcTabsOn || window.MP.gcTabsOn(), // 菜单在中部时没有「热门 / 最近 / 收藏」页签（11-28）
     'gamecards.name': () => !!(E.D.m.gamecards && E.D.m.gamecards.name), 'gamecards.title': () => !!(E.D.m.gamecards && E.D.m.gamecards.title !== false), 'gamecards.all': () => !!(E.D.m.gamecards && E.D.m.gamecards.title !== false) };
   const gmSide = () => !!(E.D.m && E.D.m.gamemenu && E.D.m.gamemenu.style === 'side');
   const mnAcct = () => !!(E.D.m && E.D.m.midnav && E.D.m.midnav.layout === 'account');
@@ -930,7 +931,7 @@
     return `<div class="tx-colors cr-sw tx-pal">${defB}${swB}${rb}<i class="tx-br" aria-hidden="true"></i>${MP.keyTag(tagV, def)}</div>`;
   }
   function txtSec(b) {
-    const els = (TXT[b] || []).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
+    const els = [].concat(...[].concat(b).map((x) => TXT[x] || [])).filter(([id]) => !TXT_WHEN[id] || TXT_WHEN[id]()); if (!els.length) return '';
     const rows = els.map((df) => {
       const [id, k, , , , dw, mx = 24] = df, ds = txDs(df);
       const v = txOf(id), size = v.s || ds, w = v.w || dw;
@@ -960,15 +961,18 @@
   A.txReset = (id) => { commit(() => { if (E.D.txt) delete E.D.txt[id]; if (TX_EC[id] && E.D.ec) delete E.D.ec[TX_EC[id]]; }); };
   document.addEventListener('change', (e) => { const el = e.target; if (el.matches && el.matches('[data-txcolor]') && /^#[0-9a-f]{6}$/i.test(el.value)) { txSet(el.dataset.txcolor, 'c', el.value.toLowerCase()); window.render(); } });
   // 布局「恢复默认」（Waydon 2026-11-26）：只恢复布局页签里的参数，内容和颜色不动
-  const LAYOUT_KEYS = { banner: ['margin', 'corner'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
+  const LAYOUT_KEYS = { banner: ['margin', 'corner'], topbar: ['h', 'pad', 'gap'], notice: ['speed'], jackpot: ['layout', 'margin', 'corner'], midnav: ['layout', 'per', 'size'], gamemenu: ['style'], gamecards: ['cols'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['style', 'h'] };
+  // 合在一个面板里的模块（游戏菜单与游戏卡片）：「恢复默认布局 / 颜色」一起算、一起恢复（卡片样式在内容页签，不算布局）
+  const GROUP = { games: ['gamemenu', 'gamecards'] };
   const layoutObj = (D, b) => (b === 'banner' ? D.banner : b === 'topbar' ? D.tb : (D.m || {})[b]);
   function layoutDirty(b) {
+    if (GROUP[b]) return GROUP[b].some(layoutDirty);
     const ks = LAYOUT_KEYS[b]; if (!ks) return false;
     const cur = layoutObj(E.D, b), def = layoutObj(defaultDesign(E.D.template), b);
     return !!(cur && def) && ks.some((k) => String(cur[k]) !== String(def[k]));
   }
   function layoutResetBtn(b) {
-    if (!LAYOUT_KEYS[b]) return '';
+    if (!LAYOUT_KEYS[b] && !GROUP[b]) return '';
     const dirty = layoutDirty(b);
     return `<button class="btn btn-secondary btn-sm btn-block layout-reset" data-act="layoutReset" data-arg="${b}" ${dirty ? '' : 'disabled'}>${ic('arrow-counter-clockwise', 'ic-16')}${t(dirty ? 'ed/layout-reset' : 'ed/layout-is-default')}</button>`;
   }
@@ -977,6 +981,7 @@
   // 帐户栏（已登录 · 帐户样式）的颜色页签里也有余额框颜色（E.D.bal.c）：改了它按钮不能再写「当前已是默认颜色」，恢复时一起清掉
   const balInColorTab = (b) => b === 'midnav' && E.D.login && ((E.D.m || {}).midnav || {}).layout === 'account';
   function colorDirty(b) {
+    if (GROUP[b]) return GROUP[b].some(colorDirty);
     const ec = E.D.ec || {};
     if (Object.keys(ec).some((k) => k.startsWith(b + '.'))) return true;
     if (balInColorTab(b) && Object.keys(balCfg().c).length) return true;
@@ -991,17 +996,17 @@
     if (!colorDirty(b)) return false;
     E.picker = null;
     commit(() => {
-      const ec = E.D.ec || {}; Object.keys(ec).forEach((k) => { if (k.startsWith(b + '.')) delete ec[k]; });
+      const ec = E.D.ec || {}, pre = (GROUP[b] || [b]).map((m) => m + '.'); Object.keys(ec).forEach((k) => { if (pre.some((p) => k.startsWith(p))) delete ec[k]; });
       if (balInColorTab(b) && E.D.bal) E.D.bal = Object.assign({}, E.D.bal, { c: {} });
       if (b === 'topbar') { E.D.tb.colors = { bg: null, side: null }; const tx = E.D.txt || {}; (TXT.topbar || []).forEach(([id]) => { if (tx[id]) { delete tx[id].c; if (!Object.keys(tx[id]).length) delete tx[id]; } }); }
-      Object.keys(E.D.ecf || {}).forEach((r) => { if (r.startsWith(b === 'topbar' ? 'tb:' : b + '.')) dropFollow(r); }); // 取色器切 Key 的跟随标记一起清
+      Object.keys(E.D.ecf || {}).forEach((r) => { if (b === 'topbar' ? r.startsWith('tb:') : pre.some((p) => r.startsWith(p))) dropFollow(r); }); // 取色器切 Key 的跟随标记一起清
     });
     window.toast(t('ed/color-reset-done'), undoOpt());
   };
   A.layoutReset = (b) => {
     if (!layoutDirty(b)) return false;
-    const def = layoutObj(defaultDesign(E.D.template), b);
-    commit(() => { const cur = layoutObj(E.D, b); LAYOUT_KEYS[b].forEach((k) => { cur[k] = def[k]; }); });
+    const D0 = defaultDesign(E.D.template);
+    commit(() => (GROUP[b] || [b]).forEach((m) => { const cur = layoutObj(E.D, m), def = layoutObj(D0, m); if (cur && def) LAYOUT_KEYS[m].forEach((k) => { cur[k] = def[k]; }); }));
     window.toast(t('ed/layout-reset-done'), undoOpt());
   };
   function modulePanel(id) {
@@ -1012,12 +1017,14 @@
     const adBtn = b === 'sidebar' && !mobileEd() ? `<span style="flex:1"></span>${sdAi}${window.AD ? window.AD.toolBtn(id, true) : ''}` : '';
     // 电脑：标题左边「‹」回到页面设置，标题下一行说明这个模块是什么（手机底部面板用右上角关闭返回，不加）
     const back = mobileEd() ? '' : `<button class="ibtn ibtn-sm p-back" data-act="selMod" data-arg="" title="${esc(t('ed/back-page'))}" aria-label="${esc(t('ed/back-page'))}">${ic('caret-left')}</button>`;
-    const head = `<h2 class="p-title">${back}<span class="ellipsis">${esc(modName(id))}</span>${adBtn}</h2>${mobileEd() || !window.I18N['ed/desc-' + b] ? '' : `<p class="p-sub">${t('ed/desc-' + b)}</p>`}`;
+    // 游戏菜单与游戏卡片（11-28，Figma 65976:10）：两个模块共用一个面板，标题「游戏菜单与游戏卡片」，没有说明行
+    const games = b === 'gamemenu' || b === 'gamecards', gb = games ? 'games' : b;
+    const head = `<h2 class="p-title">${back}<span class="ellipsis"${games ? ` title="${esc(t('mp/game-panel'))}"` : ''}>${esc(games ? t('mp/game-panel') : modName(id))}</span>${adBtn}</h2>${mobileEd() || games || !window.I18N['ed/desc-' + b] ? '' : `<p class="p-sub">${t('ed/desc-' + b)}</p>`}`;
     const pcN = window.PC && window.PC.panelNote ? window.PC.panelNote(id) : '';
     // 每个模块页签含义一致：内容（文字 / 图片 / 入口 + 文字样式）· 布局（尺寸间距 + 恢复默认布局）· 颜色（元素颜色 + 恢复默认颜色）
     if (b === 'banner') return head + tabs3(E.tab) + (E.tab === 'content' ? bannerContent() : E.tab === 'layout' ? bannerLayout() + layoutResetBtn(b) : bannerColor() + colorResetBtn(b));
     if (b === 'topbar') return head + tabs3(E.tab) + (E.tab === 'content' ? tbContent() + txtSec(b) : E.tab === 'layout' ? tbLayout() + layoutResetBtn(b) : tbColor() + colorResetBtn(b));
-    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || b === 'gamemenu' || b === 'gamecards' || b === 'bottomnav' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(b) : colorResetBtn(b));
+    if (window.MP.has(b)) return head + pcN + tabs3(E.tab) + window.MP.panel(b, E.tab) + (E.tab === 'content' ? (b === 'notice' || b === 'midnav' || games || b === 'bottomnav' ? '' : txtSec(b)) : E.tab === 'layout' ? layoutResetBtn(gb) : colorResetBtn(gb));
     return head + window.empty('wrench-fill', t('ed/todo-title'), t('ed/todo-desc'));
   }
   // 模块颜色页签里「去修改」打开 68 Key：电脑上也要换成 Key 面板（‹ 返回回到原模块）
@@ -1141,7 +1148,7 @@
   // 「N 处」相关文案：0 处（本页没有别的地方用这个 Key）、1 处（英文单数）用各自的句子
   const ksT = (key, n, vars) => t(key + (n === 0 ? '-0' : n === 1 ? '-1' : ''), Object.assign({ n }, vars));
   // 行名每次渲染现取（中途切语言跟着换）：顶部栏行 / 有固定文案的元素行按 ID 取，其它（帐户栏角标这类带参数的）用打开时记下、面板每次渲染更新的名字
-  const pkLab = (p) => (p.tbRow ? t(TB_LAB[p.tbRow] || 'ed/tb-c-bg') : p.elRow && window.I18N['mp/c-' + p.elRow.replace('.', '-')] ? t('mp/c-' + p.elRow.replace('.', '-')) : p.label || '');
+  const pkLab = (p) => (p.tbRow ? t(TB_LAB[p.tbRow] || 'ed/tb-c-bg') : p.elRow === 'gamemenu.active' && !gmSide() ? t('mp/c-gamemenu-active-c') : p.elRow && window.I18N['mp/c-' + p.elRow.replace('.', '-')] ? t('mp/c-' + p.elRow.replace('.', '-')) : p.label || '');
   const capOf = (s) => (s === '@custom' ? t('tx/key-custom') : s === '@img' ? t('mp/gm-c-img') : s || '');
   function pickerHtml(cls = '', title) {
     const p = E.picker; const rp = rowPk(p);
@@ -2275,7 +2282,7 @@
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist,
     pkLive: () => !!(E.picker && E.picker.orig0 != null && !E.picker.follow && !pkIdle(E.picker)), keyUses: (K, dbg) => keyUses(K, null, dbg),
-    openResize: (slot, f, w, h) => openResize(slot, f, w, h), canvasToast: (msg, o) => canvasToast(msg, o) }; // 单卡换图：上传走「调整尺寸」、Toast 放画布上 // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
+    openResize: (slot, f, w, h) => openResize(slot, f, w, h), canvasToast: (msg, o) => canvasToast(msg, o), slotSpec: (slot) => slotSpec(slot) }; // 单卡换图：上传走「调整尺寸」、Toast 放画布上 // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
   // PC 未开放：不管从哪里带进来的 PC 视图（恢复的状态 / 外部直接改 E.device）一律回落 H5
   window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); syncRowPk(); return mobileEd() ? mobile() : desktop(); };
   window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod || E.gcSel), escape };

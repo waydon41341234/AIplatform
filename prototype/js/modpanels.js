@@ -74,10 +74,13 @@
       notice: Object.assign(ntDef(), { mail: true, badge: true, speed: 'normal' }, { items:[{ k: 'mp/nt-i-spk', i: 'speaker-high-fill', on: true, def: CL + 'speaker.png' }, { k: 'mp/nt-i-mail', i: 'envelope-simple-fill', on: true, def: CL + 'mail.png', defOn: CL + 'mail-on.png' }] }),
       midnav: { mode: 'conf', items: MID.map(([k, i, def, badge]) => ({ n: '', k: 'mp/mn-n-' + k, i, req: false, on: true, def: CL + def + '.png', badge: badge || null })), layout: 'account', per: 4, size: 57 },
       // active = 选中的分类（下标，不再固定第一个）；btnOff / btnSel = 业主上传 / AI 的按钮底图（空 = 效果图默认底图）
-      gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', shape: 'pill', active: 0, btnOff: null, btnSel: null },
-      // 游戏卡片（Figma 317:55739）：tag = 平台角标 WG；rec = 推荐角标（第 1 张）；title = 下一分类标题行；fallback = 兜底封面；starOff / starSel = 收藏星（未收藏 / 已收藏）
-      // 圆角 20（Figma r20）、卡片间距 20（行列同一个值，750 稿）
-      gamecards: { name: true, tag: true, fav: true, rec: true, title: true, fallback: null, starOff: null, starSel: null, cols: 3, corner: 20, gap: 20 },
+      // style = 菜单位置（11-28 游戏卡片 6 样式）：'side' 左侧（竖排，卡片在右）/ 'tabs' 中部（横向分类在卡片上方）
+      gamemenu: { items: GM_ORDER.map((k, j) => ({ n: '', k: 'mp/gm-n-' + k, i: GM[k - 1], req: false, on: j < 9, def: j < 9 ? CL + 'cat' + j + '.png' : null })), style: 'side', active: 0, btnOff: null, btnSel: null },
+      // 游戏卡片（Figma 317:55739）：rec = 角标（热门 / 新，第 1 张）；tag = 平台角标 WG、fav = 收藏星、title = 下一分类标题行（11-28 起固定显示，面板不再有开关）；
+      // fallback = 兜底封面；starOff / starSel = 收藏星（未收藏 / 已收藏）
+      // style = 卡片样式（11-28，Figma H5/GameCard 65974:81179）：classic 经典 / western 欧美 / portrait 竖版 / square 方形 / round 圆版 / landscape 横版；
+      // cols = 每行张数：非横版 3 / 4（4 张时菜单固定在中部），横版 2 / 3。圆角、间距由样式决定（不再单独设置）
+      gamecards: { style: 'classic', name: true, tag: true, fav: true, rec: true, title: true, fallback: null, starOff: null, starSel: null, cols: 3 },
       footer: { items: items(FOOT.map((n) => [n])), copy: '© 2026 星河体育 版权所有', align: 'center' },
       sidebar: { items: items(SIDE), style: 'list', width: 62, head: null, headOn: true },
       bottomnav: { mode: 'fixed', items: bn, style: 'raised', h: 140 }, // Figma 底栏 750×140
@@ -89,8 +92,8 @@
   const ICON_SPEC = { notice: [57, 50], midnav: [57, 50], bottomnav: [50, 50], gamemenu: [100, 76], sidebar: [60, 60] };
   // 公告栏两个图标尺寸不同（Figma 317:55673）：喇叭 36×32、消息 57×50
   const NT_SPEC = { 'mp/nt-i-spk': [36, 32], 'mp/nt-i-mail': [57, 50] };
-  // 游戏菜单竖排图标位 Figma 317:55796：58×58 框内 58×44；横向「图标分类」仍按 100×76
-  const GM_SPEC = { side: [58, 44], icons: [100, 76], tabs: [100, 76] };
+  // 游戏菜单竖排图标位 Figma 317:55796：58×58 框内 58×44；中部横向分类（11-28）用同一套分类图标，规格相同（旧「图标分类」已并入中部）
+  const GM_SPEC = { side: [58, 44], icons: [58, 44], tabs: [58, 44] };
   // 底部导航（Figma 317:55538）：普通图标位 50×50、中间凸起 120×120、未登录「优惠」动效礼盒 100×100
   const specOf = (b, i, f) => (b === 'bottomnav' ? bnSpec(i, f) : null) || (b === 'notice' && M(b).items[i] && NT_SPEC[M(b).items[i].k]) || (b === 'gamemenu' && GM_SPEC[M(b).style]) || ICON_SPEC[b] || [96, 96];
 
@@ -318,38 +321,10 @@
       },
       color: () => mnColor(),
     },
-    gamemenu: {
-      // 顺序（2026-11-26 整理）：分类（未选中 / 选中图标 · 名称 · 选中哪个）→ 图标 AI / 批量上传 → 按钮底图（竖排）→ 文字样式
-      content: () => {
-        const x = X(), m = M('gamemenu'), side = m.style === 'side', ai = gmAct(), sp = specOf('gamemenu');
-        const hd = `<div class="gm-hd"><span class="c1" title="${esc(t('mp/state-def'))}">${t('mp/gm-h-off')}</span><span class="c1" title="${esc(t('mp/state-act'))}">${t('mp/gm-h-on')}</span><span class="c2">${t('mp/gm-h-name')}</span><span class="c3">${t('mp/gm-h-sel')}</span></div>`;
-        const rows = list('gamemenu', (it, i) => {
-          const on = i === ai, same = !it.imgOn && !it.defOn; // 没有单独的选中图 = 跟未选中同一张（虚线框提示）
-          return `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on' + (same ? ' is-same' : ''), t('mp/state-act') + (same ? ' · ' + t('mp/gm-same') : ''))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}${icAi('gamemenu', i)}<button class="gm-rad ${on ? 'is-on' : ''}" data-act="mpGmActive" data-arg="${i}" ${it.on ? '' : 'disabled'} role="radio" aria-checked="${on}" title="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}" aria-label="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}"><i></i></button>`;
-        });
-        const cats = sec(t('mp/gm-cats') + x.tipI('mp/gm-first2'), hd + rows + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec2', { w: sp[0], h: sp[1], w2: sp[0] * 2, h2: sp[1] * 2 })}</div>` + iconBtns('gamemenu'), cnt('gamemenu'));
-        return cats + (side ? gmBtnSec() : '') + (x.txtSec ? x.txtSec('gamemenu') : '');
-      },
-      layout: () => sec(t('mp/style-gamemenu'), seg([{ v: 'side', label: t('mp/gm-side') }, { v: 'tabs', label: t('mp/gm-tabs') }, { v: 'icons', label: t('mp/gm-icons') }], M('gamemenu').style, 'mpSet_gamemenu_style'))
-        + (M('gamemenu').style === 'side' ? note('mp/gm-side-note') : sec(t('mp/gm-shape'), seg([{ v: 'pill', label: t('mp/shape-pill') }, { v: 'square', label: t('mp/shape-square') }], M('gamemenu').shape, 'mpSet_gamemenu_shape')).replace('</div>', X().tipI('mp/gm-scroll') + '</div>')),
-      color: () => gmColor(),
-    },
-    gamecards: {
-      // 顺序（2026-11-26 整理）：显示内容 → 卡片图片（兜底封面 / 收藏星：上传 · AI · 恢复）→ 文字样式
-      content: () => {
-        const x = X(), m = M('gamecards');
-        const show = sec(t('mp/gc-show'), toggle(m.name, 'mpFlag', 'gamecards|name', t('mp/gc-name')) + toggle(m.tag, 'mpFlag', 'gamecards|tag', t('mp/gc-plat')) + toggle(m.fav !== false, 'gcFlag', 'fav', t('mp/gc-fav'))
-          + toggle(m.rec !== false, 'gcFlag', 'rec', t('mp/gc-rec')) + toggle(m.title !== false, 'gcFlag', 'title', t('mp/gc-title')) + note('mp/gc-data-note'));
-        return show + gcImgSec() + (x.txtSec ? x.txtSec('gamecards') : '');
-      },
-      // 卡片挨着竖排游戏菜单时最多 3 列（4 列太挤，名字放不下）
-      layout: () => {
-        const m = M('gamecards'), side = gcSide();
-        return sec(t('mp/cols'), seg((side ? [2, 3] : [2, 3, 4]).map((n) => ({ v: String(n), label: t('mp/cols-n', { n }) })), gcCols(m, side), 'mpSet_gamecards_cols') + (side ? note('mp/gc-cols-side') : ''))
-          + px('gamecards', 'corner', [0, 20, 32], { title: t('ed/corner') }) + px('gamecards', 'gap', [12, 20, 32], { title: t('mp/gc-gap') }) + note('mp/gc-gap-note');
-      },
-      color: () => gcColor(),
-    },
+    // 游戏菜单与游戏卡片（11-28，Figma「04-11-28 游戏卡片 · 6 样式」65976:10，Waydon 已确认）：两个模块合成一个面板，
+    // 画布或左栏选中任一个都打开它（标题「游戏菜单与游戏卡片」），页签 内容 / 布局 / 颜色；手机底部弹层同样三个页签
+    gamemenu: { content: () => gamesContent(), layout: () => gamesLayout(), color: () => gamesColor() },
+    gamecards: { content: () => gamesContent(), layout: () => gamesLayout(), color: () => gamesColor() },
     footer: {
       content: () => sec(t('mp/ft-links'), list('footer')) + sec(t('mp/ft-copy'), `<input class="input" data-input="mpFtCopy" value="${esc(M('footer').copy)}" maxlength="40">`),
       layout: () => sec(t('mp/align'), seg([{ v: 'center', label: t('mp/align-center') }, { v: 'left', label: t('mp/align-left') }], M('footer').align, 'mpSet_footer_align')) + note('mp/ft-one'),
@@ -471,8 +446,8 @@
     const x = X(), E = x.E, { th, ec } = x.liveTheme(), D = E.D, m = M('gamemenu'), side = m.style === 'side';
     const kv = kvOf(th, ec);
     // 第一个色块 = 默认：底色两行（侧边样式）默认是按钮图，色块显示按钮图、Key 标签写「按钮图」，Key 色块单独列在后面；其它是 Figma 绑定的 Key
-    const row = (id, imgF) => {
-      const key = EL.gamemenu.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t('mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
+    const row = (id, imgF, labK) => {
+      const key = EL.gamemenu.find((r) => r[0] === id)[1], v = D.ec[id] || null, lab = t(labK || 'mp/c-' + id.replace('.', '-')), pk = E.picker && E.picker.elRow === id;
       const sws = GM_SW[id].filter((k) => k !== key);
       if (imgF) sws.unshift(key); // 底色行：默认 = 图，Key 色块单独列出
       const img = imgF ? { defCss: gmBtnCss(imgF), defTip: `${t('mp/c-default')} · ${t('mp/gm-c-img-tip')}`, defLab: t('mp/gm-c-img') } : {};
@@ -481,10 +456,10 @@
     };
     const fallback = vis('gamemenu').some((it) => !it.img && !it.imgOn && !it.def);
     let h = '';
+    // 中部（11-28）：横向分类没有按钮底，选中 = 文字 + 下划线同一个颜色（gamemenu.active），未选中文字 gamemenu.text
     if (side) h += `<div class="p-sec"><div class="lab">${t('mp/gm-btn')}</div>${row('gamemenu.bg', 'btnOff')}${row('gamemenu.active', 'btnSel')}${row('gamemenu.shadow')}</div>`;
-    else h += `<div class="p-sec"><div class="lab">${t('mp/gm-tab-c')}</div>${row('gamemenu.bg')}${row('gamemenu.active')}</div>`;
-    h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-text')}</div>${row('gamemenu.text')}${row('gamemenu.activeText')}</div>`;
-    if (side || m.style === 'icons') h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-icons')}</div>${fallback ? row('gamemenu.icon') : note('mp/gm-c-icons-note')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-text')}</div>${row('gamemenu.text')}${side ? row('gamemenu.activeText') : row('gamemenu.active', null, 'mp/c-gamemenu-active-c')}</div>`;
+    h += `<div class="p-sec"><div class="lab">${t('mp/gm-c-icons')}</div>${fallback ? row('gamemenu.icon') : note('mp/gm-c-icons-note')}</div>`;
     return h;
   }
   // ---------- 游戏卡片（经典蓝白 Figma 317:55739 / 317:55742）：兜底封面、收藏星、推荐角标、颜色 ----------
@@ -496,7 +471,36 @@
     const v = D.order.filter((o) => !D.hidden[o]), me = id || v.find((o) => o.split('~')[0] === 'gamecards'), i = v.indexOf(me);
     return i > 0 && v[i - 1].split('~')[0] === 'gamemenu';
   };
-  const gcCols = (m, side) => (side ? Math.min(m.cols, 3) : m.cols);
+  // ---------- 卡片样式 6 种 · 菜单位置 · 每行张数（11-28，Figma「04-11-28 游戏卡片 · 6 样式」65976:10，Waydon 已确认；
+  //            组件 H5/GameCard 65974:81179、ED/CardStyleChip 66014:114002；切图 slice/game-cover/<样式> 65975:30419–30424） ----------
+  // 序号 = 文案 game-card/style-name/<序号>、game-card/upload-size/<序号>；尺寸 = 后台上传尺寸（单卡换图的裁切比例跟它走）
+  const GC_STYLES = ['classic', 'western', 'portrait', 'square', 'round', 'landscape'];
+  const GC_SIZES = { classic: [180, 180], western: [300, 400], portrait: [300, 400], square: [300, 300], round: [300, 300], landscape: [400, 250] };
+  const gcStyleOf = (m) => (m && GC_SIZES[m.style] ? m.style : 'classic');
+  const gcLand = (m) => gcStyleOf(m) === 'landscape';
+  const gcColOpts = (m) => (gcLand(m) ? [2, 3] : [3, 4]); // 横版 2 / 3，其它 3 / 4（Figma：没有非横版 2 张）
+  const gmLeft = (gm) => ((gm || M('gamemenu') || {}).style === 'side'); // 菜单位置：左侧（竖排）/ 中部（横向）
+  // 每行张数（生效值）：不在可选范围的旧值按 3；非横版 4 张只在菜单中部时成立（菜单在左侧就按 3 张）
+  const gcColsOf = (m, gm) => { const c = +m.cols, n = gcColOpts(m).includes(c) ? c : 3; return n === 4 && gmLeft(gm) ? 3 : n; };
+  const gcSz = () => GC_SIZES[gcStyleOf(M('gamecards'))];
+  // 卡片上方「热门 / 最近 / 收藏」页签：菜单在中部且游戏菜单在页面上时不显示（上方已是横向分类）
+  const gcTabsOn = () => { const D = X().E.D; return gmLeft() || !D.order.some((o) => o.split('~')[0] === 'gamemenu' && !D.hidden[o]); };
+  const gcStyleIdx = () => GC_STYLES.indexOf(gcStyleOf(M('gamecards')));
+  // 旧存档 / AI 设计迁移（面板 11-28 起只剩 菜单位置 + 每行张数 + 卡片样式）：
+  //   分类样式 竖排 → 左侧、横向标签 / 图标分类 → 中部；标签形状、卡片圆角、卡片间距去掉（由卡片样式决定）；
+  //   非横版 2 张 → 3、左侧 + 4 张 → 3；去掉开关的元素（平台角标、收藏星、分类标题行）回到显示
+  function gcNorm(D) {
+    const mm = D && D.m; if (!mm) return D;
+    const gm = mm.gamemenu, gc = mm.gamecards;
+    if (gm) { if (gm.style !== 'side') gm.style = 'tabs'; delete gm.shape; }
+    if (gc) {
+      gc.style = gcStyleOf(gc);
+      gc.cols = gcColsOf(gc, gm || {});
+      delete gc.corner; delete gc.gap;
+      ['tag', 'fav', 'title'].forEach((k) => { if (gc[k] === false) gc[k] = true; });
+    }
+    return D;
+  }
   // 元素色当前值（面板缩略图用；画布用 CSS 变量）
   const gcCol = (id) => { const { th, ec } = X().liveTheme(), v = ec[id], k = v && v.startsWith('key:') ? v.slice(4) : v ? null : EL.gamecards.find((r) => r[0] === id)[1]; return k ? (th[k] != null ? th[k] : resolveKey(k, th, ec)) : v; };
   // 兜底封面里层：上传 / AI 图（'img:'）铺满；默认 = 手柄图形（ddt_icon）；素材库模拟值 = 滤镜；隐藏 = 只剩底板
@@ -517,7 +521,7 @@
   // 只换这一张的图，名称、角标、维护状态不变。换的图存 E.D.m.gamecards.imgs[卡片序号] = { f: 'img:…', x, y }（裁切位置）或 { f, fit: 'pad', fill }（留边）；
   // 原图 = 游戏平台给的封面（GAMES），一直不改，所以每张卡都记得原图，「恢复原图」= 删掉这一项。换图 / 恢复都走 commit（撤销 / 重做）。
   // 画布第 8 张是兜底图示意（不是真的游戏封面），点它照旧出兜底图菜单。
-  const GC_STYLE = 0, GC_SZ = [180, 180], GC_AI_COST = 10; // HTML 只有「经典」卡片：上传尺寸 180×180（Figma game-card/upload-size/0），裁切 1:1
+  const GC_AI_COST = 10; // 上传尺寸 / 裁切比例跟卡片样式走（gcSz()：经典 180×180 1:1、欧美 / 竖版 300×400 3:4、方形 / 圆版 300×300 1:1、横版 400×250 8:5）
   const gcOrig = (j) => CL + 'game' + GAMES[j][1] + '.webp';
   const gcOwn = (m, j) => (m && m.imgs && m.imgs[j]) || null;
   function gcCover(m, j) {
@@ -532,7 +536,7 @@
     const own = !!gcOwn(m, j);
     // Figma：菜单项没有图标，主文字 14 + 说明 12；没换过图时「恢复原图」整行灰（不可点）
     const it = (act, lab, sub, dis) => `<button class="menu-item gim-it" data-act="${act}" role="menuitem" ${dis ? 'disabled aria-disabled="true" data-keep' : ''} data-stop><span class="tx"><span class="lb">${lab}</span><span class="sub">${sub}</span></span></button>`;
-    return `<div class="gim-hd"><span class="th">${gcCover(m, j)}</span><span class="tx"><b class="ellipsis">${esc(GAMES[j][0])}</b><small class="ellipsis">${t('game-card/style-name/' + GC_STYLE)} · ${GC_SZ[0]}×${GC_SZ[1]}</small></span></div><div class="gim-sep"></div>`
+    return `<div class="gim-hd"><span class="th">${gcCover(m, j)}</span><span class="tx"><b class="ellipsis">${esc(GAMES[j][0])}</b><small class="ellipsis">${t('game-card/style-name/' + gcStyleIdx())} · ${gcSz()[0]}×${gcSz()[1]}</small></span></div><div class="gim-sep"></div>`
       + it('gcImgUpload', t('game-card/image-flow/upload'), t('game-card/image-flow/upload-sub'))
       + it('gcImgAi', t('game-card/image-flow/ai'), t('game-card/image-flow/ai-sub', { x: GC_AI_COST }))
       + it('gcImgRestore', t('game-card/image-flow/restore'), t(own ? 'game-card/image-flow/restore-sub' : 'game-card/image-flow/restore-hint'), !own);
@@ -564,7 +568,7 @@
     window.pickImage({ maxMB: 5 }, (src) => {
       const im = new Image();
       im.onload = () => {
-        const w = im.naturalWidth || GC_SZ[0], h = im.naturalHeight || GC_SZ[1];
+        const w = im.naturalWidth || gcSz()[0], h = im.naturalHeight || gcSz()[1];
         if (again && E.rs && E.rs.slot === slot) Object.assign(E.rs, { f: 'img:' + src, w, h, x: 0.5, y: 0.5 }); // 弹窗里「重新上传」：换图，留在弹窗
         else x.openResize(slot, 'img:' + src, w, h);
         window.render();
@@ -597,7 +601,7 @@
   }
   // 「调整尺寸」采用：裁切存位置，留边存底色 Key
   function gcRsApply(r) { const j = +r.slot.slice(3).split('|')[1]; gcSet(j, r.mode === 'pad' ? { f: r.f, fit: 'pad', fill: r.fill } : { f: r.f, x: r.x, y: r.y }, 'game-card/image-flow/applied'); }
-  const gcSpec = (slot) => { const j = +slot.slice(3).split('|')[1]; return { w: GC_SZ[0], h: GC_SZ[1], name: GAMES[j] ? GAMES[j][0] : '' }; };
+  const gcSpec = (slot) => { const j = +slot.slice(3).split('|')[1], sz = gcSz(); return { w: sz[0], h: sz[1], name: GAMES[j] ? GAMES[j][0] : '' }; };
   // 电脑菜单：浮在选中卡片右侧（Figma 1：卡片右边 + 3、顶边对齐）；右边放不下就放左边；不超出画布上下
   function gcPlaceMenu(m) {
     const c = document.querySelector('#app .cl-gc .c.is-csel'); if (!c) { m.remove(); return; }
@@ -630,15 +634,79 @@
     const c = on ? onc : off;
     return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="72" height="72"><circle cx="18" cy="18" r="17" fill="${bg}"/><g transform="translate(7 6.5) scale(.0859)" fill="${c}" ${on && edge ? `stroke="${edge}" stroke-width="14"` : ''}>${window.PH['star-fill']}</g></svg>`);
   }
-  // 卡片图片两行：兜底封面（上传 · 素材库 · AI · 恢复 · 隐藏）、收藏星（未收藏 / 已收藏两张：上传 · AI · 恢复）
+  // 兜底图（Figma section · 兜底图：素材卡 = 缩略图 · 名称 · 「封面加载失败时显示 · 尺寸 · PNG」· ⋯，下面 上传 / 素材库）；
+  // ⋯ 菜单里有 AI 生成 / 恢复 / 隐藏。收藏星图片不再放在面板里：画布上点收藏星照旧可以上传 / AI / 恢复（上传进度仍显示在这里）
   function gcImgSec() {
-    const x = X(), m = M('gamecards'), fbOwn = !!m.fallback, fbOn = m.fallbackOn !== false, stOwn = !!(m.starOff || m.starSel);
-    const ib = (act, arg, icon, tip, cls = '') => `<button class="ib-s ${cls}" data-act="${act}" ${arg ? `data-arg="${arg}"` : ''} title="${esc(tip)}" aria-label="${esc(tip)}">${ic(icon, 'ic-16')}</button>`;
-    const fb = `<div class="tb-item ${fbOn ? '' : 'is-hidden'}"><button class="thumb gc-fthumb" data-act="amUpload" data-arg="mp-gamecards-fallback" title="${esc(t('ed/am-upload'))}" aria-label="${esc(t('ed/am-upload'))}" style="background:${gcCol('gamecards.placeholder')};color:${gcCol('gamecards.placeholderIcon')}">${gcFbInner(m)}</button><span class="tx"><b class="ellipsis">${t('mp/gc-fallback')}</b><small class="ellipsis">260×260 · ${fbOn ? t(fbOwn ? 'ed/tb-own' : 'mp/gc-def') : t('mp/gc-fb-off')}</small></span>${aiBtn('gamecards|fallback', 'aig/entry-tip-fb')}${fbOwn ? ib('amReset', 'mp-gamecards-fallback', 'arrow-counter-clockwise', t('ed/am-reset')) : ''}${x.moreBtn('mp-gamecards-fallback')}</div>`;
-    const sth = (f) => `<button class="thumb gc-sthumb" data-act="amUpload" data-arg="mp-gamecards-${f}" title="${esc(t(f === 'starSel' ? 'mp/gc-star-on' : 'mp/gc-star-off') + ' · ' + t('ed/am-upload'))}" aria-label="${esc(t(f === 'starSel' ? 'mp/gc-star-on' : 'mp/gc-star-off'))}">${gcStarImg(m, f)}</button>`;
-    const star = m.fav !== false ? `<div class="tb-item">${sth('starOff')}${sth('starSel')}<span class="tx"><b class="ellipsis">${t('mp/gc-fav')}</b><small class="ellipsis">36×36 · ${t(stOwn ? 'ed/tb-own' : 'mp/gc-def')}</small></span>${aiBtn('gamecards|star')}${stOwn ? ib('gcStarReset', '', 'arrow-counter-clockwise', t('ed/am-reset')) : ''}</div>` : '';
-    return `<div class="p-sec"><div class="lab">${t('mp/gc-imgs')}</div><div class="tb-group">${fb}${star}</div>${x.uploadUI('mp-gamecards-fallback')}${x.uploadUI('mp-gamecards-starOff')}${x.uploadUI('mp-gamecards-starSel')}
-      <div class="p-note">${t('mp/gc-img-note')}</div></div>`;
+    const x = X(), m = M('gamecards'), fbOwn = !!m.fallback, fbOn = m.fallbackOn !== false, sp = x.slotSpec ? x.slotSpec('mp-gamecards-fallback') : { w: 260, h: 260 };
+    const thumb = `<span class="thumb gc-fthumb" style="background:${gcCol('gamecards.placeholder')};color:${gcCol('gamecards.placeholderIcon')}">${gcFbInner(m)}</span>`;
+    const spec = t('mp/gc-fallback-spec', { w: sp.w, h: sp.h }) + (!fbOn ? ' · ' + t('mp/gc-fb-off') : fbOwn ? ' · ' + t('ed/tb-own') : '');
+    return sec(t('mp/gc-fallback'), asset('gamecards', 'fallback', t('mp/gc-fallback'), spec, thumb) + x.uploadUI('mp-gamecards-fallback') + x.uploadUI('mp-gamecards-starOff') + x.uploadUI('mp-gamecards-starSel'));
+  }
+  // 一张卡片（画布与样式缩图共用，Figma H5/GameCard）：卡片宽 = 容器宽（CSS 容器查询，尺寸按 Figma 85 宽的比例），
+  // o = { cover 封面 HTML, name 名称（空 = 不显示）, rec 角标, star 收藏星 HTML, logo 平台角标, fb 兜底示意, cls, attrs, imAttrs, extra }
+  function gcCardHtml(s, o) {
+    const nm1 = o.name ? `<span class="nm">${esc(o.name)}</span>` : '', ov = s === 'western'; // 欧美：名称压在图片底部（暖红渐变上）
+    return `<div class="c gcd s-${s} ${o.cls || ''}" ${o.attrs || ''}><div class="im ${o.fb ? 'fb' : ''}" ${o.imAttrs || ''}>${o.cover}${ov ? '<i class="shade"></i>' : ''}${o.rec ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${o.star || ''}${o.logo ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}${ov ? nm1 : ''}</div>${ov ? '' : nm1}${o.extra || ''}</div>`;
+  }
+  // 样式缩图（ED/CardStyleChip）：同一张示意游戏卡，按样式画
+  const gcMini = (s) => gcCardHtml(s, { cover: `<img src="${CL}game6.webp" alt="">`, name: GAMES[6][0], rec: true, star: `<span class="star">${gcStarImg(M('gamecards'), 'starOff')}</span>`, logo: true, cls: 'is-mini' });
+  // 游戏分类（游戏菜单原有内容：未选中 / 选中图标 · 名称 · 选中哪个 · 批量上传）——确认稿的面板没画这一段，保留在显示内容 / 兜底图下面
+  function gmCats() {
+    const x = X(), ai = gmAct(), sp = specOf('gamemenu');
+    const hd = `<div class="gm-hd"><span class="c1" title="${esc(t('mp/state-def'))}">${t('mp/gm-h-off')}</span><span class="c1" title="${esc(t('mp/state-act'))}">${t('mp/gm-h-on')}</span><span class="c2">${t('mp/gm-h-name')}</span><span class="c3">${t('mp/gm-h-sel')}</span></div>`;
+    const rows = list('gamemenu', (it, i) => {
+      const on = i === ai, same = !it.imgOn && !it.defOn; // 没有单独的选中图 = 跟未选中同一张（虚线框提示）
+      return `${upThumb('gamemenu', i, 'img', it.i, 'st2', t('mp/state-def'))}${upThumb('gamemenu', i, 'imgOn', it.i, 'st2 on' + (same ? ' is-same' : ''), t('mp/state-act') + (same ? ' · ' + t('mp/gm-same') : ''))}${nameCell('gamemenu', i)}${resetBtn('gamemenu', i)}${icAi('gamemenu', i)}<button class="gm-rad ${on ? 'is-on' : ''}" data-act="mpGmActive" data-arg="${i}" ${it.on ? '' : 'disabled'} role="radio" aria-checked="${on}" title="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}" aria-label="${esc(t(on ? 'mp/gm-is-sel' : 'mp/gm-set-sel'))}"><i></i></button>`;
+    });
+    return sec(t('mp/gm-cats') + x.tipI('mp/gm-first2'), hd + rows + `<div class="p-note">${ic('frame-corners', 'ic-16')}${t('mp/gm-icon-spec2', { w: sp[0], h: sp[1], w2: sp[0] * 2, h2: sp[1] * 2 })}</div>` + iconBtns('gamemenu'), cnt('gamemenu'));
+  }
+  // 内容页签（Figma 内容页签）：卡片样式 3×2（缩图 + 名称 + 尺寸，选中淡蓝底蓝字）→ 显示内容（游戏名称、角标（热门 / 新））→ 兜底图；
+  // 再往下是 HTML 原有、确认稿没画的：游戏分类、按钮底图（左侧时）、文字样式（两个模块合在一起）
+  function gamesContent() {
+    const x = X(), m = M('gamecards'), cur = gcStyleOf(m);
+    const chips = GC_STYLES.map((s, i) => { const on = s === cur; return `<button class="gcs-chip ${on ? 'is-on' : ''}" data-act="gcStyle" data-arg="${s}" role="radio" aria-checked="${on}"><span class="th">${gcMini(s)}</span><b class="ellipsis">${t('game-card/style-name/' + i)}</b><small class="ellipsis">${t('game-card/upload-size/' + i)}</small></button>`; }).join('');
+    const style = sec(t('mp/game-card-style'), `<div class="gcs-grid" role="radiogroup" aria-label="${esc(t('mp/game-card-style'))}">${chips}</div>`);
+    const show = sec(t('mp/gc-show'), toggle(m.name, 'mpFlag', 'gamecards|name', t('mp/gc-name')) + toggle(m.rec !== false, 'gcFlag', 'rec', t('mp/gc-tag')));
+    return style + show + gcImgSec() + gmCats() + (gmLeft() ? gmBtnSec() : '') + (x.txtSec ? x.txtSec(['gamemenu', 'gamecards']) : '');
+  }
+  // 布局页签（Figma 布局页签）：只有 菜单位置（左侧 / 中部）和 每行张数（非横版 3 / 4 + 说明「每行 4 张时，菜单固定在中部」；横版 2 / 3 没有说明）。
+  // 每行 4 张时「左侧」变灰（透明度 0.4，点了提示原因）；左侧时选 4 张 → 菜单自动移到中部 + 画布 Toast「菜单已移到中部 · 撤销」
+  function gamesLayout() {
+    const gm = M('gamemenu'), m = M('gamecards'), land = gcLand(m), cols = gcColsOf(m, gm), left = gmLeft(gm), lock = !land && cols === 4;
+    const pos = `<div class="seg">${[['side', t('ed/side-left')], ['tabs', t('mp/game-menu-center')]].map(([v, lab]) => { const on = (v === 'side') === left, dis = v === 'side' && lock; return `<button class="seg-opt ${on ? 'is-on' : ''} ${dis ? 'is-dis' : ''}" data-act="gmPos" data-arg="${v}" aria-pressed="${on}" ${dis ? `aria-disabled="true" title="${esc(t('game-card/cols-note'))}"` : ''}>${esc(lab)}</button>`; }).join('')}</div>`;
+    const cs = seg(gcColOpts(m).map((n) => ({ v: String(n), label: t('mp/game-cols-' + n) })), cols, 'gcCols');
+    return `<div class="gc-lay">${sec(t('mp/game-menu-position'), pos)}${sec(t('mp/game-card-cols'), `<div class="gc-cc">${cs}${land ? '' : note('game-card/cols-note')}</div>`)}</div>`;
+  }
+  // 颜色页签：两个模块原有的颜色行，按模块分两组
+  const gamesColor = () => `<div class="gc-cgrp"><div class="gc-cgrp-h">${t('mod/gamemenu')}</div>${gmColor()}</div><div class="gc-cgrp"><div class="gc-cgrp-h">${t('mod/gamecards')}</div>${gcColor()}</div>`;
+  A.gcStyle = (s) => {
+    const x = X(); if (!GC_SIZES[s] || gcStyleOf(M('gamecards')) === s) return false;
+    // 换样式时每行张数按新样式对应：横版 ← 4 张 → 3；非横版 ← 2 张 → 3；3 张不变
+    x.commit(() => { const g = x.E.D.m.gamecards, gm = x.E.D.m.gamemenu, c = gcColsOf(g, gm); g.style = s; g.cols = gcColOpts(g).includes(c) ? c : 3; });
+  };
+  A.gmPos = (v) => {
+    const x = X(), gm = M('gamemenu'), m = M('gamecards'), left = v === 'side';
+    if (left === gmLeft(gm)) return false;
+    if (left && !gcLand(m) && gcColsOf(m, gm) === 4) { window.toast(t('game-card/cols-note'), { info: true }); return false; } // 每行 4 张：菜单固定在中部
+    x.commit(() => { x.E.D.m.gamemenu.style = left ? 'side' : 'tabs'; });
+  };
+  A.gcCols = (n0) => {
+    const x = X(), gm = M('gamemenu'), m = M('gamecards'), n = +n0;
+    if (!gcColOpts(m).includes(n) || gcColsOf(m, gm) === n) return false;
+    if (n === 4 && gmLeft(gm)) { x.commit(() => { x.E.D.m.gamemenu.style = 'tabs'; x.E.D.m.gamecards.cols = 4; }); gcAutoToast(); return; } // Figma §8 #14 65977:38750 / 38899
+    x.commit(() => { x.E.D.m.gamecards.cols = n; });
+  };
+  // 「菜单已移到中部 · 撤销」：还是最后一步就正常撤销（可重做）；之后又改了别的，只把菜单位置和张数改回「左侧 · 每行 3 张」另记一步（菜单 / 张数已被后来的操作改过就不动）
+  function gcAutoToast() {
+    const x = X(), after = JSON.stringify(x.E.D), depth = x.E.past.length;
+    x.canvasToast(t('game-card/auto-center-toast'), { ms: 5000, actionLabel: t('ed/am-undo'), action: () => {
+      const E2 = X().E;
+      if (E2.past.length === depth && JSON.stringify(E2.D) === after) { A.undo(); window.render(); return; }
+      const gm = M('gamemenu'), g = M('gamecards');
+      if (gmLeft(gm) || gcLand(g) || +g.cols !== 4) return;
+      X().commit(() => { E2.D.m.gamemenu.style = 'side'; E2.D.m.gamecards.cols = 3; });
+      window.toast(t('ed/undo-toast')); window.render();
+    } });
   }
   // 颜色：同游戏菜单做法（'key:<名>' 引用 68 Key），「默认」= Figma 绑定的 Key；选中页签 / 分隔线 / 展开 固定跟 Key，点「去改」进整页配色
   const GC_SW = { 'gamecards.tab': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'gamecards.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'gamecards.placeholder': ['ddt_bg', 'bg_1', 'neutral_3', 'primary'], 'gamecards.placeholderIcon': ['ddt_icon', 'bg_1', 'neutral_3', 'neutral_2'], 'gamecards.label': ['label_accent3', 'accent_2', 'accent_1', 'primary'], 'gamecards.labelText': ['labeltext_accent3', 'lead', 'accent_3', 'primary'] };
@@ -652,7 +720,7 @@
     };
     const link = (lab, key) => linkRow(lab, key, kv(key));
     const fbImg = m.fallback && m.fallback.startsWith('img:');
-    let h = `<div class="p-sec"><div class="lab">${t('mp/gc-c-text')}</div>${row('gamecards.tab')}${m.name ? row('gamecards.text') : ''}</div>`;
+    let h = `<div class="p-sec"><div class="lab">${t('mp/gc-c-text')}</div>${gcTabsOn() ? row('gamecards.tab') : ''}${m.name ? row('gamecards.text') : ''}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gc-fallback')}</div>${m.fallbackOn === false ? note('mp/gc-c-fb-off') : row('gamecards.placeholder') + (fbImg ? note('mp/gc-c-fb-img') : row('gamecards.placeholderIcon'))}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gc-rec')}</div>${m.rec !== false ? row('gamecards.label') + row('gamecards.labelText') : note('mp/gc-c-rec-off')}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link(t('mp/gc-c-on'), 'primary')}${link(t('mp/gc-c-line'), 'border')}</div>`;
@@ -713,14 +781,17 @@
           return `<span class="${on ? 'on' : ''} ${bg ? 'has-img' : ''}">${bg}<span class="gi ${fo ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><b>${esc(nm(it))}</b>${fo ? iconMenu('gamemenu', i, f) : ''}</span>`;
         }).join('')}</div>`;
       }
+      // 中部（11-28，Figma 65750:31407）：卡片上方一排横向分类 = 图标 + 名称，选中 = 主色文字 + 下划线（gamemenu.active）；
       // 13 个入口放不下时横向滚动，右侧渐隐提示可滑
-      return `<div class="h5-gm-wrap"><div class="h5-gm ${m.style} ${m.shape}" data-sk="gm-${id || b}">${v.map((it) => { const i = m.items.indexOf(it), on = i === ai, [f, fo, src] = gi(it, i, on); const icon = m.style === 'icons' ? `<span class="gi ${fo ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span>` : ''; return `<span class="${on ? 'on' : ''}">${icon}${esc(nm(it))}${fo ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;
+      return `<div class="h5-gm-wrap"><div class="h5-gm center" data-sk="gm-${id || b}">${v.map((it) => { const i = m.items.indexOf(it), on = i === ai, [f, fo, src] = gi(it, i, on); return `<span class="${on ? 'on' : ''}"><span class="gi ${fo ? 'is-focus' : ''}" data-act="mpIconMenu" data-arg="${id || 'gamemenu'}|gamemenu|${i}|${f}" data-stop>${src ? img(src) : ic(it.i)}</span><b>${esc(nm(it))}</b>${fo ? iconMenu('gamemenu', i, f) : ''}</span>`; }).join('')}</div></div>`;
     }
     if (b === 'gamecards') {
-      // 游戏卡片（经典蓝白 Figma 317:55739）：上方 热门/最近/收藏 页签；方图 + 收藏星 + 平台角标 + 名称；第 1 张推荐角标、第 8 张示意兜底封面；
-      // 底部「另有 N 款游戏 展开」+ 分隔线 + 下一个分类的标题行（图标 · 名称 · 全部）
-      const side = gcSide(id), cols = gcCols(m, side);
-      const tabs = [1, 11, 12].map((k, j) => `<span class="${j ? '' : 'on'}">${t('mp/gm-n-' + k)}</span>`).join('');
+      // 游戏卡片（经典蓝白 Figma 317:55739）：上方 热门/最近/收藏 页签；卡片 = 封面 + 收藏星 + 平台角标 + 名称；第 1 张角标（热门 / 新）、第 8 张示意兜底封面；
+      // 底部「另有 N 款游戏 展开」+ 分隔线 + 下一个分类的标题行（图标 · 名称 · 全部）。
+      // 卡片外观按卡片样式（11-28，Figma H5/GameCard 65974:81179）：比例、名称在图下 / 压在图上、圆角、角标位置；每行张数 = 生效值（菜单左侧时非横版最多 3）
+      const side = gcSide(id), cols = gcColsOf(m), st = gcStyleOf(m);
+      // 热门 / 最近 / 收藏 页签只在菜单左侧时显示；菜单在中部（且游戏菜单在页面上）时上方已经是横向分类，不再叠一排页签（同 Figma 中部画面）
+      const tabs = gcTabsOn() ? `<div class="tabs">${[1, 11, 12].map((k, j) => `<span class="${j ? '' : 'on'}">${t('mp/gm-n-' + k)}</span>`).join('')}</div>` : '';
       // 只显示整行（2 / 4 列显示 8 张、3 列 9 张），最后一行不会剩一张孤零零的卡；剩下的算进「另有 N 款」
       const shown = Math.max(cols, Math.floor(GAMES.length / cols) * cols), mid = id || b;
       // 画布上点兜底封面 / 收藏星：出 上传 / AI / 恢复 菜单（同面板「⋯」）
@@ -728,19 +799,21 @@
       // 单卡换图：点卡片（图或名称）= 选中这张卡 + 换图菜单；收藏星、第 8 张兜底图示意照旧出各自的菜单
       let cs = gcSelJ(mid);
       if (cs != null && cs >= shown) { X().E.gcSel = null; cs = null; } // 改了每行张数后这张卡不显示了：回到选中整个模块（工具条回来）
-      const cards = GAMES.slice(0, shown).map(([n, g], j) => {
-        const fb = j === GC_FB, cover = fb ? gcFbInner(m) : gcCover(m, j), sf = j ? 'starOff' : 'starSel';
-        const star = m.fav !== false ? `<span class="star" data-act="gcCvMenu" data-arg="${mid}|${sf}|${j}" data-stop>${gcStarImg(m, sf)}</span>` : '';
-        const pick = fb ? '' : `data-act="gcCard" data-arg="${mid}|${j}" data-stop`;
-        return `<div class="c ${fb ? '' : 'gc-pick'} ${cs === j ? 'is-csel' : ''}" ${pick}><div class="im ${fb ? 'fb' : ''}" style="border-radius:${m.corner / 2}px" ${fb ? `data-act="gcCvMenu" data-arg="${mid}|fallback|${j}" data-stop` : ''}>${cover}${m.rec !== false && j === 0 ? `<span class="rec">${ic('thumbs-up-fill')}</span>` : ''}${star}${m.tag && !fb ? `<img class="wg" src="${CL}wg.png" alt="">` : ''}</div>${m.name ? `<span class="nm">${esc(n)}</span>` : ''}${cvm('fallback', j)}${cvm(sf, j)}${cs === j ? gcMenu(mid, m, j) : ''}</div>`;
+      const cards = GAMES.slice(0, shown).map(([n], j) => {
+        const fb = j === GC_FB, sf = j ? 'starOff' : 'starSel';
+        return gcCardHtml(st, {
+          cover: fb ? gcFbInner(m) : gcCover(m, j), name: m.name ? n : '', rec: m.rec !== false && j === 0, logo: !fb, fb,
+          star: `<span class="star" data-act="gcCvMenu" data-arg="${mid}|${sf}|${j}" data-stop>${gcStarImg(m, sf)}</span>`,
+          cls: `${fb ? '' : 'gc-pick'} ${cs === j ? 'is-csel' : ''}`, attrs: fb ? '' : `data-act="gcCard" data-arg="${mid}|${j}" data-stop`,
+          imAttrs: fb ? `data-act="gcCvMenu" data-arg="${mid}|fallback|${j}" data-stop` : '',
+          extra: `${cvm('fallback', j)}${cvm(sf, j)}${cs === j ? gcMenu(mid, m, j) : ''}`,
+        });
       }).join('');
       // 标题行 = 当前选中分类的下一个分类（Figma「棋牌游戏」），图标跟游戏菜单的未选中图
       let hd = '';
-      if (m.title !== false) {
-        const gv = vis('gamemenu'), ai = gmAct(), cur = gv.indexOf(M('gamemenu').items[ai]), nx = gv[(cur + 1) % Math.max(gv.length, 1)];
-        if (nx) { const src = nx.img || nx.def; hd = `<div class="hd"><span class="hi">${src ? img(src) : ic(nx.i)}</span><b>${esc(t('mp/gc-cat-title', { n: nm(nx) }))}</b><small>${t('mp/gc-all')}</small></div>`; }
-      }
-      return `<div class="cl-gc"><div class="tabs">${tabs}</div><div class="grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr));gap:${m.gap / 2}px">${cards}</div><div class="more">${t('mp/gc-more-n', { n: `<em>${14 + GAMES.length - shown}</em>` })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
+      const gv = vis('gamemenu'), ai = gmAct(), cur = gv.indexOf(M('gamemenu').items[ai]), nx = gv[(cur + 1) % Math.max(gv.length, 1)];
+      if (nx) { const src = nx.img || nx.def; hd = `<div class="hd"><span class="hi">${src ? img(src) : ic(nx.i)}</span><b>${esc(t('mp/gc-cat-title', { n: nm(nx) }))}</b><small>${t('mp/gc-all')}</small></div>`; }
+      return `<div class="cl-gc st-${st} ${side ? 'is-side' : 'is-solo'}">${tabs}<div class="grid c${cols}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cards}</div><div class="more">${t('mp/gc-more-n', { n: `<em>${14 + GAMES.length - shown}</em>` })} <b>${t('mp/gc-expand')}${ic('caret-down')}</b></div>${hd}</div>`;
     }
     if (b === 'footer') return `<div class="h5-foot" style="text-align:${m.align}"><div class="ln">${vis('footer').map((x) => esc(nm(x))).join(' · ')}</div><div>${esc(m.copy)}</div></div>`;
     return '';
@@ -819,7 +892,7 @@
   }
 
   // ---------- 动作 ----------
-  for (const [b, keys] of Object.entries({ notice: ['speed'], jackpot: ['anim', 'layout', 'margin', 'corner'], midnav: ['mode', 'layout', 'per', 'size'], gamemenu: ['style', 'shape'], gamecards: ['cols', 'corner', 'gap'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['mode', 'style', 'h'] })) {
+  for (const [b, keys] of Object.entries({ notice: ['speed'], jackpot: ['anim', 'layout', 'margin', 'corner'], midnav: ['mode', 'layout', 'per', 'size'], footer: ['align'], sidebar: ['style', 'width'], bottomnav: ['mode', 'style', 'h'] })) {
     for (const k of keys) A[`mpSet_${b}_${k}`] = (v) => { const cur = M(b)[k]; set(b, k, typeof cur === 'number' ? +v : v); };
   }
   A.mpItem = (arg) => { const [b, i] = arg.split('|'); const x = X(); x.commit(() => { const it = x.E.D.m[b].items[+i]; it.on = !it.on; }); };
@@ -1277,12 +1350,14 @@
     // 面板显示在游戏卡片模块的位置（host）；候选暂借其它游戏的封面示意（同 Figma 页说明）
     AIG.reg('gcimg', {
       host: 'gamecards', tool: false, oneTarget: true,
-      targets: () => [{ id: 'card', label: t('game-card/image-flow/entry'), kind: 'image', spec: GC_SZ, count: 4, cost: GC_AI_COST, ratio: 1, cols: 4 }],
+      targets: () => { const sz = gcSz(); return [{ id: 'card', label: t('game-card/image-flow/entry'), kind: 'image', spec: sz, count: 4, cost: GC_AI_COST, ratio: sz[0] / sz[1], cols: 4 }]; },
       defaultTarget: () => 'card',
       impl: () => GC_CARD_AI,
     });
   }
   const gcName = (a) => (GAMES[+a.idx] || [''])[0];
+  // 提示词的构图跟卡片样式：1:1（经典 / 方形 / 圆版）用 Figma 原文「方形构图」，欧美 / 竖版 3:4 竖版构图，横版 8:5 横版构图
+  const gcPrompt = (name) => { const sz = gcSz(); return t(sz[0] === sz[1] ? 'game-card/image-flow/ai-prompt' : sz[0] > sz[1] ? 'game-card/image-flow/ai-prompt-land' : 'game-card/image-flow/ai-prompt-port', { name }); };
   const gcCand = (g) => 'img:' + CL + 'game' + g + '.webp';
   const GC_CARD_AI = {
     entries: () => GAMES.map(([n], j) => ({ i: j, name: n })).filter((e) => e.i !== GC_FB),
@@ -1291,8 +1366,8 @@
     specTxt: (a, tg, sp) => t('game-card/image-flow/ai-spec', { n: tg.count, w: sp[0], h: sp[1] }),
     noStyle: true,
     styles: () => [{ id: 'cover', label: '', html: '' }],
-    preset: (tg, st, a) => t('game-card/image-flow/ai-prompt', { name: a ? gcName(a) : '' }),
-    refPrompt: (tg, res, a) => ({ style: 'cover', prompt: t('game-card/image-flow/ai-prompt', { name: gcName(a) }) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
+    preset: (tg, st, a) => gcPrompt(a ? gcName(a) : ''),
+    refPrompt: (tg, res, a) => ({ style: 'cover', prompt: gcPrompt(gcName(a)) + t('mp/gm-bai-ref-c', { hex: res.hex }) }),
     // 4 张候选：其它游戏的封面（不含这张卡自己的原图），再生成换下一组
     gen: (a, tg, i, n) => { const own = GAMES[+i][1], pool = GAMES.map((q) => q[1]).filter((g) => g !== own), k0 = (a.round * n) % pool.length; return Array.from({ length: n }, (v, k) => ({ g: pool[(k0 + k) % pool.length] })); },
     tile: (a, tg, i, c) => `<i class="aig-img" style="${window.fxStyle(gcCand(c.g))}"></i>`,
@@ -1587,7 +1662,9 @@
     gcStarImg: (m, f, cls) => gcStarImg(m, f, cls), // PC 卡片也显示收藏星（含上传 / AI 图）
     // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
     // 公告栏 11-27：旧的「【方括号】/“引号”/ 数字」规则上色转成 spans（括号去掉），补上「显示消息气泡」
-    migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); if (D && D.m && D.m.notice) ntNorm(D.m.notice, D.ec || (D.ec = {})); },
+    migrate: (D) => { const m = D && D.m && D.m.midnav; (m && m.items || []).forEach((it) => { const b = baseOf(it.def); const k = { mid0: 'dep', mid1: 'vip', mid2: 'share', mid3: 'more' }[b]; if (!k || it.k) return; it.k = 'mp/mn-n-' + k; if (it.n === MID_OLD[b]) it.n = ''; }); if (D && D.m && D.m.notice) ntNorm(D.m.notice, D.ec || (D.ec = {})); gcNorm(D); },
+    // 游戏卡片 6 样式（11-28）：旧数据 / AI 设计写入后整理成 菜单位置 + 每行张数 + 卡片样式（aidesign 用）
+    gcNorm, GC_STYLES, GC_SIZES, gcTabsOn,
     toggleAsset: (slot) => { const [b, f] = slotOf(slot); set(b, f + 'On', M(b)[f + 'On'] === false); },
   };
 })();
