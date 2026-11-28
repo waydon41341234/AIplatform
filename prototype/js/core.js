@@ -63,14 +63,17 @@
   let toastId = 0;
   function toast(msg, opts = {}) {
     const id = ++toastId;
-    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info });
+    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls });
     renderToasts();
     setTimeout(() => { S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }, opts.ms || 2400);
+    return id;
   }
+  // 提前收掉一条提示（单卡换图：同一时间只留一条「撤销换图」）
+  function toastDrop(id) { if (!S.toasts.some((x) => x.id === id)) return; S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }
   function renderToasts() {
     let w = document.querySelector('.toast-wrap');
     if (!w) { w = document.createElement('div'); w.className = 'toast-wrap'; document.body.appendChild(w); }
-    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
+    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''} ${x.cls || ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
   }
   const comingSoon = () => toast(t('common/coming-soon'), { info: true });
 
@@ -157,7 +160,7 @@
   const dialog = (inner, cls = '') => `<div class="scrim" data-act="closeAll"></div><div class="dialog ${cls}" role="dialog">${inner}</div>`;
   const empty = (icon, title, desc, btn) => `<div class="empty"><div class="ico">${ic(icon, 'ic-24')}</div><h3>${esc(title)}</h3>${desc ? `<p>${esc(desc)}</p>` : ''}${btn || ''}</div>`;
 
-  Object.assign(window, { t, esc, num, ic, typeIcon, MODEL_LOGO, bp, isMobile, toast, comingSoon, go, render, seg, sheet, dialog, empty, LS });
+  Object.assign(window, { t, esc, num, ic, typeIcon, MODEL_LOGO, bp, isMobile, toast, toastDrop, comingSoon, go, render, seg, sheet, dialog, empty, LS });
   window.AFTER_RENDER = [];
   window.addEventListener('DOMContentLoaded', () => { parseRoute(); render(); });
 })();

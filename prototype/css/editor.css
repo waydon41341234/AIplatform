@@ -1514,18 +1514,55 @@ body > .tb-ic-menu, body > .gc-cv-menu { color: var(--text); font-family: var(--
 .gim-hd small { font-size: 12px; line-height: 18px; color: var(--text-2); }
 .gim-sep { flex: none; height: 1px; margin: 0 1px; background: var(--border); }
 .gim-it.menu-item { min-height: 56px; padding: 8px 12px; border-radius: 12px; }
-.gim-it .tx { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; text-align: left; }
-.gim-it .lb { font: 500 14px/22px var(--font); color: var(--text); }
-.gim-it .sub { font-size: 12px; line-height: 18px; color: var(--text-2); }
+/* 说明字：可用 = 次要色（text-2），只有不可用的「恢复原图」整行 = text-3（Figma 65983:222944 / 65987:36232）。
+   电脑菜单带 .menu，通用的 `.menu .menu-item .sub`（text-3、行高 1.35）优先级更高，所以这里带上 .gc-img-menu / .gim-sheet（QA 11-28） */
+.gim-it .tx { display: flex; flex-direction: column; align-items: flex-start; gap: 0; min-width: 0; text-align: left; }
+.gc-img-menu .gim-it .lb, .gim-sheet .gim-it .lb { font: 500 14px/22px var(--font); color: var(--text); }
+.gc-img-menu .gim-it .sub, .gim-sheet .gim-it .sub { font-size: 12px; line-height: 18px; color: var(--text-2); }
 .gim-it.menu-item[disabled], .menu .gim-it.menu-item:disabled { opacity: 1; cursor: default; background: none; }
-.gim-it[disabled] .lb, .gim-it[disabled] .sub { color: var(--text-3); }
+.gc-img-menu .gim-it[disabled] .lb, .gc-img-menu .gim-it[disabled] .sub, .gim-sheet .gim-it[disabled] .lb, .gim-sheet .gim-it[disabled] .sub { color: var(--text-3); }
 /* 手机：底部弹层（底板 raised、描边，上 8 左右 4 下 28；画布不压暗） */
 .sheet.gim-sheet { padding: 8px 4px calc(28px + env(safe-area-inset-bottom)); background: var(--bg-raised); border: 1px solid var(--border); border-bottom: 0; }
 .gim-sheet .sheet-grab { margin-bottom: 3px; }
 .gim-list { display: flex; flex-direction: column; gap: 2px; }
-/* 调整尺寸（单卡换图，Figma ResizeDialog Mode=裁切 1:1）：底部说明较长，电脑可换行、按钮不被挤；
-   手机 = 高度随内容的底部弹层：说明占一整行（可换行），下面「取消 / 应用」两个等宽按钮，顶部分隔线 */
-.dialog:not(.ed-dlg-sheet) .dialog-foot.rs-gc .rs-cap { flex: 1 1 auto; min-width: 0; }
-.ed-dlg-sheet.is-rsgc { max-height: 88dvh; }
-.ed-dlg-sheet.is-rsgc .dialog-foot { flex-wrap: wrap; gap: 10px 8px; margin: 16px -16px 0; padding: 12px 16px 0; border-top: 1px solid var(--border); }
-.ed-dlg-sheet.is-rsgc .dialog-foot .rs-cap { flex-basis: 100%; margin-right: 0; align-self: auto; }
+/* 调整尺寸 · 单卡换图（Figma ResizeDialog Mode=裁切 1:1：Desktop 65983:225932 / Mobile 65983:225967）
+   电脑：760 宽、圆角 16、无内边距；标题 18 中粗（上 18 右 16 下 12 左 24）；内容 上 4 左右 24 下 20、间距 24：预览 440×330（圆角 12、凹陷底）+ 选项列；
+   裁切框 2px 主色 + 四角 10×10 主色把手，框外 bg-overlay 压暗；选项卡 圆角 12、内边距 12、间距 12：选中淡蓝底 + 1.5 主色描边 + 蓝字，未选 1px 描边无底；
+   「重新上传」= 主色文字 + 16 图标；底部 顶部分隔线、上 12 左右 24 下 20：说明 12 次要色 + 取消（描边）/ 采用（主色），按钮高 40 圆角 12 */
+.dialog.dialog-rs.is-rsgc { width: min(760px, calc(100vw - 32px)); padding: 0; border-radius: 16px; border-color: var(--border); }
+.is-rsgc .dialog-head { margin: 0; padding: 18px 16px 12px 24px; }
+.is-rsgc .dialog-head h3 { min-width: 0; font-size: 18px; line-height: 26px; font-weight: 500; }
+.is-rsgc .dialog-head .ibtn { flex: none; margin: -3px -6px -3px 0; } /* 关闭按钮点击区 32，不把标题行撑高（Figma 标题行 56 / 手机 50） */
+.is-rsgc .rs { gap: 24px; padding: 4px 24px 20px; }
+.is-rsgc .rs-stage { width: 440px; height: 330px; border-radius: 12px; }
+.is-rsgc .rs-frame { box-shadow: 0 0 0 9999px var(--bg-overlay); }
+.rs-h { position: absolute; width: 10px; height: 10px; background: var(--brand); pointer-events: none; }
+.rs-h.tl { left: -2px; top: -2px; } .rs-h.tr { right: -2px; top: -2px; } .rs-h.bl { left: -2px; bottom: -2px; } .rs-h.br { right: -2px; bottom: -2px; }
+.is-rsgc .rs-opts { gap: 12px; }
+.is-rsgc .rcard { align-items: center; gap: 10px; min-height: 48px; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: none; color: var(--text); }
+.is-rsgc .rcard > .ic { color: var(--icon-2); }
+.is-rsgc .rcard.is-on { min-height: 49px; border: 1.5px solid var(--brand); background: var(--brand-subtle); color: var(--brand); }
+.is-rsgc .rcard.is-on > .ic { color: var(--brand); }
+.is-rsgc .rcard b { font-size: 14px; line-height: 22px; font-weight: 500; }
+.rs-relink { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 32px; color: var(--brand); font: 500 14px/22px var(--font); }
+.rs-relink:hover { opacity: .8; }
+.is-rsgc .dialog-foot { align-items: center; gap: 8px; margin: 0; padding: 12px 24px 20px; border-top: 1px solid var(--border); }
+.is-rsgc .rs-cap { flex: 1 1 auto; min-width: 0; margin-right: 8px; font-size: 12px; line-height: 18px; color: var(--text-2); }
+.rs-acts { display: flex; flex: none; gap: 8px; }
+.rs-acts .btn { height: 40px; padding: 0 16px; border-radius: 12px; }
+.rs-acts .btn-outline { color: var(--text); }
+/* 手机：高度随内容的底部弹层（不是全屏、没有把手）：标题 上 12 右 12 下 12 左 16；内容竖排 间距 16、上 4 左右 16 下 16，预览 = 弹层内宽 × 3:4；
+   底部 上 12 左右 16 下 28、间距 10：说明居中（可换行），下面「取消 / 采用」两个等宽按钮 */
+.sheet.ed-dlg-sheet.is-rsgc { max-height: 88dvh; padding: 0 0 env(safe-area-inset-bottom); }
+.ed-dlg-sheet.is-rsgc .dialog-head { padding: 12px 12px 12px 16px; }
+.ed-dlg-sheet.is-rsgc .rs { flex-direction: column; align-items: stretch; gap: 16px; padding: 4px 16px 16px; }
+.ed-dlg-sheet.is-rsgc .rs-stage { width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.ed-dlg-sheet.is-rsgc .rs-opts { width: 100%; }
+.ed-dlg-sheet.is-rsgc .dialog-foot { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 16px 28px; }
+.ed-dlg-sheet.is-rsgc .rs-cap { margin: 0; text-align: center; }
+.ed-dlg-sheet.is-rsgc .rs-acts { display: grid; grid-template-columns: 1fr 1fr; }
+/* 单卡换图 Toast（Figma toast · 图片已应用 · 撤销换图）：文字 13/20 不换行；「撤销换图」= 淡蓝胶囊（上下 4 左右 12、主色 13 中粗） */
+.toast.gc-toast { font-size: 13px; line-height: 20px; }
+.toast.gc-toast > span { white-space: nowrap; }
+.toast.gc-toast button { padding: 4px 12px; border-radius: var(--radius-full); background: var(--brand-subtle); color: var(--brand); font-size: 13px; line-height: 20px; }
+.toast.gc-toast button:hover { filter: brightness(1.1); }

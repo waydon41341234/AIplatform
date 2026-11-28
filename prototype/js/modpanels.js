@@ -542,15 +542,16 @@
   function gcImgSheet() {
     const E = X().E, s = E.gcSel;
     if (!s || !GAMES[s.j] || s.j === GC_FB || E.sel !== s.id) { E.mpanel = null; return ''; }
-    return `<div class="scrim is-clear" data-act="gcImgClose"></div><div class="sheet med-sheet gim-sheet" role="dialog" aria-label="${esc(GAMES[s.j][0])}" data-sk="msheet"><div class="sheet-grab"></div><div class="gim-list">${gcMenuBody(M('gamecards'), s.j)}</div></div>`;
+    // 不放全屏遮罩（同模块弹层）：弹层开着时点画布上露出来的别的卡片直接换到那一张，顶栏撤销 / 重做也能直接点（QA 11-28）
+    return `<div class="sheet med-sheet gim-sheet" role="dialog" aria-label="${esc(GAMES[s.j][0])}" data-sk="msheet"><div class="sheet-grab"></div><div class="gim-list">${gcMenuBody(M('gamecards'), s.j)}</div></div>`;
   }
   A.gcCard = (arg) => {
     const [id, j0] = arg.split('|'), j = +j0, x = X(), E = x.E, mob = x.mobileEd();
-    if (!GAMES[j] || j === GC_FB) return false;
+    if (!GAMES[j] || j === GC_FB || E.preview) return false; // 预览是只读的：点卡片不选中、不出菜单（QA 11-28）
     const same = E.gcSel && E.gcSel.id === id && E.gcSel.j === j;
     if (E.sel !== id) { E.tab = 'content'; E.picker = null; E.rn = null; }
     if (E.ai && !(E.ai.mod === 'gcimg' && same && !mob)) E.ai = null; // 换了一张卡（或手机）：上一张的 AI 面板收起（状态留在本次会话，再打开接着看）
-    E.sel = id; E.keys = null; E.h5side = false; E.gcSel = { id, j };
+    E.sel = id; E.keys = null; E.h5side = false; E.gcSel = { id, j, mob };
     if (mob) { E.mpanel = 'gcimg'; S().menu = null; return; }
     const k = 'gcimg:' + id + '|' + j;
     S().menu = window.__prevMenu === k ? null : k; // 再点同一张：收起菜单，卡片仍选中
@@ -583,17 +584,27 @@
     gcDone(j, prev, msg);
   }
   function gcPut(m, j, v) { const o = Object.assign({}, m.imgs); if (v) o[j] = v; else delete o[j]; if (Object.keys(o).length) m.imgs = o; else delete m.imgs; }
-  // Toast 的「撤销换图」只撤这一次：还是最后一步就正常撤销（可重做）；之后又改了别的，就只把这张卡的图改回去、另记一步（这张卡已被后来的操作改过就不动）
+  // Toast 的「撤销换图」只撤这一次：还是最后一步就正常撤销（可重做）；之后又改了别的，就只把这张卡的图改回去、另记一步。
+  // 同一时间只有一条「撤销换图」Toast（Figma 2b / 4 / 6 都是一条）：再换图 / 恢复就把上一条换掉；这张卡的图被后来的操作（顶栏撤销、再换）改过了，Toast 也一起收掉，不留点了没反应的按钮（QA 11-28）
+  // 样式照 Figma Toast：「撤销换图」是淡蓝胶囊；电脑放在手机画布底部导航上（Figma 稍微压到底部导航）
+  let gcT = null;
   function gcDone(j, prev, msg) {
     const x = X(), E = x.E, after = JSON.stringify(E.D), depth = E.past.length, now = JSON.stringify(gcOwn(M('gamecards'), j));
     if (x.mobileEd() && E.mpanel === 'gcimg') E.mpanel = null;
-    x.canvasToast(t(msg), { action: () => {
-      const E2 = X().E;
+    if (gcT) window.toastDrop(gcT.id);
+    const id = x.canvasToast(t(msg), { action: () => {
+      const E2 = X().E; gcT = null;
       if (E2.past.length === depth && JSON.stringify(E2.D) === after) { A.undo(); window.render(); return; }
       if (JSON.stringify(gcOwn(M('gamecards'), j)) !== now) return;
       X().commit(() => { gcPut(X().E.D.m.gamecards, j, prev); });
       window.toast(t('ed/undo-toast')); window.render();
-    }, actionLabel: t('game-card/image-flow/undo'), ms: 5000 });
+    }, actionLabel: t('game-card/image-flow/undo'), ms: 5000, cls: 'gc-toast', onNav: true });
+    gcT = { id, j, now };
+  }
+  function gcToastCheck() {
+    if (!gcT) return;
+    if (!window.S.toasts.some((q) => q.id === gcT.id)) { gcT = null; return; }
+    if (JSON.stringify(gcOwn(M('gamecards'), gcT.j)) !== gcT.now) { window.toastDrop(gcT.id); gcT = null; }
   }
   // 「调整尺寸」采用：裁切存位置，留边存底色 Key
   function gcRsApply(r) { const j = +r.slot.slice(3).split('|')[1]; gcSet(j, r.mode === 'pad' ? { f: r.f, fit: 'pad', fill: r.fill } : { f: r.f, x: r.x, y: r.y }, 'game-card/image-flow/applied'); }
@@ -606,8 +617,22 @@
     const top = Math.max(cv.top + 8, Math.min(r.top + 3, Math.min(window.innerHeight, cv.bottom) - 8 - mh));
     m.style.left = left + 'px'; m.style.top = top + 'px';
   }
+  // 跨过 840（转屏 / 拉窗口）：电脑浮层和手机底部弹层互换，卡片选中和菜单开着的状态都留着（QA 11-28；同取色器切 Key 范围）。
+  // 在 editor.js 渲染前调用；s.mob / s.open 是上一次渲染时的样子（core 跨断点时会先清掉 S.menu，所以开没开要自己记）
+  function gcSync() {
+    const x = X(), E = x.E, s = E.gcSel; if (!s) return;
+    if (E.sel !== s.id) { E.gcSel = null; if (E.mpanel === 'gcimg') E.mpanel = null; return; } // 模块已经不选了（切面板 / 预览等）：卡片选中一起清掉
+    const mob = x.mobileEd(); if (s.mob == null) { s.mob = mob; return; }
+    if (s.mob === mob) return;
+    s.mob = mob;
+    if (mob) { if (s.open && !E.ai && !E.dlg) { E.mpanel = 'gcimg'; S().menu = null; } else if (E.ai && E.ai.mod === 'gcimg' && !E.mpanel) E.mpanel = 'module'; } // 这张卡的 AI 面板开着：手机放进底部弹层
+    else { if (E.mpanel === 'gcimg') { E.mpanel = null; if (s.open) S().menu = 'gcimg:' + s.id + '|' + s.j; } }
+  }
   // 画布有缩放（transform），fixed 会相对画布定位，所以每次渲染后把菜单移到 body 下（上一次的先删掉）
   window.AFTER_RENDER.push(() => {
+    const E = X().E, s = E.gcSel;
+    if (s && S().route === 'editor') { s.mob = X().mobileEd(); s.open = s.mob ? E.mpanel === 'gcimg' : S().menu === 'gcimg:' + s.id + '|' + s.j; }
+    gcToastCheck();
     document.querySelectorAll('body > .gc-img-menu').forEach((n) => n.remove());
     const m = document.querySelector('#app .gc-img-menu'); if (!m) return;
     document.body.appendChild(m); gcPlaceMenu(m);
@@ -1300,7 +1325,7 @@
     lib: (a, tg, i, c) => gcCand(c.g),
     // AIG 外面包 commit；换图前的值记下来给 Toast 的「撤销换图」。用了以后：卡片仍选中，手机回到画布（Figma M 4）
     apply: (a, tg, i, c) => { const m = X().E.D.m.gamecards; a.gcPrev = gcOwn(m, +i); gcPut(m, +i, { f: gcCand(c.g) }); },
-    onUsed: (a) => { const E = X().E; E.gcSel = { id: a.id, j: +a.idx }; if (X().mobileEd()) E.mpanel = null; gcDone(+a.idx, a.gcPrev || null, 'game-card/image-flow/applied'); },
+    onUsed: (a) => { const E = X().E; E.gcSel = { id: a.id, j: +a.idx, mob: X().mobileEd() }; if (X().mobileEd()) E.mpanel = null; gcDone(+a.idx, a.gcPrev || null, 'game-card/image-flow/applied'); },
     pay: () => ['one', { type: t('game-card/image-flow/entry') }],
   };
 
@@ -1583,7 +1608,7 @@
     // 游戏菜单按钮底图：上传 / 换图后回到「按钮图」显示（清掉颜色页签里对应的纯色底）
     setAsset: (slot, v) => { const [b, f] = slotOf(slot); const D = X().E.D; D.m[b][f] = v; if (b === 'gamemenu' && v && GM_BTN_EC[f] && D.ec) delete D.ec[GM_BTN_EC[f]]; },
     gcFbInner: (m) => gcFbInner(m),
-    gcCover: (m, j) => gcCover(m, j), gcImgSheet, gcRsApply, gcSpec, // 单卡换图：PC 卡片封面、手机底部弹层、「调整尺寸」采用 / 规格
+    gcCover: (m, j) => gcCover(m, j), gcImgSheet, gcRsApply, gcSpec, gcSync, // 单卡换图：PC 卡片封面、手机底部弹层、「调整尺寸」采用 / 规格
     gcStarImg: (m, f, cls) => gcStarImg(m, f, cls), // PC 卡片也显示收藏星（含上传 / AI 图）
     // 旧存档迁移：帐户栏入口补上 i18n 名称 Key，没改过名（仍是写死的中文默认名）的清掉 n，按当前语言显示
     // 公告栏 11-27：旧的「【方括号】/“引号”/ 数字」规则上色转成 spans（括号去掉），补上「显示消息气泡」

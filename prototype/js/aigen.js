@@ -98,6 +98,7 @@
     }
     if (scope === 'set' && o.idx != null && o.idx !== '' && ents.some((e) => e.i === String(o.idx))) a.pref = String(o.idx);
     a.jump = true; E.ai = a; E.picker = null; E.keys = null; E.tab = 'content'; S().menu = null; S().sheet = null;
+    if (!d.host && E.gcSel) E.gcSel = null; // 打开模块自己的 AI（兜底图 / 收藏星等）= 取消单卡换图的卡片选中（同画布上点兜底图 / 收藏星，QA 11-28）
     if (impl(a, tg).onTarget) impl(a, tg).onTarget(tg);
     if (x.mobileEd()) E.mpanel = 'module';
     return true;

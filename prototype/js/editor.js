@@ -1243,8 +1243,9 @@
     } });
   }
   // 取色器应用后的 Toast 放在画布上（Figma 5a / 5b：手机画布底部导航上方居中）；手机编辑器放在弹层上方（<600 本来就在，600–839 这里补）
-  let ctUntil = 0, ctTimer = null;
-  function canvasToast(msg, o) { window.toast(msg, o); ctUntil = Date.now() + o.ms; clearTimeout(ctTimer); ctTimer = setTimeout(() => { ctUntil = 0; placeToast(); }, o.ms + 80); placeToast(); }
+  let ctUntil = 0, ctTimer = null, ctNav = false;
+  // o.onNav：电脑上把 Toast 竖直居中放在手机画布的底部导航上（单卡换图 Figma 2b / 4 / 6），不写就放在底部导航上方（取色器 5a / 5b）
+  function canvasToast(msg, o) { const id = window.toast(msg, o); ctNav = !!o.onNav; ctUntil = Date.now() + o.ms; clearTimeout(ctTimer); ctTimer = setTimeout(() => { ctUntil = 0; placeToast(); }, o.ms + 80); placeToast(); return id; }
   function placeToast() {
     const w = document.querySelector('.toast-wrap'); if (!w) return;
     const set = (top, bottom, l, r) => { w.style.top = top; w.style.bottom = bottom; w.style.left = l; w.style.right = r; };
@@ -1253,6 +1254,8 @@
     const cv = document.querySelector('#app .ed-canvas'), ph = cv && cv.querySelector('.h5'); if (!ph) return set('', '', '', '');
     const c = cv.getBoundingClientRect(), r = ph.getBoundingClientRect(), nav = ph.querySelector('.h5-bnav'), nr = nav && nav.getClientRects().length ? nav.getBoundingClientRect() : null;
     const vb = Math.min(c.bottom, r.bottom), anchor = nr && nr.top < vb && nr.top > c.top + 80 ? nr.top : vb;
+    const last = w.lastElementChild;
+    if (ctNav && last && nr && nr.top < vb && nr.top > c.top + 80) { const mid = (nr.top + Math.min(nr.bottom, vb)) / 2; return set('auto', Math.max(8, window.innerHeight - mid - last.offsetHeight / 2) + 'px', Math.max(c.left, r.left) + 'px', window.innerWidth - Math.min(c.right, r.right) + 'px'); }
     set('auto', window.innerHeight - anchor + 16 + 'px', Math.max(c.left, r.left) + 'px', window.innerWidth - Math.min(c.right, r.right) + 'px');
   }
   window.AFTER_RENDER.push(placeToast);
@@ -1837,23 +1840,27 @@
     window.toast(t('ed/rs-done', { w: sp.w, h: sp.h }), undoOpt());
   };
   function rsGeom(mobile) {
-    const r = E.rs; const sp = slotSpec(r.slot); const BW = mobile ? Math.min(window.innerWidth - 48, 340) : 360, BH = mobile ? 220 : 260;
+    const r = E.rs; const sp = slotSpec(r.slot);
+    // 单卡换图（Figma ResizeDialog Mode=裁切 1:1）：预览区电脑 440×330，手机 = 弹层内宽 × 3:4（375 宽时 343×257）
+    const gc = r.slot.startsWith('gc:'), gw = Math.min(window.innerWidth, 560) - 32;
+    const BW = gc ? (mobile ? gw : 440) : mobile ? Math.min(window.innerWidth - 48, 340) : 360, BH = gc ? (mobile ? gw * 0.75 : 330) : mobile ? 220 : 260;
     const s = Math.min(BW / r.w, BH / r.h); const ow = r.w * s, oh = r.h * s; const ratio = sp.w / sp.h;
     let fw, fh; if (r.w / r.h > ratio) { fh = oh; fw = oh * ratio; } else { fw = ow; fh = ow / ratio; }
     return { ow, oh, fw, fh, sp, BW, BH };
   }
   function resizeBody(mobile) {
     const r = E.rs; const g = rsGeom(mobile); const th = E.D.theme;
+    const gc = r.slot.startsWith('gc:'); // 单卡换图（Figma ResizeDialog Mode=裁切 1:1）：标题带游戏名，裁切框四角蓝色把手，「重新上传」蓝色文字按钮，底部分隔线 + 说明「只换这一张…」，取消描边 / 采用
     let stage;
-    if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px"></div></div>`;
+    if (r.mode === 'crop') stage = `<div class="rs-img" style="width:${g.ow}px;height:${g.oh}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"><div class="rs-frame" data-rs-frame style="left:${(g.ow - g.fw) * r.x}px;top:${(g.oh - g.fh) * r.y}px;width:${g.fw}px;height:${g.fh}px">${gc ? '<i class="rs-h tl"></i><i class="rs-h tr"></i><i class="rs-h bl"></i><i class="rs-h br"></i>' : ''}</div></div>`;
     else { const ratio = g.sp.w / g.sp.h; let tw = g.BW, thh = g.BW / ratio; if (thh > g.BH) { thh = g.BH; tw = g.BH * ratio; } const s = Math.min(tw / r.w, thh / r.h); stage = `<div class="rs-pad" style="width:${tw}px;height:${thh}px;background:${th[r.fill]}"><span class="rs-img in" style="width:${r.w * s}px;height:${r.h * s}px;${window.fxStyle(r.f, r.slot.startsWith('slide') ? BANNER_DEF : '')}"></span></div>`; }
     const card = (m, icn, k) => `<button class="rcard ${r.mode === m ? 'is-on' : ''}" data-act="rsMode" data-arg="${m}">${ic(icn)}<span><b>${t(k)}</b></span></button>`;
-    const gc = r.slot.startsWith('gc:'); // 单卡换图（Figma ResizeDialog Mode=裁切 1:1）：标题带游戏名，底部说明「只换这一张…」
     return `<div class="dialog-head"><h3>${gc ? esc(t('game-card/image-flow/resize-title', { name: g.sp.name, w: g.sp.w, h: g.sp.h })) : t('ed/rs-title', { w: g.sp.w, h: g.sp.h })}</h3><button class="ibtn ibtn-sm" data-act="closeDlg">${ic('x')}</button></div>
       <div class="rs ${mobile ? 'is-m' : ''}"><div class="rs-stage">${stage}</div><div class="rs-opts">${card('crop', 'crop', 'ed/rs-crop')}${card('pad', 'frame-corners', 'ed/rs-pad')}
         ${r.mode === 'pad' ? `<div class="lab">${t('ed/rs-fill')}</div><div class="sws">${['bg_1', 'bg_2', 'primary'].map((k) => `<button class="sw-btn ${r.fill === k ? 'is-on' : ''}" style="background:${th[k]}" title="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-label="${esc(window.MP.swTip(t('ed/key-' + k), th[k]))}" aria-pressed="${r.fill === k}" data-act="rsFill" data-arg="${k}"></button>`).join('')}</div>` : ''}
-        <button class="btn btn-ghost btn-sm" data-act="rsReupload">${ic('upload-simple', 'ic-16')}${t('ed/rs-reupload')}</button></div></div>
-      <div class="dialog-foot ${gc ? 'rs-gc' : ''}"><span class="caption faint rs-cap">${t(gc ? 'game-card/image-flow/resize-foot' : 'ed/rs-from-to', { w: r.w, h: r.h, tw: g.sp.w, th: g.sp.h })}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary" data-act="rsApply">${t('ed/pick-apply')}</button></div>`;
+        <button class="${gc ? 'rs-relink' : 'btn btn-ghost btn-sm'}" data-act="rsReupload">${ic('upload-simple', 'ic-16')}${t('ed/rs-reupload')}</button></div></div>
+      ${gc ? `<div class="dialog-foot rs-gc"><span class="caption rs-cap">${t('game-card/image-flow/resize-foot', { w: r.w, h: r.h, tw: g.sp.w, th: g.sp.h })}</span><span class="rs-acts"><button class="btn btn-outline" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary" data-act="rsApply">${t('ed/adopt')}</button></span></div>`
+        : `<div class="dialog-foot"><span class="caption faint rs-cap">${t('ed/rs-from-to', { w: r.w, h: r.h, tw: g.sp.w, th: g.sp.h })}</span><button class="btn btn-secondary" data-act="closeDlg">${t('confirm/cancel')}</button><button class="btn btn-primary" data-act="rsApply">${t('ed/pick-apply')}</button></div>`}`;
   }
   function startCropDrag(e, fr) {
     e.preventDefault();
@@ -1973,7 +1980,7 @@
     const rsGc = E.dlg === 'resize' && E.rs.slot.startsWith('gc:'); // 单卡换图：手机是高度随内容的底部弹层（Figma ResizeDialog Mode=裁切 1:1 Mobile），不是全屏
     const full = ['lib', 'resize', 'batch', 'tplpick', 'adfig'].includes(E.dlg) && !rsGc;
     const cls = ({ lib: 'dialog-lib', tplpick: 'dialog-tpl', pal: 'dialog-sm', rename: 'dialog-sm', batch: 'dialog-bx', resize: 'dialog-rs', adfig: 'dialog-adfig' }[E.dlg] || '') + (rsGc ? ' is-rsgc' : '');
-    if (m) return `<div class="scrim" data-act="closeDlg"></div><div class="sheet med-sheet ed-dlg-sheet ${full ? 'is-full' : ''} ${cls}" data-sk="dlgsheet">${full ? '' : '<div class="sheet-grab"></div>'}${body}</div>${E.dlg === 'batch' ? window.MP.batchPickSheet() : ''}`;
+    if (m) return `<div class="scrim" data-act="closeDlg"></div><div class="sheet med-sheet ed-dlg-sheet ${full ? 'is-full' : ''} ${cls}" data-sk="dlgsheet">${full || rsGc ? '' : '<div class="sheet-grab"></div>'}${body}</div>${E.dlg === 'batch' ? window.MP.batchPickSheet() : ''}`;
     return `<div class="scrim" data-act="closeDlg"></div><div class="dialog dialog-wide ${cls}" data-sk="dlg">${body}</div>`;
   }
 
@@ -2277,6 +2284,6 @@
     pkLive: () => !!(E.picker && E.picker.orig0 != null && !E.picker.follow && !pkIdle(E.picker)), keyUses: (K, dbg) => keyUses(K, null, dbg),
     openResize: (slot, f, w, h) => openResize(slot, f, w, h), canvasToast: (msg, o) => canvasToast(msg, o) }; // 单卡换图：上传走「调整尺寸」、Toast 放画布上 // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
   // PC 未开放：不管从哪里带进来的 PC 视图（恢复的状态 / 外部直接改 E.device）一律回落 H5
-  window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); syncRowPk(); return mobileEd() ? mobile() : desktop(); };
+  window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); syncRowPk(); window.MP.gcSync(); return mobileEd() ? mobile() : desktop(); }; // gcSync：单卡换图菜单跨 840 在浮层 / 底部弹层之间切换
   window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod || E.gcSel), escape };
 })();

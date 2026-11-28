@@ -614,6 +614,7 @@ Object.assign(window.I18N, {
   'game-card/image-flow/restore-hint': ['还没换过图', '還沒換過圖', 'Not replaced yet', 'Chưa thay ảnh'],
   'game-card/image-flow/restore-sub': ['换回游戏原来的图片', '換回遊戲原來的圖片', 'Switch back to the original image', 'Đổi lại ảnh gốc của game'],
   'game-card/image-flow/resize-title': ['游戏图片 · {name} · 目标 {w}×{h}', '遊戲圖片 · {name} · 目標 {w}×{h}', 'Game image · {name} · Target {w}×{h}', 'Ảnh game · {name} · Mục tiêu {w}×{h}'],
+  'ed/adopt': ['采用', '採用', 'Use this', 'Dùng ảnh này'], // Figma ResizeDialog Mode=裁切 1:1 确认按钮
   'game-card/image-flow/resize-foot': ['原图 {w}×{h} → {tw}×{th} · 只换这一张，名称、角标、维护状态不变', '原圖 {w}×{h} → {tw}×{th} · 只換這一張，名稱、角標、維護狀態不變', 'Original {w}×{h} → {tw}×{th} · Only this card; name, badge and status stay', 'Gốc {w}×{h} → {tw}×{th} · Chỉ thẻ này; tên, nhãn, trạng thái giữ nguyên'],
   'game-card/image-flow/ai-title': ['AI 生成 · 游戏图片', 'AI 生成 · 遊戲圖片', 'AI generate · Game image', 'Tạo bằng AI · Ảnh game'],
   'game-card/image-flow/ai-scope': ['只这一张 · {name}', '只這一張 · {name}', 'This card only · {name}', 'Chỉ thẻ này · {name}'],
