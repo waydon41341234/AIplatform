@@ -530,7 +530,8 @@
   const gcStarImg = (m, f, cls = '') => { const v = m[f]; return `<img class="${cls}" src="${gcStarSrc(m, f)}" style="${v && !v.startsWith('img:') ? 'filter:' + v : ''}" alt="">`; }; // 素材库模拟值 = 滤镜
   A.gcCvMenu = (arg) => {
     const [id, f, j] = arg.split('|'), x = X(), E = x.E, key = 'gccv:' + id + '|' + f + '|' + j;
-    if (E.sel !== id) { E.ai = null; E.picker = null; }
+    if (E.sel !== id) E.ai = null;
+    E.picker = null; // 兜底图 / 收藏星菜单同换图菜单：先关掉行内取色器（11-28 整合测试）
     if (E.gcSel) { E.gcSel = null; if (E.ai && E.ai.mod === 'gcimg') E.ai = null; } // 单卡换图：点兜底图 / 收藏星 = 取消卡片选中
     E.sel = id; E.tab = 'content';
     if (x.mobileEd()) { S().menu = 'am:mp-gamecards-' + f; return; } // 手机：底部菜单（amSheet）
@@ -573,7 +574,8 @@
     const [id, j0] = arg.split('|'), j = +j0, x = X(), E = x.E, mob = x.mobileEd();
     if (!GAMES[j] || j === GC_FB || E.preview) return false; // 预览是只读的：点卡片不选中、不出菜单（QA 11-28）
     const same = E.gcSel && E.gcSel.id === id && E.gcSel.j === j;
-    if (E.sel !== id) { if (!/^game(menu|cards)(~|$)/.test(E.sel || '')) E.tab = 'content'; E.picker = null; E.rn = null; } // 从游戏菜单过来：同一个面板，页签不变
+    if (E.sel !== id) { if (!/^game(menu|cards)(~|$)/.test(E.sel || '')) E.tab = 'content'; E.rn = null; } // 从游戏菜单过来：同一个面板，页签不变
+    E.picker = null; // 同一个模块里点卡片也先关掉行内取色器（还没应用的预览收回），换图菜单不会和取色器叠在一起（11-28 整合测试，同选别的模块）
     if (E.ai && !(E.ai.mod === 'gcimg' && same && !mob)) E.ai = null; // 换了一张卡（或手机）：上一张的 AI 面板收起（状态留在本次会话，再打开接着看）
     E.sel = id; E.keys = null; E.h5side = false; E.gcSel = { id, j, mob };
     if (mob) { E.mpanel = 'gcimg'; S().menu = null; return; }
@@ -656,7 +658,7 @@
   window.AFTER_RENDER.push(() => {
     const E = X().E, s = E.gcSel;
     if (s && S().route === 'editor') { s.mob = X().mobileEd(); s.open = s.mob ? E.mpanel === 'gcimg' : S().menu === 'gcimg:' + s.id + '|' + s.j; }
-    gcToastCheck();
+    gcToastCheck(); gcAutoCheck();
     document.querySelectorAll('body > .gc-img-menu').forEach((n) => n.remove());
     const m = document.querySelector('#app .gc-img-menu'); if (!m) return;
     document.body.appendChild(m); gcPlaceMenu(m);
@@ -744,17 +746,27 @@
     if (n === 4 && gmLeft(gm)) { x.commit(() => { x.E.D.m.gamemenu.style = 'tabs'; x.E.D.m.gamecards.cols = 4; }); if (gmOnPage()) gcAutoToast(); return; }
     x.commit(() => { x.E.D.m.gamecards.cols = n; });
   };
-  // 「菜单已移到中部 · 撤销」：还是最后一步就正常撤销（可重做）；之后又改了别的，只撤这次自动移动、另记一步：
-  //   菜单还在中部 → 移回左侧；张数还是这次的 4 张 → 改回 3 张（之后改过张数 / 换过横版就保留后来的张数）。菜单已经回到左侧 = 已经撤了，不再动
+  // 「菜单已移到中部 · 撤销」：还是最后一步就正常撤销（可重做）；之后又改了别的（菜单位置、张数都没动），只撤这次自动移动、另记一步：菜单移回左侧、张数改回 3 张。
+  // 后来的改动动了菜单位置或张数（顶栏撤销 / Ctrl+Z 撤掉了这一步、自己移回左侧、改了张数、换横版、套用 AI 模版…）：要撤的已经不是这次的结果，Toast 一起收掉（gcAutoCheck，同「撤销换图」），
+  // 不留点了没反应、或会把后来的排版改掉的按钮（11-28 整合测试）
+  let gcAT = null;
+  const gcAutoNow = () => { const gm = M('gamemenu'), m = M('gamecards'); return (gmLeft(gm) ? 'side' : 'tabs') + '|' + gcColsOf(m, gm); };
   function gcAutoToast() {
-    const x = X(), after = JSON.stringify(x.E.D), depth = x.E.past.length;
-    x.canvasToast(t('game-card/auto-center-toast'), { ms: 5000, cls: 'is-pill-act', actionLabel: t('ed/am-undo'), action: () => {
-      const E2 = X().E;
+    const x = X(), after = JSON.stringify(x.E.D), depth = x.E.past.length, now = gcAutoNow();
+    if (gcAT) window.toastDrop(gcAT.id);
+    const id = x.canvasToast(t('game-card/auto-center-toast'), { ms: 5000, cls: 'is-pill-act', actionLabel: t('ed/am-undo'), action: () => {
+      const E2 = X().E; gcAT = null;
       if (E2.past.length === depth && JSON.stringify(E2.D) === after) { A.undo(); window.render(); return; }
-      if (gmLeft(M('gamemenu'))) return; // 菜单已经回到左侧（业主自己移回去了）：要撤的已经撤了
+      if (gcAutoNow() !== now) return; // 菜单位置 / 张数已经被后来的操作改过：不再动
       X().commit(() => { const g = E2.D.m.gamecards; E2.D.m.gamemenu.style = 'side'; if (!gcLand(g) && +g.cols === 4) g.cols = 3; });
       window.toast(t('ed/undo-toast')); window.render();
     } });
+    gcAT = { id, now };
+  }
+  function gcAutoCheck() {
+    if (!gcAT) return;
+    if (!window.S.toasts.some((q) => q.id === gcAT.id)) { gcAT = null; return; }
+    if (gcAutoNow() !== gcAT.now) { window.toastDrop(gcAT.id); gcAT = null; }
   }
   // 颜色：同游戏菜单做法（'key:<名>' 引用 68 Key），「默认」= Figma 绑定的 Key；选中页签 / 分隔线 / 展开 固定跟 Key，点「去改」进整页配色
   const GC_SW = { 'gamecards.tab': ['lead', 'neutral_1', 'neutral_2', 'primary'], 'gamecards.text': ['neutral_1', 'lead', 'neutral_2', 'primary'], 'gamecards.placeholder': ['ddt_bg', 'bg_1', 'neutral_3', 'primary'], 'gamecards.placeholderIcon': ['ddt_icon', 'bg_1', 'neutral_3', 'neutral_2'], 'gamecards.label': ['label_accent3', 'accent_2', 'accent_1', 'primary'], 'gamecards.labelText': ['labeltext_accent3', 'lead', 'accent_3', 'primary'] };
@@ -771,7 +783,8 @@
     const tabs = gcTabsOn();
     let h = `<div class="p-sec"><div class="lab">${t('mp/gc-c-text')}</div>${tabs ? row('gamecards.tab') : ''}${m.name ? row('gamecards.text') : ''}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('mp/gc-fallback')}</div>${m.fallbackOn === false ? note('mp/gc-c-fb-off') : row('gamecards.placeholder') + (fbImg ? note('mp/gc-c-fb-img') : row('gamecards.placeholderIcon'))}</div>`;
-    h += `<div class="p-sec"><div class="lab">${t('mp/gc-rec')}</div>${m.rec !== false ? row('gamecards.label') + row('gamecards.labelText') : note('mp/gc-c-rec-off')}</div>`;
+    // 欧美 / 竖版卡片没有推荐角标（H5/GameCard，画布不画）：不显示角标颜色这一组（改了画布也没有变化，「N 处」也不算它们，11-28 整合测试）
+    if (gcRecOk(gcStyleOf(m))) h += `<div class="p-sec"><div class="lab">${t('mp/gc-rec')}</div>${m.rec !== false ? row('gamecards.label') + row('gamecards.labelText') : note('mp/gc-c-rec-off')}</div>`;
     h += `<div class="p-sec"><div class="lab">${t('ed/tb-c-linked')}</div>${link(t(tabs ? 'mp/gc-c-on' : 'mp/gc-expand'), 'primary')}${link(t('mp/gc-c-line'), 'border')}</div>`; // 没有页签时主色只用在「展开」
     return h;
   }
@@ -1699,7 +1712,7 @@
     defaults, vars, panel, h5, bnav, bnavCls, side, iconSheet, aigReg, batchBody, batchPickSheet, keysPanel, nm, ICON_SPEC, KEYS68, has: (b) => !!P[b], libIcons,
     resolveKey, EL, aiSvg, homeBgSec, // AD：导出结构预览 / AI 首页设计用
     keyTag, swRow, keyLabel, hexOf, curCol, hexChip, swTip, colorRow, linkRow, // 色值胶囊（Figma G6/HexChip 460:31190）：editor.js 的颜色行、文字样式卡、取色器共用
-    elKey: (id) => elDef(id),
+    elKey: (id) => elDef(id), elCap: (id) => GC_CAP[id] || null, // elCap：颜色行 Key 标签另写的 Key 名（游戏名称 = cards_text），取色器标题右侧 / Key 菜单跟它一致
     // 游戏名称（11-28 QA）：文字样式的默认字号 / 粗细跟卡片样式和排版走（editor.js TX_SCALE / TX_DW）
     gcStyle: () => gcStyleOf(M('gamecards')), gcNameBase,
     // 取色器切 Key 范围「N 处」用（editor.js keyUses）：画布上正显示的帐户栏入口角标颜色行 [行 ID, 默认 Key]（已登录、入口显示、有角标）

@@ -63,7 +63,8 @@
   let toastId = 0;
   function toast(msg, opts = {}) {
     const id = ++toastId;
-    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls }); // cls：个别 Toast 的样式（如「撤销」做成胶囊按钮）
+    S.toasts.push({ id, msg, action: opts.action, actionLabel: opts.actionLabel, info: opts.info, cls: opts.cls, hold: opts.hold }); // cls：个别 Toast 的样式（如「撤销」做成胶囊按钮）
+    // hold()：返回 true 时这条先收起（不显示、按钮点不到，也不算用掉），时间照走；hold() 变回 false 时还没到时间就再出（编辑器：弹窗开着 / AI 预览中，11-28 整合测试）
     renderToasts();
     setTimeout(() => { S.toasts = S.toasts.filter((x) => x.id !== id); renderToasts(); }, opts.ms || 2400);
     return id;
@@ -73,7 +74,7 @@
   function renderToasts() {
     let w = document.querySelector('.toast-wrap');
     if (!w) { w = document.createElement('div'); w.className = 'toast-wrap'; document.body.appendChild(w); }
-    w.innerHTML = S.toasts.map((x) => `<div class="toast ${x.info ? 'is-info' : ''} ${x.cls || ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
+    w.innerHTML = S.toasts.filter((x) => !(x.hold && x.hold())).map((x) => `<div class="toast ${x.info ? 'is-info' : ''} ${x.cls || ''}" role="status">${ic(x.info ? 'info-fill' : 'check-circle-fill')}<span>${esc(x.msg)}</span>${x.action ? `<button data-act="toastAction" data-arg="${x.id}">${esc(x.actionLabel)}</button>` : ''}</div>`).join('');
   }
   const comingSoon = () => toast(t('common/coming-soon'), { info: true });
 
@@ -123,7 +124,7 @@
   });
   actions['menu:toggle'] = (id) => { S.menu = S.menu === id ? null : id; };
   actions.closeAll = () => { S.menu = null; S.sheet = null; S.dialog = null; S.drawer = false; };
-  actions.toastAction = (id) => { const x = S.toasts.find((q) => q.id === +id); if (x && x.action) x.action(); S.toasts = S.toasts.filter((q) => q.id !== +id); renderToasts(); };
+  actions.toastAction = (id) => { const x = S.toasts.find((q) => q.id === +id); if (x && x.hold && x.hold()) return false; if (x && x.action) x.action(); S.toasts = S.toasts.filter((q) => q.id !== +id); renderToasts(); };
   actions.go = (p) => { S.menu = null; S.sheet = null; S.drawer = false; go(p); return false; };
   actions.soon = () => { comingSoon(); return false; };
   actions.setTheme = (v) => { S.theme = v || (S.theme === 'dark' ? 'light' : 'dark'); LS.set('theme', S.theme); };

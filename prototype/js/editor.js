@@ -100,7 +100,10 @@
   const topup = () => { if (window.openTopup) window.openTopup(); else window.comingSoon(); };
   // 导出类通知带 name（点了回导出结果）；其它编辑器通知带 proj（点了回编辑器）
   const notice = (o) => { if (window.pushNotice) window.pushNotice(Object.assign(/^export/.test(o.kind) ? { name: E.name } : { proj: E.name }, o)); };
-  const undoOpt = (ms = 5000) => ({ action: () => { A.undo(); window.render(); }, actionLabel: t('ed/am-undo'), ms });
+  // 带「撤销」的 Toast 什么时候先收起（core.js toast 的 hold）：带遮罩的弹窗 / 弹层开着（编辑器弹窗、「应用到哪里？」、确认弹窗…）或 AI 一键设计正在预览 / 生成。
+  // 这时点「撤销」会改到弹窗背后 / 看不见的真实设计（同快捷键规则），所以先不显示、不算用掉；关掉弹窗、放弃 / 应用预览后时间还没到就再出（11-28 整合测试）
+  const toastHeld = () => S.route === 'editor' && !!(S.dialog || S.sheet || E.dlg || (E.adp && (E.adp.pick != null || E.adp.stage === 'gen')));
+  const undoOpt = (ms = 5000) => ({ action: () => { A.undo(); window.render(); }, actionLabel: t('ed/am-undo'), ms, hold: toastHeld });
   A.edTopup = () => { topup(); return false; };
 
   // ---------- 历史（撤销/重做）+ 自动保存（ED-15） ----------
@@ -112,8 +115,10 @@
     let pa = E.projAssets.slice(-24); while (!LS.set('ed.meta', { figmaLinked: E.figmaLinked, projAssets: pa }) && pa.length) pa = pa.slice(Math.ceil(pa.length / 2));
     return ok;
   }
+  // 设计改动计数：每次保存（commit、撤销 / 重做、打字）+1。AI 一键设计的合并缓存用它 + 设计对象本身当键，不再每次把整份设计 JSON 一遍（11-28 整合测试）
+  let drev = 0;
   function save() {
-    E.save = 'saving'; clearTimeout(saveTimer);
+    drev++; E.save = 'saving'; clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       if (S.demo && S.demo.saveFail) E.save = 'failed'; else E.save = persist() ? 'saved' : 'failed';
       if (S.route === 'editor') window.render();
@@ -740,7 +745,10 @@
     const full = v && !v.startsWith('key:') ? v : !v && def[0] === '#' ? def : keyVal(v ? v.slice(4) : def, th, ec) || '#ffffff', cur = full.slice(0, 7).toLowerCase();
     // 行名：有固定文案的按 ID 现取（中途切语言跟着换），帐户栏角标这类带参数的取这一行显示的名字
     const lk = 'mp/c-' + id.replace('.', '-'), rowLab = el && el.closest && el.closest('.crow') && el.closest('.crow').querySelector('.k .ellipsis');
-    const own = window.MP.imgDef && window.MP.imgDef(id) ? { curKey: null, curLab: '@img', orig0: cur } : rowOwn(v, def, cur); // 游戏菜单按钮底没选颜色 = 按钮图，不算在哪个 Key 上
+    // 游戏菜单按钮底没选颜色 = 按钮图，不算在哪个 Key 上；
+    // 颜色行 Key 标签写的是别的 Key（游戏名称 = cards_text：欧美分支固定白、其它 = neutral_1）：取色器标题右侧、Key 菜单也按它算，每种卡片样式都一样（11-28 整合测试）
+    const cap = !v && window.MP.elCap ? window.MP.elCap(id) : null;
+    const own = window.MP.imgDef && window.MP.imgDef(id) ? { curKey: null, curLab: '@img', orig0: cur } : cap ? { curKey: cap, curLab: cap, orig0: cur } : rowOwn(v, def, cur);
     E.picker = Object.assign({ key: 'primary', elRow: id, label: window.I18N[lk] ? t(lk) : rowLab ? rowLab.textContent : id, orig: cur, origCss: full.length > 7 ? full : null, value: cur, where: 'el' }, own);
     rowSheet();
   };
@@ -1288,7 +1296,12 @@
   // 取色器应用后的 Toast 放在画布上（Figma 5a / 5b：手机画布底部导航上方居中）；手机编辑器放在弹层上方（<600 本来就在，600–839 这里补）
   let ctUntil = 0, ctTimer = null, ctNav = false;
   // o.onNav：电脑上把 Toast 竖直居中放在手机画布的底部导航上（单卡换图 Figma 2b / 4 / 6），不写就放在底部导航上方（取色器 5a / 5b）
-  function canvasToast(msg, o) { const id = window.toast(msg, o); ctNav = !!o.onNav; ctUntil = Date.now() + o.ms; clearTimeout(ctTimer); ctTimer = setTimeout(() => { ctUntil = 0; placeToast(); }, o.ms + 80); placeToast(); return id; }
+  // 画布 Toast 默认带 hold（弹窗开着 / AI 预览中先收起）；ctIds 记下还在的画布 Toast，AI 一键设计「应用这一套」时一起收掉（dropCanvasToasts），画布上只留「已套用」一条
+  // 普通撤销 Toast（undoOpt：隐藏 / 删除 / 添加模块、换配色、恢复默认…）不走 canvasToast、不进 ctIds，按 hold === toastHeld 认出来一起收掉：
+  // 它的「撤销」就是 A.undo，套用后会撤掉「已套用」这一步而不是它自己那一步（11-28 整合测试复测）
+  const ctIds = new Set();
+  function dropCanvasToasts() { ctIds.forEach((id) => window.toastDrop(id)); ctIds.clear(); S.toasts.filter((q) => q.hold === toastHeld).forEach((q) => window.toastDrop(q.id)); }
+  function canvasToast(msg, o) { const id = window.toast(msg, Object.assign({ hold: toastHeld }, o)); ctIds.forEach((k) => { if (!S.toasts.some((q) => q.id === k)) ctIds.delete(k); }); ctIds.add(id); ctNav = !!o.onNav; ctUntil = Date.now() + o.ms; clearTimeout(ctTimer); ctTimer = setTimeout(() => { ctUntil = 0; placeToast(); }, o.ms + 80); placeToast(); return id; }
   function placeToast() {
     const w = document.querySelector('.toast-wrap'); if (!w) return;
     const set = (top, bottom, l, r) => { w.style.top = top; w.style.bottom = bottom; w.style.left = l; w.style.right = r; };
@@ -1472,7 +1485,8 @@
   document.addEventListener('keydown', (e) => {
     if (S.route !== 'editor' || mobileEd() || E.loading || S.dialog || S.sheet) return;
     // 编辑器弹窗开着（都有遮罩：「应用到哪里？」、调整尺寸 / 裁切、素材库、导出、换配色…）：撤销 / 重做 / 移动 / 复制模块都不在背后偷偷改（11-28 QA）
-    if (E.dlg) return;
+    // 行内取色器开着（电脑浮层）也一样：同手机取色器弹层（手机不接快捷键），撤销不会把正在取色的这一行改掉 / 弄没（11-28 整合测试）
+    if (E.dlg || rowPk(E.picker)) return;
     const tg = e.target; if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
     const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase(); let r;
     if (mod && k === 'z') r = e.shiftKey ? A.redo() : A.undo();
@@ -2342,8 +2356,17 @@
     // AD：AI 首页设计用（按给定设计数据渲染迷你预览 h5For、默认设计、配色工具）
     h5For, defaultDesign, preset, baseOf, customCount, PRESETS, KEYS, SUGGEST, BANNER, MODS, hex2hsv, hsv2hex, fixSlide, persist,
     pkLive: () => !!(E.picker && E.picker.orig0 != null && !E.picker.follow && !pkIdle(E.picker)), keyUses: (K, dbg) => keyUses(K, null, dbg),
-    openResize: (slot, f, w, h) => openResize(slot, f, w, h), canvasToast: (msg, o) => canvasToast(msg, o), slotSpec: (slot) => slotSpec(slot) }; // 单卡换图：上传走「调整尺寸」、Toast 放画布上 // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
+    openResize: (slot, f, w, h) => openResize(slot, f, w, h), canvasToast: (msg, o) => canvasToast(msg, o), dropCanvasToasts: () => dropCanvasToasts(), drev: () => drev, slotSpec: (slot) => slotSpec(slot) }; // 单卡换图：上传走「调整尺寸」、Toast 放画布上 // 取色器切 Key 范围：行显示成「自定义」/「N 处」明细（测试用）
   // PC 未开放：不管从哪里带进来的 PC 视图（恢复的状态 / 外部直接改 E.device）一律回落 H5
-  window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); syncRowPk(); window.MP.gcSync(); return mobileEd() ? mobile() : desktop(); }; // gcSync：单卡换图菜单跨 840 在浮层 / 底部弹层之间切换
+  // 行内取色器的那一行不在了（顶栏撤销、换菜单位置、隐藏 / 显示模块、换卡片样式之后，颜色页签里没有这一行了，如中部的「选中文字 / 下划线」、没有游戏菜单时才有的页签颜色、欧美 / 竖版的角标颜色）：
+  // 关掉取色器（还没应用的预览跟着收回：预览是按 E.picker 实时算的），不留提示过时、「应用」会写到看不见的行上的浮层 / 弹层（11-28 整合测试）
+  function pkRowCheck() {
+    const p = E.picker; if (!rowPk(p)) return;
+    if (E.sel && modulePanel(E.sel).includes('crow is-pk')) return;
+    E.picker = null; if (S.menu === 'keymenu') S.menu = null;
+    if (E.dlg === 'keyscope') { E.dlg = null; E.ks = null; }
+    if (E.mpanel === 'picker') E.mpanel = p.back && E.sel ? p.back : null;
+  }
+  window.VIEWS.editor = function () { if (E.device === 'pc' && !pcOpen()) E.device = 'h5'; if (E.loading) return loading(); syncRowPk(); pkRowCheck(); window.MP.gcSync(); return mobileEd() ? mobile() : desktop(); }; // gcSync：单卡换图菜单跨 840 在浮层 / 底部弹层之间切换
   window.ED = { isOpen: () => S.route === 'editor' && !!(E.dlg || E.picker || E.mpanel || E.preview || E.ai || E.keys || E.rn || E.nameEdit || E.h5side || E.palOpen || E.adp || E.adMod || E.gcSel), escape };
 })();
